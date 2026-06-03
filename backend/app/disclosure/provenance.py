@@ -123,6 +123,10 @@ class ProvenanceService:
         manifest.signature = self._sign(manifest)
         return manifest
 
+    def storage_path(self, filename: str):
+        """Return a path under the provenance storage dir (used by backends)."""
+        return self._storage / filename
+
     def write_sidecar(self, manifest: ProvenanceManifest) -> str:
         """Persist the manifest next to the asset; return its URI/path."""
         path = self._storage / f"{manifest.asset_id}.c2pa.json"

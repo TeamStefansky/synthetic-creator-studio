@@ -41,25 +41,31 @@ synthetic-creator-studio/
 | # | Module | Status |
 |---|--------|--------|
 | 1 | Foundation + constraints + domain model | implemented, enforced |
-| 2 | Disclosure / provenance (before generation) | implemented (HMAC-signed manifest standing in for native C2PA) |
-| 3 | Generation engine (per-character LoRA) | interface + stub provider; provenance on every emit |
+| 2 | Disclosure / provenance (before generation) | **real C2PA** Content Credentials backend + HMAC backend, pluggable |
+| 3 | Generation engine (per-character LoRA) | **real diffusion+LoRA provider** (GPU) + stub; provenance on every emit |
 | 4 | Scenes & backgrounds | compositor re-stamps via the generation service |
 | 5 | Strategy module | implemented (rule-based stand-in for cultural/trend analytics) |
-| 6 | Distribution | adapters + **hard publish gate**; fails closed |
+| 6 | Distribution | **real Instagram Graph API adapter** + stub + **hard publish gate** |
 | 7 | Analytics dashboard | metrics + compliance view; UI shell |
 
-### Honest notes on the stubs
-- **Provenance:** real Content Credentials use `c2pa-python`. That native
-  toolchain isn't available in the build sandbox, so `ProvenanceService` provides
-  the same guarantees (tamper-evident, verifiable, asset-bound) via an
-  HMAC-signed manifest + content hash, behind a stable interface. Swap the
-  signer/embedder to go native; the rest of the app is unaffected.
-- **Generation:** real generation uses a diffusion pipeline + per-persona LoRA on
-  GPU. `StubGenerationProvider` implements the `GenerationProvider` interface so
-  the full generate → disclose → publish path is exercisable without a GPU.
-- **Distribution:** adapters model official-API posting (incl. setting each
-  platform's AI-label flag). No scraping, credential sharing, or rate-limit
-  evasion is modeled or permitted.
+### Pluggable backends (real vs. dependency-light)
+- **Provenance (`SCS_PROVENANCE_BACKEND`):**
+  - `c2pa` — **real C2PA Content Credentials** embedded into image bytes via
+    `c2pa-python` and verified by reading them back (data-hash integrity + AI
+    assertion + trust anchor). Dev signing certs are minted automatically.
+  - `hmac` (default) — verifiable HMAC-signed manifest + content hash, zero infra.
+  - Note: the prebuilt `c2pa` wheel mis-reports `claimSignature` on some
+    platforms, so the gate verifies integrity+trust+AI-assertion by default; set
+    `SCS_C2PA_REQUIRE_VALID_STATE=true` on a correct build for strict full validation.
+- **Generation (`SCS_GENERATION_PROVIDER`):**
+  - `diffusion` — real Stable Diffusion + per-persona LoRA (`torch`/`diffusers`,
+    GPU). Fails closed with a clear error if the deps are missing.
+  - `stub` (default) — deterministic CPU placeholder so the full
+    generate → disclose → publish path runs without a GPU.
+- **Distribution:** `MetaInstagramAdapter` performs the official two-step
+  Instagram Graph API publish and sets Meta's `ai_info.is_ai_generated` flag.
+  No scraping, credential sharing, or rate-limit evasion (C5). The stub adapter
+  is used by default; the real adapter is wired with per-account credentials.
 
 ## Quickstart (backend)
 

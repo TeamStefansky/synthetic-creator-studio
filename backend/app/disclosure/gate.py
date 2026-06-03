@@ -2,26 +2,40 @@
 
 ``assert_publishable(asset)`` raises unless the asset is fully disclosed:
   - ``disclosure_status == tagged``,
-  - a provenance manifest is present, valid, signed, and bound to the bytes,
-  - the manifest asserts AI generation + a synthetic-identity stamp.
+  - a provenance manifest is present and binds to THIS asset,
+  - the provenance backend verifies integrity + the AI assertion against the
+    asset bytes (HMAC: signed manifest + content hash; C2PA: embedded Content
+    Credentials read back from the bytes).
 
 This is a hard dependency of the distribution module — ``publish()`` calls it
-*before* contacting any platform. It is intentionally storage-aware so it
-re-verifies the manifest against the asset bytes on disk (defense in depth),
-not just the cached status flag.
+*before* contacting any platform. It is storage-aware so it re-verifies against
+the asset bytes on disk (defense in depth), not just the cached status flag.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
 from app.constraints import Constraint, DisclosureError
+from app.disclosure.backends import ProvenanceBackend, get_provenance_backend
 from app.disclosure.provenance import ProvenanceService
 from app.models.asset import Asset, DisclosureStatus
 
 
 class DisclosureGate:
-    def __init__(self, provenance: ProvenanceService | None = None):
-        self.provenance = provenance or ProvenanceService()
+    def __init__(
+        self,
+        provenance: ProvenanceService | None = None,
+        *,
+        backend: ProvenanceBackend | None = None,
+    ):
+        if backend is not None:
+            self.backend = backend
+        elif provenance is not None:
+            from app.disclosure.backends import HmacProvenanceBackend
+
+            self.backend = HmacProvenanceBackend(provenance)
+        else:
+            self.backend = get_provenance_backend()
 
     def assert_publishable(self, asset: Asset) -> None:
         """Fail closed (C6) unless ``asset`` is fully disclosed (C1/C2)."""
@@ -42,20 +56,21 @@ class DisclosureGate:
                 f"asset {asset.id} has no provenance manifest",
             )
 
-        manifest = self.provenance.load_manifest(asset.provenance_manifest)
-
-        # Re-bind to the actual bytes when we still have them (tamper check).
-        content_bytes = None
+        # Re-read the actual bytes to re-verify the binding (tamper check).
+        signed_bytes = None
         if asset.storage_uri and Path(asset.storage_uri).exists():
-            content_bytes = Path(asset.storage_uri).read_bytes()
+            signed_bytes = Path(asset.storage_uri).read_bytes()
 
-        self.provenance.assert_valid(manifest, content_bytes=content_bytes)
-
-        # Cross-check the manifest actually describes THIS asset.
-        if str(manifest.asset_id) != str(asset.id):
+        ok = self.backend.verify_asset(
+            manifest=asset.provenance_manifest,
+            signed_bytes=signed_bytes,
+            asset_id=str(asset.id),
+        )
+        if not ok:
             raise DisclosureError(
                 Constraint.NO_PUBLISH_WITHOUT_DISCLOSURE,
-                f"manifest asset_id {manifest.asset_id} does not match asset {asset.id}",
+                f"asset {asset.id} provenance is missing, forged, tampered, unbound, "
+                "or not asserted AI-generated — failing closed",
             )
 
     def is_publishable(self, asset: Asset) -> bool:

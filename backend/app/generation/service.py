@@ -17,6 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.constraints import StudioError
+from app.disclosure.backends import (
+    HmacProvenanceBackend,
+    ProvenanceBackend,
+    get_provenance_backend,
+)
 from app.disclosure.labeler import VisibleLabeler
 from app.disclosure.provenance import ProvenanceService
 from app.generation.provider import GenerationProvider, GenerationRequest
@@ -33,12 +38,20 @@ class GenerationService:
         provider: GenerationProvider,
         *,
         provenance: ProvenanceService | None = None,
+        backend: ProvenanceBackend | None = None,
         labeler: VisibleLabeler | None = None,
         guard: RealPersonGuard | None = None,
     ):
         self.session = session
         self.provider = provider
-        self.provenance = provenance or ProvenanceService()
+        # Provenance backend (C1). Defaults to the configured backend (HMAC unless
+        # overridden); ``provenance`` is accepted for back-compat and wrapped.
+        if backend is not None:
+            self.backend = backend
+        elif provenance is not None:
+            self.backend = HmacProvenanceBackend(provenance)
+        else:
+            self.backend = get_provenance_backend()
         self.labeler = labeler or VisibleLabeler()
         self.guard = guard or RealPersonGuard()
         self.storage = Path(get_settings().storage_dir)
@@ -109,22 +122,27 @@ class GenerationService:
             visual_identity=persona.visual_identity, result_meta=result.meta
         )
 
-        # Persist labeled bytes to object storage.
-        asset_path = self.storage / f"{asset.id}.{ext}"
-        asset_path.write_bytes(labeled)
-        asset.storage_uri = str(asset_path)
-
-        # C1 — build + sign provenance bound to the *labeled* bytes, embed sidecar.
-        manifest = self.provenance.build_manifest(
+        # C1 — stamp provenance bound to the *labeled* bytes. For the C2PA backend
+        # this embeds Content Credentials into the bytes; for HMAC the bytes are
+        # unchanged and a signed sidecar manifest is written.
+        stamp = self.backend.stamp(
             asset_id=str(asset.id),
             persona_id=str(persona.id),
             synthetic_identity_id=str(persona.synthetic_identity.id),
             responsible_entity_id=str(persona.responsible_entity_id),
             content_bytes=labeled,
+            kind=result.kind,
+            fmt=result.fmt,
             label=self.labeler.label_text_value(),
         )
-        asset.provenance_manifest_uri = self.provenance.write_sidecar(manifest)
-        asset.provenance_manifest = manifest.to_dict()
+
+        # Persist the signed (possibly credential-embedded) bytes to object storage.
+        asset_path = self.storage / f"{asset.id}.{ext}"
+        asset_path.write_bytes(stamp.signed_bytes)
+        asset.storage_uri = str(asset_path)
+
+        asset.provenance_manifest_uri = stamp.sidecar_uri
+        asset.provenance_manifest = stamp.manifest
         asset.disclosure_status = DisclosureStatus.TAGGED
         # Stash QC outcome for audit.
         asset.provenance_manifest["qc"] = {"passed": qc.passed, "score": qc.score, "detail": qc.detail}
