@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
-from app.api import analytics, distribution, entities, generation, personas, strategy
+from app.api import analytics, distribution, entities, generation, lora, personas, strategy
 from app.api.deps import install_exception_handlers
 from app.config import get_settings
 from app.db import init_db
@@ -37,6 +37,7 @@ def create_app() -> FastAPI:
     app.include_router(entities.router)
     app.include_router(personas.router)
     app.include_router(generation.router)
+    app.include_router(lora.router)
     app.include_router(strategy.router)
     app.include_router(distribution.router)
     app.include_router(analytics.router)

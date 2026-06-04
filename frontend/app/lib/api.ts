@@ -31,6 +31,22 @@ export interface Asset {
   storage_uri?: string;
 }
 
+export interface Dashboard {
+  persona_id: string;
+  metrics: Record<string, { count: number; total: number; avg: number }>;
+  compliance: { compliant: boolean; published_count: number };
+  strategy_feedback: { best_platform: string | null; recommendations: string[] };
+}
+
+export interface LoraModel {
+  id: string;
+  persona_id: string;
+  version: string;
+  base_model: string;
+  status: string;
+  weights_uri?: string;
+}
+
 export const api = {
   constraints: () => http<Record<string, string>>("/constraints"),
   createEntity: (name: string, contact_email: string) =>
@@ -41,4 +57,11 @@ export const api = {
     http<Asset>("/generate", { method: "POST", body: JSON.stringify({ persona_id, prompt }) }),
   compliance: (persona_id: string) =>
     http<{ compliant: boolean; published_count: number }>(`/analytics/personas/${persona_id}/compliance`),
+  dashboard: (persona_id: string) =>
+    http<Dashboard>(`/analytics/personas/${persona_id}/dashboard`),
+  trainLora: (persona_id: string, dataset_uri: string) =>
+    http<LoraModel>("/lora/train", {
+      method: "POST",
+      body: JSON.stringify({ persona_id, dataset_uri }),
+    }),
 };

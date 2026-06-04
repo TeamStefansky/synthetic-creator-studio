@@ -99,3 +99,32 @@ class StrategyRequest(BaseModel):
     language: str
     interests: list[str] = Field(default_factory=list)
     trends: list[str] | None = None
+
+
+# ---- LoRA training ----
+class LoraTrainRequest(BaseModel):
+    persona_id: uuid.UUID
+    base_model: str = "stabilityai/stable-diffusion-2-1"
+    dataset_uri: str
+    run_inline: bool = True  # run now (no broker) vs enqueue to Celery
+
+
+class LoraModelOut(BaseModel):
+    id: uuid.UUID
+    persona_id: uuid.UUID
+    version: str
+    base_model: str
+    status: str
+    weights_uri: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+# ---- analytics ----
+class AnalyticsIngest(BaseModel):
+    persona_id: uuid.UUID
+    platform: str
+    metric: str  # reach|engagement|growth|sentiment
+    value: float
+    post_id: uuid.UUID | None = None
+    extra: dict | None = None

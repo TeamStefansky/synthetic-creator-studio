@@ -52,6 +52,44 @@ class AnalyticsService:
             b["avg"] = round(b["total"] / b["count"], 4) if b["count"] else 0.0
         return agg
 
+    def strategy_feedback(self, *, persona_id) -> dict:
+        """Turn metrics into actionable strategy adjustments (M7 → M5 loop).
+
+        Compares average engagement/sentiment against simple thresholds and
+        surfaces the best-performing platform so Strategy can re-weight pillars.
+        """
+        summary = self.summary(persona_id=persona_id)
+        events = (
+            self.session.query(AnalyticsEvent)
+            .filter(AnalyticsEvent.persona_id == persona_id)
+            .all()
+        )
+        by_platform: dict[str, float] = {}
+        for e in events:
+            if e.metric == "engagement":
+                by_platform[e.platform] = by_platform.get(e.platform, 0.0) + e.value
+
+        recs: list[str] = []
+        eng = summary.get("engagement", {}).get("avg", 0.0)
+        sent = summary.get("sentiment", {}).get("avg", 0.0)
+        if eng and eng < 0.02:
+            recs.append("Engagement is low — test shorter-form content and stronger hooks.")
+        if sent and sent < 0.0:
+            recs.append("Sentiment is negative — review tone against persona hard_boundaries.")
+        best_platform = max(by_platform, key=by_platform.get) if by_platform else None
+        if best_platform:
+            recs.append(f"Double down on '{best_platform}' — highest cumulative engagement.")
+        return {"best_platform": best_platform, "recommendations": recs}
+
+    def dashboard(self, *, persona_id) -> dict:
+        """Single payload powering the live dashboard UI."""
+        return {
+            "persona_id": str(persona_id),
+            "metrics": self.summary(persona_id=persona_id),
+            "compliance": self.compliance_view(persona_id=persona_id),
+            "strategy_feedback": self.strategy_feedback(persona_id=persona_id),
+        }
+
     def compliance_view(self, *, persona_id) -> dict:
         """Confirm every PUBLISHED asset for the persona carried valid disclosure."""
         published = (

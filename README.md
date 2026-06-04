@@ -42,11 +42,13 @@ synthetic-creator-studio/
 |---|--------|--------|
 | 1 | Foundation + constraints + domain model | implemented, enforced |
 | 2 | Disclosure / provenance (before generation) | **real C2PA** Content Credentials backend + HMAC backend, pluggable |
-| 3 | Generation engine (per-character LoRA) | **real diffusion+LoRA provider** (GPU) + stub; provenance on every emit |
+| 3 | Generation engine (per-character LoRA) | **real diffusion+LoRA provider** (GPU) + stub; **LoRA training pipeline** (Celery job, versioned, status-tracked) |
 | 4 | Scenes & backgrounds | compositor re-stamps via the generation service |
-| 5 | Strategy module | implemented (rule-based stand-in for cultural/trend analytics) |
-| 6 | Distribution | **real Instagram Graph API adapter** + stub + **hard publish gate** |
-| 7 | Analytics dashboard | metrics + compliance view; UI shell |
+| 5 | Strategy module | rule-based, plus an analytics → strategy feedback loop |
+| 6 | Distribution | **real Instagram + TikTok official-API adapters** + stub + **hard publish gate** |
+| 7 | Analytics dashboard | metrics + compliance + strategy feedback; **live-wired** Next.js dashboard |
+
+CI: GitHub Actions runs the full `pytest` suite (incl. a real-C2PA-backend pass) on every push/PR — see `.github/workflows/ci.yml`.
 
 ### Pluggable backends (real vs. dependency-light)
 - **Provenance (`SCS_PROVENANCE_BACKEND`):**
