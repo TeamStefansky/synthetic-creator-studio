@@ -6,11 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.models.asset import Asset
 from app.models.persona import Persona
-from app.schemas import PersonaCreate, PersonaOut
+from app.schemas import AssetOut, PersonaCreate, PersonaOut
 from app.services.personas import create_persona
 
 router = APIRouter(prefix="/personas", tags=["persona"])
+
+
+@router.get("", response_model=list[PersonaOut])
+def list_personas(session: Session = Depends(get_session)):
+    return session.query(Persona).order_by(Persona.created_at.desc()).all()
 
 
 @router.post("", response_model=PersonaOut, status_code=201)
@@ -34,3 +40,13 @@ def get(persona_id: uuid.UUID, session: Session = Depends(get_session)):
     if persona is None:
         raise HTTPException(status_code=404, detail="persona not found")
     return persona
+
+
+@router.get("/{persona_id}/assets", response_model=list[AssetOut])
+def list_assets(persona_id: uuid.UUID, session: Session = Depends(get_session)):
+    return (
+        session.query(Asset)
+        .filter(Asset.persona_id == persona_id)
+        .order_by(Asset.created_at.desc())
+        .all()
+    )

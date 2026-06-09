@@ -2,8 +2,18 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import analytics, distribution, entities, generation, lora, personas, strategy
+from app.api import (
+    analytics,
+    assets,
+    distribution,
+    entities,
+    generation,
+    lora,
+    personas,
+    strategy,
+)
 from app.api.deps import install_exception_handlers
 from app.config import get_settings
 from app.db import init_db
@@ -18,6 +28,14 @@ def create_app() -> FastAPI:
     )
 
     install_exception_handlers(app)
+
+    # Allow the Next.js studio (dev + same-origin proxy) to call the API.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     @app.on_event("startup")
     def _startup() -> None:
@@ -37,6 +55,7 @@ def create_app() -> FastAPI:
     app.include_router(entities.router)
     app.include_router(personas.router)
     app.include_router(generation.router)
+    app.include_router(assets.router)
     app.include_router(lora.router)
     app.include_router(strategy.router)
     app.include_router(distribution.router)

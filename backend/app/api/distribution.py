@@ -13,6 +13,11 @@ from app.schemas import PostOut, ScheduleRequest
 router = APIRouter(prefix="/distribution", tags=["distribution"])
 
 
+@router.get("/posts", response_model=list[PostOut])
+def list_posts(session: Session = Depends(get_session)):
+    return session.query(Post).order_by(Post.created_at.desc()).all()
+
+
 @router.post("/schedule", response_model=PostOut, status_code=201)
 def schedule(payload: ScheduleRequest, session: Session = Depends(get_session)):
     service = DistributionService(session)

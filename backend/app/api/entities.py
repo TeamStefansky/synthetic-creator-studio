@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.models.responsible_entity import ResponsibleEntity
 from app.schemas import EntityCreate, EntityOut
 from app.services.entities import create_responsible_entity
 
@@ -18,4 +19,13 @@ def create_entity(payload: EntityCreate, session: Session = Depends(get_session)
         contact_email=payload.contact_email,
         kind=payload.kind,
         jurisdiction=payload.jurisdiction,
+    )
+
+
+@router.get("", response_model=list[EntityOut])
+def list_entities(session: Session = Depends(get_session)):
+    return (
+        session.query(ResponsibleEntity)
+        .order_by(ResponsibleEntity.created_at.desc())
+        .all()
     )
