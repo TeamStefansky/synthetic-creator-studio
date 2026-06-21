@@ -67,6 +67,11 @@ CI: GitHub Actions runs the full `pytest` suite (incl. a real-C2PA-backend pass)
     platforms, so the gate verifies integrity+trust+AI-assertion by default; set
     `SCS_C2PA_REQUIRE_VALID_STATE=true` on a correct build for strict full validation.
 - **Generation (`SCS_GENERATION_PROVIDER`):**
+  - `krea` — generate via the **KREA API** (`SCS_KREA_API_KEY`). The provider
+    returns raw bytes; the visible AI label + provenance are still applied by
+    `GenerationService`, and prompts are screened (C4) first. Base URL / model /
+    auth scheme are env-configurable (`SCS_KREA_BASE_URL`, `SCS_KREA_MODEL`,
+    `SCS_KREA_AUTH_SCHEME`). The key is read from the environment only.
   - `diffusion` — real Stable Diffusion + per-persona LoRA (`torch`/`diffusers`,
     GPU). Fails closed with a clear error if the deps are missing.
   - `stub` (default) — deterministic CPU placeholder so the full

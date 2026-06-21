@@ -44,8 +44,16 @@ class Settings(BaseSettings):
     # platforms, so dev defaults to integrity+trust+AI-assertion checks instead.
     c2pa_require_valid_state: bool = False
 
-    # Generation provider: "stub" (CPU, deterministic) or "diffusion" (GPU; needs torch+diffusers).
+    # Generation provider: "stub" | "diffusion" | "krea".
     generation_provider: str = "stub"
+
+    # KREA API (https://krea.ai) — used when generation_provider="krea".
+    # The key is read from the environment only; never commit it.
+    krea_api_key: str | None = None
+    krea_base_url: str = "https://api.krea.ai"
+    krea_model: str = "flux-1.1"
+    krea_auth_scheme: str = "bearer"  # bearer | basic | x-api-key
+    krea_timeout_s: float = 120.0
 
     # When true, seed a small demo dataset on startup if the DB is empty (hosted demos).
     seed_demo: bool = False

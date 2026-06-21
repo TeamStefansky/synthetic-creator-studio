@@ -14,6 +14,16 @@ from app.generation.stub_provider import StubGenerationProvider
 
 def get_provider(name: str | None = None, *, allow_fallback: bool = True) -> GenerationProvider:
     choice = (name or get_settings().generation_provider).lower()
+    if choice == "krea":
+        from app.constraints import StudioError
+        from app.generation.krea_provider import KreaGenerationProvider
+
+        if get_settings().krea_api_key:
+            return KreaGenerationProvider()
+        if not allow_fallback:
+            raise StudioError("generation_provider='krea' requested but SCS_KREA_API_KEY is unset")
+        # No key configured → fall back to the stub rather than failing requests.
+        return StubGenerationProvider()
     if choice == "diffusion":
         from app.generation.diffusion_provider import (
             DiffusionGenerationProvider,
