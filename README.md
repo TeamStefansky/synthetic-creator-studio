@@ -69,6 +69,31 @@ CI: GitHub Actions runs the full `pytest` suite (incl. a real-C2PA-backend pass)
   No scraping, credential sharing, or rate-limit evasion (C5). The stub adapter
   is used by default; the real adapter is wired with per-account credentials.
 
+## Try it in one command
+
+From the repo root:
+
+```bash
+./scripts/dev.sh
+```
+
+This installs deps (first run), starts the **backend** (`http://localhost:8000`,
+Swagger at `/docs`) and the **studio UI** (`http://localhost:3000`), and seeds
+demo personas, disclosed assets, published posts, and analytics so every screen
+is populated. Open **http://localhost:3000** and click around:
+
+- **Personas** — create a persona (an accountable entity + a required synthetic
+  identity are created atomically).
+- **Studio** — generate assets; each is visibly labeled `AI · SYNTHETIC` and
+  provenance-stamped (`tagged`) before it can be saved.
+- **Distribution** — schedule → approve → publish through the hard gate
+  (Instagram / TikTok), which refuses anything undisclosed.
+- **Dashboard** — live reach/engagement/sentiment, a compliance view, and
+  analytics-driven strategy feedback.
+
+Set `SEED=0 ./scripts/dev.sh` to start empty. Re-seed any time with
+`python scripts/seed_demo.py` (backend running).
+
 ## Quickstart (backend)
 
 ```bash
