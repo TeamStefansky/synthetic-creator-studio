@@ -51,8 +51,12 @@ class Settings(BaseSettings):
     # The key is read from the environment only; never commit it.
     krea_api_key: str | None = None
     krea_base_url: str = "https://api.krea.ai"
-    krea_model: str = "flux-1.1"
-    krea_auth_scheme: str = "bearer"  # bearer | basic | x-api-key
+    krea_model: str = "flux"
+    # id:secret credentials are HTTP Basic by convention.
+    krea_auth_scheme: str = "basic"  # bearer | basic | x-api-key
+    # KREA Train knobs (mirror the web flow): style|character|object|face, image|video.
+    krea_optimize_for: str = "style"
+    krea_modality: str = "image"
     krea_timeout_s: float = 120.0
 
     # When true, seed a small demo dataset on startup if the DB is empty (hosted demos).

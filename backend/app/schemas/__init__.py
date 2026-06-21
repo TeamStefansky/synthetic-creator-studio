@@ -134,7 +134,10 @@ class TrainRequest(BaseModel):
     no_real_person: bool = False
     rights_confirmed: bool = False
     subject_note: str | None = None
-    base_model: str = "flux-1.1"
+    # KREA Train knobs (mirror the web flow).
+    name: str | None = None
+    base_model: str = "flux"
+    optimize_for: str = "style"  # style | character | object
     run_inline: bool = True
 
 

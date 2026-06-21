@@ -69,9 +69,17 @@ def test_inline_url_downloads_bytes_and_sends_auth():
 
     assert result.content == png and result.kind == AssetKind.IMAGE
     post = client.calls[0]
-    assert post["headers"]["Authorization"] == "Bearer krea_id:secret"
+    # id:secret credentials default to HTTP Basic auth.
+    assert post["headers"]["Authorization"] == "Basic " + base64.b64encode(b"krea_id:secret").decode()
     assert "brand portrait" in post["json"]["prompt"]
     assert post["json"]["model"]  # a model was sent
+
+
+def test_bearer_auth_scheme_when_configured():
+    png = _png_bytes()
+    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
+    _provider(client, auth_scheme="bearer").generate(_req())
+    assert client.calls[0]["headers"]["Authorization"] == "Bearer krea_id:secret"
 
 
 def test_base64_response_decoded_without_download():

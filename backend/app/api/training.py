@@ -90,6 +90,8 @@ def train_persona(persona_id: uuid.UUID, payload: TrainRequest, session: Session
         persona_id=persona_id,
         attestation=attestation,
         base_model=payload.base_model,
+        name=payload.name,
+        optimize_for=payload.optimize_for,
         run_inline=payload.run_inline,
     )
     return job

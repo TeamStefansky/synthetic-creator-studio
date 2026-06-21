@@ -43,15 +43,15 @@ class KreaPersonaTrainer(PersonaTrainer):
         # Reuse the generation provider's auth scheme handling.
         return KreaGenerationProvider(api_key=self.api_key, client=self._client)._auth_headers()
 
-    # ---- API shapes (configurable) --------------------------------------
-    @staticmethod
-    def _start_payload(persona_id: str, asset_ids: list[str], base_model: str, meta: dict) -> dict:
+    # ---- API shapes (mirror the KREA Train web flow) --------------------
+    def _start_payload(self, persona_id: str, asset_ids: list[str], base_model: str, meta: dict) -> dict:
+        s = get_settings()
         return {
-            "name": f"persona-{persona_id}",
-            "base_model": base_model,
+            "name": meta.get("name") or f"persona-{persona_id}",
+            "model": base_model or s.krea_model,            # e.g. "flux"
+            "optimize_for": meta.get("optimize_for") or s.krea_optimize_for,  # style|character|object|face
+            "modality": meta.get("modality") or s.krea_modality,             # image|video
             "asset_ids": asset_ids,
-            "type": "style",
-            "metadata": {k: v for k, v in meta.items() if k != "attestation"},
         }
 
     @staticmethod

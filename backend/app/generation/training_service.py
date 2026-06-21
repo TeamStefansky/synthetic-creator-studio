@@ -79,7 +79,9 @@ class PersonaTrainingService:
         *,
         persona_id,
         attestation: TrainingAttestation,
-        base_model: str = "flux-1.1",
+        base_model: str = "flux",
+        name: str | None = None,
+        optimize_for: str = "style",
         run_inline: bool = True,
     ) -> LoraModel:
         persona = self.session.get(Persona, persona_id)
@@ -101,7 +103,12 @@ class PersonaTrainingService:
         job = LoraRegistry(self.session).register(
             persona_id=persona_id,
             base_model=base_model,
-            training_meta={"attestation": attestation.to_dict(), "num_images": len(images)},
+            training_meta={
+                "attestation": attestation.to_dict(),
+                "num_images": len(images),
+                "name": name or f"{persona.name} ({optimize_for})",
+                "optimize_for": optimize_for,
+            },
             status="queued",
         )
         if run_inline:
