@@ -5,6 +5,13 @@ A **transparency-first** product for creating, managing, and distributing
 persona is openly labeled as AI across its entire lifecycle. This is **not** an
 impersonation tool.
 
+### ▶ Live demo
+
+**https://teamstefansky.github.io/synthetic-creator-studio/** — a static build
+of the studio that runs entirely in your browser with seeded sample data (no
+backend). Click around the Dashboard, Personas, Studio, and Distribution.
+For the full app on the real backend, see *Try it in one command* below.
+
 > The non-negotiable rules live in [`CONSTRAINTS.md`](./CONSTRAINTS.md) and are
 > enforced server-side and in tests. Nothing in the codebase may bypass them.
 

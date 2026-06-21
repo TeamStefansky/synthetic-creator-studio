@@ -1,26 +1,18 @@
 name: Deploy demo to GitHub Pages
 
+# Manual redeploy of the static demo to the gh-pages branch (the source GitHub
+# Pages serves from). Triggered on demand so it never blocks PR checks. The
+# GITHUB_TOKEN can't auto-create a Pages *site* (that was enabled once by the
+# first gh-pages push), but it can push the branch, which GitHub then builds.
 on:
-  push:
-    branches: ["claude/hopeful-fermat-nMkMF", "main"]
-    paths: ["frontend/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -30,34 +22,21 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Configure Pages (auto-enable)
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Install deps
-        run: npm ci --no-audit --no-fund
-
       - name: Build static demo
+        working-directory: frontend
         env:
           NEXT_PUBLIC_DEMO: "1"
-        # The static export has no server routes — drop the runtime API proxy,
-        # the demo uses an in-browser mock API instead.
+        # Static export has no server routes — drop the runtime API proxy; the
+        # demo uses an in-browser mock API instead.
         run: |
+          npm ci --no-audit --no-fund
           rm -rf app/api
           npm run build
           touch out/.nojekyll
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: frontend/out
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./frontend/out
+          publish_branch: gh-pages
