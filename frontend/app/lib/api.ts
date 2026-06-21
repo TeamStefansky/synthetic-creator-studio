@@ -66,9 +66,13 @@ export interface Dashboard {
   strategy_feedback: { best_platform: string | null; recommendations: string[] };
 }
 
-export const assetFileUrl = (id: string) => `${BASE}/assets/${id}/file`;
+export const assetFileUrl = (id: string) =>
+  process.env.NEXT_PUBLIC_DEMO === "1"
+    ? // eslint-disable-next-line @typescript-eslint/no-var-requires
+      (require("./demo") as typeof import("./demo")).demoAssetSrc(id)
+    : `${BASE}/assets/${id}/file`;
 
-export const api = {
+const liveApi = {
   constraints: () => http<Record<string, string>>("/constraints"),
 
   listEntities: () => http<Entity[]>("/entities"),
@@ -98,3 +102,10 @@ export const api = {
     http<{ id: string }>("/analytics/events", { method: "POST", body: JSON.stringify(body) }),
   dashboard: (personaId: string) => http<Dashboard>(`/analytics/personas/${personaId}/dashboard`),
 };
+
+// In the static GitHub Pages build (NEXT_PUBLIC_DEMO=1) the mock API backs the UI.
+export const api =
+  process.env.NEXT_PUBLIC_DEMO === "1"
+    ? // eslint-disable-next-line @typescript-eslint/no-var-requires
+      ((require("./demo") as typeof import("./demo")).demoApi as unknown as typeof liveApi)
+    : liveApi;

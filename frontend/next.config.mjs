@@ -1,10 +1,26 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
+const isDemo = process.env.NEXT_PUBLIC_DEMO === "1";
+
+// For the static GitHub Pages demo we export a fully static site under the
+// repo's Pages base path. The app/api proxy route is removed by the Pages
+// workflow before this build (static export has no server routes).
+const demoConfig = {
+  output: "export",
+  basePath: "/synthetic-creator-studio",
+  assetPrefix: "/synthetic-creator-studio/",
+  images: { unoptimized: true },
+  trailingSlash: true,
+};
+
+const serverConfig = {
   // Self-contained server build for small Docker images.
   output: "standalone",
-  // Note: /api/* is handled by the runtime proxy route (app/api/[...path]/route.ts),
-  // which forwards to BACKEND_URL. This keeps the image host-agnostic (no rebuild
-  // needed to point at a different backend).
 };
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  ...(isDemo ? demoConfig : serverConfig),
+};
+
 export default nextConfig;
