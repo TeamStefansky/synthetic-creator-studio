@@ -94,6 +94,26 @@ is populated. Open **http://localhost:3000** and click around:
 Set `SEED=0 ./scripts/dev.sh` to start empty. Re-seed any time with
 `python scripts/seed_demo.py` (backend running).
 
+## Run the whole stack with Docker
+
+```bash
+docker compose up --build
+# open http://localhost:3000   (API + Swagger at http://localhost:8000/docs)
+```
+
+Compose seeds demo data on first boot (`SCS_SEED_DEMO=1`). The frontend serves
+a runtime proxy at `/api/*` that forwards to `BACKEND_URL`, so the same image
+points at any backend without rebuilding.
+
+## Deploy a public link (Render)
+
+This repo ships a Render Blueprint (`render.yaml`) that provisions both
+services. In the Render dashboard: **New + → Blueprint**, select this repo and
+branch. It deploys the backend (with a persistent disk + auto-seed) and the
+frontend, wiring `BACKEND_URL` to the backend's URL automatically. The frontend
+URL is your public, clickable demo. Any Docker host (Fly.io, Railway, a VPS)
+works too — build the two `Dockerfile`s and set `BACKEND_URL` on the frontend.
+
 ## Quickstart (backend)
 
 ```bash

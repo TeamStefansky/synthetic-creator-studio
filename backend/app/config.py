@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # Generation provider: "stub" (CPU, deterministic) or "diffusion" (GPU; needs torch+diffusers).
     generation_provider: str = "stub"
 
+    # When true, seed a small demo dataset on startup if the DB is empty (hosted demos).
+    seed_demo: bool = False
+
     # Celery / Redis (interfaces only in this scaffold).
     broker_url: str = "redis://localhost:6379/0"
     result_backend: str = "redis://localhost:6379/1"

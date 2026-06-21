@@ -1,0 +1,28 @@
+# Full-stack local run: `docker compose up --build`
+# Then open http://localhost:3000  (API + Swagger at http://localhost:8000/docs)
+services:
+  backend:
+    build: ./backend
+    environment:
+      # Seed demo data on first boot so the UI is populated immediately.
+      SCS_SEED_DEMO: "1"
+      SCS_PROVENANCE_SIGNING_KEY: "change-me-in-prod"
+      SCS_STORAGE_DIR: /app/storage
+      SCS_DATABASE_URL: sqlite:////app/storage/scs.db
+    volumes:
+      - scs_storage:/app/storage
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    environment:
+      # The frontend's runtime proxy (/api/*) forwards to this backend URL.
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  scs_storage:

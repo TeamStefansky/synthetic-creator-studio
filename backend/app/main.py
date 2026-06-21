@@ -41,6 +41,15 @@ def create_app() -> FastAPI:
     def _startup() -> None:
         # Dev/test convenience; prod uses Alembic migrations.
         init_db()
+        if settings.seed_demo:
+            from app.db import SessionLocal
+            from app.demo_seed import seed_if_empty
+
+            session = SessionLocal()
+            try:
+                seed_if_empty(session)
+            finally:
+                session.close()
 
     @app.get("/healthz", tags=["meta"])
     def healthz() -> dict:
