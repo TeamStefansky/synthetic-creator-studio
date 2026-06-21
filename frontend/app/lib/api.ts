@@ -66,6 +66,39 @@ export interface Dashboard {
   strategy_feedback: { best_platform: string | null; recommendations: string[] };
 }
 
+export interface TrainingImage {
+  id: string;
+  persona_id: string;
+  content_type: string;
+}
+
+export interface LoraModel {
+  id: string;
+  persona_id: string;
+  version: string;
+  base_model: string;
+  status: string;
+  weights_uri?: string;
+}
+
+export interface TrainBody {
+  no_real_person: boolean;
+  rights_confirmed: boolean;
+  subject_note?: string;
+  base_model?: string;
+}
+
+async function uploadFiles(personaId: string, files: File[]): Promise<TrainingImage[]> {
+  if (process.env.NEXT_PUBLIC_DEMO === "1") {
+    return (require("./demo") as typeof import("./demo")).demoApi.uploadTrainingImages(personaId, files);
+  }
+  const form = new FormData();
+  files.forEach((f) => form.append("files", f));
+  const res = await fetch(`${BASE}/personas/${personaId}/training-images`, { method: "POST", body: form });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || `HTTP ${res.status}`);
+  return res.json();
+}
+
 export const assetFileUrl = (id: string) =>
   process.env.NEXT_PUBLIC_DEMO === "1"
     ? // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -101,6 +134,11 @@ const liveApi = {
   ingestMetric: (body: { persona_id: string; platform: string; metric: string; value: number }) =>
     http<{ id: string }>("/analytics/events", { method: "POST", body: JSON.stringify(body) }),
   dashboard: (personaId: string) => http<Dashboard>(`/analytics/personas/${personaId}/dashboard`),
+
+  listTrainingImages: (personaId: string) => http<TrainingImage[]>(`/personas/${personaId}/training-images`),
+  uploadTrainingImages: (personaId: string, files: File[]) => uploadFiles(personaId, files),
+  train: (personaId: string, body: TrainBody) =>
+    http<LoraModel>(`/personas/${personaId}/train`, { method: "POST", body: JSON.stringify(body) }),
 };
 
 // In the static GitHub Pages build (NEXT_PUBLIC_DEMO=1) the mock API backs the UI.

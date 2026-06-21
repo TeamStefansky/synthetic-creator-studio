@@ -8,6 +8,7 @@ from app.models.post import ApprovalState, Post
 from app.models.responsible_entity import ResponsibleEntity
 from app.models.strategy import Strategy
 from app.models.synthetic_identity import SyntheticIdentity
+from app.models.training_image import TrainingImage
 
 __all__ = [
     "Base",
@@ -22,4 +23,5 @@ __all__ = [
     "Post",
     "ApprovalState",
     "AnalyticsEvent",
+    "TrainingImage",
 ]

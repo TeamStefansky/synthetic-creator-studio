@@ -96,11 +96,16 @@ class GenerationService:
         return asset
 
     def _produce_and_disclose(self, persona, asset, prompt, kind, lora_version, seed):
+        # Condition on the persona's trained model (KREA Train / LoRA), if any.
+        from app.generation.training_service import latest_ready_model
+
+        trained = latest_ready_model(self.session, persona.id)
         req = GenerationRequest(
             persona_id=str(persona.id),
             prompt=prompt,
             kind=kind,
-            lora_version=lora_version,
+            lora_version=lora_version or (trained.version if trained else None),
+            model_ref=trained.weights_uri if trained else None,
             seed=seed,
             visual_identity=persona.visual_identity,
         )

@@ -25,6 +25,9 @@ class GenerationRequest:
     kind: AssetKind = AssetKind.IMAGE
     negative_prompt: str | None = None
     lora_version: str | None = None
+    # Trained-model reference (e.g. a KREA trained-model id or LoRA URI) the
+    # provider should condition on for this persona's learned likeness.
+    model_ref: str | None = None
     width: int = 512
     height: int = 512
     seed: int | None = None

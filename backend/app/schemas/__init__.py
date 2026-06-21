@@ -120,6 +120,24 @@ class LoraModelOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ---- training (learn a persona from uploaded images) ----
+class TrainingImageOut(BaseModel):
+    id: uuid.UUID
+    persona_id: uuid.UUID
+    content_type: str
+
+    model_config = {"from_attributes": True}
+
+
+class TrainRequest(BaseModel):
+    # C4 attestation — required to train (fail closed if not affirmed).
+    no_real_person: bool = False
+    rights_confirmed: bool = False
+    subject_note: str | None = None
+    base_model: str = "flux-1.1"
+    run_inline: bool = True
+
+
 # ---- analytics ----
 class AnalyticsIngest(BaseModel):
     persona_id: uuid.UUID

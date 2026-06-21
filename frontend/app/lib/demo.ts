@@ -59,6 +59,7 @@ const entity: Entity = {
 const entities: Entity[] = [entity];
 const personas: Persona[] = Object.keys(PALETTES).map((n) => makePersona(n, entity.id));
 const assets: Record<string, Asset[]> = {};
+const trainingImages: Record<string, { id: string; persona_id: string; content_type: string }[]> = {};
 const posts: Post[] = [];
 for (const p of personas) {
   assets[p.id] = Array.from({ length: 4 }, () => makeAsset(p.id));
@@ -137,4 +138,24 @@ export const demoApi = {
   },
   ingestMetric: async () => wait({ id: uid() }),
   dashboard: async (personaId: string) => wait(dashboardFor(personaId)),
+
+  listTrainingImages: async (personaId: string) => wait([...(trainingImages[personaId] ?? [])]),
+  uploadTrainingImages: async (personaId: string, files: File[]) => {
+    const added = files.map(() => ({ id: uid(), persona_id: personaId, content_type: "image/png" }));
+    trainingImages[personaId] = [...added, ...(trainingImages[personaId] ?? [])];
+    return wait(trainingImages[personaId], 400);
+  },
+  train: async (personaId: string, body: { no_real_person: boolean; rights_confirmed: boolean }) => {
+    // Mirror the server-side C4 gate so the demo teaches the same rule.
+    if (!body.no_real_person)
+      throw new Error("[C4_NO_REAL_PERSON_IMPERSONATION] This product does not train on real people.");
+    if (!body.rights_confirmed) throw new Error("Confirm you hold rights to the reference images.");
+    if ((trainingImages[personaId] ?? []).length < 3)
+      throw new Error("Upload at least 3 reference images to train.");
+    return wait(
+      { id: uid(), persona_id: personaId, version: "v1", base_model: "flux-1.1", status: "ready",
+        weights_uri: `demo-lora:${personaId}` },
+      900,
+    );
+  },
 };

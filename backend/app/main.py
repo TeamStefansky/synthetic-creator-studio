@@ -13,6 +13,7 @@ from app.api import (
     lora,
     personas,
     strategy,
+    training,
 )
 from app.api.deps import install_exception_handlers
 from app.config import get_settings
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(personas.router)
     app.include_router(generation.router)
     app.include_router(assets.router)
+    app.include_router(training.router)
     app.include_router(lora.router)
     app.include_router(strategy.router)
     app.include_router(distribution.router)

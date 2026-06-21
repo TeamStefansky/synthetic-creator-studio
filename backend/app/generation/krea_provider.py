@@ -69,7 +69,9 @@ class KreaGenerationProvider(GenerationProvider):
         style = ", ".join(vi.get("tags", [])) if isinstance(vi.get("tags"), list) else ""
         prompt = f"{req.prompt}, {style}".strip(", ")
         payload = {
-            "model": self.model,
+            # Use the persona's trained model when available (KREA Train output),
+            # otherwise the configured base model.
+            "model": req.model_ref or self.model,
             "prompt": prompt,
             "width": req.width,
             "height": req.height,

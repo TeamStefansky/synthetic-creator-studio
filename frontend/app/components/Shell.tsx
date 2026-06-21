@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import clsx from "clsx";
-import { BarChart3, Users, Wand2, Send, Menu, X, ShieldCheck } from "lucide-react";
+import { BarChart3, Users, Wand2, Send, Menu, X, ShieldCheck, GraduationCap } from "lucide-react";
 import { DisclosureBadge } from "./DisclosureBadge";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: BarChart3 },
   { href: "/personas", label: "Personas", icon: Users },
+  { href: "/train", label: "Train", icon: GraduationCap },
   { href: "/studio", label: "Studio", icon: Wand2 },
   { href: "/distribution", label: "Distribution", icon: Send },
 ];

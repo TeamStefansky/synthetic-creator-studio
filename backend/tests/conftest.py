@@ -17,6 +17,10 @@ _TMP = Path(tempfile.mkdtemp(prefix="scs_test_"))
 os.environ["SCS_DATABASE_URL"] = f"sqlite:///{_TMP / 'test.db'}"
 os.environ["SCS_STORAGE_DIR"] = str(_TMP / "storage")
 os.environ["SCS_PROVENANCE_SIGNING_KEY"] = "test-signing-key"
+# Hermetic defaults — never pick up a developer's local .env (e.g. KREA keys).
+os.environ["SCS_GENERATION_PROVIDER"] = "stub"
+os.environ["SCS_PROVENANCE_BACKEND"] = "hmac"
+os.environ["SCS_KREA_API_KEY"] = ""
 
 from app.db import SessionLocal, engine  # noqa: E402
 from app.models import Base  # noqa: E402
