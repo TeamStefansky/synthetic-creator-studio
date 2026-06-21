@@ -82,6 +82,26 @@ def test_bearer_auth_scheme_when_configured():
     assert client.calls[0]["headers"]["Authorization"] == "Bearer krea_id:secret"
 
 
+def test_trained_lora_applied_as_lora_not_as_model():
+    """Regression: after Train, the LoRA must be applied on top of the base
+    model (loras list), NOT sent as the model — that broke generate-after-train."""
+    png = _png_bytes()
+    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
+    req = GenerationRequest(persona_id="p", prompt="x", kind=AssetKind.IMAGE, model_ref="lora_123")
+    _provider(client).generate(req)
+
+    body = client.calls[0]["json"]
+    assert body["model"] != "lora_123"  # base model, not the LoRA id
+    assert any(l.get("id") == "lora_123" for l in body.get("loras", []))
+
+
+def test_no_lora_field_without_trained_model():
+    png = _png_bytes()
+    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
+    _provider(client).generate(_req())  # no model_ref
+    assert "loras" not in client.calls[0]["json"]
+
+
 def test_base64_response_decoded_without_download():
     png = _png_bytes((200, 90, 60))
     client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])

@@ -69,14 +69,17 @@ class KreaGenerationProvider(GenerationProvider):
         style = ", ".join(vi.get("tags", [])) if isinstance(vi.get("tags"), list) else ""
         prompt = f"{req.prompt}, {style}".strip(", ")
         payload = {
-            # Use the persona's trained model when available (KREA Train output),
-            # otherwise the configured base model.
-            "model": req.model_ref or self.model,
+            # Base model stays the generator (e.g. flux_dev); the persona's trained
+            # LoRA is applied *on top* via the loras list — mirroring KREA's flow
+            # (model picker + separate "Lora" selector), not by replacing the model.
+            "model": self.model,
             "prompt": prompt,
             "width": req.width,
             "height": req.height,
             "num_images": 1,
         }
+        if req.model_ref:
+            payload["loras"] = [{"id": req.model_ref, "weight": get_settings().krea_lora_weight}]
         if req.negative_prompt:
             payload["negative_prompt"] = req.negative_prompt
         if req.seed is not None:
