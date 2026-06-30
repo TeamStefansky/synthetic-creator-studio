@@ -38,6 +38,30 @@ The app **runs out of the box on free public endpoints** — no keys required fo
 the infrastructure exposure, scoring, and network graph. Keys only unlock
 optional layers (see below).
 
+## Deploy a public instance
+
+TruthLens is a server app (analysis runs in API routes), so it needs a Node host
+— a static export won't work for the live features.
+
+### Vercel (recommended for Next.js)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FTeamStefansky%2Fsynthetic-creator-studio&root-directory=truthlens&project-name=truthlens&repository-name=truthlens)
+
+The button pre-sets the **root directory to `truthlens`** (the app lives in a
+subdirectory). Add any optional keys as Environment Variables in the Vercel
+project settings, then deploy — you'll get a public `*.vercel.app` URL.
+
+### Render (Docker blueprint)
+
+The repo's root [`render.yaml`](../render.yaml) includes a `truthlens` web
+service (Docker, `rootDir: truthlens`). In Render: **New + → Blueprint → point at
+this repo/branch**. Set the optional keys (marked `sync: false`) in the
+dashboard. A `truthlens/Dockerfile` (standalone Next.js output) is included for
+any other container host too.
+
+> Both paths run out of the box on free public APIs; keys only add the optional
+> layers below.
+
 ## Environment variables
 
 All optional — core features work without any of them.
