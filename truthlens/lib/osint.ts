@@ -130,6 +130,16 @@ Only include items you actually found evidence for. Leave arrays empty if nothin
     await cacheSet(`osint:${domain}`, dossier);
     return dossier;
   } catch (e: any) {
-    return { ...UNAVAILABLE, note: `OSINT research failed: ${e?.message || "error"}.` };
+    const msg = String(e?.message || "error");
+    if (/credit balance|billing|too low|insufficient/i.test(msg)) {
+      return { ...UNAVAILABLE, note: "OSINT research paused — the Anthropic account is out of credits. Add credits at console.anthropic.com (Plans & Billing) to re-enable." };
+    }
+    if (/401|invalid x-api-key|authentication/i.test(msg)) {
+      return { ...UNAVAILABLE, note: "OSINT research unavailable — the ANTHROPIC_API_KEY appears invalid." };
+    }
+    if (/429|rate limit/i.test(msg)) {
+      return { ...UNAVAILABLE, note: "OSINT research temporarily rate-limited — try again shortly." };
+    }
+    return { ...UNAVAILABLE, note: `OSINT research failed: ${msg.slice(0, 160)}.` };
   }
 }
