@@ -198,6 +198,12 @@ function ReportInner() {
           <h2 className="text-lg font-semibold">Operator Network</h2>
         </div>
         <NetworkGraph network={report.network} />
+        {report.network.note && (
+          <p className="mt-3 flex items-start gap-1.5 text-xs text-yellow-300/80">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {report.network.note}
+          </p>
+        )}
       </section>
 
       {/* Content analysis */}

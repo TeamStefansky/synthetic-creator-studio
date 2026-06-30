@@ -197,6 +197,9 @@ export interface GraphEdge {
 export interface OperatorNetwork {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  note?: string;
+  /** co-tenant domains hidden because the IP is a CDN / shared host. */
+  hiddenSharedIpCount?: number;
 }
 
 // ---------------------------------------------------------------------------
