@@ -9,6 +9,16 @@ the infrastructure behind them. Paste a URL and get:
 2. **Credibility risk rating** — a badge (LIKELY LEGITIMATE / UNKNOWN / HIGH
    RISK), a 0–100 score, a confidence level, and a **transparent, itemized list
    of every signal** that produced the score.
+3. **Legitimacy / authority layer** — domain age, web longevity (Wayback),
+   archive volume, optional Open PageRank, and SEO completeness recognize
+   established outlets automatically. A researched allowlist of ~450 leading
+   global outlets (incl. comprehensive Israeli coverage) plus a high-authority
+   signal **guarantee a site is never rated HIGH RISK**.
+4. **Deep OSINT research** (on-demand) — investigates who is behind a site
+   across the open web (owners, affiliations, social presence, funding,
+   reputation, controversies, related sites) with sources.
+5. **Detailed rating report** — the score broken down by category with every
+   weight, downloadable as Markdown or printable to PDF.
 
 Plus an **Attribution Tools** suite (log analyzer, email-header tracer) and an
 operator-network graph that links a site to siblings via shared IP, GA/AdSense
@@ -71,6 +81,7 @@ All optional — core features work without any of them.
 | `ANTHROPIC_API_KEY` | Content-credibility analysis (Claude) **and** the open-web propagation tracer (`web_search`) | Content-analysis card skipped; confidence lower; propagation limited |
 | `GOOGLE_FACTCHECK_KEY` | Google Fact Check Tools API | Fact-check layer skipped |
 | `IPINFO_TOKEN` | Higher-accuracy / higher-limit IP geo & ASN | Falls back to free ip-api.com (throttled) |
+| `OPENPAGERANK_KEY` | 0–10 domain-authority signal for the legitimacy layer | Authority estimated from domain age + Wayback longevity |
 | `SEARCH_API_KEY` | Reserved for an alternate web-search provider | Propagation relies on Claude `web_search` + Wayback |
 | `IMAGE_SEARCH_KEY` | (paid) reverse-image origin tracing | Disabled |
 | `SOCIAL_API_KEY` | (paid/limited) social amplification signals | Disabled |

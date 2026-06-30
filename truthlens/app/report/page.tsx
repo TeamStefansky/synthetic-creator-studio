@@ -4,23 +4,25 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Globe, Server, Mail, Lock, Cpu, History, AlertTriangle, Network as NetIcon,
-  Share2, Radar,
+  Share2, Radar, TrendingUp, Search,
 } from "lucide-react";
-import type { Report } from "@/lib/types";
+import type { Report, OsintDossier } from "@/lib/types";
 import { fmtDate } from "@/lib/ui";
 import VerdictBadge from "@/components/VerdictBadge";
 import ScoreGauge from "@/components/ScoreGauge";
 import InfraCard from "@/components/InfraCard";
-import EvidenceList from "@/components/EvidenceList";
 import ContentAnalysisCard from "@/components/ContentAnalysisCard";
 import NetworkGraph from "@/components/NetworkGraph";
 import LoadingChecklist from "@/components/LoadingChecklist";
 import Disclaimer from "@/components/Disclaimer";
+import OsintPanel from "@/components/OsintPanel";
+import RatingReportCard from "@/components/RatingReportCard";
 
 function ReportInner() {
   const params = useSearchParams();
   const url = params.get("url") || "";
   const [report, setReport] = useState<Report | null>(null);
+  const [dossier, setDossier] = useState<OsintDossier | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -75,6 +77,8 @@ function ReportInner() {
   const ssl = i.ssl.value;
   const tech = i.tech.value;
   const arch = i.archive.value;
+  const seo = i.seo.value;
+  const authority = i.authority.value;
 
   return (
     <div className="space-y-6">
@@ -160,6 +164,26 @@ function ReportInner() {
               { label: "Snapshots", value: arch?.snapshotCount != null ? String(arch.snapshotCount) : "—" },
             ]}
           />
+          <InfraCard
+            title="Authority & Longevity" icon={<TrendingUp className="h-5 w-5" />} data={i.authority}
+            rows={[
+              { label: "Domain age (yrs)", value: authority?.domainAgeYears != null ? String(authority.domainAgeYears) : "—" },
+              { label: "Web presence (yrs)", value: authority?.waybackYears != null ? String(authority.waybackYears) : "—" },
+              { label: "Archive snapshots", value: authority?.snapshotCount != null ? String(authority.snapshotCount) : "—" },
+              { label: "Open PageRank", value: authority?.openPageRank != null ? `${authority.openPageRank}/10` : "n/a" },
+              { label: "Authority level", value: authority?.level },
+            ]}
+          />
+          <InfraCard
+            title="SEO Health" icon={<Search className="h-5 w-5" />} data={i.seo}
+            rows={[
+              { label: "SEO score", value: seo?.seoScore != null ? `${seo.seoScore}/100` : "—" },
+              { label: "Meta description", value: seo?.metaDescription ? "✓" : "✗" },
+              { label: "Open Graph", value: seo?.hasOpenGraph ? "✓" : "✗" },
+              { label: "Structured data", value: seo?.hasStructuredData ? "✓" : "✗" },
+              { label: "Canonical", value: seo?.hasCanonical ? "✓" : "✗" },
+            ]}
+          />
         </div>
       </section>
 
@@ -238,11 +262,11 @@ function ReportInner() {
         )}
       </div>
 
-      {/* Evidence */}
-      <section className="card">
-        <h2 className="mb-3 text-lg font-semibold">Why this score? (Evidence)</h2>
-        <EvidenceList evidence={report.risk.evidence} />
-      </section>
+      {/* Deep OSINT research (on-demand) */}
+      <OsintPanel report={report} onLoaded={setDossier} />
+
+      {/* Detailed, auditable rating breakdown + export */}
+      <RatingReportCard report={report} dossier={dossier} />
 
       <p className="text-center text-xs text-gray-500">
         Analyzed {fmtDate(report.fetchedAt)} · cached for 24h

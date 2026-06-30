@@ -12,7 +12,8 @@ import { lookupArchive } from "@/lib/archive";
 import { lookupFactChecks } from "@/lib/factcheck";
 import { reverseIp } from "@/lib/reverseip";
 import { fetchPage } from "@/lib/page-fetch";
-import { fingerprint, extractArticle } from "@/lib/fingerprint";
+import { fingerprint, extractArticle, extractSeo } from "@/lib/fingerprint";
+import { assessAuthority } from "@/lib/authority";
 import { matchReputation } from "@/lib/reputation";
 import { analyzeContent } from "@/lib/content-analysis";
 import { scoreReport } from "@/lib/scoring";
@@ -91,7 +92,14 @@ export async function POST(req: NextRequest) {
     page && page.html
       ? fingerprint(page.html, page.headers, domain)
       : undefined;
+  const seo = page && page.html ? extractSeo(page.html) : undefined;
   const article = page && page.html ? extractArticle(page.html) : { text: "", quote: "" };
+
+  // Authority / longevity (legitimacy independent of the seed list).
+  const authority = await assessAuthority(domain, rdap, archive).catch(() => undefined);
+
+  // A successful HTTPS fetch is a more reliable HTTPS signal than crt.sh.
+  const pageHttpsOk = !!page?.ok && (page.finalUrl || norm.url).startsWith("https://");
 
   // Mail info from DNS TXT + MX + emails in page.
   const mail = dns
@@ -120,9 +128,11 @@ export async function POST(req: NextRequest) {
     ssl: ssl ? ok(ssl) : unavailable<any>("SSL/crt.sh unavailable"),
     tech: tech ? ok(tech) : unavailable<any>("Page fetch/fingerprint unavailable"),
     archive: archive ? ok(archive) : unavailable<any>("Wayback unavailable"),
+    seo: seo ? ok(seo) : unavailable<any>("Page fetch unavailable"),
+    authority: authority ? ok(authority) : unavailable<any>("Authority signals unavailable"),
   };
 
-  const risk = scoreReport({ domain, infrastructure, reputation, content, siblingDomains });
+  const risk = scoreReport({ domain, infrastructure, reputation, content, siblingDomains, pageHttpsOk });
   const network = buildNetwork({ domain, infrastructure, reverseIpNeighbors: reverseNeighbors });
 
   // Open-web propagation (optional) + coordination indicator.

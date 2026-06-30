@@ -21,6 +21,8 @@ export interface ScoringInput {
   content: ContentAnalysis;
   /** sibling domains discovered (SAN, reverse-IP, shared ids) for fake-match. */
   siblingDomains: string[];
+  /** the page was actually fetched over valid HTTPS (more reliable than crt.sh). */
+  pageHttpsOk?: boolean;
 }
 
 function bandOf(score: number): RiskBand {
@@ -43,7 +45,7 @@ function lookalikeOf(domain: string): { target: string; distance: number } | nul
 }
 
 export function scoreReport(input: ScoringInput): RiskResult {
-  const { domain, infrastructure, reputation, content } = input;
+  const { domain, infrastructure, reputation, content, pageHttpsOk } = input;
   const evidence: EvidenceItem[] = [];
   let score = 40; // baseline
 
@@ -57,6 +59,8 @@ export function scoreReport(input: ScoringInput): RiskResult {
   const mail = infrastructure.mail.value;
   const ssl = infrastructure.ssl.value;
   const tech = infrastructure.tech.value;
+  const seo = infrastructure.seo.value;
+  const authority = infrastructure.authority.value;
 
   // ---- Reputation (strongest) ----
   if (reputation.matchedCredible) {
@@ -128,14 +132,36 @@ export function scoreReport(input: ScoringInput): RiskResult {
   }
 
   // ---- HTTPS / cert ----
-  const httpsValid = !!ssl && ssl.certCount > 0;
+  // A successful HTTPS page fetch is more reliable than crt.sh (which throttles).
+  const httpsValid = pageHttpsOk || (!!ssl && ssl.certCount > 0);
   if (!httpsValid) {
-    add("No valid HTTPS certificate", +10, "No current/valid certificate found via crt.sh.");
+    add("No valid HTTPS certificate", +10, "Site did not serve over valid HTTPS and no certificate was found via crt.sh.");
   }
 
   // ---- Mail auth (positive) ----
   if (httpsValid && mail?.spf && mail?.dmarc && mail?.dkim) {
     add("Full mail authentication", -6, "Valid HTTPS + SPF + DKIM + DMARC all present.");
+  }
+
+  // ---- Authority / longevity (legitimacy, independent of the seed list) ----
+  if (authority) {
+    const yrs = Math.max(authority.domainAgeYears ?? 0, authority.waybackYears ?? 0);
+    if (authority.waybackYears != null) {
+      if (authority.waybackYears >= 10) add("Long-established web presence", -15, `First archived ~${Math.round(authority.waybackYears)} years ago (Wayback).`);
+      else if (authority.waybackYears >= 5) add("Established web presence", -10, `First archived ~${Math.round(authority.waybackYears)} years ago (Wayback).`);
+      else if (authority.waybackYears >= 3) add("Multi-year web presence", -5, `First archived ~${Math.round(authority.waybackYears)} years ago (Wayback).`);
+    }
+    if (authority.snapshotCount >= 1000) add("Extensively archived", -6, `${authority.snapshotCount}+ Wayback snapshots — heavily crawled, established site.`);
+    if (authority.openPageRank != null) {
+      if (authority.openPageRank >= 6) add("High domain authority", -15, `Open PageRank ${authority.openPageRank}/10 — a high-authority domain.`);
+      else if (authority.openPageRank >= 4) add("Moderate domain authority", -8, `Open PageRank ${authority.openPageRank}/10.`);
+    }
+    void yrs;
+  }
+
+  // ---- SEO completeness (professional-publisher signal) ----
+  if (seo && seo.seoScore >= 70 && (authority?.level === "high" || authority?.level === "medium")) {
+    add("Professional SEO & structured data", -4, `Complete SEO metadata (score ${seo.seoScore}/100: title, description, Open Graph, structured data).`);
   }
 
   // ---- Content signals ----
@@ -149,6 +175,15 @@ export function scoreReport(input: ScoringInput): RiskResult {
   // clamp
   score = Math.max(0, Math.min(100, Math.round(score)));
 
+  // ---- Safety caps: recognized/established outlets are never HIGH RISK ----
+  if (reputation.matchedCredible && score > 35) {
+    score = 35;
+    evidence.push({ label: "Recognized credible outlet — capped", impact: 0, detail: "On the researched leading-outlets allowlist: capped out of the HIGH RISK band." });
+  } else if (authority?.level === "high" && score > 60) {
+    score = 60;
+    evidence.push({ label: "Established high-authority site — capped", impact: 0, detail: "Long-lived, high-authority domain: capped out of the HIGH RISK band (still flag-worthy → Unknown)." });
+  }
+
   // ---- Confidence ----
   const categories = [
     infrastructure.domain.status === "ok",
@@ -161,7 +196,10 @@ export function scoreReport(input: ScoringInput): RiskResult {
   ];
   const ratio = categories.filter(Boolean).length / categories.length;
   const strongSignal =
-    reputation.matchedCredible || reputation.matchedFake || reputation.factChecks.length > 0;
+    reputation.matchedCredible ||
+    reputation.matchedFake ||
+    reputation.factChecks.length > 0 ||
+    authority?.level === "high";
 
   let confidence: Confidence = "Low";
   if (strongSignal) confidence = "High";
