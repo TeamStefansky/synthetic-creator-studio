@@ -1,23 +1,16 @@
-"""KreaGenerationProvider — generate via the KREA API (https://krea.ai).
+"""KreaGenerationProvider — generate via the KREA API (https://api.krea.ai).
 
-Implements the ``GenerationProvider`` interface, so it only produces *raw* image
-bytes — the visible AI label and provenance stamping still happen in
-``GenerationService`` (C1 cannot be bypassed), and prompts are screened for
-real-person impersonation (C4) before reaching here.
+Matches KREA's documented REST API:
+  - Auth:    Authorization: Bearer <API token>
+  - Create:  POST /generate/image/krea/{model}   (default model: krea-2/large)
+             body: {prompt, aspect_ratio, resolution, seed?, styles?:[{id,strength}]}
+             → {job_id, status, result, error}
+  - Result:  GET  /jobs/{job_id}  → poll until status == "completed",
+             then the image URL(s) are in the job's `result`.
 
-The credential is read from ``SCS_KREA_API_KEY`` (never hard-coded). Base URL,
-model, and auth scheme are configurable so the integration can be pointed at the
-current KREA endpoints without code changes.
-
-Flow (covers the common shapes of image-gen REST APIs):
-  1. POST ``{base}/v1/generations`` with the prompt → response.
-  2. If the response already contains an image (URL or base64), use it.
-  3. Otherwise treat it as an async job and poll
-     ``{base}/v1/generations/{id}`` until it completes, then download.
-
-Network access to KREA was not available in the build sandbox, so this provider
-is covered by mocked-transport tests rather than a live call. If KREA's request
-or response shape differs, adjust ``_build_payload`` / ``_extract_image_ref``.
+A persona's trained model (a KREA "style"/LoRA) is applied via the `styles`
+list, not by replacing the base model. The provider returns raw image bytes;
+visible labeling + provenance still happen in GenerationService (C1).
 """
 from __future__ import annotations
 
@@ -29,6 +22,19 @@ from app.constraints import StudioError
 from app.generation.provider import GenerationProvider, GenerationRequest, GenerationResult
 from app.models.asset import AssetKind
 
+# KREA aspect-ratio enum (docs).
+_ASPECTS = {
+    "1:1": 1.0, "4:3": 4 / 3, "3:2": 3 / 2, "16:9": 16 / 9, "2.35:1": 2.35,
+    "4:5": 4 / 5, "2:3": 2 / 3, "9:16": 9 / 16,
+}
+
+
+def _nearest_aspect(width: int, height: int) -> str:
+    if not width or not height:
+        return "1:1"
+    ratio = width / height
+    return min(_ASPECTS, key=lambda k: abs(_ASPECTS[k] - ratio))
+
 
 class KreaGenerationProvider(GenerationProvider):
     name = "krea"
@@ -38,12 +44,12 @@ class KreaGenerationProvider(GenerationProvider):
         s = get_settings()
         self.api_key = api_key or s.krea_api_key
         self.base_url = (base_url or s.krea_base_url).rstrip("/")
-        self.model = model or s.krea_model
+        self.model = model or s.krea_model          # path component, e.g. "krea-2/large"
         self.auth_scheme = (auth_scheme or s.krea_auth_scheme).lower()
+        self.lora_strength = s.krea_lora_weight
         self.timeout = s.krea_timeout_s
         self._client = client
         if not self.api_key:
-            # Fail closed (C6): never silently "generate nothing".
             raise StudioError("KREA provider requires SCS_KREA_API_KEY to be set")
 
     # ---- http ------------------------------------------------------------
@@ -57,35 +63,29 @@ class KreaGenerationProvider(GenerationProvider):
 
     def _auth_headers(self) -> dict:
         if self.auth_scheme == "basic":
-            token = base64.b64encode(self.api_key.encode()).decode()
-            return {"Authorization": f"Basic {token}"}
+            return {"Authorization": f"Basic {base64.b64encode(self.api_key.encode()).decode()}"}
         if self.auth_scheme == "x-api-key":
             return {"x-api-key": self.api_key}
         return {"Authorization": f"Bearer {self.api_key}"}
 
-    # ---- payload / parsing ----------------------------------------------
+    # ---- payload ---------------------------------------------------------
     def _build_payload(self, req: GenerationRequest) -> dict:
         vi = req.visual_identity or {}
-        style = ", ".join(vi.get("tags", [])) if isinstance(vi.get("tags"), list) else ""
-        prompt = f"{req.prompt}, {style}".strip(", ")
+        tags = vi.get("tags") if isinstance(vi.get("tags"), list) else []
+        prompt = ", ".join([req.prompt, *tags]).strip(", ")
         payload = {
-            # Base model stays the generator (e.g. flux_dev); the persona's trained
-            # LoRA is applied *on top* via the loras list — mirroring KREA's flow
-            # (model picker + separate "Lora" selector), not by replacing the model.
-            "model": self.model,
             "prompt": prompt,
-            "width": req.width,
-            "height": req.height,
-            "num_images": 1,
+            "aspect_ratio": _nearest_aspect(req.width, req.height),
+            "resolution": "1K",
         }
-        if req.model_ref:
-            payload["loras"] = [{"id": req.model_ref, "weight": get_settings().krea_lora_weight}]
-        if req.negative_prompt:
-            payload["negative_prompt"] = req.negative_prompt
         if req.seed is not None:
             payload["seed"] = req.seed
+        if req.model_ref:
+            # Apply the persona's trained KREA style (LoRA) on top of the base model.
+            payload["styles"] = [{"id": req.model_ref, "strength": self.lora_strength}]
         return payload
 
+    # ---- result parsing --------------------------------------------------
     @staticmethod
     def _first(d, *keys):
         for k in keys:
@@ -93,31 +93,26 @@ class KreaGenerationProvider(GenerationProvider):
                 return d[k]
         return None
 
-    def _extract_image_ref(self, body: dict) -> tuple[str | None, str | None, str | None]:
-        """Return (url, b64, job_id) from a KREA-style response."""
-        if not isinstance(body, dict):
-            return None, None, None
-        # Common containers: data/images/outputs/output/result.
-        items = (
-            self._first(body, "images", "data", "outputs", "output")
-            or (body.get("result") or {}).get("images")
-            or []
+    def _image_from_result(self, result) -> tuple[str | None, str | None]:
+        """Return (url, b64) from a completed job's `result`."""
+        if result is None:
+            return None, None
+        # result may be a list, a dict with images/output, or a direct url/b64.
+        candidates = result if isinstance(result, list) else (
+            self._first(result, "images", "output", "outputs", "data") or [result]
         )
-        if isinstance(items, list) and items:
-            it = items[0]
-            if isinstance(it, str):
-                return (it, None, None) if it.startswith("http") else (None, it, None)
-            if isinstance(it, dict):
-                return self._first(it, "url", "image_url"), self._first(it, "b64_json", "b64", "base64"), None
-        # Direct fields.
-        url = self._first(body, "image_url", "url")
-        b64 = self._first(body, "b64_json", "image_base64")
-        job_id = self._first(body, "id", "job_id", "request_id", "generation_id")
-        return url, b64, job_id
-
-    @staticmethod
-    def _status(body: dict) -> str:
-        return str(KreaGenerationProvider._first(body, "status", "state") or "").lower()
+        if isinstance(candidates, list):
+            for it in candidates:
+                if isinstance(it, str):
+                    return (it, None) if it.startswith("http") else (None, it)
+                if isinstance(it, dict):
+                    url = self._first(it, "url", "image_url", "signed_url")
+                    b64 = self._first(it, "b64_json", "b64", "base64")
+                    if url or b64:
+                        return url, b64
+        if isinstance(result, dict):
+            return self._first(result, "url", "image_url"), self._first(result, "b64_json")
+        return None, None
 
     # ---- generate --------------------------------------------------------
     def generate(self, request: GenerationRequest) -> GenerationResult:
@@ -126,48 +121,50 @@ class KreaGenerationProvider(GenerationProvider):
 
         http = self._http()
         headers = {**self._auth_headers(), "Content-Type": "application/json", "Accept": "application/json"}
+        url = f"{self.base_url}/generate/image/krea/{self.model}"
 
-        resp = http.post(f"{self.base_url}/v1/generations", json=self._build_payload(request), headers=headers)
+        resp = http.post(url, json=self._build_payload(request), headers=headers)
         body = self._json(resp)
         if resp.status_code >= 400:
             raise StudioError(f"KREA generation failed ({resp.status_code}): {body}")
 
-        url, b64, job_id = self._extract_image_ref(body)
+        job_id = self._first(body, "job_id", "id")
+        status = str(self._first(body, "status", "state") or "").lower()
+        img_url, b64 = self._image_from_result(body.get("result"))
 
-        # Async job → poll to completion.
-        if not (url or b64) and job_id:
-            url, b64 = self._poll(http, job_id, headers)
+        if not (img_url or b64):
+            if not job_id:
+                raise StudioError(f"KREA returned no job_id: {body}")
+            img_url, b64 = self._poll_job(http, job_id, headers)
 
         if b64:
-            content = base64.b64decode(b64)
-        elif url:
-            img = http.get(url, headers=self._auth_headers())
+            return self._result(base64.b64decode(b64))
+        if img_url:
+            img = http.get(img_url)
             if img.status_code >= 400:
                 raise StudioError(f"KREA image download failed ({img.status_code})")
-            content = img.content
-        else:
-            raise StudioError(f"KREA response contained no image: {body}")
+            return self._result(img.content)
+        raise StudioError("KREA job completed without an image")
 
-        return GenerationResult(
-            kind=AssetKind.IMAGE,
-            content=content,
-            fmt="PNG",
-            meta={"provider": self.name, "model": self.model},
-        )
-
-    def _poll(self, http, job_id: str, headers: dict) -> tuple[str | None, str | None]:
+    def _poll_job(self, http, job_id: str, headers: dict) -> tuple[str | None, str | None]:
         deadline = time.time() + self.timeout
         while time.time() < deadline:
-            r = http.get(f"{self.base_url}/v1/generations/{job_id}", headers=headers)
+            r = http.get(f"{self.base_url}/jobs/{job_id}", headers=headers)
             body = self._json(r)
-            status = self._status(body)
-            url, b64, _ = self._extract_image_ref(body)
-            if url or b64:
-                return url, b64
-            if status in {"failed", "error", "canceled", "cancelled"}:
-                raise StudioError(f"KREA job {job_id} {status}: {body}")
+            status = str(self._first(body, "status", "state") or "").lower()
+            img_url, b64 = self._image_from_result(body.get("result"))
+            if img_url or b64:
+                return img_url, b64
+            if status in {"failed", "error", "cancelled", "canceled"}:
+                raise StudioError(f"KREA job {job_id} {status}: {self._first(body, 'error') or body}")
             time.sleep(2)
         raise StudioError(f"KREA job {job_id} timed out after {self.timeout}s")
+
+    def _result(self, content: bytes) -> GenerationResult:
+        # KREA returns JPEG/PNG/WebP; PIL in the labeler handles any of them.
+        fmt = "PNG" if content[:8] == b"\x89PNG\r\n\x1a\n" else "JPEG"
+        return GenerationResult(kind=AssetKind.IMAGE, content=content, fmt=fmt,
+                                meta={"provider": self.name, "model": self.model})
 
     @staticmethod
     def _json(resp) -> dict:

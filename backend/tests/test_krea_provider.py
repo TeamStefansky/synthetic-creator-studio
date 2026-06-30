@@ -1,7 +1,7 @@
-"""KreaGenerationProvider — request building, response shapes, and fail-closed.
+"""KreaGenerationProvider — matches KREA's real REST API (mocked transport).
 
-Uses a fake httpx-style client (no network). Also proves that KREA output still
-flows through disclosure: the emitted asset is labeled + provenance-stamped (C1).
+POST /generate/image/krea/{model} → job; GET /jobs/{id} → result; Bearer auth;
+trained model applied via the `styles` list. Also proves KREA output is disclosed.
 """
 from __future__ import annotations
 
@@ -54,77 +54,61 @@ def _provider(client, **kw):
     return KreaGenerationProvider(api_key="krea_id:secret", client=client, **kw)
 
 
-def _req(prompt="studio portrait"):
+def _req(prompt="studio portrait", model_ref=None):
     return GenerationRequest(persona_id="p", prompt=prompt, kind=AssetKind.IMAGE,
-                             visual_identity={"tags": ["studio"]})
+                             model_ref=model_ref, visual_identity={"tags": ["studio"]})
 
 
-def test_inline_url_downloads_bytes_and_sends_auth():
+def test_generate_uses_bearer_correct_endpoint_and_required_fields():
     png = _png_bytes()
-    client = _Client(
-        posts=[_Resp(payload={"images": [{"url": "https://cdn.krea/x.png"}]})],
-        gets=[_Resp(content=png)],
-    )
+    client = _Client(posts=[_Resp({"job_id": "j1", "status": "completed",
+                                   "result": {"images": [{"b64_json": base64.b64encode(png).decode()}]}})])
     result = _provider(client).generate(_req("brand portrait"))
 
     assert result.content == png and result.kind == AssetKind.IMAGE
     post = client.calls[0]
-    # id:secret credentials default to HTTP Basic auth.
-    assert post["headers"]["Authorization"] == "Basic " + base64.b64encode(b"krea_id:secret").decode()
-    assert "brand portrait" in post["json"]["prompt"]
-    assert post["json"]["model"]  # a model was sent
+    assert post["url"].endswith("/generate/image/krea/krea-2/large")
+    assert post["headers"]["Authorization"] == "Bearer krea_id:secret"
+    body = post["json"]
+    assert body["prompt"].startswith("brand portrait")
+    assert body["resolution"] == "1K"
+    assert body["aspect_ratio"] in {"1:1", "4:3", "3:2", "16:9", "2.35:1", "4:5", "2:3", "9:16"}
 
 
-def test_bearer_auth_scheme_when_configured():
+def test_trained_model_applied_as_style_not_base_model():
     png = _png_bytes()
-    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
-    _provider(client, auth_scheme="bearer").generate(_req())
-    assert client.calls[0]["headers"]["Authorization"] == "Bearer krea_id:secret"
-
-
-def test_trained_lora_applied_as_lora_not_as_model():
-    """Regression: after Train, the LoRA must be applied on top of the base
-    model (loras list), NOT sent as the model — that broke generate-after-train."""
-    png = _png_bytes()
-    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
-    req = GenerationRequest(persona_id="p", prompt="x", kind=AssetKind.IMAGE, model_ref="lora_123")
-    _provider(client).generate(req)
-
+    client = _Client(posts=[_Resp({"job_id": "j", "status": "completed",
+                                   "result": {"images": [{"b64_json": base64.b64encode(png).decode()}]}})])
+    _provider(client).generate(_req(model_ref="style_123"))
     body = client.calls[0]["json"]
-    assert body["model"] != "lora_123"  # base model, not the LoRA id
-    assert any(l.get("id") == "lora_123" for l in body.get("loras", []))
+    assert body.get("styles") == [{"id": "style_123", "strength": 1.0}]
+    assert "model" not in body  # model is in the URL path, not the body
 
 
-def test_no_lora_field_without_trained_model():
+def test_no_styles_without_trained_model():
     png = _png_bytes()
-    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
-    _provider(client).generate(_req())  # no model_ref
-    assert "loras" not in client.calls[0]["json"]
+    client = _Client(posts=[_Resp({"job_id": "j", "status": "completed",
+                                   "result": {"images": [{"b64_json": base64.b64encode(png).decode()}]}})])
+    _provider(client).generate(_req())
+    assert "styles" not in client.calls[0]["json"]
 
 
-def test_base64_response_decoded_without_download():
-    png = _png_bytes((200, 90, 60))
-    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
-    result = _provider(client).generate(_req())
-    assert result.content == png
-    assert all(c["m"] != "GET" for c in client.calls)  # no download needed
-
-
-def test_async_job_is_polled_to_completion(monkeypatch):
+def test_generate_polls_job_then_downloads(monkeypatch):
     import app.generation.krea_provider as mod
 
     monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
     png = _png_bytes()
     client = _Client(
-        posts=[_Resp(payload={"id": "job_1", "status": "queued"})],
+        posts=[_Resp({"job_id": "j1", "status": "queued", "result": None})],
         gets=[
-            _Resp(payload={"status": "processing"}),
-            _Resp(payload={"status": "completed", "images": [{"b64_json": base64.b64encode(png).decode()}]}),
+            _Resp({"status": "processing", "result": None}),
+            _Resp({"status": "completed", "result": {"images": [{"url": "https://cdn.krea/x.png"}]}}),
+            _Resp(content=png),  # image download
         ],
     )
     result = _provider(client).generate(_req())
     assert result.content == png
-    assert any("/v1/generations/job_1" in c.get("url", "") for c in client.calls)
+    assert any(c["url"].endswith("/jobs/j1") for c in client.calls)
 
 
 def test_failed_job_fails_closed(monkeypatch):
@@ -132,15 +116,15 @@ def test_failed_job_fails_closed(monkeypatch):
 
     monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
     client = _Client(
-        posts=[_Resp(payload={"id": "job_2", "status": "queued"})],
-        gets=[_Resp(payload={"status": "failed", "error": "nsfw"})],
+        posts=[_Resp({"job_id": "j2", "status": "queued", "result": None})],
+        gets=[_Resp({"status": "failed", "result": None, "error": {"code": "nsfw"}})],
     )
     with pytest.raises(StudioError):
         _provider(client).generate(_req())
 
 
 def test_http_error_fails_closed():
-    client = _Client(posts=[_Resp(payload={"error": "unauthorized"}, status=401)])
+    client = _Client(posts=[_Resp({"error": "unauthorized"}, status=401)])
     with pytest.raises(StudioError):
         _provider(client).generate(_req())
 
@@ -150,27 +134,17 @@ def test_missing_key_fails_closed():
         KreaGenerationProvider(api_key=None, client=_Client(posts=[]))
 
 
-def test_basic_auth_scheme_header():
-    png = _png_bytes()
-    client = _Client(posts=[_Resp(payload={"image_url": "https://cdn.krea/y.png"})], gets=[_Resp(content=png)])
-    _provider(client, auth_scheme="basic").generate(_req())
-    expected = "Basic " + base64.b64encode(b"krea_id:secret").decode()
-    assert client.calls[0]["headers"]["Authorization"] == expected
-
-
 def test_factory_krea_fallback_and_failclosed():
-    # No key configured in the test env.
     assert isinstance(get_provider("krea", allow_fallback=True), StubGenerationProvider)
     with pytest.raises(StudioError):
         get_provider("krea", allow_fallback=False)
 
 
 def test_krea_output_is_disclosed(session, persona):
-    """KREA bytes still get the visible label + provenance via GenerationService."""
     png = _png_bytes()
-    client = _Client(posts=[_Resp(payload={"images": [{"b64_json": base64.b64encode(png).decode()}]})])
+    client = _Client(posts=[_Resp({"job_id": "j", "status": "completed",
+                                   "result": {"images": [{"b64_json": base64.b64encode(png).decode()}]}})])
     service = GenerationService(session, _provider(client))
     asset = service.generate_asset(persona_id=persona.id, prompt="cheerful studio portrait")
-
     assert asset.disclosure_status == DisclosureStatus.TAGGED
     assert asset.provenance_manifest is not None and asset.storage_uri
