@@ -13,7 +13,6 @@ from sqlalchemy.orm import Session
 
 from app.analytics.service import AnalyticsService
 from app.distribution.service import DistributionService
-from app.generation.factory import get_provider
 from app.generation.service import GenerationService
 from app.models.persona import Persona
 from app.models.post import ApprovalState
@@ -37,7 +36,11 @@ def seed_if_empty(session: Session) -> bool:
     entity = create_responsible_entity(
         session, name="Aurora Labs", contact_email="brand@aurora.example"
     )
-    gen = GenerationService(session, get_provider())
+    # Seed sample assets with the stub generator so boot is instant and free even
+    # when the live provider is KREA — real generations happen on user demand.
+    from app.generation.stub_provider import StubGenerationProvider
+
+    gen = GenerationService(session, StubGenerationProvider())
     dist = DistributionService(session)
     analytics = AnalyticsService(session)
 

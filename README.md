@@ -117,14 +117,23 @@ Compose seeds demo data on first boot (`SCS_SEED_DEMO=1`). The frontend serves
 a runtime proxy at `/api/*` that forwards to `BACKEND_URL`, so the same image
 points at any backend without rebuilding.
 
-## Deploy a public link (Render)
+## Deploy a public, real backend (Render) — one click
 
-This repo ships a Render Blueprint (`render.yaml`) that provisions both
-services. In the Render dashboard: **New + → Blueprint**, select this repo and
-branch. It deploys the backend (with a persistent disk + auto-seed) and the
-frontend, wiring `BACKEND_URL` to the backend's URL automatically. The frontend
-URL is your public, clickable demo. Any Docker host (Fly.io, Railway, a VPS)
-works too — build the two `Dockerfile`s and set `BACKEND_URL` on the frontend.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/TeamStefansky/synthetic-creator-studio)
+
+This repo ships a Render Blueprint (`render.yaml`) that provisions **both** the
+backend (FastAPI, persistent disk, demo-seeded) and the frontend (Next.js),
+wiring them together automatically. Steps:
+
+1. Click the button → sign in to Render → **Apply** the blueprint.
+2. When prompted, paste your **`SCS_KREA_API_KEY`** (your KREA `id:secret`). It
+   is stored as a Render secret — never in git.
+3. Open the **scs-frontend** URL Render gives you. That's your live app, backed
+   by a real backend and **real KREA** generation.
+
+Seeding uses the stub generator (instant, free); your own Train/Generate calls
+use KREA. Any Docker host (Fly.io, Railway, a VPS) works too — build the two
+`Dockerfile`s and set `BACKEND_URL` on the frontend.
 
 ## Quickstart (backend)
 

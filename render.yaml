@@ -19,6 +19,18 @@ services:
         value: /var/data/storage
       - key: SCS_DATABASE_URL
         value: sqlite:////var/data/storage/scs.db
+      # --- KREA (real generation) ---
+      # Use KREA when a key is present; without it, the app falls back to the
+      # built-in stub so it still runs. Enter the key in the Render dashboard
+      # (sync:false → prompted at deploy, never stored in git).
+      - key: SCS_GENERATION_PROVIDER
+        value: krea
+      - key: SCS_KREA_API_KEY
+        sync: false
+      - key: SCS_KREA_AUTH_SCHEME
+        value: basic
+      - key: SCS_KREA_MODEL
+        value: flux_dev
     disk:
       name: scs-storage
       mountPath: /var/data/storage
