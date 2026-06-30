@@ -1,7 +1,9 @@
 // Typed API client for the Synthetic Creator Studio backend.
-// Requests go through the Next.js /api rewrite to FastAPI.
+// - Local dev / Docker: BASE="/api" (handled by the runtime proxy route).
+// - Static site (GitHub Pages): NEXT_PUBLIC_API_BASE points straight at the
+//   live backend (CORS is open), so no server/proxy is needed.
 
-const BASE = "/api";
+const BASE = (process.env.NEXT_PUBLIC_API_BASE || "/api").replace(/\/$/, "");
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

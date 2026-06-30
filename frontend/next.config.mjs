@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
-const isDemo = process.env.NEXT_PUBLIC_DEMO === "1";
+const isStatic = process.env.NEXT_PUBLIC_STATIC === "1" || process.env.NEXT_PUBLIC_DEMO === "1";
 
-// For the static GitHub Pages demo we export a fully static site under the
-// repo's Pages base path. The app/api proxy route is removed by the Pages
-// workflow before this build (static export has no server routes).
-const demoConfig = {
+// Static site (GitHub Pages): export a fully static build under the repo's Pages
+// base path. Used for both the mock demo (NEXT_PUBLIC_DEMO=1) and a real build
+// that talks straight to the live backend (NEXT_PUBLIC_API_BASE=...).
+// The app/api proxy route is removed by the Pages workflow before this build.
+const staticConfig = {
   output: "export",
   basePath: "/synthetic-creator-studio",
   assetPrefix: "/synthetic-creator-studio/",
@@ -20,7 +21,7 @@ const serverConfig = {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  ...(isDemo ? demoConfig : serverConfig),
+  ...(isStatic ? staticConfig : serverConfig),
 };
 
 export default nextConfig;
