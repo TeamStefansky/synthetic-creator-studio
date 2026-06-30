@@ -18,6 +18,7 @@ import Disclaimer from "@/components/Disclaimer";
 import OsintPanel from "@/components/OsintPanel";
 import RatingReportCard from "@/components/RatingReportCard";
 import GeoOriginCard from "@/components/GeoOriginCard";
+import OriginChainCard from "@/components/OriginChainCard";
 
 function ReportInner() {
   const params = useSearchParams();
@@ -190,6 +191,9 @@ function ReportInner() {
 
       {/* Geographic origin (server + registrant countries) */}
       <GeoOriginCard report={report} />
+
+      {/* Origin chain — attempt to reveal the true server behind a CDN */}
+      {report.originTrace && <OriginChainCard trace={report.originTrace} />}
 
       {/* Network graph */}
       <section className="card">
