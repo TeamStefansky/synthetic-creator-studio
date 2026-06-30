@@ -13,9 +13,13 @@ import type { OriginTrace, OriginCandidate, HostingInfo } from "./types";
 
 // Subdomains that are commonly served directly (not proxied through the CDN).
 const PROBE_SUBDOMAINS = [
-  "mail", "webmail", "ftp", "cpanel", "cpcalc", "whm", "webdisk", "smtp",
-  "pop", "imap", "direct", "origin", "server", "host", "ns1", "ns2",
-  "dev", "staging", "test", "vpn", "remote", "portal", "autodiscover", "mx",
+  "mail", "webmail", "webmail2", "ftp", "cpanel", "whm", "webdisk", "smtp",
+  "smtp2", "mx", "mx1", "mx2", "relay", "mailgw", "mailhost", "exchange", "owa",
+  "pop", "pop3", "imap", "autodiscover", "autoconfig",
+  "direct", "direct-connect", "origin", "origin-www", "server", "host", "cpsess",
+  "ns1", "ns2", "dns", "dev", "staging", "test", "beta", "old", "www2", "web",
+  "vpn", "remote", "portal", "admin", "panel", "secure", "gateway",
+  "api", "app", "blog", "shop", "store", "forum", "cloud", "git", "backup",
 ];
 
 const PRIVATE_IP_RE = /^(10\.|127\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;

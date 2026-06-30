@@ -13,13 +13,14 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-bg-base/80 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-bg-base/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <Eye className="h-5 w-5 text-indigo-400" />
-          <span>TruthLens</span>
-          <span className="hidden text-xs font-normal text-gray-500 sm:inline">
-            · Attribution Tools
+        <Link href="/" className="group flex items-center gap-2.5 font-semibold">
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-glow transition group-hover:scale-105">
+            <Eye className="h-5 w-5 text-white" />
+          </span>
+          <span className="text-[15px] tracking-tight">
+            Truth<span className="text-brand-soft">Lens</span>
           </span>
         </Link>
         <nav className="flex items-center gap-1 text-sm">
@@ -30,7 +31,9 @@ export default function Nav() {
                 key={href}
                 href={href}
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition sm:px-3 ${
-                  active ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  active
+                    ? "bg-white/[0.08] text-white ring-hairline"
+                    : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
                 <Icon className="h-4 w-4" />

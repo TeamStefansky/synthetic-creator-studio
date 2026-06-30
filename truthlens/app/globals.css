@@ -8,30 +8,62 @@
 
 html,
 body {
-  background-color: #0b0f17;
+  background-color: #070a12;
   color: #e5e7eb;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Reusable card surface */
-.card {
-  @apply rounded-2xl border border-white/10 bg-bg-card p-5 shadow-lg shadow-black/20;
+/* Ambient page background: deep gradient + soft brand glows. */
+body {
+  background-image:
+    radial-gradient(60rem 40rem at 50% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(50rem 30rem at 100% 0%, rgba(56, 189, 248, 0.08), transparent 55%),
+    radial-gradient(40rem 30rem at 0% 20%, rgba(168, 85, 247, 0.08), transparent 55%);
+  background-attachment: fixed;
 }
 
-.card-elev {
-  @apply rounded-xl border border-white/10 bg-bg-elev p-4;
+@layer components {
+  /* Reusable card surface — subtle glass + gradient hairline border. */
+  .card {
+    @apply relative rounded-2xl border border-white/[0.08] p-5 shadow-soft;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)) ,
+      rgba(15, 20, 34, 0.8);
+    backdrop-filter: blur(8px);
+  }
+
+  .card-elev {
+    @apply rounded-xl border border-white/[0.07] bg-bg-elev/80 p-4;
+  }
+
+  .label-muted {
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-gray-400;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    background-image: linear-gradient(180deg, #6d70f2, #4f46e5);
+    box-shadow: 0 6px 20px -8px rgba(99, 102, 241, 0.7);
+  }
+  .btn:hover {
+    box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.85);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 font-medium text-gray-200 transition hover:border-white/25 hover:bg-white/[0.06];
+  }
 }
 
-.label-muted {
-  @apply text-xs uppercase tracking-wide text-gray-400;
-}
-
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 font-medium text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50;
-}
-
-.btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-2 font-medium text-gray-200 transition hover:bg-white/5;
+@layer utilities {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(180deg, #ffffff, #b9c0ff 90%);
+  }
+  .ring-hairline {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  }
 }
 
 /* thin scrollbars for tables */
@@ -56,11 +88,15 @@ body {
     background: #fff !important;
     color: #111 !important;
   }
+  body {
+    background-image: none !important;
+  }
   .card,
   .card-elev {
     border: 1px solid #ddd !important;
     background: #fff !important;
     box-shadow: none !important;
+    backdrop-filter: none !important;
     break-inside: avoid;
   }
 }
