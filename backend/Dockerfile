@@ -21,6 +21,7 @@ ENV SCS_STORAGE_DIR=/app/storage \
 
 EXPOSE 8000
 HEALTHCHECK --interval=20s --timeout=4s --retries=5 \
-    CMD curl -fsS http://localhost:8000/healthz || exit 1
+    CMD curl -fsS "http://localhost:${PORT:-8000}/healthz" || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Shell form so the platform-injected $PORT (e.g. Render sets PORT) is honored.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
