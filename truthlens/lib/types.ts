@@ -110,6 +110,27 @@ export interface Infrastructure {
   authority: Maybe<AuthorityInfo>;
 }
 
+// Best-effort origin discovery behind a CDN (legitimate OSINT on public DNS).
+export interface OriginCandidate {
+  ip: string;
+  country?: string;
+  asnOrg?: string;
+  source: string; // how it was found, e.g. "subdomain mail.x.com", "SPF", "MX"
+  isCdn: boolean;
+  isAdversary?: boolean;
+}
+
+export interface OriginTrace {
+  available: boolean;
+  cdn?: string; // CDN fronting the site, if any
+  edgeIp?: string; // the CDN edge IP the domain resolves to
+  edgeCountry?: string;
+  candidates: OriginCandidate[]; // non-CDN IPs that may be the true origin
+  likelyOrigin?: { ip: string; country?: string; asnOrg?: string };
+  methods: string[]; // techniques attempted
+  note: string;
+}
+
 // Where the various parts of the site live, by country.
 export interface GeoEndpoint {
   host: string; // hostname (server IP, MX host, NS host)
@@ -217,6 +238,7 @@ export interface Report {
   risk: RiskResult;
   network: OperatorNetwork;
   geography?: Geography;
+  originTrace?: OriginTrace;
   propagation?: PropagationResult;
   coordination?: CoordinationResult;
 }

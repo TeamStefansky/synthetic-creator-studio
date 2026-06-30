@@ -15,6 +15,7 @@ import { fetchPage } from "@/lib/page-fetch";
 import { fingerprint, extractArticle, extractSeo } from "@/lib/fingerprint";
 import { assessAuthority } from "@/lib/authority";
 import { buildGeography } from "@/lib/geo";
+import { traceOrigin } from "@/lib/origin-trace";
 import { matchReputation } from "@/lib/reputation";
 import { analyzeContent } from "@/lib/content-analysis";
 import { scoreReport } from "@/lib/scoring";
@@ -141,6 +142,11 @@ export async function POST(req: NextRequest) {
     ? await buildGeography(hosting, rdap?.registrantCountry, mxHosts(dns), dns.ns).catch(() => undefined)
     : undefined;
 
+  // Origin discovery: attempt to reveal the true server behind a CDN.
+  const originTrace = dns
+    ? await traceOrigin(domain, dns, hosting).catch(() => undefined)
+    : undefined;
+
   // Open-web propagation (optional) + coordination indicator.
   const propagation = await tracePropagation(article.quote, siblingDomains).catch(() => undefined);
   const coordination = assessCoordination({ network, propagation });
@@ -156,6 +162,7 @@ export async function POST(req: NextRequest) {
     risk,
     network,
     geography,
+    originTrace,
     propagation,
     coordination,
   };
