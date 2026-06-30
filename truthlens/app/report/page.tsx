@@ -17,6 +17,7 @@ import LoadingChecklist from "@/components/LoadingChecklist";
 import Disclaimer from "@/components/Disclaimer";
 import OsintPanel from "@/components/OsintPanel";
 import RatingReportCard from "@/components/RatingReportCard";
+import GeoOriginCard from "@/components/GeoOriginCard";
 
 function ReportInner() {
   const params = useSearchParams();
@@ -186,6 +187,9 @@ function ReportInner() {
           />
         </div>
       </section>
+
+      {/* Geographic origin (server + registrant countries) */}
+      <GeoOriginCard report={report} />
 
       {/* Network graph */}
       <section className="card">
