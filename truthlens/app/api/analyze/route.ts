@@ -14,6 +14,7 @@ import { reverseIp } from "@/lib/reverseip";
 import { fetchPage } from "@/lib/page-fetch";
 import { fingerprint, extractArticle, extractSeo } from "@/lib/fingerprint";
 import { assessAuthority } from "@/lib/authority";
+import { buildGeography } from "@/lib/geo";
 import { matchReputation } from "@/lib/reputation";
 import { analyzeContent } from "@/lib/content-analysis";
 import { scoreReport } from "@/lib/scoring";
@@ -135,6 +136,11 @@ export async function POST(req: NextRequest) {
   const risk = scoreReport({ domain, infrastructure, reputation, content, siblingDomains, pageHttpsOk });
   const network = buildNetwork({ domain, infrastructure, reverseIpNeighbors: reverseNeighbors });
 
+  // Geographic origin: server + registrant + mail (MX) + DNS (NS) countries.
+  const geography = dns
+    ? await buildGeography(hosting, rdap?.registrantCountry, mxHosts(dns), dns.ns).catch(() => undefined)
+    : undefined;
+
   // Open-web propagation (optional) + coordination indicator.
   const propagation = await tracePropagation(article.quote, siblingDomains).catch(() => undefined);
   const coordination = assessCoordination({ network, propagation });
@@ -149,6 +155,7 @@ export async function POST(req: NextRequest) {
     contentAnalysis: content,
     risk,
     network,
+    geography,
     propagation,
     coordination,
   };

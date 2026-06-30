@@ -110,6 +110,24 @@ export interface Infrastructure {
   authority: Maybe<AuthorityInfo>;
 }
 
+// Where the various parts of the site live, by country.
+export interface GeoEndpoint {
+  host: string; // hostname (server IP, MX host, NS host)
+  ip?: string;
+  country?: string; // ISO alpha-2
+  asnOrg?: string;
+  isAdversary?: boolean;
+}
+
+export interface Geography {
+  server?: GeoEndpoint & { city?: string; region?: string; cdn?: string; masked?: boolean };
+  registrantCountry?: string;
+  mail: GeoEndpoint[]; // MX servers
+  dns: GeoEndpoint[]; // NS servers
+  /** Distinct ISO codes involved, for the map. */
+  countries: string[];
+}
+
 // ---------------------------------------------------------------------------
 // Reputation & content
 // ---------------------------------------------------------------------------
@@ -195,6 +213,7 @@ export interface Report {
   contentAnalysis: ContentAnalysis;
   risk: RiskResult;
   network: OperatorNetwork;
+  geography?: Geography;
   propagation?: PropagationResult;
   coordination?: CoordinationResult;
 }
