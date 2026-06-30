@@ -31,6 +31,12 @@ async function query(domain: string, type: DnsType): Promise<string[]> {
   return data.Answer.map((a) => a.data.replace(/^"|"$/g, "").trim());
 }
 
+/** Resolve a single hostname to its first IPv4 (for MX/NS geo-location). */
+export async function resolveHostIp(host: string): Promise<string | undefined> {
+  const ips = await query(host, "A");
+  return ips.find((r) => /^\d+\.\d+\.\d+\.\d+$/.test(r));
+}
+
 export async function lookupDns(domain: string): Promise<DnsRecords> {
   const [a, mx, ns, txt] = await Promise.all([
     query(domain, "A"),
