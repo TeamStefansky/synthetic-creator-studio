@@ -1,0 +1,20 @@
+{
+  "_comment": "Seed list of well-documented hoax / disinformation / fabricated-news domains. These are illustrative, drawn from public fact-checker and academic write-ups of fake-news sites. Treat as a starting seed and curate for your own policy. A match (directly, or via shared IP / ad-id / SAN) is a strong risk signal.",
+  "domains": [
+    "infowars.com",
+    "naturalnews.com",
+    "beforeitsnews.com",
+    "yournewswire.com",
+    "newspunch.com",
+    "worldnewsdailyreport.com",
+    "nationalreport.net",
+    "empirenews.net",
+    "huzlers.com",
+    "react365.com",
+    "now8news.com",
+    "denverguardian.com",
+    "abcnews.com.co",
+    "70news.wordpress.com",
+    "thelastlineofdefense.org"
+  ]
+}

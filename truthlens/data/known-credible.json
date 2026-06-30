@@ -1,0 +1,30 @@
+{
+  "_comment": "Seed list of widely-recognized credible outlets. Expand for your own use. A match strongly lowers the risk score and raises confidence.",
+  "domains": [
+    "reuters.com",
+    "apnews.com",
+    "bbc.com",
+    "bbc.co.uk",
+    "nytimes.com",
+    "washingtonpost.com",
+    "theguardian.com",
+    "npr.org",
+    "wsj.com",
+    "economist.com",
+    "ft.com",
+    "bloomberg.com",
+    "cnn.com",
+    "nbcnews.com",
+    "abcnews.go.com",
+    "cbsnews.com",
+    "pbs.org",
+    "aljazeera.com",
+    "dw.com",
+    "politico.com",
+    "axios.com",
+    "propublica.org",
+    "nature.com",
+    "science.org",
+    "scientificamerican.com"
+  ]
+}
