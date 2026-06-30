@@ -76,6 +76,29 @@ export interface ArchiveInfo {
   snapshotCount: number;
 }
 
+// SEO health extracted from the page — a proxy for a professional publisher.
+export interface SeoInfo {
+  title?: string;
+  metaDescription?: string;
+  hasOpenGraph: boolean;
+  hasStructuredData: boolean; // JSON-LD
+  hasCanonical: boolean;
+  hasViewport: boolean;
+  hasFavicon: boolean;
+  headings: number;
+  seoScore: number; // 0-100 completeness
+}
+
+// Authority / longevity — legitimacy signals independent of the seed list.
+export interface AuthorityInfo {
+  domainAgeYears?: number;
+  waybackYears?: number; // years since first Wayback snapshot
+  snapshotCount: number;
+  openPageRank?: number; // 0-10 (Open PageRank), if OPENPAGERANK_KEY set
+  globalRank?: number; // domain rank position, if available
+  level: "low" | "medium" | "high" | "unknown";
+}
+
 export interface Infrastructure {
   domain: Maybe<DomainInfo>;
   hosting: Maybe<HostingInfo>;
@@ -83,6 +106,8 @@ export interface Infrastructure {
   ssl: Maybe<SslInfo>;
   tech: Maybe<TechInfo>;
   archive: Maybe<ArchiveInfo>;
+  seo: Maybe<SeoInfo>;
+  authority: Maybe<AuthorityInfo>;
 }
 
 // ---------------------------------------------------------------------------
@@ -295,4 +320,53 @@ export interface CoordinationResult {
   score: number; // 0-100 internal
   signals: { label: string; weight: number; detail: string }[];
   note: string;
+}
+
+// --- Deep OSINT dossier (on-demand; Claude + web_search) ------------------
+
+export interface OsintEntity {
+  name: string;
+  role: string; // e.g. "owner", "editor", "parent company", "registrant"
+  evidence: string;
+}
+
+export interface OsintCitation {
+  title: string;
+  url: string;
+}
+
+export interface OsintDossier {
+  available: boolean;
+  summary: string; // 2-4 sentence narrative
+  entities: OsintEntity[]; // people / orgs behind the site
+  affiliations: string[]; // networks, political/commercial ties
+  socialProfiles: { platform: string; handle: string; url: string }[];
+  funding: string; // monetization / funding model, if known
+  reputation: string; // how it's regarded by fact-checkers / press
+  controversies: string[];
+  relatedSites: string[]; // sibling/related domains discovered via research
+  citations: OsintCitation[];
+  confidence: Confidence;
+  note: string;
+}
+
+// --- Detailed rating report (computed from evidence; no AI required) -------
+
+export interface RatingReportGroup {
+  category: string;
+  items: EvidenceItem[];
+  subtotal: number; // net impact of this group
+}
+
+export interface RatingReport {
+  domain: string;
+  score: number;
+  band: RiskBand;
+  confidence: Confidence;
+  baseline: number;
+  groups: RatingReportGroup[];
+  increasingTotal: number;
+  decreasingTotal: number;
+  bandExplanation: string;
+  confidenceExplanation: string;
 }

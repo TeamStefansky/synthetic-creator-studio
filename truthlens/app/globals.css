@@ -43,3 +43,24 @@ body {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
+
+/* Clean print / PDF output: drop chrome, force light, avoid splitting cards. */
+@media print {
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .card,
+  .card-elev {
+    border: 1px solid #ddd !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}

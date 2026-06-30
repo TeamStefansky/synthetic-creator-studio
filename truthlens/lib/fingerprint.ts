@@ -3,7 +3,7 @@
 // and the presence of transparency pages (about/contact/author/corrections).
 
 import * as cheerio from "cheerio";
-import type { TechInfo } from "./types";
+import type { TechInfo, SeoInfo } from "./types";
 
 const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
 const GA_RE = /\b(G-[A-Z0-9]{6,}|UA-\d{4,}-\d{1,4})\b/g;
@@ -98,12 +98,24 @@ export function fingerprint(
     if (!/\.(png|jpg|jpeg|gif|svg|webp|css|js)$/i.test(e)) emails.add(e.toLowerCase());
   }
 
-  const hasAbout = hasLink($, /about|about-us|who-we-are/);
-  const hasContact = hasLink($, /contact|contact-us|reach-us/);
+  // Multilingual detection — English + Hebrew + common European terms — so
+  // legitimate non-English outlets aren't penalized for "missing" pages.
+  const hasAbout = hasLink(
+    $,
+    /about|about-us|who-we-are|אודות|מי אנחנו|אודותינו|über uns|à propos|sobre nosotros|chi siamo|over ons/i,
+  );
+  const hasContact = hasLink(
+    $,
+    /contact|contact-us|reach-us|צור קשר|יצירת קשר|צרו קשר|kontakt|contacto|contatti|nous contacter/i,
+  );
   const hasAuthor =
-    hasLink($, /\/author\/|byline/) ||
-    $("[rel='author'], .author, .byline, [itemprop='author']").length > 0;
-  const hasCorrections = hasLink($, /correction|corrections|ethics|editorial-policy/);
+    hasLink($, /\/author\/|\/writers?\/|byline|מאת|הכותב|כתבים|מערכת|הכתב/i) ||
+    $("[rel='author'], .author, .byline, [itemprop='author'], [class*='author'], [class*='byline']").length > 0 ||
+    $("meta[name='author'], meta[property='article:author']").length > 0;
+  const hasCorrections = hasLink(
+    $,
+    /correction|corrections|ethics|editorial-policy|תיקון|תיקונים|מדיניות|אתיקה|תקנון/i,
+  );
 
   return {
     cms: detectCms(html, headers),
@@ -117,6 +129,45 @@ export function fingerprint(
     hasContact,
     hasAuthor,
     hasCorrections,
+  };
+}
+
+/** SEO health — established publishers tend to ship complete SEO metadata. */
+export function extractSeo(html: string): SeoInfo {
+  const $ = cheerio.load(html || "");
+  const title = $("title").first().text().trim() || undefined;
+  const metaDescription = $("meta[name='description']").attr("content")?.trim() || undefined;
+  const hasOpenGraph = $("meta[property^='og:']").length > 0;
+  const hasStructuredData =
+    $("script[type='application/ld+json']").length > 0 ||
+    $("[itemscope]").length > 0;
+  const hasCanonical = $("link[rel='canonical']").length > 0;
+  const hasViewport = $("meta[name='viewport']").length > 0;
+  const hasFavicon = $("link[rel~='icon'], link[rel='shortcut icon']").length > 0;
+  const headings = $("h1, h2, h3").length;
+
+  // Completeness score (0-100): weighted presence of standard SEO signals.
+  let score = 0;
+  if (title) score += 18;
+  if (metaDescription) score += 18;
+  if (hasOpenGraph) score += 18;
+  if (hasStructuredData) score += 20;
+  if (hasCanonical) score += 12;
+  if (hasViewport) score += 7;
+  if (hasFavicon) score += 7;
+  if (headings >= 3) score += 0; // headings inform but don't inflate the score
+  score = Math.min(100, score);
+
+  return {
+    title,
+    metaDescription,
+    hasOpenGraph,
+    hasStructuredData,
+    hasCanonical,
+    hasViewport,
+    hasFavicon,
+    headings,
+    seoScore: score,
   };
 }
 
