@@ -1,8 +1,5 @@
-"""KreaPersonaTrainer — upload → start → poll, with a mocked transport."""
+"""KreaPersonaTrainer — POST /styles/train + resolve via /jobs (mocked transport)."""
 from __future__ import annotations
-
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -21,70 +18,65 @@ class _Resp:
 
 
 class _Client:
-    def __init__(self, posts, gets=None):
-        self.posts, self.gets, self.calls = list(posts), list(gets or []), []
+    def __init__(self, posts=None, gets=None):
+        self.posts, self.gets, self.calls = list(posts or []), list(gets or []), []
 
-    def post(self, url, json=None, files=None, headers=None, **k):
-        self.calls.append({"m": "POST", "url": url, "json": json, "files": bool(files)})
+    def post(self, url, json=None, headers=None, **k):
+        self.calls.append({"m": "POST", "url": url, "json": json, "headers": headers})
         return self.posts.pop(0)
 
     def get(self, url, headers=None, **k):
-        self.calls.append({"m": "GET", "url": url})
+        self.calls.append({"m": "GET", "url": url, "headers": headers})
         return self.gets.pop(0)
-
-
-def _images(n=3):
-    d = Path(tempfile.mkdtemp(prefix="scs_kt_"))
-    paths = []
-    for i in range(n):
-        p = d / f"i{i}.png"
-        p.write_bytes(b"\x89PNG\r\n\x1a\n" + bytes([i]))
-        paths.append(str(p))
-    return paths
 
 
 def _trainer(client):
     return KreaPersonaTrainer(api_key="krea_id:secret", client=client)
 
 
-def test_train_uploads_then_returns_model_id_inline():
-    client = _Client(posts=[
-        _Resp({"id": "asset_1"}), _Resp({"id": "asset_2"}), _Resp({"id": "asset_3"}),
-        _Resp({"model_id": "model_xyz", "status": "completed"}),
-    ])
-    result = _trainer(client).train(persona_id="p1", image_paths=_images(3), base_model="flux-1.1", meta={})
-    assert result.model_ref == "model_xyz"
-    # 3 uploads to /v1/assets then a start to /v1/trainings.
-    assert sum(1 for c in client.calls if c["url"].endswith("/v1/assets")) == 3
-    assert any(c["url"].endswith("/v1/trainings") for c in client.calls)
-
-
-def test_train_polls_until_ready(monkeypatch):
-    import app.generation.krea_trainer as mod
-
-    monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
-    client = _Client(
-        posts=[_Resp({"id": "a1"}), _Resp({"id": "a2"}), _Resp({"id": "a3"}),
-               _Resp({"id": "train_1", "status": "queued"})],
-        gets=[_Resp({"status": "running"}), _Resp({"status": "completed", "model_id": "m_final"})],
+def test_train_posts_styles_train_with_urls_and_returns_pending():
+    client = _Client(posts=[_Resp({"job_id": "job_1", "status": "queued"})])
+    urls = ["https://b/1.png", "https://b/2.png", "https://b/3.png"]
+    result = _trainer(client).train(
+        persona_id="p1", image_paths=urls, base_model="flux_dev",
+        meta={"name": "Nova", "optimize_for": "character"},
     )
-    result = _trainer(client).train(persona_id="p", image_paths=_images(3), base_model="flux", meta={})
-    assert result.model_ref == "m_final"
+    assert result.pending is True and result.job_id == "job_1"
+    post = client.calls[0]
+    assert post["url"].endswith("/styles/train")
+    assert post["headers"]["Authorization"] == "Bearer krea_id:secret"
+    body = post["json"]
+    assert body["name"] == "Nova"
+    assert body["type"] == "Character"          # optimize_for mapped to KREA type
+    assert body["urls"] == urls                  # images passed as URLs (no upload step)
+    assert body["model"] == "flux_dev"
 
 
-def test_train_failure_fails_closed(monkeypatch):
-    import app.generation.krea_trainer as mod
+def test_resolve_completed_returns_style_id():
+    client = _Client(gets=[_Resp({"status": "completed", "result": {"style_id": "style_42"}})])
+    status, style_id = _trainer(client).resolve("job_1")
+    assert status == "ready" and style_id == "style_42"
+    assert client.calls[0]["url"].endswith("/jobs/job_1")
 
-    monkeypatch.setattr(mod.time, "sleep", lambda *_: None)
-    client = _Client(
-        posts=[_Resp({"id": "a1"}), _Resp({"id": "a2"}), _Resp({"id": "a3"}),
-               _Resp({"id": "t1", "status": "queued"})],
-        gets=[_Resp({"status": "failed", "error": "bad dataset"})],
-    )
+
+def test_resolve_still_running():
+    client = _Client(gets=[_Resp({"status": "processing", "result": None})])
+    status, style_id = _trainer(client).resolve("j")
+    assert status == "training" and style_id is None
+
+
+def test_resolve_failed():
+    client = _Client(gets=[_Resp({"status": "failed", "result": None, "error": {"code": "x"}})])
+    status, style_id = _trainer(client).resolve("j")
+    assert status == "failed" and style_id is None
+
+
+def test_train_http_error_fails_closed():
+    client = _Client(posts=[_Resp({"error": "bad"}, status=400)])
     with pytest.raises(StudioError):
-        _trainer(client).train(persona_id="p", image_paths=_images(3), base_model="flux", meta={})
+        _trainer(client).train(persona_id="p", image_paths=["https://b/1.png"], base_model="flux_dev", meta={})
 
 
 def test_train_requires_key():
     with pytest.raises(StudioError):
-        KreaPersonaTrainer(api_key=None, client=_Client(posts=[]))
+        KreaPersonaTrainer(api_key=None, client=_Client())

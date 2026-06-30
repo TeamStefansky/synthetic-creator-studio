@@ -37,4 +37,9 @@ def get(lora_id: uuid.UUID, session: Session = Depends(get_session)):
     model = session.get(LoraModel, lora_id)
     if model is None:
         raise HTTPException(status_code=404, detail="lora model not found")
+    # If a KREA training job is in progress, poll it once and update the status.
+    if model.status == "training":
+        from app.generation.training_service import PersonaTrainingService
+
+        PersonaTrainingService(session).refresh(model)
     return model

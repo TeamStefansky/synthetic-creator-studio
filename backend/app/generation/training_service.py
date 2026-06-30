@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.constraints import Constraint, ConstraintViolation, ImpersonationError, StudioError
 from app.generation.lora import LoraRegistry
 from app.generation.trainer import PersonaTrainer, get_trainer
@@ -97,8 +98,18 @@ class PersonaTrainingService:
         )
         if len(images) < MIN_IMAGES:
             raise StudioError(f"need at least {MIN_IMAGES} reference images to train (have {len(images)})")
-        image_paths = [i.storage_uri for i in images]
-        self._screen_dataset(image_paths)
+        self._screen_dataset([i.storage_uri for i in images])
+
+        # KREA fetches reference images by URL → expose them via this backend's
+        # public base URL. On Render, RENDER_EXTERNAL_URL is set automatically.
+        # Stub training just needs any stable refs (use paths).
+        import os
+
+        public = (get_settings().public_base_url or os.environ.get("RENDER_EXTERNAL_URL") or "").rstrip("/")
+        if public:
+            image_refs = [f"{public}/training-images/{i.id}/file" for i in images]
+        else:
+            image_refs = [i.storage_uri for i in images]
 
         job = LoraRegistry(self.session).register(
             persona_id=persona_id,
@@ -112,22 +123,27 @@ class PersonaTrainingService:
             status="queued",
         )
         if run_inline:
-            self._run(job, image_paths, base_model)
+            self._run(job, image_refs, base_model)
         return job
 
-    def _run(self, job: LoraModel, image_paths: list[str], base_model: str) -> LoraModel:
+    def _run(self, job: LoraModel, image_refs: list[str], base_model: str) -> LoraModel:
         job.status = "training"
         self.session.flush()
         try:
             result = self.trainer.train(
                 persona_id=str(job.persona_id),
-                image_paths=image_paths,
+                image_paths=image_refs,
                 base_model=base_model,
                 meta=dict(job.training_meta or {}),
             )
-            job.weights_uri = result.model_ref
-            job.training_meta = {**(job.training_meta or {}), **result.meta, "model_ref": result.model_ref}
-            job.status = "ready"
+            job.training_meta = {**(job.training_meta or {}), **result.meta}
+            if result.pending:
+                # Async (KREA): stays "training"; resolved later via refresh().
+                job.status = "training"
+            else:
+                job.weights_uri = result.model_ref
+                job.training_meta = {**job.training_meta, "model_ref": result.model_ref}
+                job.status = "ready"
             self.session.flush()
             return job
         except Exception as exc:
@@ -135,6 +151,28 @@ class PersonaTrainingService:
             job.training_meta = {**(job.training_meta or {}), "error": str(exc)}
             self.session.flush()
             raise
+
+    def refresh(self, job: LoraModel) -> LoraModel:
+        """Poll an in-progress KREA training job once and update its status."""
+        if job.status != "training":
+            return job
+        job_id = (job.training_meta or {}).get("krea_job_id")
+        resolve = getattr(self.trainer, "resolve", None)
+        if not (job_id and callable(resolve)):
+            return job
+        try:
+            status, style_id = resolve(job_id)
+        except Exception:
+            return job
+        if status == "ready" and style_id:
+            job.weights_uri = style_id
+            job.training_meta = {**(job.training_meta or {}), "model_ref": style_id}
+            job.status = "ready"
+            self.session.flush()
+        elif status == "failed":
+            job.status = "failed"
+            self.session.flush()
+        return job
 
 
 def latest_ready_model(session: Session, persona_id) -> LoraModel | None:

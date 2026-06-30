@@ -11,6 +11,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -66,6 +67,16 @@ async def upload_training_images(
         created.append(img)
     session.flush()
     return created
+
+
+@router.get("/training-images/{image_id}/file")
+def training_image_file(image_id: uuid.UUID, session: Session = Depends(get_session)):
+    """Public bytes of a reference image — so KREA's servers can fetch it by URL
+    during training. The id is an unguessable UUID."""
+    img = session.get(TrainingImage, image_id)
+    if img is None or not Path(img.storage_uri).exists():
+        raise HTTPException(status_code=404, detail="training image not found")
+    return FileResponse(img.storage_uri, media_type=img.content_type)
 
 
 @router.get("/personas/{persona_id}/training-images", response_model=list[TrainingImageOut])

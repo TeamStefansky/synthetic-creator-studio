@@ -57,10 +57,15 @@ class Settings(BaseSettings):
     krea_lora_weight: float = 1.0
     # KREA uses Bearer auth (Authorization: Bearer <token>).
     krea_auth_scheme: str = "bearer"  # bearer | basic | x-api-key
-    # KREA Train knobs (mirror the web flow): style|character|object|face, image|video.
-    krea_optimize_for: str = "style"
+    # KREA Train: base model for LoRA training + the "type" of subject.
+    krea_train_model: str = "flux_dev"  # flux_dev|flux_schnell|wan|wan22|qwen|z-image
+    krea_optimize_for: str = "style"     # style|character|object|default
     krea_modality: str = "image"
     krea_timeout_s: float = 120.0
+
+    # Public base URL of THIS backend, so KREA can fetch training images by URL
+    # (e.g. https://scs-backend-xxxx.onrender.com). Required for KREA training.
+    public_base_url: str = ""
 
     # When true, seed a small demo dataset on startup if the DB is empty (hosted demos).
     seed_demo: bool = False

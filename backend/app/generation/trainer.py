@@ -23,6 +23,11 @@ class TrainResult:
     model_ref: str          # id/URI generation will reference (lora_model.weights_uri)
     base_model: str
     meta: dict = field(default_factory=dict)
+    # Async trainers (KREA) return pending=True with a job_id; the model_ref is
+    # resolved later via the trainer's resolve(job_id). Sync trainers (stub)
+    # return pending=False with model_ref already set.
+    pending: bool = False
+    job_id: str | None = None
 
 
 class PersonaTrainer(ABC):
