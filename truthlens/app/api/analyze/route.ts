@@ -153,6 +153,13 @@ export async function POST(req: NextRequest) {
     coordination,
   };
 
-  await cacheSet(`report:${domain}`, report);
+  // Cache the report for 24h — but NOT when content analysis failed despite a
+  // configured key (e.g. out of credits / rate-limited). That keeps a transient
+  // failure from being pinned for 24h, so a retry works once it's resolved.
+  const contentTransientlyFailed =
+    !!process.env.ANTHROPIC_API_KEY && !content.available;
+  if (!contentTransientlyFailed) {
+    await cacheSet(`report:${domain}`, report);
+  }
   return NextResponse.json(report);
 }
