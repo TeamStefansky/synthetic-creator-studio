@@ -1,0 +1,4 @@
+{
+  "_comment": "OPERATOR POLICY FILE — intentionally NOT pre-populated with political judgments. Add the ISO 3166-1 alpha-2 country codes YOU consider higher-risk origins for YOUR threat model. The tool only matches against whatever you put here; it ships neutral and auditable. Example: [\"KP\", \"RU\"]. Leave empty to disable adversary-origin flagging.",
+  "codes": []
+}

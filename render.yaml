@@ -43,3 +43,19 @@ services:
           type: web
           name: scs-backend
           property: host
+
+  # TruthLens — standalone Next.js app (independent of the studio services).
+  # Runs out of the box on free public APIs; set ANTHROPIC_API_KEY to enable
+  # the content-analysis + open-web propagation layers.
+  - type: web
+    name: truthlens
+    runtime: docker
+    rootDir: truthlens
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_FACTCHECK_KEY
+        sync: false
+      - key: IPINFO_TOKEN
+        sync: false

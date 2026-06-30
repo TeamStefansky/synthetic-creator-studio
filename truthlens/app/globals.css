@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0b0f17;
+  color: #e5e7eb;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reusable card surface */
+.card {
+  @apply rounded-2xl border border-white/10 bg-bg-card p-5 shadow-lg shadow-black/20;
+}
+
+.card-elev {
+  @apply rounded-xl border border-white/10 bg-bg-elev p-4;
+}
+
+.label-muted {
+  @apply text-xs uppercase tracking-wide text-gray-400;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 font-medium text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-2 font-medium text-gray-200 transition hover:bg-white/5;
+}
+
+/* thin scrollbars for tables */
+.scroll-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
