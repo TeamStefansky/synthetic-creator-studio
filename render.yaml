@@ -15,10 +15,9 @@ services:
         value: "1"
       - key: SCS_PROVENANCE_SIGNING_KEY
         generateValue: true
-      - key: SCS_STORAGE_DIR
-        value: /var/data/storage
-      - key: SCS_DATABASE_URL
-        value: sqlite:////var/data/storage/scs.db
+      # Storage uses the container's ephemeral disk (free tier). It re-seeds on
+      # each boot, so trying it costs nothing. For persistence across restarts,
+      # add a Render disk (paid) mounted at /var/data and point SCS_STORAGE_DIR there.
       # --- KREA (real generation) ---
       # Use KREA when a key is present; without it, the app falls back to the
       # built-in stub so it still runs. Enter the key in the Render dashboard
@@ -31,10 +30,6 @@ services:
         value: basic
       - key: SCS_KREA_MODEL
         value: flux_dev
-    disk:
-      name: scs-storage
-      mountPath: /var/data/storage
-      sizeGB: 1
 
   - type: web
     name: scs-frontend
