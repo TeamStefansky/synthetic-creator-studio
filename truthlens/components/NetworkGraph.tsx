@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ExternalLink, Search } from "lucide-react";
 import type { OperatorNetwork } from "@/lib/types";
 
 // react-force-graph-2d is browser-only; load it client-side without SSR.
@@ -16,18 +17,34 @@ const KIND_COLOR: Record<string, string> = {
   adsense: "#10b981",
 };
 
-// Open a domain node in a new tab (target + sibling domains are real hosts).
-function openNode(node: { kind?: string; label?: string }) {
-  if ((node.kind === "domain" || node.kind === "target") && node.label) {
-    window.open(`https://${node.label}`, "_blank", "noopener,noreferrer");
-  }
+const reportHref = (domain: string) => `/report?url=${encodeURIComponent(domain)}`;
+
+// External OSINT pivot for non-domain nodes (IP lookup, or "who else uses this ID").
+function externalNodeUrl(node: { kind?: string; label?: string }): string | null {
+  if (!node.label) return null;
+  if (node.kind === "ip") return `https://ipinfo.io/${node.label}`;
+  if (node.kind === "ga" || node.kind === "adsense")
+    return `https://www.google.com/search?q=${encodeURIComponent(`"${node.label}"`)}`;
+  return null;
 }
 
 export default function NetworkGraph({ network }: { network: OperatorNetwork }) {
+  const router = useRouter();
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(600);
   const [isMobile, setIsMobile] = useState(false);
   const [hovering, setHovering] = useState(false);
+
+  // Domain/target -> run a fresh TruthLens report; IP/ID -> external OSINT pivot.
+  const clickNode = (node: { kind?: string; label?: string }) => {
+    if (!node.label) return;
+    if (node.kind === "domain" || node.kind === "target") {
+      router.push(reportHref(node.label));
+      return;
+    }
+    const url = externalNodeUrl(node);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   useEffect(() => {
     const update = () => {
@@ -81,8 +98,8 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         linkColor={() => "rgba(255,255,255,0.18)"}
         linkWidth={1}
         cooldownTicks={isMobile ? 60 : 120}
-        onNodeClick={(n: any) => openNode(n)}
-        onNodeHover={(n: any) => setHovering(!!n && (n.kind === "domain" || n.kind === "target"))}
+        onNodeClick={(n: any) => clickNode(n)}
+        onNodeHover={(n: any) => setHovering(!!n)}
         nodeColor={(n: any) => (n.flaggedFake ? "#ef4444" : KIND_COLOR[n.kind] || "#94a3b8")}
         nodeCanvasObjectMode={() => "after"}
         nodeCanvasObject={(node: any, ctx: any, scale: number) => {
@@ -107,23 +124,37 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
 
       {/* Clickable domain links (tap-friendly; nodes are also clickable). */}
       <div className="border-t border-white/10 px-3 py-2.5">
-        <div className="label-muted mb-1.5">Linked domains — click to open</div>
+        <div className="label-muted mb-1.5">
+          Linked domains — analyze in TruthLens, or open the site
+        </div>
         <div className="flex flex-wrap gap-1.5">
           {domainLinks.map((d) => (
-            <a
+            <span
               key={d.label}
-              href={`https://${d.label}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition hover:bg-white/[0.06] ${
-                d.flaggedFake
-                  ? "border-risk-high/40 text-risk-high"
-                  : "border-white/10 text-gray-300 hover:border-white/25"
+              className={`inline-flex items-center overflow-hidden rounded-lg border text-xs ${
+                d.flaggedFake ? "border-risk-high/40" : "border-white/10"
               }`}
             >
-              {d.label}
-              <ExternalLink className="h-3 w-3 opacity-60" />
-            </a>
+              <button
+                onClick={() => router.push(reportHref(d.label))}
+                title="Analyze in TruthLens"
+                className={`inline-flex items-center gap-1 px-2 py-1 transition hover:bg-white/[0.06] ${
+                  d.flaggedFake ? "text-risk-high" : "text-gray-200"
+                }`}
+              >
+                <Search className="h-3 w-3 opacity-70" />
+                {d.label}
+              </button>
+              <a
+                href={`https://${d.label}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open the site in a new tab"
+                className="border-l border-white/10 px-1.5 py-1 text-gray-400 transition hover:bg-white/[0.06] hover:text-gray-200"
+              >
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </span>
           ))}
         </div>
       </div>
