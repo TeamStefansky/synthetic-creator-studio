@@ -136,7 +136,7 @@ class TrainRequest(BaseModel):
     subject_note: str | None = None
     # KREA Train knobs (mirror the web flow).
     name: str | None = None
-    base_model: str = "flux"
+    base_model: str = "flux_dev"  # valid KREA training model
     optimize_for: str = "style"  # style | character | object
     run_inline: bool = True
 

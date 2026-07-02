@@ -22,6 +22,8 @@ from app.generation.trainer import PersonaTrainer, TrainResult
 
 # Our optimize_for → KREA training "type".
 _TYPE_MAP = {"style": "Style", "object": "Object", "character": "Character", "default": "Default"}
+# Valid KREA training base models (per the API).
+_VALID_MODELS = {"flux_dev", "flux_schnell", "wan", "wan22", "qwen", "z-image"}
 
 
 class KreaPersonaTrainer(PersonaTrainer):
@@ -59,9 +61,13 @@ class KreaPersonaTrainer(PersonaTrainer):
     def train(self, *, persona_id, image_paths, base_model, meta) -> TrainResult:
         if not image_paths:
             raise StudioError("no reference images to train on")
+        # Pick a valid KREA training model; fall back to the configured default.
+        model = meta.get("train_model") or base_model or self.train_model
+        if model not in _VALID_MODELS:
+            model = self.train_model if self.train_model in _VALID_MODELS else "flux_dev"
         payload = {
             "name": meta.get("name") or f"persona-{persona_id}",
-            "model": meta.get("train_model") or base_model or self.train_model,
+            "model": model,
             "type": _TYPE_MAP.get(str(meta.get("optimize_for", "style")).lower(), "Style"),
             "urls": list(image_paths),
         }

@@ -52,6 +52,13 @@ def test_train_posts_styles_train_with_urls_and_returns_pending():
     assert body["model"] == "flux_dev"
 
 
+def test_invalid_base_model_falls_back_to_valid():
+    client = _Client(posts=[_Resp({"job_id": "j", "status": "queued"})])
+    _trainer(client).train(persona_id="p", image_paths=["https://b/1.png"],
+                           base_model="flux", meta={"name": "x"})  # "flux" is not valid
+    assert client.calls[0]["json"]["model"] == "flux_dev"
+
+
 def test_resolve_completed_returns_style_id():
     client = _Client(gets=[_Resp({"status": "completed", "result": {"style_id": "style_42"}})])
     status, style_id = _trainer(client).resolve("job_1")
