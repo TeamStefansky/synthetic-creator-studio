@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, RefreshCw, Play, AlertTriangle, ExternalLink, Bell, BellOff } from "lucide-react";
+import { Activity, RefreshCw, Play, AlertTriangle, ExternalLink, Bell, BellOff, Download } from "lucide-react";
 import { bandLabel, bandColor, fmtDate } from "@/lib/ui";
 import type { RiskBand } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
@@ -74,7 +74,10 @@ export default function MonitorPage() {
           <Activity className="h-6 w-6 text-indigo-400" />
           <h1 className="text-2xl font-bold">Monitoring Dashboard</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 no-print">
+          <button className="btn-ghost text-sm" onClick={() => window.print()}>
+            <Download className="h-4 w-4" /> PDF
+          </button>
           <button className="btn-ghost text-sm" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
           </button>

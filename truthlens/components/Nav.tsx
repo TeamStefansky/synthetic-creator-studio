@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Eye, FileSearch, Mail, ScrollText, Activity } from "lucide-react";
+import { Eye, FileSearch, Mail, ScrollText, Activity, Info } from "lucide-react";
 
 const links = [
   { href: "/", label: "Site Report", icon: FileSearch, match: (p: string) => p === "/" || p.startsWith("/report") },
   { href: "/tools/logs", label: "Log Analyzer", icon: ScrollText, match: (p: string) => p.startsWith("/tools/logs") },
   { href: "/tools/email", label: "Email Tracer", icon: Mail, match: (p: string) => p.startsWith("/tools/email") },
   { href: "/monitor", label: "Monitor", icon: Activity, match: (p: string) => p.startsWith("/monitor") },
+  { href: "/about", label: "About", icon: Info, match: (p: string) => p.startsWith("/about") },
 ];
 
 export default function Nav() {
