@@ -2,19 +2,37 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, RefreshCw, Play, AlertTriangle, ExternalLink, Bell, BellOff, Download } from "lucide-react";
+import { Activity, RefreshCw, Plus, Download, X, ExternalLink, Loader2, Search } from "lucide-react";
 import { bandLabel, bandColor, fmtDate } from "@/lib/ui";
 import type { RiskBand } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 
-interface HistPoint { ts: string; band?: string; score?: number; coordination?: string; changes?: string[]; }
-interface Item { domain: string; latest: { band?: string; score?: number; ts?: string } | null; history: HistPoint[]; }
-interface Feed { historyEnabled: boolean; configured: boolean; webhook: boolean; items: Item[]; }
+interface HistPoint { ts: string; band?: string; score?: number; }
+interface Watch { domain: string; band?: RiskBand; score?: number; ts?: string; loading?: boolean; error?: string; history: HistPoint[]; }
+
+const LIST_KEY = "tl:watchlist";
+const histKey = (d: string) => `tl:hist:${d}`;
+
+function normalizeDomain(input: string): string | null {
+  let v = (input || "").trim().toLowerCase();
+  if (!v) return null;
+  v = v.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").replace(/\s/g, "");
+  return v.includes(".") ? v : null;
+}
+
+function loadList(): string[] {
+  try { return JSON.parse(localStorage.getItem(LIST_KEY) || "[]"); } catch { return []; }
+}
+function saveList(list: string[]) { localStorage.setItem(LIST_KEY, JSON.stringify(list)); }
+function loadHist(d: string): HistPoint[] {
+  try { return JSON.parse(localStorage.getItem(histKey(d)) || "[]"); } catch { return []; }
+}
+function saveHist(d: string, h: HistPoint[]) { localStorage.setItem(histKey(d), JSON.stringify(h.slice(-60))); }
 
 function Sparkline({ points }: { points: HistPoint[] }) {
   const scores = points.map((p) => p.score ?? 0);
-  if (scores.length < 2) return <div className="h-8 text-xs text-gray-600">not enough history</div>;
-  const W = 160, H = 32, max = 100;
+  if (scores.length < 2) return <div className="h-8 text-xs text-gray-600">no history yet</div>;
+  const W = 180, H = 32, max = 100;
   const step = W / (scores.length - 1);
   const path = scores.map((s, i) => `${i === 0 ? "M" : "L"} ${(i * step).toFixed(1)} ${(H - (s / max) * H).toFixed(1)}`).join(" ");
   const last = scores[scores.length - 1];
@@ -28,44 +46,64 @@ function Sparkline({ points }: { points: HistPoint[] }) {
 }
 
 export default function MonitorPage() {
-  const [feed, setFeed] = useState<Feed | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [items, setItems] = useState<Watch[]>([]);
+  const [input, setInput] = useState("");
+  const [err, setErr] = useState("");
+  const [checkingAll, setCheckingAll] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // Load persisted list on mount.
+  useEffect(() => {
+    const list = loadList();
+    setItems(list.map((d) => ({ domain: d, history: loadHist(d) })));
+  }, []);
+
+  const persist = useCallback((next: Watch[]) => {
+    setItems(next);
+    saveList(next.map((w) => w.domain));
+  }, []);
+
+  const check = useCallback(async (domain: string) => {
+    setItems((prev) => prev.map((w) => (w.domain === domain ? { ...w, loading: true, error: undefined } : w)));
     try {
-      const r = await fetch("/api/watchlist");
-      setFeed(await r.json());
-    } catch {
-      setMsg("Failed to load watchlist.");
-    } finally {
-      setLoading(false);
+      const r = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: `https://${domain}` }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Analysis failed");
+      const ts = new Date().toISOString();
+      const hist = loadHist(domain);
+      hist.push({ ts, band: data.risk?.band, score: data.risk?.score });
+      saveHist(domain, hist);
+      setItems((prev) => prev.map((w) => (w.domain === domain ? { ...w, band: data.risk?.band, score: data.risk?.score, ts, loading: false, history: loadHist(domain) } : w)));
+    } catch (e: any) {
+      setItems((prev) => prev.map((w) => (w.domain === domain ? { ...w, loading: false, error: e.message } : w)));
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
-
-  const runNow = async () => {
-    setRunning(true);
-    setMsg("");
-    try {
-      const r = await fetch("/api/monitor");
-      const d = await r.json();
-      if (!r.ok) setMsg(d.error === "Unauthorized" ? "Manual run is disabled because CRON_SECRET is set (runs happen via the daily cron)." : d.error || "Run failed.");
-      else { setMsg(`Checked ${d.checked} domain(s), ${d.alerts} change(s).`); await load(); }
-    } catch (e: any) {
-      setMsg(e.message);
-    } finally {
-      setRunning(false);
-    }
+  const add = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const d = normalizeDomain(input);
+    if (!d) { setErr("Enter a valid site, e.g. example.com"); return; }
+    if (items.some((w) => w.domain === d)) { setErr("Already in your watchlist."); return; }
+    setErr("");
+    setInput("");
+    const next = [...items, { domain: d, history: loadHist(d) }];
+    persist(next);
+    check(d);
   };
 
-  const allChanges = (feed?.items || [])
-    .flatMap((it) => it.history.filter((h) => h.changes?.length).map((h) => ({ domain: it.domain, ...h })))
-    .sort((a, b) => (b.ts || "").localeCompare(a.ts || ""))
-    .slice(0, 30);
+  const remove = (domain: string) => {
+    localStorage.removeItem(histKey(domain));
+    persist(items.filter((w) => w.domain !== domain));
+  };
+
+  const checkAll = async () => {
+    setCheckingAll(true);
+    for (const w of items) await check(w.domain);
+    setCheckingAll(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -75,65 +113,66 @@ export default function MonitorPage() {
           <h1 className="text-2xl font-bold">Monitoring Dashboard</h1>
         </div>
         <div className="flex items-center gap-2 no-print">
-          <button className="btn-ghost text-sm" onClick={() => window.print()}>
-            <Download className="h-4 w-4" /> PDF
-          </button>
-          <button className="btn-ghost text-sm" onClick={load} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
-          </button>
-          <button className="btn text-sm" onClick={runNow} disabled={running}>
-            <Play className="h-4 w-4" /> {running ? "Running…" : "Run check now"}
+          <button className="btn-ghost text-sm" onClick={() => window.print()}><Download className="h-4 w-4" /> PDF</button>
+          <button className="btn text-sm" onClick={checkAll} disabled={checkingAll || items.length === 0}>
+            <RefreshCw className={`h-4 w-4 ${checkingAll ? "animate-spin" : ""}`} /> {checkingAll ? "Checking…" : "Check all"}
           </button>
         </div>
       </div>
 
-      {feed && (
-        <div className="flex flex-wrap gap-2 text-xs">
-          <Badge on={feed.configured} onText="Watchlist configured" offText="No MONITOR_DOMAINS set" />
-          <Badge on={feed.historyEnabled} onText="History store connected" offText="No KV store — current-state only" />
-          <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 ${feed.webhook ? "border-risk-legit/30 text-risk-legit" : "border-white/10 text-gray-400"}`}>
-            {feed.webhook ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
-            {feed.webhook ? "Alerts webhook set" : "No alert webhook"}
-          </span>
+      {/* Add bar */}
+      <form onSubmit={add} className="no-print">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <input
+              value={input}
+              onChange={(e) => { setInput(e.target.value); setErr(""); }}
+              placeholder="Add a site to monitor — e.g. example.com"
+              className="w-full rounded-xl border border-white/15 bg-bg-card py-3 pl-9 pr-4 text-base outline-none transition focus:border-indigo-400"
+            />
+          </div>
+          <button type="submit" className="btn shrink-0"><Plus className="h-4 w-4" /> Add</button>
         </div>
-      )}
+        {err && <p className="mt-2 text-sm text-risk-high">{err}</p>}
+        <p className="mt-2 text-xs text-gray-500">Your watchlist is saved in this browser. Each check records a point for the trend line.</p>
+      </form>
 
-      {msg && <p className="text-sm text-gray-300">{msg}</p>}
-
-      {!loading && feed && !feed.configured && (
-        <div className="card">
-          <div className="mb-2 flex items-center gap-2 font-semibold"><AlertTriangle className="h-5 w-5 text-risk-unknown" /> Not configured yet</div>
-          <p className="text-sm text-gray-400">
-            Set <code className="text-indigo-300">MONITOR_DOMAINS</code> (comma-separated) in your host&rsquo;s env vars, add a
-            KV store for history and an <code className="text-indigo-300">ALERT_WEBHOOK_URL</code>, then redeploy. The daily cron
-            (<code className="text-indigo-300">/api/monitor</code>) will populate this dashboard.
-          </p>
+      {items.length === 0 ? (
+        <div className="card text-center text-sm text-gray-400">
+          No sites yet — add one above to start monitoring. For automated background alerts to a webhook,
+          see <Link href="/about" className="text-indigo-400">About</Link>.
         </div>
-      )}
-
-      {/* Watchlist grid */}
-      {feed && feed.items.length > 0 && (
+      ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {feed.items.map((it) => {
-            const band = (it.latest?.band as RiskBand) || "UNKNOWN";
+          {items.map((w) => {
+            const band = (w.band as RiskBand) || "UNKNOWN";
             const c = bandColor(band);
             return (
-              <div key={it.domain} className="card">
+              <div key={w.domain} className="card">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <div className="truncate font-semibold">{it.domain}</div>
-                  <Link href={`/report?url=${encodeURIComponent(it.domain)}`} className="text-indigo-400" title="Open report"><ExternalLink className="h-4 w-4" /></Link>
+                  <div className="truncate font-semibold">{w.domain}</div>
+                  <div className="flex items-center gap-1 no-print">
+                    <Link href={`/report?url=${encodeURIComponent(w.domain)}`} className="rounded p-1 text-indigo-400 hover:bg-white/5" title="Full report"><ExternalLink className="h-4 w-4" /></Link>
+                    <button onClick={() => check(w.domain)} className="rounded p-1 text-gray-400 hover:bg-white/5 hover:text-white" title="Re-check"><RefreshCw className={`h-4 w-4 ${w.loading ? "animate-spin" : ""}`} /></button>
+                    <button onClick={() => remove(w.domain)} className="rounded p-1 text-gray-400 hover:bg-white/5 hover:text-risk-high" title="Remove"><X className="h-4 w-4" /></button>
+                  </div>
                 </div>
-                {it.latest ? (
+                {w.loading && !w.band ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin text-indigo-400" /> Checking…</div>
+                ) : w.error ? (
+                  <p className="text-sm text-risk-high">{w.error}</p>
+                ) : w.band ? (
                   <>
                     <div className={`mb-2 inline-flex items-center gap-2 rounded-lg border ${c.border} ${c.bg} px-2 py-1 text-sm`}>
                       <span className={`font-semibold ${c.text}`}>{bandLabel(band)}</span>
-                      <span className="text-gray-400">{it.latest.score}/100</span>
+                      <span className="text-gray-400">{w.score}/100</span>
                     </div>
-                    <Sparkline points={it.history} />
-                    <div className="mt-1 text-xs text-gray-500">Last checked {fmtDate(it.latest.ts)} · {it.history.length} point(s)</div>
+                    <Sparkline points={w.history} />
+                    <div className="mt-1 text-xs text-gray-500">Checked {fmtDate(w.ts)} · {w.history.length} point(s)</div>
                   </>
                 ) : (
-                  <p className="text-sm text-gray-500">No data yet — awaiting first check.</p>
+                  <p className="text-sm text-gray-500">Not checked yet.</p>
                 )}
               </div>
             );
@@ -141,31 +180,7 @@ export default function MonitorPage() {
         </div>
       )}
 
-      {/* Change timeline */}
-      {allChanges.length > 0 && (
-        <div className="card">
-          <h2 className="mb-3 text-lg font-semibold">Recent changes</h2>
-          <ul className="space-y-2">
-            {allChanges.map((ch, i) => (
-              <li key={i} className="flex items-start gap-3 rounded-lg border border-white/10 bg-bg-elev p-3 text-sm">
-                <span className="mt-0.5 shrink-0 text-xs text-gray-500">{fmtDate(ch.ts)}</span>
-                <span className="font-medium text-gray-100">{ch.domain}</span>
-                <span className="text-gray-400">{ch.changes?.join("; ")}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       <Disclaimer variant="inline" />
     </div>
-  );
-}
-
-function Badge({ on, onText, offText }: { on: boolean; onText: string; offText: string }) {
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 ${on ? "border-risk-legit/30 text-risk-legit" : "border-risk-unknown/30 text-risk-unknown"}`}>
-      {on ? onText : offText}
-    </span>
   );
 }
