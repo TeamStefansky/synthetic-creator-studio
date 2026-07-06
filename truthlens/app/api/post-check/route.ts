@@ -19,6 +19,16 @@ export async function POST(req: NextRequest) {
 
   let text = String(body.text || "").trim();
 
+  // Screenshot path: Claude reads the post text from the image directly.
+  const image =
+    body.imageBase64 && body.mediaType
+      ? { data: String(body.imageBase64), mediaType: String(body.mediaType) }
+      : undefined;
+  if (image) {
+    const result = await checkPost({ text: text || undefined, image });
+    return NextResponse.json(result);
+  }
+
   // If a URL was pasted (and no separate text), fetch and extract the article.
   if (!text && body.url) {
     try {
@@ -39,9 +49,9 @@ export async function POST(req: NextRequest) {
   }
 
   if (!text || text.length < 10) {
-    return NextResponse.json({ error: "Provide a post text or a fetchable URL." }, { status: 400 });
+    return NextResponse.json({ error: "Provide a post text, a screenshot, or a fetchable URL." }, { status: 400 });
   }
 
-  const result = await checkPost(text);
+  const result = await checkPost({ text });
   return NextResponse.json(result);
 }

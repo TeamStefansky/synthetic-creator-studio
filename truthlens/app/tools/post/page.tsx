@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { ShieldQuestion, Loader2, ExternalLink, AlertTriangle, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import {
+  ShieldQuestion, Loader2, ExternalLink, AlertTriangle, CheckCircle2, XCircle,
+  HelpCircle, Upload, X, Share2, Check,
+} from "lucide-react";
 import type { PostCheckResult, PostVerdict } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -14,7 +18,6 @@ function verdictStyle(v: PostVerdict) {
     default: return { cls: "text-gray-300 border-white/20 bg-white/5", icon: <ShieldQuestion className="h-6 w-6" /> };
   }
 }
-
 function claimIcon(v: string) {
   const s = v.toLowerCase();
   if (s.includes("support")) return <CheckCircle2 className="h-4 w-4 text-risk-legit" />;
@@ -23,21 +26,51 @@ function claimIcon(v: string) {
   return <HelpCircle className="h-4 w-4 text-gray-400" />;
 }
 
-export default function PostCheckPage() {
+function PostCheckInner() {
+  const params = useSearchParams();
+  const sharedId = params.get("s");
+
   const [text, setText] = useState("");
+  const [image, setImage] = useState<{ dataUrl: string; base64: string; mediaType: string } | null>(null);
   const [res, setRes] = useState<PostCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [shareMsg, setShareMsg] = useState("");
+  const [shared, setShared] = useState(false);
+
+  // Load a shared result if ?s=<id> is present.
+  useEffect(() => {
+    if (!sharedId) return;
+    setLoading(true);
+    fetch(`/api/share?id=${encodeURIComponent(sharedId)}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.result) { setRes(d.result); setShared(true); } else setError(d.error || "Shared result not found."); })
+      .catch(() => setError("Could not load shared result."))
+      .finally(() => setLoading(false));
+  }, [sharedId]);
+
+  const onFile = (file?: File) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      const base64 = dataUrl.split(",")[1] || "";
+      setImage({ dataUrl, base64, mediaType: file.type });
+      setError("");
+    };
+    reader.readAsDataURL(file);
+  };
 
   const run = async () => {
     setLoading(true);
     setError("");
     setRes(null);
+    setShareMsg("");
     try {
       const r = await fetch("/api/post-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify(image ? { text, imageBase64: image.base64, mediaType: image.mediaType } : { text }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Check failed");
@@ -49,6 +82,33 @@ export default function PostCheckPage() {
     }
   };
 
+  const share = async () => {
+    if (!res) return;
+    setShareMsg("");
+    try {
+      const r = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ result: res }),
+      });
+      if (r.ok) {
+        const { id } = await r.json();
+        const url = `${window.location.origin}/tools/post?s=${id}`;
+        await navigator.clipboard.writeText(url);
+        setShareMsg("Share link copied to clipboard!");
+      } else {
+        // No KV store — copy a text summary instead.
+        const summary = `TruthLens Post Check — ${res.verdict} (${res.confidence} confidence)\n${res.summary}`;
+        await navigator.clipboard.writeText(summary);
+        setShareMsg("No share store configured — copied a text summary instead.");
+      }
+    } catch {
+      setShareMsg("Could not create share link.");
+    }
+  };
+
+  const canRun = !loading && (text.trim().length >= 5 || !!image);
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -57,25 +117,50 @@ export default function PostCheckPage() {
           <h1 className="text-2xl font-bold">Post Check — is it fake?</h1>
         </div>
         <p className="mt-1 text-sm text-gray-400">
-          Paste a social-media post, message, or claim (or a link to an article). We extract the
-          factual claims, verify them against the open web, and return a verdict with sources.
+          Paste a post, message, or claim — <strong>or upload a screenshot</strong> — and we extract the
+          claims, verify them against the open web, and return a verdict with sources.
         </p>
       </div>
 
-      <div className="card">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Paste the post / claim / forwarded message here — or a URL to an article…"
-          className="h-40 w-full rounded-xl border border-white/15 bg-bg-elev p-3 text-sm outline-none focus:border-indigo-400 scroll-thin"
-        />
-        <div className="mt-3 flex items-center gap-3">
-          <button className="btn" onClick={run} disabled={loading || text.trim().length < 5}>
-            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking…</> : "Check this post"}
-          </button>
-          {error && <span className="text-sm text-risk-high">{error}</span>}
+      {!shared && (
+        <div className="card">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Paste the post / claim / forwarded message here — or a URL to an article…"
+            className="h-32 w-full rounded-xl border border-white/15 bg-bg-elev p-3 text-sm outline-none focus:border-indigo-400 scroll-thin"
+          />
+
+          {/* Screenshot upload */}
+          {image ? (
+            <div className="mt-3 flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image.dataUrl} alt="screenshot" className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
+              <button className="btn-ghost text-sm" onClick={() => setImage(null)}><X className="h-4 w-4" /> Remove image</button>
+            </div>
+          ) : (
+            <label
+              className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-4 text-sm text-gray-400 hover:border-indigo-400/50"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files?.[0]); }}
+            >
+              <Upload className="h-4 w-4" /> Drag &amp; drop a screenshot of the post, or click to upload
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || undefined)} />
+            </label>
+          )}
+
+          <div className="mt-3 flex items-center gap-3">
+            <button className="btn" onClick={run} disabled={!canRun}>
+              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking…</> : "Check this post"}
+            </button>
+            {error && <span className="text-sm text-risk-high">{error}</span>}
+          </div>
         </div>
-      </div>
+      )}
+
+      {loading && shared && (
+        <div className="card flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin text-indigo-400" /> Loading shared result…</div>
+      )}
 
       {res && (
         <div className="space-y-4">
@@ -83,17 +168,23 @@ export default function PostCheckPage() {
             <div className="card text-sm text-yellow-300/90">{res.summary || res.note}</div>
           ) : (
             <>
-              <div className={`card flex items-center gap-4 border ${verdictStyle(res.verdict).cls}`}>
-                {verdictStyle(res.verdict).icon}
-                <div>
-                  <div className="text-xl font-bold">{res.verdict}</div>
-                  <div className="text-xs text-gray-400">Confidence: {res.confidence}</div>
+              <div className={`card flex items-center justify-between gap-4 border ${verdictStyle(res.verdict).cls}`}>
+                <div className="flex items-center gap-4">
+                  {verdictStyle(res.verdict).icon}
+                  <div>
+                    <div className="text-xl font-bold">{res.verdict}</div>
+                    <div className="text-xs text-gray-400">Confidence: {res.confidence}</div>
+                  </div>
                 </div>
+                {!shared && (
+                  <button className="btn-ghost text-sm no-print" onClick={share} title="Copy a shareable link">
+                    <Share2 className="h-4 w-4" /> Share
+                  </button>
+                )}
               </div>
+              {shareMsg && <p className="flex items-center gap-1.5 text-xs text-risk-legit"><Check className="h-3.5 w-3.5" />{shareMsg}</p>}
 
-              <div className="card">
-                <p className="text-sm text-gray-200">{res.summary}</p>
-              </div>
+              <div className="card"><p className="text-sm text-gray-200">{res.summary}</p></div>
 
               {res.claims.length > 0 && (
                 <div className="card">
@@ -162,5 +253,13 @@ export default function PostCheckPage() {
 
       <Disclaimer variant="inline" />
     </div>
+  );
+}
+
+export default function PostCheckPage() {
+  return (
+    <Suspense fallback={<div className="py-10 text-center text-gray-400">Loading…</div>}>
+      <PostCheckInner />
+    </Suspense>
   );
 }

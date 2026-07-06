@@ -46,10 +46,16 @@ const UNAVAILABLE: PostCheckResult = {
   note: "Set ANTHROPIC_API_KEY to enable claim verification against the open web.",
 };
 
-export async function checkPost(text: string): Promise<PostCheckResult> {
+export interface PostInput {
+  text?: string;
+  image?: { data: string; mediaType: string }; // base64 screenshot of a post
+}
+
+export async function checkPost(input: PostInput): Promise<PostCheckResult> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return UNAVAILABLE;
-  if (!text || text.trim().length < 10) {
+  const text = (input.text || "").trim();
+  if (!input.image && text.length < 10) {
     return { ...UNAVAILABLE, available: true, summary: "Paste a longer post or claim to check." };
   }
 
@@ -64,7 +70,13 @@ export async function checkPost(text: string): Promise<PostCheckResult> {
       messages: [
         {
           role: "user",
-          content: `Fact-check this post/claim. Verify its factual claims against the open web, then output ONE JSON object (no text after it):
+          content: [
+            ...(input.image
+              ? [{ type: "image", source: { type: "base64", media_type: input.image.mediaType, data: input.image.data } }]
+              : []),
+            {
+              type: "text",
+              text: `Fact-check this ${input.image ? "post shown in the screenshot — first read the text and claims visible in the image (and note who posted it, if shown)" : "post/claim"}. Verify its factual claims against the open web, then output ONE JSON object (no text after it):
 {
   "verdict": "Likely False | Misleading | Unverified | Likely True | Opinion or Satire",
   "confidence": "Low | Medium | High",
@@ -74,12 +86,9 @@ export async function checkPost(text: string): Promise<PostCheckResult> {
   "aiGeneratedLikelihood": 0-100,
   "redFlags": ["specific warning signs in the text"],
   "sources": [{"title":"","url":""}]
-}
-
-POST/CLAIM:
-"""
-${text.slice(0, 6000)}
-"""`,
+}${text ? `\n\nPOST/CLAIM:\n"""\n${text.slice(0, 6000)}\n"""` : ""}`,
+            },
+          ] as any,
         },
       ],
     });
