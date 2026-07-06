@@ -65,3 +65,20 @@ class PostOut(BaseModel):
     url: str | None
     timestamp: datetime | None
     author_id: int | None
+
+
+class SignalOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    name: str
+    score: float
+    confidence: float
+    weight: float
+    explanation: str | None
+
+
+class AuthorDetailOut(AuthorOut):
+    display_name: str | None = None
+    bio: str | None = None
+    following: int | None = None
+    posts_count: int | None = None
+    signals: list[SignalOut] = []

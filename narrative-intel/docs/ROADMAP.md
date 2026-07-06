@@ -7,10 +7,13 @@ reversible migrations and tests. Stop-for-approval between stages.
 - [x] **Stage 1 — Ingestion layer.** `SourceConnector` interface; X (real+mock),
   Telegram/RSS/NewsAPI connectors; normalized `Post`/`Author`; idempotent dedup;
   dead-letter + run tracking; scheduler worker; REST API; migrations; tests.
-- [ ] **Stage 2 — Authenticity Engine.** Per-`Author` score 0–100 from independent
-  signal classes (age vs volume, follower ratio, posting cadence/bursts, content
-  repetition, AI-avatar hook). Weights in config; signal breakdown stored so the
-  UI can show "why suspicious".
+- [x] **Stage 2 — Authenticity Engine.** Per-`Author` score 0–100 from independent
+  signal classes (age vs volume, follower ratio, profile completeness, posting
+  cadence/bursts, content repetition, AI-avatar hook). Weights in
+  `app/authenticity/weights.json`; per-signal breakdown (score/confidence/
+  explanation) stored in `author_signals` for the "why suspicious" UI. Combined
+  weighted by weight×confidence so no-data signals don't skew. API:
+  `POST /api/authenticity/run`, `GET /api/authors/{id}`.
 - [ ] **Stage 3 — Coordinated behaviour.** Cluster identical/near-identical content
   in tight time windows (uses the stored `content_hash`); temporal sync;
   relationship graph; `Campaign` entity with saved evidence.

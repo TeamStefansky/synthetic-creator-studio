@@ -31,6 +31,8 @@ live data — see `.env.example`.
 | GET | `/api/health` | counts + connector health (mock vs live) |
 | GET | `/api/sources` | available sources |
 | POST | `/api/ingest/run?source=x` | run one source (or all when omitted) |
+| POST | `/api/authenticity/run` | compute authenticity scores (all authors, or `?author_id=`) |
+| GET | `/api/authors/{id}` | author detail + per-signal "why suspicious" breakdown |
 | GET | `/api/posts` / `/api/authors` / `/api/runs` | read stored data |
 
 OpenAPI docs at `/docs`.
