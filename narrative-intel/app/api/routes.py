@@ -5,11 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from ..authenticity.engine import score_all, score_author
 from ..connectors import available_sources, get_connector
 from ..db import get_session
 from ..ingest.service import ingest_source
 from ..models import Author, IngestRun, Post
-from ..schemas import AuthorOut, IngestResult, PostOut
+from ..schemas import AuthorDetailOut, AuthorOut, IngestResult, PostOut
 
 router = APIRouter()
 
@@ -69,6 +70,27 @@ def list_authors(
     db: Session = Depends(get_session),
 ) -> list[Author]:
     return list(db.scalars(select(Author).order_by(Author.id.desc()).limit(limit).offset(offset)))
+
+
+@router.get("/authors/{author_id}", response_model=AuthorDetailOut)
+def author_detail(author_id: int, db: Session = Depends(get_session)) -> Author:
+    author = db.get(Author, author_id)
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+    return author
+
+
+@router.post("/authenticity/run")
+def run_authenticity(
+    author_id: int | None = Query(default=None, description="one author, or all when omitted"),
+    db: Session = Depends(get_session),
+) -> dict:
+    if author_id is not None:
+        author = db.get(Author, author_id)
+        if not author:
+            raise HTTPException(status_code=404, detail="Author not found")
+        return {"author_id": author_id, "authenticity_score": score_author(db, author)}
+    return score_all(db)
 
 
 @router.get("/runs")

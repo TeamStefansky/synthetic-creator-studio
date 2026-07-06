@@ -1,0 +1,11 @@
+{
+  "_comment": "Authenticity signal weights (edit here, not in code). Each signal returns 0-100 inauthenticity; the engine combines them weighted by weight * confidence, then authenticity_score = 100 - weighted_inauthenticity.",
+  "weights": {
+    "account_age_vs_volume": 0.30,
+    "follower_ratio": 0.25,
+    "profile_completeness": 0.15,
+    "posting_cadence": 0.15,
+    "content_repetition": 0.10,
+    "ai_avatar": 0.05
+  }
+}

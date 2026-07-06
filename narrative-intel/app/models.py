@@ -41,6 +41,23 @@ class Author(Base):
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     posts: Mapped[list["Post"]] = relationship(back_populates="author")
+    signals: Mapped[list["AuthorSignal"]] = relationship(cascade="all, delete-orphan")
+
+
+class AuthorSignal(Base):
+    """One authenticity signal's contribution for an author (stored so the UI
+    can explain *why* an account looks inauthentic). score: 0-100 inauthenticity."""
+    __tablename__ = "author_signals"
+    __table_args__ = (UniqueConstraint("author_id", "name", name="uq_author_signal"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    author_id: Mapped[int] = mapped_column(ForeignKey("authors.id"), index=True)
+    name: Mapped[str] = mapped_column(String(48))
+    score: Mapped[float] = mapped_column(Float)          # 0-100, higher = more inauthentic
+    confidence: Mapped[float] = mapped_column(Float)     # 0-1
+    weight: Mapped[float] = mapped_column(Float)
+    explanation: Mapped[str | None] = mapped_column(Text)
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
 class Post(Base):
