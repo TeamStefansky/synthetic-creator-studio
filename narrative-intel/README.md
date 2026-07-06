@@ -33,6 +33,9 @@ live data — see `.env.example`.
 | POST | `/api/ingest/run?source=x` | run one source (or all when omitted) |
 | POST | `/api/authenticity/run` | compute authenticity scores (all authors, or `?author_id=`) |
 | GET | `/api/authors/{id}` | author detail + per-signal "why suspicious" breakdown |
+| POST | `/api/coordination/run` | detect coordinated campaigns (`?window_minutes=`) |
+| GET | `/api/campaigns` / `/api/campaigns/{id}` | campaigns + members & evidence |
+| GET | `/api/coordination/graph` | co-posting relationship graph (nodes + edges) |
 | GET | `/api/posts` / `/api/authors` / `/api/runs` | read stored data |
 
 OpenAPI docs at `/docs`.

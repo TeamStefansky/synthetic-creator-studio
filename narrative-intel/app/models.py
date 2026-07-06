@@ -90,6 +90,55 @@ class Post(Base):
     author: Mapped[Author | None] = relationship(back_populates="posts")
 
 
+class Campaign(Base):
+    """A detected coordinated cluster: >=2 distinct accounts posting the same
+    content within a tight time window. Evidence (the posts) is saved for the
+    forensic report."""
+    __tablename__ = "campaigns"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    sample_text: Mapped[str] = mapped_column(Text)
+    coordination_score: Mapped[float] = mapped_column(Float)  # 0-100
+    account_count: Mapped[int] = mapped_column(Integer)
+    post_count: Mapped[int] = mapped_column(Integer)
+    time_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    time_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sources: Mapped[list | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    accounts: Mapped[list["CampaignAccount"]] = relationship(cascade="all, delete-orphan")
+    evidence: Mapped[list["CampaignEvidence"]] = relationship(cascade="all, delete-orphan")
+
+
+class CampaignAccount(Base):
+    __tablename__ = "campaign_accounts"
+    __table_args__ = (UniqueConstraint("campaign_id", "author_id", name="uq_campaign_account"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
+    author_id: Mapped[int] = mapped_column(ForeignKey("authors.id"), index=True)
+
+
+class CampaignEvidence(Base):
+    __tablename__ = "campaign_evidence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    campaign_id: Mapped[int] = mapped_column(ForeignKey("campaigns.id"), index=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+
+
+class CoordinationEdge(Base):
+    """Undirected co-posting relationship between two accounts (canonical a<b)."""
+    __tablename__ = "coordination_edges"
+    __table_args__ = (UniqueConstraint("author_a", "author_b", name="uq_coordination_edge"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    author_a: Mapped[int] = mapped_column(ForeignKey("authors.id"), index=True)
+    author_b: Mapped[int] = mapped_column(ForeignKey("authors.id"), index=True)
+    weight: Mapped[int] = mapped_column(Integer, default=1)  # shared campaigns
+
+
 class IngestRun(Base):
     __tablename__ = "ingest_runs"
 

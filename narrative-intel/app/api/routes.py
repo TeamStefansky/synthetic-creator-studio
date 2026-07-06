@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 
 from ..authenticity.engine import score_all, score_author
 from ..connectors import available_sources, get_connector
+from ..coordination.engine import detect_campaigns, graph
 from ..db import get_session
 from ..ingest.service import ingest_source
-from ..models import Author, IngestRun, Post
-from ..schemas import AuthorDetailOut, AuthorOut, IngestResult, PostOut
+from ..models import Author, Campaign, CampaignEvidence, IngestRun, Post
+from ..schemas import AuthorDetailOut, AuthorOut, CampaignOut, IngestResult, PostOut
 
 router = APIRouter()
 
@@ -91,6 +92,49 @@ def run_authenticity(
             raise HTTPException(status_code=404, detail="Author not found")
         return {"author_id": author_id, "authenticity_score": score_author(db, author)}
     return score_all(db)
+
+
+@router.post("/coordination/run")
+def run_coordination(
+    window_minutes: int = Query(default=60, ge=1, le=1440),
+    db: Session = Depends(get_session),
+) -> dict:
+    return detect_campaigns(db, window_minutes=window_minutes)
+
+
+@router.get("/campaigns", response_model=list[CampaignOut])
+def list_campaigns(db: Session = Depends(get_session)) -> list[Campaign]:
+    return list(db.scalars(select(Campaign).order_by(Campaign.coordination_score.desc())))
+
+
+@router.get("/campaigns/{campaign_id}")
+def campaign_detail(campaign_id: int, db: Session = Depends(get_session)) -> dict:
+    c = db.get(Campaign, campaign_id)
+    if not c:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    accounts = []
+    for ca in c.accounts:
+        a = db.get(Author, ca.author_id)
+        if a:
+            accounts.append({"id": a.id, "handle": a.handle or a.display_name, "source": a.source,
+                             "authenticity_score": a.authenticity_score})
+    evidence = []
+    for ev in db.scalars(select(CampaignEvidence).where(CampaignEvidence.campaign_id == c.id)):
+        p = db.get(Post, ev.post_id)
+        if p:
+            evidence.append({"post_id": p.id, "source": p.source, "text": p.text,
+                             "url": p.url, "timestamp": p.timestamp, "author_id": p.author_id})
+    return {
+        "id": c.id, "coordination_score": c.coordination_score, "sample_text": c.sample_text,
+        "account_count": c.account_count, "post_count": c.post_count,
+        "time_start": c.time_start, "time_end": c.time_end, "sources": c.sources,
+        "accounts": accounts, "evidence": evidence,
+    }
+
+
+@router.get("/coordination/graph")
+def coordination_graph(db: Session = Depends(get_session)) -> dict:
+    return graph(db)
 
 
 @router.get("/runs")
