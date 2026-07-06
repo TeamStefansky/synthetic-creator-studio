@@ -103,3 +103,19 @@ API: `analyze`, `post-check`, `insights`, `intel` (social+media), `osint`,
 - Alerts → generalize `/api/monitor` + `lib/store.ts`.
 - UI shell, design system, RTL-ready Tailwind, `MiniMap`, cards → reuse directly.
 - AI boundary → wrap existing Anthropic calls in one `lib/ai/` provider interface.
+
+## 8. New service: `narrative-intel/` (platform backend)
+
+Per the approved plan, the Narrative Intelligence platform is a **new, isolated
+FastAPI + Postgres service** at repo root (`narrative-intel/`) — it does NOT
+touch TruthLens or the studio backend.
+
+- **Stage 1 (done): ingestion layer.** `SourceConnector` interface; X
+  (real+mock), Telegram/RSS/NewsAPI connectors; normalized `Post`/`Author`;
+  idempotent dedup (`content_hash` kept as non-key coordination signal);
+  dead-letter + `IngestRun`; scheduler worker; REST API (`/api/*`); reversible
+  Alembic migration; 9 passing tests; Render blueprint. Runs on SQLite + mock
+  with zero config.
+- Stages 2–7 (authenticity, coordination, narratives, alerts, dashboard,
+  reports) tracked in `narrative-intel/docs/ROADMAP.md`. The **Dashboard/UI
+  (Stage 6)** will be built into this TruthLens Next.js app, calling the new API.

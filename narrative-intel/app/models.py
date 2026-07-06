@@ -1,0 +1,99 @@
+"""Core data entities for the ingestion layer.
+
+Author and Post are the normalized units every connector produces. IngestRun and
+DeadLetter give the pipeline observability + a forensic trail. All columns are
+DB-agnostic (work on SQLite and Postgres). JSON is used for flexible/raw blobs.
+"""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
+from sqlalchemy import (
+    JSON, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .db import Base
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class Author(Base):
+    __tablename__ = "authors"
+    __table_args__ = (UniqueConstraint("source", "source_author_id", name="uq_author_source"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String(32), index=True)
+    source_author_id: Mapped[str] = mapped_column(String(128))
+    handle: Mapped[str | None] = mapped_column(String(255))
+    display_name: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    followers: Mapped[int | None] = mapped_column(Integer)
+    following: Mapped[int | None] = mapped_column(Integer)
+    posts_count: Mapped[int | None] = mapped_column(Integer)
+    bio: Mapped[str | None] = mapped_column(Text)
+    avatar_url: Mapped[str | None] = mapped_column(Text)
+    # Filled by the Authenticity Engine (Stage 2). Nullable for now.
+    authenticity_score: Mapped[float | None] = mapped_column(Float)
+    raw: Mapped[dict | None] = mapped_column(JSON)
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    posts: Mapped[list["Post"]] = relationship(back_populates="author")
+
+
+class Post(Base):
+    __tablename__ = "posts"
+    __table_args__ = (
+        # Idempotency: never store the same source item twice on re-fetch.
+        UniqueConstraint("source", "source_post_id", name="uq_post_source_id"),
+        # content_hash is intentionally NOT unique — identical text from DIFFERENT
+        # authors is the coordinated-behavior signal we preserve for Stage 3.
+        Index("ix_post_source_ts", "source", "timestamp"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String(32), index=True)
+    source_post_id: Mapped[str] = mapped_column(String(128), index=True)
+    content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    author_id: Mapped[int | None] = mapped_column(ForeignKey("authors.id"))
+    text: Mapped[str] = mapped_column(Text)
+    lang: Mapped[str | None] = mapped_column(String(8))
+    url: Mapped[str | None] = mapped_column(Text)
+    media: Mapped[list | None] = mapped_column(JSON)
+    engagement: Mapped[dict | None] = mapped_column(JSON)
+    timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    # Enrichment fields (Stage 4) — nullable for now.
+    sentiment: Mapped[float | None] = mapped_column(Float)
+    narrative_id: Mapped[int | None] = mapped_column(Integer, index=True)
+    raw: Mapped[dict | None] = mapped_column(JSON)
+    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+    author: Mapped[Author | None] = relationship(back_populates="posts")
+
+
+class IngestRun(Base):
+    __tablename__ = "ingest_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String(32), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    fetched: Mapped[int] = mapped_column(Integer, default=0)
+    inserted: Mapped[int] = mapped_column(Integer, default=0)
+    duplicates: Mapped[int] = mapped_column(Integer, default=0)
+    errors: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(16), default="running")  # running|ok|failed
+    detail: Mapped[str | None] = mapped_column(Text)
+
+
+class DeadLetter(Base):
+    """Items that failed normalization/storage — kept for retry + forensics."""
+    __tablename__ = "dead_letters"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source: Mapped[str] = mapped_column(String(32), index=True)
+    reason: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
