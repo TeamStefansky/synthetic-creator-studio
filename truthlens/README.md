@@ -90,7 +90,8 @@ All optional — core features work without any of them.
 | `X_BEARER_TOKEN` | X (Twitter) API v2 — social amplification + bot analysis | Social panel shows "unavailable" |
 | `SIGHTENGINE_API_USER` + `SIGHTENGINE_API_SECRET` | AI-generated / deepfake **image** detection (primary) | Image detection disabled |
 | `HIVE_API_KEY` | Image detection fallback (Hive) | — |
-| `MONITOR_DOMAINS`, `ALERT_WEBHOOK_URL`, `CRON_SECRET` | Daily monitoring (`/api/monitor` via Vercel Cron) → alert to a Slack-style webhook when a watched site is HIGH RISK | Monitoring inactive |
+| `MONITOR_DOMAINS`, `ALERT_WEBHOOK_URL`, `CRON_SECRET` | Daily monitoring (`/api/monitor` via Vercel Cron) → alert to a Slack-style webhook | Monitoring inactive |
+| Vercel KV (`KV_REST_API_URL`/`KV_REST_API_TOKEN`) or Upstash (`UPSTASH_REDIS_REST_URL`/`_TOKEN`) | History store so monitoring detects **changes/spikes** (band worsened, score jump, coordination up, narrative/amplification spike) instead of just current state | Monitoring alerts on current HIGH RISK only |
 | `SEARCH_API_KEY` | Reserved for an alternate web-search provider | Propagation relies on Claude `web_search` + Wayback |
 | `IMAGE_SEARCH_KEY` | (paid) reverse-image origin tracing | Disabled |
 | `SOCIAL_API_KEY` | (paid/limited) social amplification signals | Disabled |
