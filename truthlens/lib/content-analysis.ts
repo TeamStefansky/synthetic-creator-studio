@@ -12,6 +12,11 @@ const UNAVAILABLE: ContentAnalysis = {
   aiGeneratedLikelihood: 0,
   summary: "Content analysis unavailable (no ANTHROPIC_API_KEY configured).",
   redFlags: [],
+  narratives: [],
+  propagandaTechniques: [],
+  manipulationTactics: [],
+  targetAudience: "",
+  intent: "",
 };
 
 function clamp(n: any): number {
@@ -59,8 +64,8 @@ export async function analyzeContent(text: string): Promise<ContentAnalysis> {
       messages: [
         {
           role: "user",
-          content: `Return JSON with EXACTLY this schema:
-{"sensationalism":0-100,"emotionalManipulation":0-100,"sourcingQuality":0-100,"aiGeneratedLikelihood":0-100,"summary":"1-2 sentences","redFlags":["..."]}
+          content: `Analyze this article for credibility AND for narrative/influence intelligence. Return JSON with EXACTLY this schema (no prose, no fences):
+{"sensationalism":0-100,"emotionalManipulation":0-100,"sourcingQuality":0-100,"aiGeneratedLikelihood":0-100,"summary":"1-2 sentences","redFlags":["..."],"narratives":["the main narrative(s)/claim(s) being pushed"],"propagandaTechniques":["named techniques, e.g. fear appeal, strawman, false dichotomy, whataboutism, cherry-picking"],"manipulationTactics":["concrete manipulative moves used in THIS text"],"targetAudience":"who this is aimed at","intent":"one of: informational | persuasive | propaganda | clickbait | satire | advertising"}
 
 Article text:
 """
@@ -85,6 +90,11 @@ ${text.slice(0, 6000)}
       redFlags: Array.isArray(parsed.redFlags)
         ? parsed.redFlags.map((r: any) => String(r)).slice(0, 10)
         : [],
+      narratives: Array.isArray(parsed.narratives) ? parsed.narratives.map((r: any) => String(r)).slice(0, 8) : [],
+      propagandaTechniques: Array.isArray(parsed.propagandaTechniques) ? parsed.propagandaTechniques.map((r: any) => String(r)).slice(0, 10) : [],
+      manipulationTactics: Array.isArray(parsed.manipulationTactics) ? parsed.manipulationTactics.map((r: any) => String(r)).slice(0, 10) : [],
+      targetAudience: String(parsed.targetAudience || "").slice(0, 200),
+      intent: String(parsed.intent || "").slice(0, 60),
     };
   } catch (e: any) {
     const msg = String(e?.message || "error");

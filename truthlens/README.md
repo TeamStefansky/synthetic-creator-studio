@@ -19,6 +19,11 @@ the infrastructure behind them. Paste a URL and get:
    reputation, controversies, related sites) with sources.
 5. **Detailed rating report** — the score broken down by category with every
    weight, downloadable as Markdown or printable to PDF.
+6. **Narrative intelligence** — main narratives, propaganda techniques,
+   manipulation tactics, intent, target audience, and an authenticity
+   (organic vs coordinated) indicator.
+7. **Insights Q&A** — ask the finished report anything; answers are grounded
+   only in the report's own data (needs `ANTHROPIC_API_KEY`).
 
 Plus an **Attribution Tools** suite (log analyzer, email-header tracer) and an
 operator-network graph that links a site to siblings via shared IP, GA/AdSense
