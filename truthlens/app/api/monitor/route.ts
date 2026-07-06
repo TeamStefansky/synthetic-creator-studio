@@ -93,6 +93,11 @@ export async function GET(req: NextRequest) {
         const prev = await kvGetJson<Snapshot>(`monitor:snap:${domain}`);
         changes = diff(prev, cur);
         await kvSetJson(`monitor:snap:${domain}`, cur);
+        // Append a timeline point (capped) for the dashboard.
+        const hist = (await kvGetJson<any[]>(`monitor:hist:${domain}`)) || [];
+        hist.push({ ts: now, band: cur.band, score: cur.score, coordination: cur.coordination, changes });
+        while (hist.length > 60) hist.shift();
+        await kvSetJson(`monitor:hist:${domain}`, hist);
       } else if (cur.band === "HIGH_RISK") {
         changes = ["HIGH RISK (no history store configured — current-state alert)"];
       }
