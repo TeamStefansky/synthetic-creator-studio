@@ -17,6 +17,8 @@ import LoadingChecklist from "@/components/LoadingChecklist";
 import Disclaimer from "@/components/Disclaimer";
 import OsintPanel from "@/components/OsintPanel";
 import RatingReportCard from "@/components/RatingReportCard";
+import NarrativeCard from "@/components/NarrativeCard";
+import InsightsCard from "@/components/InsightsCard";
 import GeoOriginCard from "@/components/GeoOriginCard";
 import OriginChainCard from "@/components/OriginChainCard";
 
@@ -212,6 +214,12 @@ function ReportInner() {
 
       {/* Content analysis */}
       <ContentAnalysisCard data={report.contentAnalysis} />
+
+      {/* Narrative intelligence + authenticity (Cyabra-style) */}
+      <NarrativeCard report={report} />
+
+      {/* Insights — ask the report anything */}
+      <InsightsCard report={report} />
 
       {/* Propagation + coordination */}
       <div className="grid gap-4 lg:grid-cols-2">

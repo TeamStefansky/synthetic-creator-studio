@@ -176,6 +176,12 @@ export interface ContentAnalysis {
   aiGeneratedLikelihood: number;
   summary: string;
   redFlags: string[];
+  // Narrative intelligence (Cyabra-style)
+  narratives: string[]; // main narratives / claims being pushed
+  propagandaTechniques: string[]; // e.g. fear appeal, strawman, false dichotomy
+  manipulationTactics: string[];
+  targetAudience: string;
+  intent: string; // informational | persuasive | propaganda | clickbait | satire | ...
 }
 
 // ---------------------------------------------------------------------------
