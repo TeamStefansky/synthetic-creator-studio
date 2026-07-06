@@ -10,8 +10,11 @@ from ..connectors import available_sources, get_connector
 from ..coordination.engine import detect_campaigns, graph
 from ..db import get_session
 from ..ingest.service import ingest_source
-from ..models import Author, Campaign, CampaignEvidence, IngestRun, Post
-from ..schemas import AuthorDetailOut, AuthorOut, CampaignOut, IngestResult, PostOut
+from ..models import Author, Campaign, CampaignEvidence, IngestRun, Narrative, Post
+from ..narratives.engine import run as run_narratives, volume_over_time
+from ..schemas import (
+    AuthorDetailOut, AuthorOut, CampaignOut, IngestResult, NarrativeOut, PostOut,
+)
 
 router = APIRouter()
 
@@ -135,6 +138,33 @@ def campaign_detail(campaign_id: int, db: Session = Depends(get_session)) -> dic
 @router.get("/coordination/graph")
 def coordination_graph(db: Session = Depends(get_session)) -> dict:
     return graph(db)
+
+
+@router.post("/narratives/run")
+def run_narrative_pipeline(db: Session = Depends(get_session)) -> dict:
+    return run_narratives(db)
+
+
+@router.get("/narratives", response_model=list[NarrativeOut])
+def list_narratives(db: Session = Depends(get_session)) -> list[Narrative]:
+    return list(db.scalars(select(Narrative).order_by(Narrative.post_count.desc())))
+
+
+@router.get("/narratives/{narrative_id}")
+def narrative_detail(narrative_id: int, db: Session = Depends(get_session)) -> dict:
+    n = db.get(Narrative, narrative_id)
+    if not n:
+        raise HTTPException(status_code=404, detail="Narrative not found")
+    posts = list(db.scalars(select(Post).where(Post.narrative_id == n.id).limit(50)))
+    return {
+        "id": n.id, "label": n.label, "summary": n.summary, "keywords": n.keywords,
+        "post_count": n.post_count, "account_count": n.account_count,
+        "sentiment_avg": n.sentiment_avg, "manipulation_index": n.manipulation_index,
+        "first_seen": n.first_seen, "last_seen": n.last_seen,
+        "volume_over_time": volume_over_time(db, n.id),
+        "posts": [{"id": p.id, "source": p.source, "text": p.text, "sentiment": p.sentiment,
+                   "author_id": p.author_id, "timestamp": p.timestamp} for p in posts],
+    }
 
 
 @router.get("/runs")

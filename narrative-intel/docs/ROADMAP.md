@@ -20,7 +20,7 @@ reversible migrations and tests. Stop-for-approval between stages.
   (accounts × time-tightness × low-authenticity); builds a co-posting
   relationship graph (`coordination_edges`). API: `POST /api/coordination/run`,
   `GET /api/campaigns`, `GET /api/campaigns/{id}`, `GET /api/coordination/graph`.
-- [ ] **Stage 4 — Narratives & sentiment.** Enrichment (lang → sentiment →
+- [x] **Stage 4 — Narratives & sentiment.** Enrichment (lang → sentiment →
   entities → narrative assignment); narrative clustering (embeddings/Claude);
   volume-over-time; **Manipulation Index** (% engagement from low-authenticity
   accounts). English first.

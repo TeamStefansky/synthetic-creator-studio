@@ -90,6 +90,24 @@ class Post(Base):
     author: Mapped[Author | None] = relationship(back_populates="posts")
 
 
+class Narrative(Base):
+    """A cluster of posts pushing the same storyline. Manipulation Index = share
+    of the narrative driven by low-authenticity accounts."""
+    __tablename__ = "narratives"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    label: Mapped[str] = mapped_column(String(255))
+    summary: Mapped[str | None] = mapped_column(Text)
+    keywords: Mapped[list | None] = mapped_column(JSON)
+    post_count: Mapped[int] = mapped_column(Integer, default=0)
+    account_count: Mapped[int] = mapped_column(Integer, default=0)
+    sentiment_avg: Mapped[float | None] = mapped_column(Float)
+    manipulation_index: Mapped[float | None] = mapped_column(Float)  # 0-100
+    first_seen: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_seen: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
 class Campaign(Base):
     """A detected coordinated cluster: >=2 distinct accounts posting the same
     content within a tight time window. Evidence (the posts) is saved for the

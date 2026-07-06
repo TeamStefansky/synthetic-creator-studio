@@ -94,3 +94,17 @@ class CampaignOut(BaseModel):
     time_start: datetime | None
     time_end: datetime | None
     sources: list | None
+
+
+class NarrativeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    label: str
+    summary: str | None
+    keywords: list | None
+    post_count: int
+    account_count: int
+    sentiment_avg: float | None
+    manipulation_index: float | None
+    first_seen: datetime | None
+    last_seen: datetime | None
