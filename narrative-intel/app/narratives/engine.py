@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from ..ai import get_provider
 from ..models import Author, Narrative, Post
 
-_WORD = re.compile(r"[a-z0-9']+")
+_WORD = re.compile(r"[a-z0-9]+")
 SIM_THRESHOLD = 0.5          # Jaccard word-set similarity to join a narrative
 LOW_AUTHENTICITY = 40.0      # accounts below this count as inauthentic
 

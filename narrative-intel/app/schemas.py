@@ -96,6 +96,31 @@ class CampaignOut(BaseModel):
     sources: list | None
 
 
+class AlertRuleIn(BaseModel):
+    name: str
+    type: str  # new_campaign | high_manipulation | volume_spike | entity_mention
+    threshold: float = 0
+    channel: str = "inapp"  # inapp | webhook | email
+    config: dict | None = None
+    enabled: bool = True
+
+
+class AlertRuleOut(AlertRuleIn):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class AlertOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    rule_name: str
+    type: str
+    title: str
+    body: str | None
+    delivered: bool
+    created_at: datetime
+
+
 class NarrativeOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

@@ -7,13 +7,17 @@ from sqlalchemy.orm import Session
 
 from ..authenticity.engine import score_all, score_author
 from ..connectors import available_sources, get_connector
+from ..alerts.engine import evaluate as evaluate_alerts
 from ..coordination.engine import detect_campaigns, graph
 from ..db import get_session
 from ..ingest.service import ingest_source
-from ..models import Author, Campaign, CampaignEvidence, IngestRun, Narrative, Post
+from ..models import (
+    Alert, AlertRule, Author, Campaign, CampaignEvidence, IngestRun, Narrative, Post,
+)
 from ..narratives.engine import run as run_narratives, volume_over_time
 from ..schemas import (
-    AuthorDetailOut, AuthorOut, CampaignOut, IngestResult, NarrativeOut, PostOut,
+    AlertOut, AlertRuleIn, AlertRuleOut, AuthorDetailOut, AuthorOut, CampaignOut,
+    IngestResult, NarrativeOut, PostOut,
 )
 
 router = APIRouter()
@@ -165,6 +169,39 @@ def narrative_detail(narrative_id: int, db: Session = Depends(get_session)) -> d
         "posts": [{"id": p.id, "source": p.source, "text": p.text, "sentiment": p.sentiment,
                    "author_id": p.author_id, "timestamp": p.timestamp} for p in posts],
     }
+
+
+@router.post("/alerts/rules", response_model=AlertRuleOut)
+def create_rule(rule: AlertRuleIn, db: Session = Depends(get_session)) -> AlertRule:
+    obj = AlertRule(**rule.model_dump())
+    db.add(obj)
+    db.commit()
+    return obj
+
+
+@router.get("/alerts/rules", response_model=list[AlertRuleOut])
+def list_rules(db: Session = Depends(get_session)) -> list[AlertRule]:
+    return list(db.scalars(select(AlertRule).order_by(AlertRule.id.desc())))
+
+
+@router.delete("/alerts/rules/{rule_id}")
+def delete_rule(rule_id: int, db: Session = Depends(get_session)) -> dict:
+    obj = db.get(AlertRule, rule_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="Rule not found")
+    db.delete(obj)
+    db.commit()
+    return {"deleted": rule_id}
+
+
+@router.post("/alerts/evaluate")
+def run_alerts(db: Session = Depends(get_session)) -> dict:
+    return evaluate_alerts(db)
+
+
+@router.get("/alerts", response_model=list[AlertOut])
+def list_alerts(limit: int = Query(default=50, le=200), db: Session = Depends(get_session)) -> list[Alert]:
+    return list(db.scalars(select(Alert).order_by(Alert.id.desc()).limit(limit)))
 
 
 @router.get("/runs")

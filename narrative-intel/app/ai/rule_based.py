@@ -6,7 +6,7 @@ from collections import Counter
 
 from .base import AiProvider
 
-_WORD = re.compile(r"[a-z0-9']+")
+_WORD = re.compile(r"[a-z0-9]+")
 
 _STOP = set(
     "the a an and or but of to in on for with at by from is are was were be been being "

@@ -24,7 +24,7 @@ reversible migrations and tests. Stop-for-approval between stages.
   entities → narrative assignment); narrative clustering (embeddings/Claude);
   volume-over-time; **Manipulation Index** (% engagement from low-authenticity
   accounts). English first.
-- [ ] **Stage 5 — Alerts engine.** User rules (volume spike, new narrative,
+- [x] **Stage 5 — Alerts engine.** User rules (volume spike, new narrative,
   manipulation jump, monitored-entity mention, new campaign); dedup + cooldown;
   channels (in-app/email/webhook).
 - [ ] **Stage 6 — Dashboard/UI.** Overview, Narratives, Profiles, Campaigns,

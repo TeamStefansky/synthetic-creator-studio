@@ -157,6 +157,36 @@ class CoordinationEdge(Base):
     weight: Mapped[int] = mapped_column(Integer, default=1)  # shared campaigns
 
 
+class AlertRule(Base):
+    """User-defined alert condition. type ∈ {new_campaign, high_manipulation,
+    volume_spike, entity_mention}. channel ∈ {inapp, webhook, email}."""
+    __tablename__ = "alert_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(128))
+    type: Mapped[str] = mapped_column(String(32))
+    threshold: Mapped[float] = mapped_column(Float, default=0)
+    channel: Mapped[str] = mapped_column(String(16), default="inapp")
+    config: Mapped[dict | None] = mapped_column(JSON)
+    enabled: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class Alert(Base):
+    __tablename__ = "alerts"
+    __table_args__ = (UniqueConstraint("dedup_key", name="uq_alert_dedup"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    rule_id: Mapped[int | None] = mapped_column(ForeignKey("alert_rules.id"))
+    rule_name: Mapped[str] = mapped_column(String(128))
+    type: Mapped[str] = mapped_column(String(32))
+    title: Mapped[str] = mapped_column(String(255))
+    body: Mapped[str | None] = mapped_column(Text)
+    dedup_key: Mapped[str] = mapped_column(String(128), index=True)
+    delivered: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
 class IngestRun(Base):
     __tablename__ = "ingest_runs"
 

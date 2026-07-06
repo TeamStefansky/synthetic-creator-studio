@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     x_query: str = "disinformation OR fake news"
     rss_feeds: str = ""  # comma-separated URLs (real when provided)
 
+    # Default webhook for alert rules that don't set their own.
+    alert_webhook_url: str | None = None
+
+    # Optional API keys for the public API (comma-separated). Empty = open.
+    api_keys: str = ""
+
     def sources(self) -> list[str]:
         return [s.strip() for s in self.enabled_sources.split(",") if s.strip()]
 
