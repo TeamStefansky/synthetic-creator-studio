@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, Network, ScrollText, Mail, Telescope, Globe, ArrowRight } from "lucide-react";
+import { Eye, Network, ScrollText, Mail, Telescope, Globe, ArrowRight, ShieldQuestion } from "lucide-react";
 import UrlInput from "@/components/UrlInput";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -39,6 +39,7 @@ export default function HomePage() {
         <Feature icon={<Network className="h-5 w-5" />} title="Operator graph" desc="Link a site to siblings via shared IP, GA/AdSense IDs, and SSL SAN." />
         <Feature icon={<Globe className="h-5 w-5" />} title="Geographic origin" desc="Server, registrant, mail & DNS countries on a mini world map." />
         <Feature icon={<Telescope className="h-5 w-5" />} title="Deep OSINT" desc="Who's behind the site — owners, affiliations, funding — with sources." />
+        <Link href="/tools/post"><Feature icon={<ShieldQuestion className="h-5 w-5" />} title="Post Check" desc="Paste a post or claim — verify it against sources for a fake/true verdict." linked /></Link>
         <Link href="/tools/logs"><Feature icon={<ScrollText className="h-5 w-5" />} title="Log Analyzer" desc="Analyze logs you own: flag bots, datacenter ASNs, adversary origins." linked /></Link>
         <Link href="/tools/email"><Feature icon={<Mail className="h-5 w-5" />} title="Email Tracer" desc="Trace an email's true origin from its headers + spoofing verdict." linked /></Link>
         <Feature icon={<Eye className="h-5 w-5" />} title="Origin chain" desc="Attempt to reveal the true server behind Cloudflare and other CDNs." />

@@ -250,6 +250,33 @@ export interface Report {
   media?: { images: string[] }; // image URLs found on the page (for AI detection)
 }
 
+// --- Post / claim fact-check ("is this post fake?") -------------------------
+export type PostVerdict =
+  | "Likely False"
+  | "Misleading"
+  | "Unverified"
+  | "Likely True"
+  | "Opinion or Satire";
+
+export interface PostClaim {
+  claim: string;
+  verdict: string; // supported | contradicted | unverified | misleading
+  assessment: string;
+}
+
+export interface PostCheckResult {
+  available: boolean;
+  verdict: PostVerdict;
+  confidence: Confidence;
+  summary: string;
+  claims: PostClaim[];
+  manipulationTechniques: string[];
+  aiGeneratedLikelihood: number; // 0-100
+  redFlags: string[];
+  sources: { title: string; url: string }[];
+  note: string;
+}
+
 // --- Social amplification / bot analysis (X/Twitter; needs X_BEARER_TOKEN) --
 export interface SocialAccount {
   handle: string;
