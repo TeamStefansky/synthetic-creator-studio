@@ -164,3 +164,5 @@ the tool will match against them (in the site report, logs, and email tracer).
 - **Attribution is probabilistic** — strong infra + propagation signals point to
   a *likely* origin, not proof. It is presented as indicators with evidence.
 - **Free APIs rate-limit.** That's why everything is cached for 24h.
+
+<!-- redeploy trigger: 2026-07-06T06:54:09Z -->
