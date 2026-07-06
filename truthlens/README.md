@@ -87,6 +87,10 @@ All optional — core features work without any of them.
 | `GOOGLE_FACTCHECK_KEY` | Google Fact Check Tools API | Fact-check layer skipped |
 | `IPINFO_TOKEN` | Higher-accuracy / higher-limit IP geo & ASN | Falls back to free ip-api.com (throttled) |
 | `OPENPAGERANK_KEY` | 0–10 domain-authority signal for the legitimacy layer | Authority estimated from domain age + Wayback longevity |
+| `X_BEARER_TOKEN` | X (Twitter) API v2 — social amplification + bot analysis | Social panel shows "unavailable" |
+| `SIGHTENGINE_API_USER` + `SIGHTENGINE_API_SECRET` | AI-generated / deepfake **image** detection (primary) | Image detection disabled |
+| `HIVE_API_KEY` | Image detection fallback (Hive) | — |
+| `MONITOR_DOMAINS`, `ALERT_WEBHOOK_URL`, `CRON_SECRET` | Daily monitoring (`/api/monitor` via Vercel Cron) → alert to a Slack-style webhook when a watched site is HIGH RISK | Monitoring inactive |
 | `SEARCH_API_KEY` | Reserved for an alternate web-search provider | Propagation relies on Claude `web_search` + Wayback |
 | `IMAGE_SEARCH_KEY` | (paid) reverse-image origin tracing | Disabled |
 | `SOCIAL_API_KEY` | (paid/limited) social amplification signals | Disabled |

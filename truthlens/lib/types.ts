@@ -247,6 +247,47 @@ export interface Report {
   originTrace?: OriginTrace;
   propagation?: PropagationResult;
   coordination?: CoordinationResult;
+  media?: { images: string[] }; // image URLs found on the page (for AI detection)
+}
+
+// --- Social amplification / bot analysis (X/Twitter; needs X_BEARER_TOKEN) --
+export interface SocialAccount {
+  handle: string;
+  name?: string;
+  createdAt?: string;
+  followers?: number;
+  following?: number;
+  posts?: number;
+  engagement?: number; // summed likes+reposts within the result set
+  botScore: number; // 0-100 inauthenticity
+  reasons: string[];
+}
+
+export interface SocialResult {
+  available: boolean;
+  provider: string;
+  query: string;
+  totalPosts: number;
+  uniqueAuthors: number;
+  suspectedBotPct: number;
+  topSpreaders: SocialAccount[];
+  note: string;
+}
+
+// --- AI-generated / deepfake image detection (Sightengine / Hive) -----------
+export interface ImageVerdict {
+  url: string;
+  aiGeneratedScore: number; // 0-100
+  deepfakeScore?: number; // 0-100 (faces), if provided
+  label: string; // "Likely AI-generated" | "Likely authentic" | ...
+  provider: string;
+}
+
+export interface MediaResult {
+  available: boolean;
+  provider: string;
+  images: ImageVerdict[];
+  note: string;
 }
 
 // ===========================================================================
