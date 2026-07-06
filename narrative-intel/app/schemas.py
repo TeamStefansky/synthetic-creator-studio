@@ -82,3 +82,15 @@ class AuthorDetailOut(AuthorOut):
     following: int | None = None
     posts_count: int | None = None
     signals: list[SignalOut] = []
+
+
+class CampaignOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    coordination_score: float
+    sample_text: str
+    account_count: int
+    post_count: int
+    time_start: datetime | None
+    time_end: datetime | None
+    sources: list | None

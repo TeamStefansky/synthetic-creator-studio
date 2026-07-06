@@ -14,9 +14,12 @@ reversible migrations and tests. Stop-for-approval between stages.
   explanation) stored in `author_signals` for the "why suspicious" UI. Combined
   weighted by weight×confidence so no-data signals don't skew. API:
   `POST /api/authenticity/run`, `GET /api/authors/{id}`.
-- [ ] **Stage 3 — Coordinated behaviour.** Cluster identical/near-identical content
-  in tight time windows (uses the stored `content_hash`); temporal sync;
-  relationship graph; `Campaign` entity with saved evidence.
+- [x] **Stage 3 — Coordinated behaviour.** Clusters identical content (stored
+  `content_hash`) from >=2 distinct accounts within a time window into a
+  `Campaign` (with member accounts + saved evidence posts); scores coordination
+  (accounts × time-tightness × low-authenticity); builds a co-posting
+  relationship graph (`coordination_edges`). API: `POST /api/coordination/run`,
+  `GET /api/campaigns`, `GET /api/campaigns/{id}`, `GET /api/coordination/graph`.
 - [ ] **Stage 4 — Narratives & sentiment.** Enrichment (lang → sentiment →
   entities → narrative assignment); narrative clustering (embeddings/Claude);
   volume-over-time; **Manipulation Index** (% engagement from low-authenticity
