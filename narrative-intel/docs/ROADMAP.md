@@ -27,8 +27,13 @@ reversible migrations and tests. Stop-for-approval between stages.
 - [x] **Stage 5 — Alerts engine.** User rules (volume spike, new narrative,
   manipulation jump, monitored-entity mention, new campaign); dedup + cooldown;
   channels (in-app/email/webhook).
-- [ ] **Stage 6 — Dashboard/UI.** Overview, Narratives, Profiles, Campaigns,
-  Alerts — built into the existing TruthLens Next.js app, calling this API.
+- [x] **Stage 6 — Dashboard/UI.** Overview, Narratives, Campaigns, Profiles,
+  Alerts — built into the existing TruthLens Next.js app at `/platform`, calling
+  this API through a same-origin proxy (`app/api/platform/[...path]`) that keeps
+  the optional API key server-side. One-click "Run pipeline" drives
+  ingest → authenticity → coordination → narratives → alerts; forensic reports
+  open from campaign/narrative cards. Degrades gracefully to a "connect the
+  platform" state when `NARRATIVE_API_URL` is unset.
 - [x] **Stage 7 — Reports & public API.** Standalone HTML/JSON forensic report
   per campaign or narrative (executive summary via the AI provider, meta,
   member accounts, evidence quotes, recommended actions) at
