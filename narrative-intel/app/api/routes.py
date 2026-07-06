@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,9 @@ from ..models import (
     Alert, AlertRule, Author, Campaign, CampaignEvidence, IngestRun, Narrative, Post,
 )
 from ..narratives.engine import run as run_narratives, volume_over_time
+from ..report.generator import (
+    build_campaign_report, build_narrative_report, render_html,
+)
 from ..schemas import (
     AlertOut, AlertRuleIn, AlertRuleOut, AuthorDetailOut, AuthorOut, CampaignOut,
     IngestResult, NarrativeOut, PostOut,
@@ -202,6 +206,34 @@ def run_alerts(db: Session = Depends(get_session)) -> dict:
 @router.get("/alerts", response_model=list[AlertOut])
 def list_alerts(limit: int = Query(default=50, le=200), db: Session = Depends(get_session)) -> list[Alert]:
     return list(db.scalars(select(Alert).order_by(Alert.id.desc()).limit(limit)))
+
+
+@router.get("/report/campaign/{campaign_id}")
+def report_campaign(
+    campaign_id: int,
+    format: str = Query(default="html", pattern="^(html|json)$"),
+    db: Session = Depends(get_session),
+):
+    report = build_campaign_report(db, campaign_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if format == "json":
+        return report
+    return HTMLResponse(render_html(report))
+
+
+@router.get("/report/narrative/{narrative_id}")
+def report_narrative(
+    narrative_id: int,
+    format: str = Query(default="html", pattern="^(html|json)$"),
+    db: Session = Depends(get_session),
+):
+    report = build_narrative_report(db, narrative_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Narrative not found")
+    if format == "json":
+        return report
+    return HTMLResponse(render_html(report))
 
 
 @router.get("/runs")

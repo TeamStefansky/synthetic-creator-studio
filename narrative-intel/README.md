@@ -3,10 +3,25 @@
 Backend service for the **Narrative Intelligence & Media Monitoring** platform
 (Cyabra + Meltwater style), built alongside — and independent of — TruthLens.
 
-**Stage 1 (this milestone): the ingestion layer.** A modular pipeline that pulls
-posts from multiple sources through one uniform connector interface, normalizes
-them, de-duplicates for idempotency, and stores them for the analysis stages to
-come (authenticity, coordination, narratives, alerts, dashboard, reports).
+A modular pipeline that pulls posts from multiple sources through one uniform
+connector interface, then layers analysis on top:
+
+1. **Ingestion** — normalize + de-duplicate posts/authors from X, Telegram, RSS,
+   NewsAPI (Stage 1).
+2. **Authenticity Engine** — per-author 0–100 score from independent signal
+   classes, with a per-signal "why suspicious" breakdown (Stage 2).
+3. **Coordinated behaviour** — cluster identical content from ≥2 accounts into
+   scored campaigns + a co-posting relationship graph (Stage 3).
+4. **Narratives & sentiment** — language → sentiment → clustering, volume over
+   time, and a **Manipulation Index** (Stage 4).
+5. **Alerts** — user rules (volume spike, new narrative/campaign, manipulation
+   jump, entity mention) with dedup + cooldown and in-app/webhook/email channels
+   (Stage 5).
+6. **Reports & public API** — standalone HTML/JSON forensic report per campaign
+   or narrative, optional API-key auth + rate limiting (Stage 7).
+
+Everything runs on **SQLite + deterministic mock data with zero config**, so the
+whole platform is explorable without any API keys.
 
 ## Run locally
 
@@ -23,7 +38,7 @@ Runs on **SQLite + mock data with zero config**. Point `DATABASE_URL` at
 Postgres and set source credentials (`X_BEARER_TOKEN`, `NEWSAPI_KEY`, …) for
 live data — see `.env.example`.
 
-## API (Stage 1)
+## API
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -36,9 +51,26 @@ live data — see `.env.example`.
 | POST | `/api/coordination/run` | detect coordinated campaigns (`?window_minutes=`) |
 | GET | `/api/campaigns` / `/api/campaigns/{id}` | campaigns + members & evidence |
 | GET | `/api/coordination/graph` | co-posting relationship graph (nodes + edges) |
+| POST | `/api/narratives/run` | enrich + cluster posts into narratives |
+| GET | `/api/narratives` / `/api/narratives/{id}` | narratives + volume over time |
+| POST | `/api/alerts/evaluate` | run alert rules, emit alerts |
+| GET/POST/DELETE | `/api/alerts/rules` | manage alert rules |
+| GET | `/api/alerts` | recent alerts |
+| GET | `/api/report/campaign/{id}` | forensic report (`?format=html` default, or `json`) |
+| GET | `/api/report/narrative/{id}` | forensic report (`?format=html` default, or `json`) |
 | GET | `/api/posts` / `/api/authors` / `/api/runs` | read stored data |
 
 OpenAPI docs at `/docs`.
+
+### Public-API guards
+
+All `/api/*` routes accept optional protection, configured via env (no-ops until
+set — the API is open by default for local exploration):
+
+- **API key** — set `API_KEYS` (comma-separated). Requests must then send a
+  matching `X-API-Key` header or get `401`.
+- **Rate limiting** — a generous in-memory limit per key/IP (`429` when
+  exceeded). Suitable for a single-instance MVP.
 
 ## Architecture
 

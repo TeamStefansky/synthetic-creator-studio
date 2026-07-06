@@ -29,8 +29,12 @@ reversible migrations and tests. Stop-for-approval between stages.
   channels (in-app/email/webhook).
 - [ ] **Stage 6 — Dashboard/UI.** Overview, Narratives, Profiles, Campaigns,
   Alerts — built into the existing TruthLens Next.js app, calling this API.
-- [ ] **Stage 7 — Reports & public API.** PDF/HTML report (Claude exec summary);
-  documented OpenAPI with API keys + rate limiting.
+- [x] **Stage 7 — Reports & public API.** Standalone HTML/JSON forensic report
+  per campaign or narrative (executive summary via the AI provider, meta,
+  member accounts, evidence quotes, recommended actions) at
+  `GET /api/report/campaign/{id}` and `GET /api/report/narrative/{id}`; optional
+  API-key auth (`X-API-Key` vs `API_KEYS`) + in-memory rate limiting guarding all
+  `/api/*` routes; OpenAPI docs served at `/docs`.
 
 ## Deferred / decisions to revisit
 - **AI provider interface** — wrap Anthropic behind one `ai/` interface so a
