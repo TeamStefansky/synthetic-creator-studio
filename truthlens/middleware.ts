@@ -7,8 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 // Without SITE_PASSWORD the site is open (so local dev isn't blocked).
 
 export const config = {
-  // Protect everything except Next.js internals and common static assets.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt).*)"],
+  // Protect everything except Next.js internals, static assets, and the cron
+  // endpoint (which authenticates itself via CRON_SECRET).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|api/monitor).*)"],
 };
 
 export function middleware(req: NextRequest) {

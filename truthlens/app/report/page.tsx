@@ -19,6 +19,7 @@ import OsintPanel from "@/components/OsintPanel";
 import RatingReportCard from "@/components/RatingReportCard";
 import NarrativeCard from "@/components/NarrativeCard";
 import InsightsCard from "@/components/InsightsCard";
+import SocialMediaPanel from "@/components/SocialMediaPanel";
 import GeoOriginCard from "@/components/GeoOriginCard";
 import OriginChainCard from "@/components/OriginChainCard";
 
@@ -283,6 +284,9 @@ function ReportInner() {
           </div>
         )}
       </div>
+
+      {/* Social & media intelligence (on-demand) */}
+      <SocialMediaPanel report={report} />
 
       {/* Deep OSINT research (on-demand) */}
       <OsintPanel report={report} onLoaded={setDossier} />

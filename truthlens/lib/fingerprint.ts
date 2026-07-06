@@ -132,6 +132,27 @@ export function fingerprint(
   };
 }
 
+/** Extract the most prominent image URLs (og:image + article imgs), absolute. */
+export function extractImages(html: string, baseUrl: string): string[] {
+  const $ = cheerio.load(html || "");
+  const out = new Set<string>();
+  const abs = (src?: string) => {
+    if (!src) return;
+    try {
+      out.add(new URL(src, baseUrl).toString());
+    } catch {
+      /* skip */
+    }
+  };
+  abs($("meta[property='og:image'], meta[name='twitter:image']").attr("content"));
+  $("article img, main img, img").each((_, el) => {
+    if (out.size >= 8) return;
+    const src = $(el).attr("src") || $(el).attr("data-src");
+    if (src && !/\.svg($|\?)|sprite|logo|icon|avatar|1x1|pixel/i.test(src)) abs(src);
+  });
+  return Array.from(out).slice(0, 8);
+}
+
 /** SEO health — established publishers tend to ship complete SEO metadata. */
 export function extractSeo(html: string): SeoInfo {
   const $ = cheerio.load(html || "");

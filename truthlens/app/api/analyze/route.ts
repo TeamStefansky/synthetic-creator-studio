@@ -12,7 +12,7 @@ import { lookupArchive } from "@/lib/archive";
 import { lookupFactChecks } from "@/lib/factcheck";
 import { reverseIp } from "@/lib/reverseip";
 import { fetchPage } from "@/lib/page-fetch";
-import { fingerprint, extractArticle, extractSeo } from "@/lib/fingerprint";
+import { fingerprint, extractArticle, extractSeo, extractImages } from "@/lib/fingerprint";
 import { assessAuthority } from "@/lib/authority";
 import { buildGeography } from "@/lib/geo";
 import { traceOrigin } from "@/lib/origin-trace";
@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
       ? fingerprint(page.html, page.headers, domain)
       : undefined;
   const seo = page && page.html ? extractSeo(page.html) : undefined;
+  const images = page && page.html ? extractImages(page.html, page.finalUrl || norm.url) : [];
   const article = page && page.html ? extractArticle(page.html) : { text: "", quote: "" };
 
   // Authority / longevity (legitimacy independent of the seed list).
@@ -165,6 +166,7 @@ export async function POST(req: NextRequest) {
     originTrace,
     propagation,
     coordination,
+    media: { images },
   };
 
   // Cache the report for 24h — but NOT when content analysis failed despite a
