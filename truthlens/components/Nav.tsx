@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Eye, FileSearch, Mail, ScrollText, Activity, Info } from "lucide-react";
+import { Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion } from "lucide-react";
 
 const links = [
   { href: "/", label: "Site Report", icon: FileSearch, match: (p: string) => p === "/" || p.startsWith("/report") },
+  { href: "/tools/post", label: "Post Check", icon: ShieldQuestion, match: (p: string) => p.startsWith("/tools/post") },
   { href: "/tools/logs", label: "Log Analyzer", icon: ScrollText, match: (p: string) => p.startsWith("/tools/logs") },
   { href: "/tools/email", label: "Email Tracer", icon: Mail, match: (p: string) => p.startsWith("/tools/email") },
   { href: "/monitor", label: "Monitor", icon: Activity, match: (p: string) => p.startsWith("/monitor") },
