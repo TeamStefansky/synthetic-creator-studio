@@ -2,9 +2,10 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   ShieldQuestion, Loader2, ExternalLink, AlertTriangle, CheckCircle2, XCircle,
-  HelpCircle, Upload, X, Share2, Check,
+  HelpCircle, Upload, X, Share2, Check, Code, LayoutGrid,
 } from "lucide-react";
 import type { PostCheckResult, PostVerdict } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
@@ -37,6 +38,7 @@ function PostCheckInner() {
   const [error, setError] = useState("");
   const [shareMsg, setShareMsg] = useState("");
   const [shared, setShared] = useState(false);
+  const [shareId, setShareId] = useState<string | null>(null);
 
   // Load a shared result if ?s=<id> is present.
   useEffect(() => {
@@ -82,29 +84,45 @@ function PostCheckInner() {
     }
   };
 
+  const ensureShareId = async (): Promise<string | null> => {
+    if (shareId) return shareId;
+    if (!res) return null;
+    const r = await fetch("/api/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ result: res }),
+    });
+    if (!r.ok) return null;
+    const { id } = await r.json();
+    setShareId(id);
+    return id;
+  };
+
   const share = async () => {
     if (!res) return;
     setShareMsg("");
     try {
-      const r = await fetch("/api/share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ result: res }),
-      });
-      if (r.ok) {
-        const { id } = await r.json();
-        const url = `${window.location.origin}/tools/post?s=${id}`;
-        await navigator.clipboard.writeText(url);
+      const id = await ensureShareId();
+      if (id) {
+        await navigator.clipboard.writeText(`${window.location.origin}/tools/post?s=${id}`);
         setShareMsg("Share link copied to clipboard!");
       } else {
-        // No KV store — copy a text summary instead.
-        const summary = `TruthLens Post Check — ${res.verdict} (${res.confidence} confidence)\n${res.summary}`;
-        await navigator.clipboard.writeText(summary);
+        await navigator.clipboard.writeText(`TruthLens Post Check — ${res.verdict} (${res.confidence} confidence)\n${res.summary}`);
         setShareMsg("No share store configured — copied a text summary instead.");
       }
     } catch {
       setShareMsg("Could not create share link.");
     }
+  };
+
+  const embed = async () => {
+    if (!res) return;
+    setShareMsg("");
+    const id = await ensureShareId();
+    if (!id) { setShareMsg("Embedding needs a KV store connected."); return; }
+    const snippet = `<iframe src="${window.location.origin}/embed/post?s=${id}" width="380" height="260" style="border:0" loading="lazy"></iframe>`;
+    try { await navigator.clipboard.writeText(snippet); setShareMsg("Embed code copied to clipboard!"); }
+    catch { setShareMsg("Could not copy embed code."); }
   };
 
   const canRun = !loading && (text.trim().length >= 5 || !!image);
@@ -120,6 +138,9 @@ function PostCheckInner() {
           Paste a post, message, or claim — <strong>or upload a screenshot</strong> — and we extract the
           claims, verify them against the open web, and return a verdict with sources.
         </p>
+        <Link href="/checks" className="mt-2 inline-flex items-center gap-1.5 text-sm text-indigo-400 hover:underline">
+          <LayoutGrid className="h-4 w-4" /> Recent shared checks
+        </Link>
       </div>
 
       {!shared && (
@@ -177,9 +198,14 @@ function PostCheckInner() {
                   </div>
                 </div>
                 {!shared && (
-                  <button className="btn-ghost text-sm no-print" onClick={share} title="Copy a shareable link">
-                    <Share2 className="h-4 w-4" /> Share
-                  </button>
+                  <div className="flex gap-2 no-print">
+                    <button className="btn-ghost text-sm" onClick={share} title="Copy a shareable link">
+                      <Share2 className="h-4 w-4" /> Share
+                    </button>
+                    <button className="btn-ghost text-sm" onClick={embed} title="Copy an embed code">
+                      <Code className="h-4 w-4" /> Embed
+                    </button>
+                  </div>
                 )}
               </div>
               {shareMsg && <p className="flex items-center gap-1.5 text-xs text-risk-legit"><Check className="h-3.5 w-3.5" />{shareMsg}</p>}

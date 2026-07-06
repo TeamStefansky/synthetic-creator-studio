@@ -66,6 +66,20 @@ body {
   }
 }
 
+/* Embed mode: strip site chrome so a result renders cleanly inside an iframe. */
+body.embed-mode > header,
+body.embed-mode > div:last-of-type {
+  display: none !important;
+}
+body.embed-mode {
+  background: transparent !important;
+  background-image: none !important;
+}
+body.embed-mode main {
+  padding: 0 !important;
+  max-width: none !important;
+}
+
 /* thin scrollbars for tables */
 .scroll-thin::-webkit-scrollbar {
   height: 8px;
