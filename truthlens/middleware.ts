@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const config = {
   // Protect everything except Next.js internals, static assets, and the cron
   // endpoint (which authenticates itself via CRON_SECRET).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|api/monitor).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|api/monitor|api/share|embed).*)"],
 };
 
 export function middleware(req: NextRequest) {
