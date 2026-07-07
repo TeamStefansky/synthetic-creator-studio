@@ -1,5 +1,11 @@
-# Render blueprint for the narrative-intel service (API + ingestion worker + DB).
-# In Render: New + → Blueprint → point at this repo, rootDir narrative-intel.
+# Render blueprint for the narrative-intel service (API + DB).
+# In Render: New + → Blueprint → point at this repo. It reads this file.
+#
+# Free tier: the web service + Postgres below are both free. Render's free tier
+# does NOT include background workers, so the ingestion worker is commented out —
+# the dashboard's "Run pipeline" button ingests on demand, which is all an MVP
+# needs. To run continuous ingestion, uncomment the worker and pick a paid plan
+# (or add a free Cron Job that curls POST /api/ingest/run on a schedule).
 databases:
   - name: narrative-db
     plan: free
@@ -8,6 +14,7 @@ services:
   - type: web
     name: narrative-api
     runtime: python
+    plan: free
     rootDir: narrative-intel
     buildCommand: pip install -r requirements.txt && alembic upgrade head
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -17,6 +24,10 @@ services:
         fromDatabase:
           name: narrative-db
           property: connectionString
+      # Optional — set to protect the public API (must match NARRATIVE_API_KEY in Vercel).
+      - key: API_KEYS
+        sync: false
+      # Optional real-source credentials; deterministic mock data is used when absent.
       - key: X_BEARER_TOKEN
         sync: false
       - key: NEWSAPI_KEY
@@ -24,22 +35,17 @@ services:
       - key: RSS_FEEDS
         sync: false
 
-  - type: worker
-    name: narrative-worker
-    runtime: python
-    rootDir: narrative-intel
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m app.worker
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: narrative-db
-          property: connectionString
-      - key: POLL_INTERVAL_SECONDS
-        value: "600"
-      - key: X_BEARER_TOKEN
-        sync: false
-      - key: NEWSAPI_KEY
-        sync: false
-      - key: RSS_FEEDS
-        sync: false
+  # --- Continuous ingestion worker (needs a paid plan; free tier has no workers) ---
+  # - type: worker
+  #   name: narrative-worker
+  #   runtime: python
+  #   rootDir: narrative-intel
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python -m app.worker
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: narrative-db
+  #         property: connectionString
+  #     - key: POLL_INTERVAL_SECONDS
+  #       value: "600"
