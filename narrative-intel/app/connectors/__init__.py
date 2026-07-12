@@ -3,13 +3,21 @@ from __future__ import annotations
 
 from .base import SourceConnector
 from .bluesky import BlueskyConnector
+from .brave import BraveConnector
 from .gdelt import GdeltConnector
+from .gnews import GNewsConnector
+from .guardian import GuardianConnector
 from .hackernews import HackerNewsConnector
+from .mastodon import MastodonConnector
+from .mediastack import MediastackConnector
 from .newsapi import NewsApiConnector
+from .newsdata import NewsDataConnector
+from .nyt import NytConnector
 from .reddit import RedditConnector
 from .rss import RssConnector
 from .telegram import TelegramConnector
 from .x import XConnector
+from .youtube import YouTubeConnector
 
 _BUILDERS = {
     "x": XConnector,
@@ -20,6 +28,14 @@ _BUILDERS = {
     "bluesky": BlueskyConnector,
     "hackernews": HackerNewsConnector,
     "reddit": RedditConnector,
+    "mastodon": MastodonConnector,
+    "guardian": GuardianConnector,
+    "nyt": NytConnector,
+    "gnews": GNewsConnector,
+    "newsdata": NewsDataConnector,
+    "mediastack": MediastackConnector,
+    "brave": BraveConnector,
+    "youtube": YouTubeConnector,
 }
 
 

@@ -1,9 +1,19 @@
 from app.connectors import available_sources, get_connector
 
-# These are network-only (keyless live search) — no offline mock fixture, so
-# they're excluded from the mock-fixture tests (they'd make real HTTP calls).
-NETWORK_ONLY = {"gdelt", "bluesky", "hackernews", "reddit"}
+# These are network/key-gated (no offline mock fixture): keyless live-search
+# sources plus key-gated ones that return [] without a key. Excluded from the
+# mock-fixture tests (they'd make real HTTP calls or return nothing).
+NETWORK_ONLY = {
+    "gdelt", "bluesky", "hackernews", "reddit", "mastodon",
+    "guardian", "nyt", "gnews", "newsdata", "mediastack", "brave", "youtube",
+}
 MOCK_SOURCES = [s for s in available_sources() if s not in NETWORK_ONLY]
+
+
+def test_key_gated_sources_are_inert_without_keys():
+    # Without credentials these must return [] (not crash, not mock).
+    for name in ("guardian", "nyt", "gnews", "newsdata", "mediastack", "brave", "youtube"):
+        assert get_connector(name).fetch("test") == []
 
 
 def test_all_connectors_normalize_their_mock_items():
@@ -82,3 +92,49 @@ def test_reddit_normalizes_a_post():
     assert np.source_post_id == "t3_abc"
     assert "Headline" in np.text
     assert np.url.startswith("https://www.reddit.com/r/news")
+
+
+def test_guardian_normalizes_an_article():
+    np = get_connector("guardian").normalize({
+        "id": "world/2024/a", "webTitle": "Big story", "webUrl": "https://theguardian.com/a",
+        "webPublicationDate": "2024-01-15T12:30:00Z",
+        "fields": {"trailText": "details", "byline": "Jane Doe"},
+    })
+    assert np.source == "guardian"
+    assert "Big story" in np.text
+    assert np.author.display_name == "Jane Doe"
+    assert np.timestamp is not None
+
+
+def test_nyt_normalizes_an_article():
+    np = get_connector("nyt").normalize({
+        "_id": "nyt://article/1", "web_url": "https://nytimes.com/a",
+        "abstract": "summary", "headline": {"main": "The headline"},
+        "pub_date": "2024-01-15T12:30:00+0000", "byline": {"original": "By Reporter"},
+    })
+    assert np.source == "nyt"
+    assert "The headline" in np.text
+    assert np.url == "https://nytimes.com/a"
+
+
+def test_youtube_normalizes_a_video():
+    np = get_connector("youtube").normalize({
+        "id": {"videoId": "vid123"},
+        "snippet": {"title": "Clip", "description": "desc", "channelTitle": "Chan",
+                    "channelId": "UC1", "publishedAt": "2024-01-15T12:30:00Z"},
+    })
+    assert np.source == "youtube"
+    assert np.url == "https://www.youtube.com/watch?v=vid123"
+    assert np.author.display_name == "Chan"
+
+
+def test_mastodon_normalizes_and_strips_html():
+    np = get_connector("mastodon").normalize({
+        "id": "111", "content": "<p>Hello <b>world</b></p>", "url": "https://m.social/@a/111",
+        "created_at": "2024-01-15T12:30:00.000Z", "language": "en",
+        "account": {"id": "7", "acct": "alice", "display_name": "Alice"},
+        "favourites_count": 3, "reblogs_count": 1, "replies_count": 0,
+    })
+    assert np.source == "mastodon"
+    assert "Hello" in np.text and "<" not in np.text
+    assert np.author.handle == "alice"

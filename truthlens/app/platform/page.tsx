@@ -228,6 +228,34 @@ export default function PlatformPage() {
                     <Stat label="Narratives" value={narratives.length} />
                     <Stat label="Campaigns" value={campaigns.length} tone={campaigns.length ? "text-risk-high" : "text-white"} />
                   </div>
+
+                  <div className="card">
+                    <h3 className="mb-3 flex items-center gap-2 font-semibold text-white">
+                      <Radar className="h-4 w-4 text-brand-soft" /> Monitored sources
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(health?.connectors ?? []).map((c: any) => (
+                        <span
+                          key={c.source}
+                          title={c.mock ? "Needs an API key — add it on the backend to go live" : "Live — searching real data"}
+                          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
+                            c.mock
+                              ? "border-risk-unknown/30 bg-risk-unknown/[0.06] text-risk-unknown"
+                              : "border-risk-legit/30 bg-risk-legit/[0.06] text-risk-legit"
+                          }`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${c.mock ? "bg-risk-unknown" : "bg-risk-legit"}`} />
+                          {c.source}
+                          {c.mock && <span className="text-gray-500">· key</span>}
+                        </span>
+                      ))}
+                      {!(health?.connectors ?? []).length && <p className="text-sm text-gray-500">—</p>}
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                      <span className="text-risk-legit">●</span> live (searching real data) ·{" "}
+                      <span className="text-risk-unknown">●</span> needs an API key (add on the backend)
+                    </p>
+                  </div>
                   {narratives.length === 0 && campaigns.length === 0 && (
                     <div className="card text-sm text-gray-400">
                       No analysis yet. Click <span className="font-semibold text-white">Run pipeline</span> to ingest the
