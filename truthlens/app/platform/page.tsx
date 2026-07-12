@@ -60,6 +60,8 @@ export default function PlatformPage() {
   const [authors, setAuthors] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -73,6 +75,7 @@ export default function PlatformPage() {
       ]);
       setHealth(h); setNarratives(n); setCampaigns(c); setAuthors(a); setAlerts(al);
       setUnavailable(null);
+      setUpdatedAt(new Date().toLocaleTimeString());
     } catch (e) {
       if (e instanceof PlatformUnavailable) setUnavailable(e.reason);
       else setUnavailable((e as Error).message);
@@ -83,10 +86,9 @@ export default function PlatformPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const runSearch = useCallback(async () => {
-    const q = query.trim();
+  const doSearch = useCallback(async (q: string, silent = false) => {
     if (q.length < 2) return;
-    setRunning(`Detecting “${q}” across sources…`);
+    if (!silent) setRunning(`Detecting “${q}” across sources…`);
     try {
       await apiPost(`search?query=${encodeURIComponent(q)}`);
       setActiveQuery(q);
@@ -94,9 +96,23 @@ export default function PlatformPage() {
     } catch (e) {
       if (e instanceof PlatformUnavailable) setUnavailable(e.reason);
     } finally {
-      setRunning(null);
+      if (!silent) setRunning(null);
     }
-  }, [query, refresh]);
+  }, [refresh]);
+
+  const runSearch = useCallback(() => doSearch(query.trim()), [query, doSearch]);
+
+  // Auto-refresh: every 60s re-read the dashboard; if a keyword is being
+  // monitored, silently re-run its search to pull fresh posts (live monitoring).
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => {
+      if (running) return;                 // don't collide with a manual run
+      if (activeQuery) doSearch(activeQuery, true);
+      else refresh();
+    }, 60000);
+    return () => clearInterval(id);
+  }, [autoRefresh, running, activeQuery, doSearch, refresh]);
 
   const runPipeline = useCallback(async () => {
     setRunning("Running full pipeline…");
@@ -132,21 +148,33 @@ export default function PlatformPage() {
             campaigns, narratives &amp; sentiment, and alerts. Indicators with evidence — not verdicts.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={runPipeline}
+              disabled={!!running || !!unavailable}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50"
+            >
+              {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+              {running || "Run pipeline"}
+            </button>
+            <button
+              onClick={refresh}
+              disabled={loading}
+              title="Refresh now"
+              className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:bg-white/[0.04]"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
           <button
-            onClick={runPipeline}
-            disabled={!!running || !!unavailable}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50"
+            onClick={() => setAutoRefresh((v) => !v)}
+            className="flex items-center gap-1.5 text-xs text-gray-500 transition hover:text-gray-300"
+            title="Toggle auto-refresh (every 60s)"
           >
-            {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-            {running || "Run pipeline"}
-          </button>
-          <button
-            onClick={refresh}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition hover:bg-white/[0.04]"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${autoRefresh ? "animate-pulse bg-risk-legit" : "bg-gray-600"}`} />
+            {autoRefresh ? "Live · auto-refresh on" : "Auto-refresh off"}
+            {updatedAt && <span className="text-gray-600">· {updatedAt}</span>}
           </button>
         </div>
       </header>
