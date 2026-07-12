@@ -17,6 +17,7 @@ from ..models import (
 )
 from ..narratives.engine import run as run_narratives, volume_over_time
 from ..pipeline import run_all as run_pipeline
+from ..threat.engine import compute as compute_threat
 from ..report.generator import (
     build_campaign_report, build_narrative_report, render_html,
 )
@@ -73,6 +74,24 @@ def search_and_analyze(
     pipeline (authenticity → coordination → narratives → alerts) and return a
     run summary. This is what the dashboard's keyword search calls."""
     return run_pipeline(db, query=query)
+
+
+@router.get("/brandwatch")
+def brandwatch(
+    entity: str = Query(..., min_length=2, description="brand / client / product / keyword"),
+    refresh: bool = Query(default=True, description="pull fresh data before scoring"),
+    window_hours: int = Query(default=72, ge=1, le=720),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Brand Watch: is this entity under a coordinated disinformation attack?
+
+    When refresh=true, pulls fresh data for the entity across every source and
+    runs the analysis pipeline (scoped to the entity), then returns the composite
+    threat score, per-signal breakdown, live evidence feed and trend.
+    """
+    if refresh:
+        run_pipeline(db, query=entity, entity=entity)
+    return compute_threat(db, entity, window_hours=window_hours)
 
 
 @router.get("/posts", response_model=list[PostOut])

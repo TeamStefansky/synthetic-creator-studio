@@ -74,6 +74,8 @@ class Post(Base):
     source: Mapped[str] = mapped_column(String(32), index=True)
     source_post_id: Mapped[str] = mapped_column(String(128), index=True)
     content_hash: Mapped[str] = mapped_column(String(64), index=True)
+    # The watched entity/keyword this post was pulled for (Brand Watch scoping).
+    entity: Mapped[str | None] = mapped_column(String(255), index=True)
     author_id: Mapped[int | None] = mapped_column(ForeignKey("authors.id"))
     text: Mapped[str] = mapped_column(Text)
     lang: Mapped[str | None] = mapped_column(String(8))

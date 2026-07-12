@@ -8,9 +8,16 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Radar, Play, RefreshCw, AlertTriangle, Users, Network, MessageSquareText,
-  Activity, Bell, FileText, Loader2, PlugZap, ExternalLink, Search,
+  Activity, Bell, FileText, Loader2, PlugZap, ExternalLink, Search, ShieldAlert,
+  ShieldCheck, ShieldQuestion, TrendingUp,
 } from "lucide-react";
 import { apiGet, apiPost, apiDelete, reportUrl, PlatformUnavailable } from "@/lib/platform";
+
+const STATUS_UI: Record<string, { label: string; tone: string; bar: string; border: string; icon: any }> = {
+  UNDER_ATTACK: { label: "Under attack", tone: "text-risk-high", bar: "bg-risk-high", border: "border-risk-high/40", icon: ShieldAlert },
+  ELEVATED: { label: "Elevated", tone: "text-risk-unknown", bar: "bg-risk-unknown", border: "border-risk-unknown/40", icon: ShieldQuestion },
+  CALM: { label: "Calm", tone: "text-risk-legit", bar: "bg-risk-legit", border: "border-risk-legit/40", icon: ShieldCheck },
+};
 
 type Tab = "overview" | "narratives" | "campaigns" | "profiles" | "alerts";
 
@@ -54,6 +61,7 @@ export default function PlatformPage() {
   const [running, setRunning] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState<string | null>(null);
+  const [threat, setThreat] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
   const [narratives, setNarratives] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -86,11 +94,13 @@ export default function PlatformPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const doSearch = useCallback(async (q: string, silent = false) => {
+  // Brand Watch: pull fresh data for the entity, score the threat, refresh tabs.
+  const runBrandWatch = useCallback(async (q: string, silent = false) => {
     if (q.length < 2) return;
-    if (!silent) setRunning(`Detecting “${q}” across sources…`);
+    if (!silent) setRunning(`Scanning “${q}” for a disinformation attack…`);
     try {
-      await apiPost(`search?query=${encodeURIComponent(q)}`);
+      const result = await apiGet(`brandwatch?entity=${encodeURIComponent(q)}`);
+      setThreat(result);
       setActiveQuery(q);
       await refresh();
     } catch (e) {
@@ -100,19 +110,19 @@ export default function PlatformPage() {
     }
   }, [refresh]);
 
-  const runSearch = useCallback(() => doSearch(query.trim()), [query, doSearch]);
+  const runSearch = useCallback(() => runBrandWatch(query.trim()), [query, runBrandWatch]);
 
-  // Auto-refresh: every 60s re-read the dashboard; if a keyword is being
-  // monitored, silently re-run its search to pull fresh posts (live monitoring).
+  // Auto-refresh: every 60s. If an entity is being watched, silently re-scan it
+  // (live monitoring); otherwise just re-read the dashboard.
   useEffect(() => {
     if (!autoRefresh) return;
     const id = setInterval(() => {
       if (running) return;                 // don't collide with a manual run
-      if (activeQuery) doSearch(activeQuery, true);
+      if (activeQuery) runBrandWatch(activeQuery, true);
       else refresh();
     }, 60000);
     return () => clearInterval(id);
-  }, [autoRefresh, running, activeQuery, doSearch, refresh]);
+  }, [autoRefresh, running, activeQuery, runBrandWatch, refresh]);
 
   const runPipeline = useCallback(async () => {
     setRunning("Running full pipeline…");
@@ -200,14 +210,14 @@ export default function PlatformPage() {
         <>
           <div className="card">
             <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
-              <Search className="h-4 w-4 text-brand-soft" /> Detect keywords across sources
+              <ShieldAlert className="h-4 w-4 text-brand-soft" /> Brand Watch — is your entity under a disinformation attack?
             </label>
             <div className="flex flex-wrap gap-2">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
-                placeholder="e.g. election fraud, vaccine, brand name…"
+                placeholder="Enter a brand, client, product, or keyword…"
                 className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-gray-200 outline-none placeholder:text-gray-600 focus:border-brand"
               />
               <button
@@ -215,15 +225,17 @@ export default function PlatformPage() {
                 disabled={!!running || query.trim().length < 2}
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50"
               >
-                {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                Detect
+                {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
+                Scan
               </button>
             </div>
             <p className="mt-2 text-xs text-gray-500">
-              Searches news, web &amp; GDELT for free; X/Twitter &amp; Telegram when their API keys are set on the backend.
-              {activeQuery && <> · Showing results for <span className="text-brand-soft">“{activeQuery}”</span></>}
+              Scans news, web, GDELT, Bluesky, Hacker News, Reddit &amp; Mastodon free; more sources when their keys are set.
+              {activeQuery && <> · Watching <span className="text-brand-soft">“{activeQuery}”</span></>}
             </p>
           </div>
+
+          {threat && <ThreatCard threat={threat} />}
 
           <nav className="flex flex-wrap gap-1 border-b border-white/[0.07]">
             {TABS.map(({ id, label, icon: Icon }) => (
@@ -428,6 +440,106 @@ export default function PlatformPage() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function ThreatCard({ threat }: { threat: any }) {
+  const ui = STATUS_UI[threat.status] || STATUS_UI.CALM;
+  const Icon = ui.icon;
+  const score = threat.threat_score ?? 0;
+  const maxTrend = Math.max(1, ...(threat.trend || []).map((t: any) => t.count));
+  return (
+    <div className={`card ${ui.border}`}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className={`grid h-12 w-12 place-items-center rounded-2xl bg-white/[0.04] ${ui.tone}`}>
+            <Icon className="h-6 w-6" />
+          </span>
+          <div>
+            <div className="text-lg font-bold text-white">{threat.entity}</div>
+            <div className={`text-sm font-semibold uppercase tracking-wide ${ui.tone}`}>{ui.label}</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={`text-4xl font-black ${ui.tone}`}>{score}<span className="text-lg text-gray-600">/100</span></div>
+          <div className="text-xs text-gray-500">threat score · {threat.total_posts} posts · {threat.total_accounts} accounts</div>
+        </div>
+      </div>
+
+      {threat.note && <p className="mt-3 text-sm text-gray-400">{threat.note}</p>}
+
+      {(threat.signals || []).length > 0 && (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {threat.signals.map((s: any) => {
+            const tone = s.score >= 66 ? "bg-risk-high" : s.score >= 34 ? "bg-risk-unknown" : "bg-risk-legit";
+            return (
+              <div key={s.key}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-200">{s.label}</span>
+                  <span className="text-xs text-gray-500">
+                    {s.score}{s.confidence < 0.4 && <span title="low confidence — limited data"> ·low data</span>}
+                  </span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+                  <div className={`h-full rounded-full ${tone}`} style={{ width: `${Math.max(2, s.score)}%`, opacity: 0.4 + s.confidence * 0.6 }} />
+                </div>
+                <div className="mt-1 text-xs text-gray-500">{s.detail}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {(threat.sources || []).length > 0 && (
+        <div className="mt-5 flex flex-wrap gap-1.5">
+          {threat.sources.map((s: any) => (
+            <span key={s.source} className="rounded-full bg-white/[0.06] px-2 py-0.5 text-xs text-gray-300">
+              {s.source} <span className="text-gray-500">{s.count}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-5 grid gap-6 lg:grid-cols-2">
+        {(threat.trend || []).length > 1 && (
+          <div>
+            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-white">
+              <TrendingUp className="h-4 w-4 text-brand-soft" /> Volume over time
+            </h4>
+            <div className="flex h-16 items-end gap-0.5">
+              {threat.trend.map((t: any, i: number) => (
+                <div key={i} title={`${t.ts}: ${t.count}`}
+                  className="flex-1 rounded-t bg-brand-soft/60"
+                  style={{ height: `${Math.max(4, (t.count / maxTrend) * 100)}%` }} />
+              ))}
+            </div>
+          </div>
+        )}
+        <div>
+          <h4 className="mb-2 text-sm font-semibold text-white">Live evidence</h4>
+          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+            {(threat.evidence || []).map((e: any, i: number) => (
+              <div key={i} className="rounded-lg border border-white/[0.06] px-3 py-2 text-sm">
+                <p className="text-gray-300">{e.text}</p>
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                  <span className="rounded bg-white/[0.06] px-1.5">{e.source}</span>
+                  {e.handle && <span>{e.handle}</span>}
+                  {typeof e.authenticity_score === "number" && (
+                    <span className={e.authenticity_score <= 40 ? "text-risk-high" : ""}>auth {e.authenticity_score}</span>
+                  )}
+                  {e.url && <a href={e.url} target="_blank" rel="noopener noreferrer" className="ml-auto text-brand-soft hover:underline">open ↗</a>}
+                </div>
+              </div>
+            ))}
+            {!(threat.evidence || []).length && <p className="text-sm text-gray-500">No evidence captured.</p>}
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-4 border-t border-white/[0.06] pt-3 text-xs text-gray-600">
+        Indicators of a coordinated inauthentic campaign, with evidence — not a verdict about any specific person or post.
+      </p>
     </div>
   );
 }

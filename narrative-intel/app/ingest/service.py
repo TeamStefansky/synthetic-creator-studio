@@ -48,7 +48,8 @@ def _upsert_author(db: Session, na: NormalizedAuthor | None) -> Author | None:
     return author
 
 
-def ingest_source(db: Session, source: str, query: str | None = None) -> IngestResult:
+def ingest_source(db: Session, source: str, query: str | None = None,
+                  entity: str | None = None) -> IngestResult:
     run = IngestRun(source=source, status="running")
     db.add(run)
     db.flush()
@@ -92,6 +93,7 @@ def ingest_source(db: Session, source: str, query: str | None = None) -> IngestR
             source=np.source,
             source_post_id=np.source_post_id,
             content_hash=chash,
+            entity=entity,
             author_id=author.id if author else None,
             text=np.text,
             lang=np.lang,

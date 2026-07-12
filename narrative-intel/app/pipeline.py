@@ -25,14 +25,15 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [pipeline] %(message
 log = logging.getLogger("pipeline")
 
 
-def run_all(db, query: str | None = None) -> dict:
+def run_all(db, query: str | None = None, entity: str | None = None) -> dict:
     """Run the full pipeline against `db`. `query` (keywords) is passed to every
-    connector; when omitted each connector uses its configured default."""
+    connector; when omitted each connector uses its configured default. `entity`
+    tags the ingested posts for Brand Watch scoping."""
     summary: dict = {"query": query, "ingest": {}, "authenticity": None,
                      "coordination": None, "narratives": None, "alerts": None}
     for source in settings.sources():
         try:
-            res = ingest_source(db, source, query=query)
+            res = ingest_source(db, source, query=query, entity=entity)
             summary["ingest"][source] = {
                 "fetched": res.fetched, "inserted": res.inserted,
                 "duplicates": res.duplicates, "errors": res.errors, "status": res.status,
