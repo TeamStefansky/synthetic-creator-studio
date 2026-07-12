@@ -7,11 +7,11 @@ A modular pipeline that pulls posts from multiple sources through one uniform
 connector interface, then layers analysis on top:
 
 0. **Keyword search** — type keywords in the dashboard; `POST /api/search` fans
-   them out across every source, then runs the whole pipeline. GDELT (global
-   news/web) works free with no key; X/Twitter, Telegram and NewsAPI activate
-   when their keys are set.
+   them out across every source, then runs the whole pipeline. GDELT, Bluesky,
+   Hacker News and Reddit search **free with no key**; X/Twitter, Telegram and
+   NewsAPI activate when their keys are set. See `docs/DATA_SOURCES.md`.
 1. **Ingestion** — normalize + de-duplicate posts/authors from X, Telegram, RSS,
-   NewsAPI, GDELT (Stage 1).
+   NewsAPI, GDELT, Bluesky, Hacker News, Reddit (Stage 1).
 2. **Authenticity Engine** — per-author 0–100 score from independent signal
    classes, with a per-signal "why suspicious" breakdown (Stage 2).
 3. **Coordinated behaviour** — cluster identical content from ≥2 accounts into

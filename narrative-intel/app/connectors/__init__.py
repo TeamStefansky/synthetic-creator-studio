@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 from .base import SourceConnector
+from .bluesky import BlueskyConnector
 from .gdelt import GdeltConnector
+from .hackernews import HackerNewsConnector
 from .newsapi import NewsApiConnector
+from .reddit import RedditConnector
 from .rss import RssConnector
 from .telegram import TelegramConnector
 from .x import XConnector
@@ -14,6 +17,9 @@ _BUILDERS = {
     "rss": RssConnector,
     "newsapi": NewsApiConnector,
     "gdelt": GdeltConnector,
+    "bluesky": BlueskyConnector,
+    "hackernews": HackerNewsConnector,
+    "reddit": RedditConnector,
 }
 
 

@@ -16,12 +16,17 @@ class Settings(BaseSettings):
 
     # Ingestion worker cadence (seconds) and which sources are enabled.
     poll_interval_seconds: int = 300
-    enabled_sources: str = "x,telegram,rss,newsapi,gdelt"
+    # gdelt/bluesky/hackernews/reddit are free & keyless (real search, no signup);
+    # x/telegram/newsapi need keys (else mock).
+    enabled_sources: str = "x,telegram,rss,newsapi,gdelt,bluesky,hackernews,reddit"
 
     # Optional real-source credentials (mock data is used when absent).
     x_bearer_token: str | None = None
     newsapi_key: str | None = None
     telegram_bot_token: str | None = None
+    # Reddit works keyless (best-effort); set these for reliable OAuth access.
+    reddit_client_id: str | None = None
+    reddit_client_secret: str | None = None
 
     # Comma-separated default queries/handles/feeds the connectors pull.
     x_query: str = "disinformation OR fake news"

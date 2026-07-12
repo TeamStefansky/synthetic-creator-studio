@@ -27,11 +27,24 @@ To require nothing, GDELT already runs for free.
 
 ---
 
-## ✅ Already wired — just add a key
+## ✅ Free & keyless — already live, nothing to do
+
+These run with **no signup and no key** (real keyword search):
+
+| Source | What it covers |
+|---|---|
+| **GDELT** | global online news/web |
+| **Bluesky** | live social network (public search) |
+| **Hacker News** | tech/news discussion (Algolia API) |
+| **Reddit** | public post search (best-effort keyless; add OAuth for reliability) |
+
+Reddit is more reliable with a free OAuth app — set `REDDIT_CLIENT_ID` +
+`REDDIT_CLIENT_SECRET` (create an app at https://www.reddit.com/prefs/apps).
+
+## ✅ Wired — add a key to activate
 
 | Source | Env var(s) | Cost | Get the key |
 |---|---|---|---|
-| **GDELT** (global news/web) | *(none — always on)* | Free | https://www.gdeltproject.org |
 | **X / Twitter** | `X_BEARER_TOKEN` | Free tier can't search; **Basic ~$100/mo**, Pro higher | https://developer.x.com → Projects & Apps → Keys → *Bearer Token* |
 | **NewsAPI.org** | `NEWSAPI_KEY` | Free (100 req/day, dev only); paid for production | https://newsapi.org/register |
 | **RSS** (any feed) | `RSS_FEEDS` (comma-separated URLs) | Free | Copy feed URLs from any news site (e.g. `https://feeds.bbci.co.uk/news/rss.xml`) |
@@ -60,8 +73,6 @@ create a Project + App, and copy the **Bearer Token** into `X_BEARER_TOKEN`.
 
 | Source | Cost | Notes | Sign up |
 |---|---|---|---|
-| **Bluesky (AT Protocol)** | **Free** | Public search, no paid tier. Best free social source. | App password: https://bsky.app → Settings → App Passwords · docs https://docs.bsky.app |
-| **Reddit** | **Free** (rate-limited) | OAuth client id/secret; good for subreddit + keyword monitoring | https://www.reddit.com/prefs/apps · docs https://www.reddit.com/dev/api |
 | **Mastodon** | **Free** | Per-instance public timeline/search API | e.g. https://mastodon.social/settings/applications · docs https://docs.joinmastodon.org |
 | **YouTube Data API v3** | Free quota (10k units/day) | Search videos/comments by keyword | https://console.cloud.google.com → enable *YouTube Data API v3* · docs https://developers.google.com/youtube/v3 |
 | **TikTok Research API** | Free but **vetted/application-only** | Restricted to approved researchers | https://developers.tiktok.com/products/research-api/ |
@@ -84,13 +95,12 @@ create a Project + App, and copy the **Bearer Token** into `X_BEARER_TOKEN`.
 
 ## Recommended order (best value first)
 
-1. **GDELT** — already on, free. ✅
-2. **Bluesky** + **Reddit** — free, real social signal → high value. 🔧 (ask to build)
-3. **The Guardian** + **NYT** + **GNews** — free, real news. 🔧
-4. **NewsAPI** — add `NEWSAPI_KEY` (free dev tier). ✅
-5. **X/Twitter** — add `X_BEARER_TOKEN` once you buy Basic ($100/mo). ✅
-6. **YouTube** — free quota. 🔧
-7. **Telegram (MTProto)** — real, free, but setup-heavy. 🔧
+1. **GDELT + Bluesky + Hacker News + Reddit** — already on, free, keyless. ✅
+2. **The Guardian** + **NYT** + **GNews** — free, real news. 🔧 (ask to build)
+3. **NewsAPI** — add `NEWSAPI_KEY` (free dev tier). ✅
+4. **X/Twitter** — add `X_BEARER_TOKEN` once you buy Basic ($100/mo). ✅
+5. **YouTube** — free quota. 🔧
+6. **Telegram (MTProto)** — real, free, but setup-heavy. 🔧
 
 To add any 🔧 source: say which one(s), and a connector gets written; then it
-becomes "add the key" like the ✅ rows above.
+becomes "add the key" (or keyless) like the ✅ rows above.

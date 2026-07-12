@@ -1,8 +1,9 @@
 from app.connectors import available_sources, get_connector
 
-# gdelt is network-only (keyless live search) — it has no offline mock fixture,
-# so it's excluded from the mock-fixture test.
-MOCK_SOURCES = [s for s in available_sources() if s != "gdelt"]
+# These are network-only (keyless live search) — no offline mock fixture, so
+# they're excluded from the mock-fixture tests (they'd make real HTTP calls).
+NETWORK_ONLY = {"gdelt", "bluesky", "hackernews", "reddit"}
+MOCK_SOURCES = [s for s in available_sources() if s not in NETWORK_ONLY]
 
 
 def test_all_connectors_normalize_their_mock_items():
@@ -41,3 +42,43 @@ def test_gdelt_normalizes_an_article():
     assert np.source_post_id == "https://example.com/a"
     assert np.text == "Sample headline"
     assert np.timestamp is not None
+
+
+def test_bluesky_normalizes_a_post():
+    c = get_connector("bluesky")
+    np = c.normalize({
+        "uri": "at://did:plc:abc/app.bsky.feed.post/xyz", "cid": "cid1",
+        "author": {"did": "did:plc:abc", "handle": "alice.bsky.social", "displayName": "Alice"},
+        "record": {"text": "hello world", "createdAt": "2024-01-15T12:30:00Z"},
+        "likeCount": 5, "repostCount": 2, "replyCount": 1,
+    })
+    assert np.source == "bluesky"
+    assert np.text == "hello world"
+    assert np.author.handle == "alice.bsky.social"
+    assert np.url.endswith("/xyz")
+    assert np.timestamp is not None
+
+
+def test_hackernews_normalizes_a_story():
+    c = get_connector("hackernews")
+    np = c.normalize({
+        "objectID": "42", "title": "Big news", "url": "https://example.com",
+        "author": "pg", "points": 100, "num_comments": 20, "created_at_i": 1700000000,
+    })
+    assert np.source == "hackernews"
+    assert np.source_post_id == "42"
+    assert np.text == "Big news"
+    assert np.timestamp is not None
+
+
+def test_reddit_normalizes_a_post():
+    c = get_connector("reddit")
+    np = c.normalize({
+        "name": "t3_abc", "id": "abc", "title": "Headline", "selftext": "body text",
+        "author": "someuser", "permalink": "/r/news/comments/abc/headline/",
+        "ups": 50, "num_comments": 12, "created_utc": 1700000000,
+    })
+    assert np.source == "reddit"
+    assert np.source_post_id == "t3_abc"
+    assert "Headline" in np.text
+    assert np.url.startswith("https://www.reddit.com/r/news")
