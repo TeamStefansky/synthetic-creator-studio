@@ -25,8 +25,12 @@ class SourceConnector(ABC):
     rate_limit: RateLimit = RateLimit(60, 60)
 
     @abstractmethod
-    def fetch(self) -> list[dict]:
-        """Return raw source items (dicts). Network lives here."""
+    def fetch(self, query: str | None = None) -> list[dict]:
+        """Return raw source items (dicts). Network lives here.
+
+        `query` is an optional keyword query to search for; when omitted the
+        connector falls back to its configured default.
+        """
 
     @abstractmethod
     def normalize(self, raw: dict) -> NormalizedPost:

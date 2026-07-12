@@ -6,8 +6,12 @@ Backend service for the **Narrative Intelligence & Media Monitoring** platform
 A modular pipeline that pulls posts from multiple sources through one uniform
 connector interface, then layers analysis on top:
 
+0. **Keyword search** — type keywords in the dashboard; `POST /api/search` fans
+   them out across every source, then runs the whole pipeline. GDELT (global
+   news/web) works free with no key; X/Twitter, Telegram and NewsAPI activate
+   when their keys are set.
 1. **Ingestion** — normalize + de-duplicate posts/authors from X, Telegram, RSS,
-   NewsAPI (Stage 1).
+   NewsAPI, GDELT (Stage 1).
 2. **Authenticity Engine** — per-author 0–100 score from independent signal
    classes, with a per-signal "why suspicious" breakdown (Stage 2).
 3. **Coordinated behaviour** — cluster identical content from ≥2 accounts into
@@ -45,7 +49,8 @@ live data — see `.env.example`.
 | GET | `/healthz` | liveness |
 | GET | `/api/health` | counts + connector health (mock vs live) |
 | GET | `/api/sources` | available sources |
-| POST | `/api/ingest/run?source=x` | run one source (or all when omitted) |
+| POST | `/api/search?query=...` | keyword search across all sources, then run the full pipeline |
+| POST | `/api/ingest/run?source=x&query=...` | run one source (or all when omitted) for a keyword query |
 | POST | `/api/authenticity/run` | compute authenticity scores (all authors, or `?author_id=`) |
 | GET | `/api/authors/{id}` | author detail + per-signal "why suspicious" breakdown |
 | POST | `/api/coordination/run` | detect coordinated campaigns (`?window_minutes=`) |

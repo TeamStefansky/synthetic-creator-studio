@@ -25,41 +25,43 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [pipeline] %(message
 log = logging.getLogger("pipeline")
 
 
-def run_all() -> dict:
-    db = SessionLocal()
-    summary: dict = {"ingest": {}, "authenticity": None, "coordination": None,
-                     "narratives": None, "alerts": None}
-    try:
-        for source in settings.sources():
-            try:
-                res = ingest_source(db, source)
-                summary["ingest"][source] = {
-                    "fetched": res.fetched, "inserted": res.inserted,
-                    "duplicates": res.duplicates, "errors": res.errors,
-                }
-                log.info("ingest %s: inserted=%s dup=%s err=%s", source, res.inserted, res.duplicates, res.errors)
-            except Exception as exc:
-                log.error("ingest %s failed: %s", source, exc)
+def run_all(db, query: str | None = None) -> dict:
+    """Run the full pipeline against `db`. `query` (keywords) is passed to every
+    connector; when omitted each connector uses its configured default."""
+    summary: dict = {"query": query, "ingest": {}, "authenticity": None,
+                     "coordination": None, "narratives": None, "alerts": None}
+    for source in settings.sources():
+        try:
+            res = ingest_source(db, source, query=query)
+            summary["ingest"][source] = {
+                "fetched": res.fetched, "inserted": res.inserted,
+                "duplicates": res.duplicates, "errors": res.errors, "status": res.status,
+            }
+            log.info("ingest %s: inserted=%s dup=%s err=%s", source, res.inserted, res.duplicates, res.errors)
+        except Exception as exc:
+            log.error("ingest %s failed: %s", source, exc)
 
-        for stage, fn in (
-            ("authenticity", lambda: score_all(db)),
-            ("coordination", lambda: detect_campaigns(db)),
-            ("narratives", lambda: run_narratives(db)),
-            ("alerts", lambda: evaluate_alerts(db)),
-        ):
-            try:
-                summary[stage] = fn()
-                log.info("%s: %s", stage, summary[stage])
-            except Exception as exc:
-                log.error("%s failed: %s", stage, exc)
-        return summary
-    finally:
-        db.close()
+    for stage, fn in (
+        ("authenticity", lambda: score_all(db)),
+        ("coordination", lambda: detect_campaigns(db)),
+        ("narratives", lambda: run_narratives(db)),
+        ("alerts", lambda: evaluate_alerts(db)),
+    ):
+        try:
+            summary[stage] = fn()
+            log.info("%s: %s", stage, summary[stage])
+        except Exception as exc:
+            log.error("%s failed: %s", stage, exc)
+    return summary
 
 
 def main() -> None:
     log.info("full pipeline starting; sources=%s", settings.sources())
-    run_all()
+    db = SessionLocal()
+    try:
+        run_all(db)
+    finally:
+        db.close()
     log.info("full pipeline done")
 
 

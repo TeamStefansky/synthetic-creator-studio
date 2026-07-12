@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Ingestion worker cadence (seconds) and which sources are enabled.
     poll_interval_seconds: int = 300
-    enabled_sources: str = "x,telegram,rss,newsapi"
+    enabled_sources: str = "x,telegram,rss,newsapi,gdelt"
 
     # Optional real-source credentials (mock data is used when absent).
     x_bearer_token: str | None = None
@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     # Comma-separated default queries/handles/feeds the connectors pull.
     x_query: str = "disinformation OR fake news"
     rss_feeds: str = ""  # comma-separated URLs (real when provided)
+
+    # GDELT (free, keyless global news search) tuning.
+    gdelt_timespan: str = "3d"      # how far back to search
+    gdelt_max_records: int = 75     # articles per query
 
     # Default webhook for alert rules that don't set their own.
     alert_webhook_url: str | None = None

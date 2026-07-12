@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Radar, Play, RefreshCw, AlertTriangle, Users, Network, MessageSquareText,
-  Activity, Bell, FileText, Loader2, PlugZap, ExternalLink,
+  Activity, Bell, FileText, Loader2, PlugZap, ExternalLink, Search,
 } from "lucide-react";
 import { apiGet, apiPost, apiDelete, reportUrl, PlatformUnavailable } from "@/lib/platform";
 
@@ -52,6 +52,8 @@ export default function PlatformPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [unavailable, setUnavailable] = useState<string | null>(null);
   const [running, setRunning] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [activeQuery, setActiveQuery] = useState<string | null>(null);
   const [health, setHealth] = useState<any>(null);
   const [narratives, setNarratives] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -80,6 +82,21 @@ export default function PlatformPage() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const runSearch = useCallback(async () => {
+    const q = query.trim();
+    if (q.length < 2) return;
+    setRunning(`Detecting “${q}” across sources…`);
+    try {
+      await apiPost(`search?query=${encodeURIComponent(q)}`);
+      setActiveQuery(q);
+      await refresh();
+    } catch (e) {
+      if (e instanceof PlatformUnavailable) setUnavailable(e.reason);
+    } finally {
+      setRunning(null);
+    }
+  }, [query, refresh]);
 
   const runPipeline = useCallback(async () => {
     setRunning("Running full pipeline…");
@@ -153,6 +170,33 @@ export default function PlatformPage() {
 
       {!unavailable && (
         <>
+          <div className="card">
+            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
+              <Search className="h-4 w-4 text-brand-soft" /> Detect keywords across sources
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
+                placeholder="e.g. election fraud, vaccine, brand name…"
+                className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-gray-200 outline-none placeholder:text-gray-600 focus:border-brand"
+              />
+              <button
+                onClick={runSearch}
+                disabled={!!running || query.trim().length < 2}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50"
+              >
+                {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                Detect
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Searches news, web &amp; GDELT for free; X/Twitter &amp; Telegram when their API keys are set on the backend.
+              {activeQuery && <> · Showing results for <span className="text-brand-soft">“{activeQuery}”</span></>}
+            </p>
+          </div>
+
           <nav className="flex flex-wrap gap-1 border-b border-white/[0.07]">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button

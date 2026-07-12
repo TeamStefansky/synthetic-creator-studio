@@ -16,6 +16,7 @@ from ..models import (
     Alert, AlertRule, Author, Campaign, CampaignEvidence, IngestRun, Narrative, Post,
 )
 from ..narratives.engine import run as run_narratives, volume_over_time
+from ..pipeline import run_all as run_pipeline
 from ..report.generator import (
     build_campaign_report, build_narrative_report, render_html,
 )
@@ -51,6 +52,7 @@ def sources() -> dict:
 @router.post("/ingest/run", response_model=list[IngestResult])
 def run_ingest(
     source: str | None = Query(default=None, description="one source, or all when omitted"),
+    query: str | None = Query(default=None, description="keyword query (defaults per-connector)"),
     db: Session = Depends(get_session),
 ) -> list[IngestResult]:
     targets = [source] if source else available_sources()
@@ -58,8 +60,19 @@ def run_ingest(
     for name in targets:
         if name not in available_sources():
             raise HTTPException(status_code=400, detail=f"Unknown source '{name}'")
-        results.append(ingest_source(db, name))
+        results.append(ingest_source(db, name, query=query))
     return results
+
+
+@router.post("/search")
+def search_and_analyze(
+    query: str = Query(..., min_length=2, description="keywords to detect across all sources"),
+    db: Session = Depends(get_session),
+) -> dict:
+    """Ingest every source for these keywords, then run the full analysis
+    pipeline (authenticity → coordination → narratives → alerts) and return a
+    run summary. This is what the dashboard's keyword search calls."""
+    return run_pipeline(db, query=query)
 
 
 @router.get("/posts", response_model=list[PostOut])

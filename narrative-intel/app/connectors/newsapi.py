@@ -18,10 +18,11 @@ class NewsApiConnector(SourceConnector):
     def __init__(self) -> None:
         self.key = settings.newsapi_key
 
-    def fetch(self) -> list[dict]:
+    def fetch(self, query: str | None = None) -> list[dict]:
         if not self.key:
             return _mock.newsapi_items()
-        params = {"q": settings.x_query, "pageSize": "50", "language": "en", "apiKey": self.key}
+        params = {"q": (query or settings.x_query).strip(), "pageSize": "50",
+                  "language": "en", "sortBy": "publishedAt", "apiKey": self.key}
         with httpx.Client(timeout=15) as client:
             r = client.get("https://newsapi.org/v2/everything", params=params)
             r.raise_for_status()

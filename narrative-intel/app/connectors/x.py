@@ -28,11 +28,12 @@ class XConnector(SourceConnector):
         self.query = query or settings.x_query
         self.token = settings.x_bearer_token
 
-    def fetch(self) -> list[dict]:
+    def fetch(self, query: str | None = None) -> list[dict]:
+        q = (query or self.query).strip()
         if not self.token:
             return _mock.x_items()
         params = {
-            "query": f"{self.query} -is:retweet",
+            "query": f"{q} -is:retweet",
             "max_results": "100",
             "tweet.fields": "public_metrics,created_at",
             "expansions": "author_id",

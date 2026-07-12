@@ -13,6 +13,14 @@ from . import _mock
 from .base import RateLimit, SourceConnector
 
 
+def _terms(query: str | None) -> list[str]:
+    """Split a keyword query into lowercase terms (ignoring boolean OR/AND)."""
+    if not query:
+        return []
+    cleaned = query.replace(" OR ", " ").replace(" AND ", " ").replace('"', " ")
+    return [t.lower() for t in cleaned.split() if len(t) > 1]
+
+
 class RssConnector(SourceConnector):
     name = "rss"
     rate_limit = RateLimit(60, 60)
@@ -20,7 +28,7 @@ class RssConnector(SourceConnector):
     def __init__(self) -> None:
         self.feeds = [f.strip() for f in settings.rss_feeds.split(",") if f.strip()]
 
-    def fetch(self) -> list[dict]:
+    def fetch(self, query: str | None = None) -> list[dict]:
         if not self.feeds:
             return _mock.rss_items()
         items: list[dict] = []
@@ -41,7 +49,12 @@ class RssConnector(SourceConnector):
                         "summary": item.findtext("description") or "",
                         "author": {"id": host, "name": host},
                     })
-        return items or _mock.rss_items()
+        # Keyword filter: keep items whose title/summary contains any query term.
+        terms = _terms(query)
+        if terms:
+            items = [it for it in items
+                     if any(t in f"{it['title']} {it['summary']}".lower() for t in terms)]
+        return items
 
     def normalize(self, raw: dict) -> NormalizedPost:
         a = raw.get("author", {}) or {}

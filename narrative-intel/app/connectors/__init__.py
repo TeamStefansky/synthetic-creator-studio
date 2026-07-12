@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .base import SourceConnector
+from .gdelt import GdeltConnector
 from .newsapi import NewsApiConnector
 from .rss import RssConnector
 from .telegram import TelegramConnector
@@ -12,6 +13,7 @@ _BUILDERS = {
     "telegram": TelegramConnector,
     "rss": RssConnector,
     "newsapi": NewsApiConnector,
+    "gdelt": GdeltConnector,
 }
 
 

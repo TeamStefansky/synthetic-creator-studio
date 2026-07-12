@@ -48,7 +48,7 @@ def _upsert_author(db: Session, na: NormalizedAuthor | None) -> Author | None:
     return author
 
 
-def ingest_source(db: Session, source: str) -> IngestResult:
+def ingest_source(db: Session, source: str, query: str | None = None) -> IngestResult:
     run = IngestRun(source=source, status="running")
     db.add(run)
     db.flush()
@@ -58,7 +58,7 @@ def ingest_source(db: Session, source: str) -> IngestResult:
     connector = get_connector(source)
 
     try:
-        raw_items = connector.fetch()
+        raw_items = connector.fetch(query)
     except Exception as exc:  # network / auth failure — record and bail cleanly
         run.status = "failed"
         run.detail = f"fetch failed: {exc}"[:500]

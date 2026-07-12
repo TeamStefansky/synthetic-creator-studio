@@ -13,8 +13,10 @@ class TelegramConnector(SourceConnector):
     name = "telegram"
     rate_limit = RateLimit(30, 60)
 
-    def fetch(self) -> list[dict]:
-        # Real implementation would use the Telegram API here when a token is set.
+    def fetch(self, query: str | None = None) -> list[dict]:
+        # Telegram has no public keyword-search API for a bot token: real
+        # ingestion requires an MTProto user session already joined to the target
+        # channels. Kept as a mock connector so the pipeline is complete E2E.
         return _mock.telegram_items()
 
     def normalize(self, raw: dict) -> NormalizedPost:
