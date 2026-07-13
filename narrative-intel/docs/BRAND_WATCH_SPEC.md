@@ -114,11 +114,17 @@ auto-refresh, monitored-sources panel, forensic reports.
 
 ---
 
-## 6. Suggested phasing
+## 6. Phasing — status
 
-- **Phase A (MVP, live one-shot):** entity input → scoped ingest → threat score
-  + breakdown + evidence feed, live-refreshing. (Items 1, 2, 4-partial, 6.)
-- **Phase B (continuous):** watchlist + per-entity scheduled monitoring +
-  escalation alerts + baseline spikes. (Items 3, 5, watchlist CRUD.)
+- **✅ Phase A (live one-shot) — built.** entity input → scoped ingest → threat
+  score + 7-signal breakdown + live evidence + volume trend, auto-refreshing.
+  (`Post.entity`, `app/threat/engine.py`, `GET /api/brandwatch`, Brand Watch UI.)
+- **✅ Phase B (continuous) — built.** `WatchedEntity` + `ThreatSnapshot` tables;
+  `app/watch/service.py` re-scans each watched entity, stores a snapshot, scores
+  against a rolling baseline, and fires an **escalation alert** when the status
+  worsens; `GET/POST/DELETE /api/watch`, `POST /api/watch/run`,
+  `GET /api/watch/{id}/history`; hourly Render cron (`app.watch.runner`);
+  Watchlist UI with live status dots.
 
-Phase A already delivers the core experience you described.
+Both phases are implemented. Future ideas: entity aliases/handles, per-entity
+source weighting, competitor benchmarking, PDF situation reports.

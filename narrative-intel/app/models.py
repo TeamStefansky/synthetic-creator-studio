@@ -189,6 +189,34 @@ class Alert(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
 
+class WatchedEntity(Base):
+    """A brand/client/product/keyword monitored 24/7 by Brand Watch."""
+    __tablename__ = "watched_entities"
+    __table_args__ = (UniqueConstraint("name", name="uq_watched_entity"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    query: Mapped[str | None] = mapped_column(String(255))  # search query; defaults to name
+    enabled: Mapped[bool] = mapped_column(default=True)
+    last_score: Mapped[float | None] = mapped_column(Float)
+    last_status: Mapped[str | None] = mapped_column(String(16))
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+class ThreatSnapshot(Base):
+    """One Brand Watch threat-score reading, kept for baseline + history/trend."""
+    __tablename__ = "threat_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    entity: Mapped[str] = mapped_column(String(255), index=True)
+    score: Mapped[float] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String(16))
+    total_posts: Mapped[int] = mapped_column(Integer, default=0)
+    total_accounts: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
 class IngestRun(Base):
     __tablename__ = "ingest_runs"
 

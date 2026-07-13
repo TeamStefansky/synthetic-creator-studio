@@ -64,7 +64,8 @@ def _sig(name: str, score: float, confidence: float, detail: str) -> dict:
             "confidence": round(max(0.0, min(1.0, confidence)), 2), "detail": detail}
 
 
-def compute(db: Session, entity: str, window_hours: int = 72) -> dict:
+def compute(db: Session, entity: str, window_hours: int = 72,
+            baseline: float | None = None) -> dict:
     posts = list(db.scalars(select(Post).where(Post.entity == entity)))
     total = len(posts)
     if total == 0:
@@ -121,17 +122,23 @@ def compute(db: Session, entity: str, window_hours: int = 72) -> dict:
                         f"{len(srcs)} sources"
                         + (f" · {multi_src_hash} claims span multiple platforms" if multi_src_hash else "")))
 
-    # 5. Volume burst — recent hour vs typical, when timestamps exist.
-    buckets = _hour_buckets(posts)
-    if len(buckets) >= 3:
-        counts = sorted(buckets.values())
-        median = counts[len(counts) // 2] or 1
-        latest = buckets[max(buckets)]
-        ratio = latest / median
-        signals.append(_sig("volume", (ratio - 1) * 45, 0.7,
-                            f"{ratio:.1f}× the typical hourly volume"))
+    # 5. Volume burst — vs a stored baseline when available (continuous
+    #    monitoring), else recent hour vs typical within this window.
+    if baseline and baseline > 0:
+        ratio = total / baseline
+        signals.append(_sig("volume", (ratio - 1) * 45, 0.85,
+                            f"{ratio:.1f}× the {baseline:.0f}-post baseline"))
     else:
-        signals.append(_sig("volume", 0, 0.2, "not enough time span for a baseline"))
+        buckets = _hour_buckets(posts)
+        if len(buckets) >= 3:
+            counts = sorted(buckets.values())
+            median = counts[len(counts) // 2] or 1
+            latest = buckets[max(buckets)]
+            ratio = latest / median
+            signals.append(_sig("volume", (ratio - 1) * 45, 0.7,
+                                f"{ratio:.1f}× the typical hourly volume"))
+        else:
+            signals.append(_sig("volume", 0, 0.2, "not enough history for a baseline"))
 
     # 6. Narrative concentration — one storyline dominating.
     narr = Counter(p.narrative_id for p in posts if p.narrative_id)

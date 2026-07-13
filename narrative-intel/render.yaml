@@ -35,17 +35,18 @@ services:
       - key: RSS_FEEDS
         sync: false
 
-  # Scheduled full pipeline (free Cron Job). Runs ingest → authenticity →
-  # coordination → narratives → alerts every 6 hours against the shared DB, so
-  # the dashboard stays fresh without anyone clicking "Run pipeline".
+  # Scheduled Brand Watch monitoring (free Cron Job). Every hour it re-scans
+  # every watched entity, recomputes its threat score against a rolling baseline,
+  # stores a snapshot, and fires an escalation alert when the status worsens.
+  # (No watched entities → a fast no-op.)
   - type: cron
-    name: narrative-pipeline
+    name: narrative-watch
     runtime: python
     plan: free
     rootDir: narrative-intel
-    schedule: "0 */6 * * *"
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m app.pipeline
+    schedule: "0 * * * *"
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: python -m app.watch.runner
     envVars:
       - key: DATABASE_URL
         fromDatabase:

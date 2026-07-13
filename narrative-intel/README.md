@@ -50,6 +50,10 @@ live data — see `.env.example`.
 | GET | `/healthz` | liveness |
 | GET | `/api/health` | counts + connector health (mock vs live) |
 | GET | `/api/sources` | available sources |
+| GET | `/api/brandwatch?entity=...` | **Brand Watch**: is this entity under a disinformation attack? threat score + signal breakdown + evidence + trend |
+| GET/POST/DELETE | `/api/watch` · `/api/watch/{id}` | watchlist CRUD (entities monitored 24/7) |
+| POST | `/api/watch/run` | run one monitoring cycle over all watched entities (scheduler) |
+| GET | `/api/watch/{id}/history` | threat-score history for a watched entity |
 | POST | `/api/search?query=...` | keyword search across all sources, then run the full pipeline |
 | POST | `/api/ingest/run?source=x&query=...` | run one source (or all when omitted) for a keyword query |
 | POST | `/api/authenticity/run` | compute authenticity scores (all authors, or `?author_id=`) |

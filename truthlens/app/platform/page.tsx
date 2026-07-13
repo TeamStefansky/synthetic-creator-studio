@@ -62,6 +62,7 @@ export default function PlatformPage() {
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState<string | null>(null);
   const [threat, setThreat] = useState<any>(null);
+  const [watchlist, setWatchlist] = useState<any[]>([]);
   const [health, setHealth] = useState<any>(null);
   const [narratives, setNarratives] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -74,14 +75,15 @@ export default function PlatformPage() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [h, n, c, a, al] = await Promise.all([
+      const [h, n, c, a, al, w] = await Promise.all([
         apiGet("health"),
         apiGet("narratives"),
         apiGet("campaigns"),
         apiGet("authors?limit=100"),
         apiGet("alerts"),
+        apiGet("watch"),
       ]);
-      setHealth(h); setNarratives(n); setCampaigns(c); setAuthors(a); setAlerts(al);
+      setHealth(h); setNarratives(n); setCampaigns(c); setAuthors(a); setAlerts(al); setWatchlist(w);
       setUnavailable(null);
       setUpdatedAt(new Date().toLocaleTimeString());
     } catch (e) {
@@ -111,6 +113,16 @@ export default function PlatformPage() {
   }, [refresh]);
 
   const runSearch = useCallback(() => runBrandWatch(query.trim()), [query, runBrandWatch]);
+
+  const addWatch = useCallback(async (name: string) => {
+    if (name.length < 2) return;
+    try { await apiPost(`watch?name=${encodeURIComponent(name)}`); await refresh(); }
+    catch (e) { if (e instanceof PlatformUnavailable) setUnavailable(e.reason); }
+  }, [refresh]);
+
+  const removeWatch = useCallback(async (id: number) => {
+    try { await apiDelete(`watch/${id}`); await refresh(); } catch {}
+  }, [refresh]);
 
   // Auto-refresh: every 60s. If an entity is being watched, silently re-scan it
   // (live monitoring); otherwise just re-read the dashboard.
@@ -234,6 +246,43 @@ export default function PlatformPage() {
               {activeQuery && <> · Watching <span className="text-brand-soft">“{activeQuery}”</span></>}
             </p>
           </div>
+
+          {(watchlist.length > 0 || (activeQuery && !watchlist.some((w) => w.name === activeQuery))) && (
+            <div className="card">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <Activity className="h-4 w-4 text-brand-soft" /> Watchlist
+                  <span className="text-xs font-normal text-gray-500">· monitored 24/7</span>
+                </h3>
+                {activeQuery && !watchlist.some((w) => w.name === activeQuery) && (
+                  <button
+                    onClick={() => addWatch(activeQuery)}
+                    className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-brand-soft transition hover:bg-white/[0.04]"
+                  >
+                    ＋ Watch “{activeQuery}”
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {watchlist.map((w) => {
+                  const wu = STATUS_UI[w.last_status] || STATUS_UI.CALM;
+                  return (
+                    <span key={w.id} className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pl-2.5 pr-1.5 text-sm">
+                      <span className={`h-2 w-2 rounded-full ${w.last_status ? wu.bar : "bg-gray-600"}`}
+                        title={w.last_status ? wu.label : "not checked yet"} />
+                      <button onClick={() => { setQuery(w.name); runBrandWatch(w.name); }} className="text-gray-200 hover:text-white">
+                        {w.name}
+                      </button>
+                      {typeof w.last_score === "number" && <span className={`text-xs ${wu.tone}`}>{w.last_score}</span>}
+                      <button onClick={() => removeWatch(w.id)} title="Stop watching"
+                        className="text-gray-600 opacity-0 transition group-hover:opacity-100 hover:text-risk-high">✕</button>
+                    </span>
+                  );
+                })}
+                {!watchlist.length && <p className="text-xs text-gray-500">No entities watched yet — scan one, then add it.</p>}
+              </div>
+            </div>
+          )}
 
           {threat && <ThreatCard threat={threat} />}
 

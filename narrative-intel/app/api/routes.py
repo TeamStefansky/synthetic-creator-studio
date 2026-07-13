@@ -14,10 +14,12 @@ from ..db import get_session
 from ..ingest.service import ingest_source
 from ..models import (
     Alert, AlertRule, Author, Campaign, CampaignEvidence, IngestRun, Narrative, Post,
+    ThreatSnapshot, WatchedEntity,
 )
 from ..narratives.engine import run as run_narratives, volume_over_time
 from ..pipeline import run_all as run_pipeline
 from ..threat.engine import compute as compute_threat
+from ..watch.service import check_entity, run_all_watched
 from ..report.generator import (
     build_campaign_report, build_narrative_report, render_html,
 )
@@ -92,6 +94,70 @@ def brandwatch(
     if refresh:
         run_pipeline(db, query=entity, entity=entity)
     return compute_threat(db, entity, window_hours=window_hours)
+
+
+def _entity_out(we: WatchedEntity) -> dict:
+    return {"id": we.id, "name": we.name, "query": we.query, "enabled": we.enabled,
+            "last_score": we.last_score, "last_status": we.last_status,
+            "last_checked_at": we.last_checked_at}
+
+
+@router.get("/watch")
+def list_watched(db: Session = Depends(get_session)) -> list[dict]:
+    return [_entity_out(w) for w in
+            db.scalars(select(WatchedEntity).order_by(WatchedEntity.id.desc()))]
+
+
+@router.post("/watch")
+def add_watched(
+    name: str = Query(..., min_length=2, description="brand / client / product / keyword"),
+    query: str | None = Query(default=None, description="search query (defaults to name)"),
+    db: Session = Depends(get_session),
+) -> dict:
+    existing = db.scalar(select(WatchedEntity).where(WatchedEntity.name == name))
+    if existing:
+        return _entity_out(existing)
+    we = WatchedEntity(name=name, query=query)
+    db.add(we)
+    db.commit()
+    return _entity_out(we)
+
+
+@router.delete("/watch/{entity_id}")
+def remove_watched(entity_id: int, db: Session = Depends(get_session)) -> dict:
+    we = db.get(WatchedEntity, entity_id)
+    if not we:
+        raise HTTPException(status_code=404, detail="Watched entity not found")
+    db.delete(we)
+    db.commit()
+    return {"deleted": entity_id}
+
+
+@router.post("/watch/{entity_id}/check")
+def check_watched(entity_id: int, db: Session = Depends(get_session)) -> dict:
+    we = db.get(WatchedEntity, entity_id)
+    if not we:
+        raise HTTPException(status_code=404, detail="Watched entity not found")
+    return check_entity(db, we)
+
+
+@router.post("/watch/run")
+def run_watched(db: Session = Depends(get_session)) -> dict:
+    """Monitor every enabled watched entity once (what the scheduler calls)."""
+    return run_all_watched(db)
+
+
+@router.get("/watch/{entity_id}/history")
+def watched_history(entity_id: int, db: Session = Depends(get_session)) -> dict:
+    we = db.get(WatchedEntity, entity_id)
+    if not we:
+        raise HTTPException(status_code=404, detail="Watched entity not found")
+    snaps = db.scalars(
+        select(ThreatSnapshot).where(ThreatSnapshot.entity == we.name)
+        .order_by(ThreatSnapshot.id.desc()).limit(100))
+    return {"entity": _entity_out(we), "history": [
+        {"score": s.score, "status": s.status, "total_posts": s.total_posts,
+         "created_at": s.created_at} for s in snaps]}
 
 
 @router.get("/posts", response_model=list[PostOut])
