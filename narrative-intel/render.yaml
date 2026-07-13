@@ -34,6 +34,11 @@ services:
         sync: false
       - key: RSS_FEEDS
         sync: false
+      # Telegram alert delivery (Brand Watch escalations).
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ALERT_CHAT_ID
+        sync: false
 
   # Scheduled Brand Watch monitoring (free Cron Job). Every hour it re-scans
   # every watched entity, recomputes its threat score against a rolling baseline,
@@ -57,6 +62,11 @@ services:
       - key: NEWSAPI_KEY
         sync: false
       - key: RSS_FEEDS
+        sync: false
+      # Telegram alert delivery — the cron fires the escalation alerts.
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ALERT_CHAT_ID
         sync: false
 
   # --- Continuous ingestion worker (needs a paid plan; free tier has no workers) ---

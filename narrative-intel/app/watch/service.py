@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from ..models import Alert, ThreatSnapshot, WatchedEntity
 from ..pipeline import run_all
 from ..threat.engine import compute
-from ..alerts.channels import get_channel
+from ..alerts.channels import notify_all
 
 STATUS_ORDER = {"CALM": 0, "ELEVATED": 1, "UNDER_ATTACK": 2}
 BASELINE_N = 10  # snapshots averaged for the volume baseline
@@ -47,7 +47,7 @@ def _emit_escalation(db: Session, we: WatchedEntity, prev: str, result: dict) ->
                   title=title, body=body, dedup_key=dedup)
     db.add(alert)
     db.flush()
-    alert.delivered = get_channel("webhook").deliver(alert, None)
+    alert.delivered = notify_all(alert)  # Telegram + webhook, whichever configured
     return alert
 
 

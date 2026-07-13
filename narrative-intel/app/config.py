@@ -51,6 +51,8 @@ class Settings(BaseSettings):
 
     # Default webhook for alert rules that don't set their own.
     alert_webhook_url: str | None = None
+    # Telegram alert delivery: bot token (see telegram_bot_token above) + chat id.
+    telegram_alert_chat_id: str | None = None
 
     # Optional API keys for the public API (comma-separated). Empty = open.
     api_keys: str = ""
