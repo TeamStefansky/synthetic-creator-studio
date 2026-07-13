@@ -597,6 +597,7 @@ function AlertsTab({ alerts, onChange }: { alerts: any[]; onChange: () => void }
   const [rules, setRules] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [type, setType] = useState("high_manipulation");
+  const [channel, setChannel] = useState("telegram");
   const [busy, setBusy] = useState(false);
 
   const loadRules = useCallback(() => { apiGet("alerts/rules").then(setRules).catch(() => {}); }, []);
@@ -606,7 +607,7 @@ function AlertsTab({ alerts, onChange }: { alerts: any[]; onChange: () => void }
     if (!name.trim()) return;
     setBusy(true);
     try {
-      await apiPost("alerts/rules", { name: name.trim(), type, threshold: 0, channel: "inapp" });
+      await apiPost("alerts/rules", { name: name.trim(), type, threshold: 0, channel });
       setName(""); loadRules();
     } finally { setBusy(false); }
   };
@@ -627,13 +628,20 @@ function AlertsTab({ alerts, onChange }: { alerts: any[]; onChange: () => void }
             <option value="volume_spike">Volume spike</option>
             <option value="entity_mention">Entity mention</option>
           </select>
+          <select value={channel} onChange={(e) => setChannel(e.target.value)} title="Delivery channel"
+            className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5 text-sm text-gray-200 outline-none focus:border-brand">
+            <option value="telegram">→ Telegram</option>
+            <option value="webhook">→ Webhook</option>
+            <option value="inapp">→ In-app</option>
+            <option value="email">→ Email</option>
+          </select>
           <button onClick={addRule} disabled={busy}
             className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-soft disabled:opacity-50">Add</button>
         </div>
         <div className="space-y-2">
           {rules.map((r) => (
             <div key={r.id} className="flex items-center justify-between rounded-lg border border-white/[0.06] px-3 py-2 text-sm">
-              <span className="text-gray-200">{r.name} <span className="text-gray-500">· {r.type}</span></span>
+              <span className="text-gray-200">{r.name} <span className="text-gray-500">· {r.type} · {r.channel}</span></span>
               <button onClick={() => removeRule(r.id)} className="text-xs text-risk-high hover:underline">delete</button>
             </div>
           ))}
