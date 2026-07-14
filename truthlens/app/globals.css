@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+/* Subtle scrollbar styling for the dark theme. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f17;
+}
+::-webkit-scrollbar-thumb {
+  background: #243049;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #314060;
+}
+
+/* Background gradient accent for the landing hero. */
+.hero-gradient {
+  background:
+    radial-gradient(900px 400px at 50% -10%, rgba(59, 130, 246, 0.18), transparent),
+    radial-gradient(700px 300px at 80% 10%, rgba(16, 185, 129, 0.12), transparent);
+}
+
+@keyframes pulse-ring {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 1.4s ease-in-out infinite;
+}

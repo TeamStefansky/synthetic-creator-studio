@@ -1,0 +1,23 @@
+{
+  "description": "Seed list of domains documented by fact-checkers/researchers as hoax, satire-presented-as-news, or disinformation outlets. Inclusion is a risk-INCREASING signal, NOT a legal accusation. These are well-documented public examples; verify and expand responsibly.",
+  "domains": [
+    "infowars.com",
+    "naturalnews.com",
+    "beforeitsnews.com",
+    "yournewswire.com",
+    "newspunch.com",
+    "worldnewsdailyreport.com",
+    "theonion.com",
+    "empirenews.net",
+    "nationalreport.net",
+    "denverguardian.com",
+    "abcnews.com.co",
+    "70news.wordpress.com",
+    "react365.com",
+    "now8news.com",
+    "channel23news.com",
+    "huzlers.com",
+    "thelastlineofdefense.org",
+    "realnewsrightnow.com"
+  ]
+}
