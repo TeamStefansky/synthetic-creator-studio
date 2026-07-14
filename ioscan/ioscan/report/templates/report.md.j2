@@ -1,0 +1,32 @@
+# ioscan forensic report
+
+**Verdict: {{ result.verdict }}**
+
+- Target: `{{ result.target }}`
+- Scan type: {{ result.scan_type }}
+- Detections: {{ detections|length }}
+- Records analyzed: {{ result.records|length }}
+- Started: {{ started }}
+- Finished: {{ finished }}
+
+## Detections
+
+{% if detections %}
+| Severity | Type | Source | Matched value | Description | IOC / Rule | Timestamp |
+|----------|------|--------|---------------|-------------|------------|-----------|
+{% for d in detections %}| {{ d.severity.name }} | {{ d.record_type or "" }} | `{{ d.source }}` | `{{ d.matched_value }}` | {{ d.description }} | {{ d.ioc_id or d.rule or "" }} | {{ d.timestamp.isoformat() if d.timestamp else "" }} |
+{% endfor %}
+{% else %}
+No detections. The scanned artifacts show no known IOCs or heuristic anomalies.
+{% endif %}
+
+{% if result.notes %}
+## Notes
+
+{% for n in result.notes %}- [{{ n.level }}] **{{ n.source }}**: {{ n.message }}
+{% endfor %}
+{% endif %}
+
+---
+
+_{{ consent }}_

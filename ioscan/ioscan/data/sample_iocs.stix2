@@ -1,0 +1,59 @@
+{
+  "type": "bundle",
+  "id": "bundle--0d9f8b2a-1c3e-4a7b-9f6d-3e2a1b0c4d5e",
+  "spec_version": "2.0",
+  "objects": [
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--11111111-1111-4111-8111-111111111111",
+      "created": "2023-01-01T00:00:00.000Z",
+      "modified": "2023-01-01T00:00:00.000Z",
+      "name": "Sample malicious C2 domain",
+      "description": "Synthetic IOC for ioscan tests - not a real threat.",
+      "labels": ["high", "malicious-activity"],
+      "pattern": "[domain-name:value = 'evil-c2.example']",
+      "pattern_type": "stix",
+      "valid_from": "2023-01-01T00:00:00Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--22222222-2222-4222-8222-222222222222",
+      "created": "2023-01-01T00:00:00.000Z",
+      "modified": "2023-01-01T00:00:00.000Z",
+      "name": "Sample spyware process name",
+      "description": "Synthetic IOC for ioscan tests - not a real threat.",
+      "labels": ["high", "malicious-activity"],
+      "pattern": "[process:name = 'BackupAgentX']",
+      "pattern_type": "stix",
+      "valid_from": "2023-01-01T00:00:00Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--33333333-3333-4333-8333-333333333333",
+      "created": "2023-01-01T00:00:00.000Z",
+      "modified": "2023-01-01T00:00:00.000Z",
+      "name": "Sample malicious payload URL",
+      "description": "Synthetic IOC for ioscan tests - not a real threat.",
+      "labels": ["high", "malicious-activity"],
+      "pattern": "[url:value = 'https://evil-c2.example/payload']",
+      "pattern_type": "stix",
+      "valid_from": "2023-01-01T00:00:00Z"
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--44444444-4444-4444-8444-444444444444",
+      "created": "2023-01-01T00:00:00.000Z",
+      "modified": "2023-01-01T00:00:00.000Z",
+      "name": "Sample malicious bundle id",
+      "description": "Synthetic IOC for ioscan tests - not a real threat.",
+      "labels": ["medium", "malicious-activity"],
+      "pattern": "[app:bundle_id = 'com.evil.spy']",
+      "pattern_type": "stix",
+      "valid_from": "2023-01-01T00:00:00Z"
+    }
+  ]
+}

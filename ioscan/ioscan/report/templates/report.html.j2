@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ioscan report - {{ result.target }}</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 2rem;
+           background: #0f1115; color: #e6e6e6; }
+    h1 { margin-top: 0; }
+    .verdict { padding: 1rem 1.25rem; border-radius: 10px; font-size: 1.25rem; font-weight: 700;
+               margin-bottom: 1.5rem; }
+    .verdict.clean { background: #113b1f; color: #7ee29a; }
+    .verdict.suspicious { background: #4a3c0c; color: #ffd866; }
+    .verdict.compromise { background: #4a1113; color: #ff8a8a; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 2rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #2a2f3a;
+             vertical-align: top; font-size: 0.9rem; }
+    th { color: #9aa4b2; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.04em; }
+    .sev-HIGH { color: #ff6b6b; font-weight: 700; }
+    .sev-MEDIUM { color: #ffd866; font-weight: 700; }
+    .sev-LOW { color: #7ec8ff; }
+    .sev-INFO { color: #9aa4b2; }
+    .meta { color: #9aa4b2; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    code { background: #1b1f27; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .overflow { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>ioscan forensic report</h1>
+  <div class="verdict {{ verdict_class }}">{{ result.verdict }}</div>
+  <div class="meta">
+    Target: <code>{{ result.target }}</code> &middot;
+    Scan type: {{ result.scan_type }} &middot;
+    Detections: {{ result.detections|length }} &middot;
+    Records analyzed: {{ result.records|length }}<br>
+    Started: {{ started }} &middot; Finished: {{ finished }}
+  </div>
+
+  <h2>Detections</h2>
+  {% if detections %}
+  <div class="overflow">
+  <table>
+    <thead>
+      <tr><th>Severity</th><th>Type</th><th>Source</th><th>Matched value</th>
+          <th>Description</th><th>IOC / Rule</th><th>Timestamp</th></tr>
+    </thead>
+    <tbody>
+      {% for d in detections %}
+      <tr>
+        <td class="sev-{{ d.severity.name }}">{{ d.severity.name }}</td>
+        <td>{{ d.record_type or "" }}</td>
+        <td><code>{{ d.source }}</code></td>
+        <td><code>{{ d.matched_value }}</code></td>
+        <td>{{ d.description }}</td>
+        <td>{{ d.ioc_id or d.rule or "" }}</td>
+        <td>{{ d.timestamp.isoformat() if d.timestamp else "" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p>No detections. The scanned artifacts show no known IOCs or heuristic anomalies.</p>
+  {% endif %}
+
+  {% if result.notes %}
+  <h2>Notes</h2>
+  <ul>
+    {% for n in result.notes %}
+    <li>[{{ n.level }}] <strong>{{ n.source }}</strong>: {{ n.message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p class="meta">{{ consent }}</p>
+</body>
+</html>

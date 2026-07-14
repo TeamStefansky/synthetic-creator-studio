@@ -1,0 +1,18 @@
+# Virtualenv
+.venv/
+
+# Build / packaging
+*.egg-info/
+build/
+dist/
+__pycache__/
+*.pyc
+
+# Scan output (leading slash = repo root only, so it never matches the
+# ioscan/iocs/ SOURCE package)
+/out/
+/iocs/
+
+# Pytest / ruff caches
+.pytest_cache/
+.ruff_cache/

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ioscan"
+version = "0.1.0"
+description = "Offline DFIR CLI that scans iOS backups and sysdiagnose archives for spyware IOCs (defensive, read-only)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "ioscan contributors" }]
+keywords = ["dfir", "forensics", "ios", "spyware", "ioc", "mvt", "stix2"]
+
+dependencies = [
+    "click>=8.1",
+    "stix2>=3.0",
+    "pycryptodome>=3.19",
+    "rich>=13.0",
+    "jinja2>=3.1",
+    "python-dateutil>=2.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[project.scripts]
+ioscan = "ioscan.cli:cli"
+
+[tool.setuptools.packages.find]
+include = ["ioscan*"]
+
+[tool.setuptools.package-data]
+ioscan = ["data/*.stix2", "report/templates/*.j2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
