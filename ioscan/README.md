@@ -11,6 +11,38 @@ indicators of compromise (IOCs) and heuristic anomalies. It is modeled on
 > never modifies the source artifacts. Only scan devices/backups you are
 > authorized to examine. Every run prints this consent notice.
 
+## Check your own iPhone — the easy way (no terminal)
+
+If you just want to scan **your own** iPhone/iPad and don't want to touch a
+command line, use the graphical app:
+
+1. Create a backup of your device on your computer (Finder on Mac, or the Apple
+   Devices app / iTunes on Windows). Tick **"Encrypt local backup"** and choose a
+   password — an encrypted backup exposes the forensic artifacts this tool needs.
+   See [Creating an (encrypted) iOS backup](#creating-an-encrypted-ios-backup).
+2. Launch the scanner:
+   - **Mac:** double-click **`Check-My-iPhone.command`**.
+   - **Windows:** double-click **`Check-My-iPhone.bat`**.
+   The first launch sets up a private Python environment automatically (needs
+   [Python 3](https://www.python.org/downloads/) installed), then opens a window.
+3. In the window: pick the detected backup, type the backup password if it's
+   encrypted, and click **Scan now**. When it finishes, a colored verdict banner
+   appears and you can open the full HTML report.
+
+> The bundled indicators are only a small **sample**. For a meaningful check,
+> fetch the real Amnesty MVT feeds into an `iocs/` folder first — see
+> [Fetching public IOC feeds](#fetching-public-ioc-feeds-amnesty-mvt). The app
+> tells you which feed set it's using.
+
+You can also launch the same window from a terminal with `ioscan-gui`.
+
+**A clean result is reassuring but not proof** — the tool flags what it *knows*
+(known IOCs + heuristics); novel or undocumented spyware can evade it. If you
+believe you are a targeted individual (journalist, activist, etc.), also run
+Amnesty's official [MVT](https://github.com/mvt-project/mvt), enable Apple's
+**Lockdown Mode**, and contact the
+[Access Now Digital Security Helpline](https://www.accessnow.org/help/).
+
 ## What it looks at
 
 - **DataUsage.sqlite / netusage.sqlite** - per-process network usage
