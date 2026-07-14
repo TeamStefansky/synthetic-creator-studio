@@ -20,6 +20,9 @@ interface ScoringInput {
   content: ContentAnalysis;
   lookalike: LookalikeResult;
   sharesWithFake: { shared: boolean; via: string | null };
+  // Attribution addendum: adversary-origin flag (already CDN-aware — the route
+  // only sets this when the country is trustworthy, i.e. not masked by a CDN).
+  adversary: { flagged: boolean; detail: string | null };
 }
 
 function bandFor(score: number): Band {
@@ -29,7 +32,8 @@ function bandFor(score: number): Band {
 }
 
 export function computeRisk(input: ScoringInput): Risk {
-  const { infra, reputation, content, lookalike, sharesWithFake } = input;
+  const { infra, reputation, content, lookalike, sharesWithFake, adversary } =
+    input;
   const evidence: EvidenceItem[] = [];
   let score = 40; // baseline
 
@@ -145,6 +149,17 @@ export function computeRisk(input: ScoringInput): Risk {
       `Shares ${sharesWithFake.via} with a domain on the known-fake list — a hallmark of coordinated networks.`
     );
     categoriesAvailable.add("network");
+  }
+
+  // ---- Adversary-origin flag (operator-configured policy) ----------------
+  if (adversary.flagged) {
+    add(
+      "Adversary-country origin",
+      +12,
+      adversary.detail ??
+        "An observed origin country matches the operator-configured adversary list."
+    );
+    categoriesAvailable.add("origin");
   }
 
   // ---- Transparency affordances ------------------------------------------

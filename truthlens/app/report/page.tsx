@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  Eye,
   Globe,
   Server,
   Mail,
@@ -13,8 +12,12 @@ import {
   History,
   ArrowLeft,
   AlertCircle,
+  ShieldAlert,
+  Users,
+  Share2,
+  Cloud,
 } from "lucide-react";
-import type { Report } from "@/lib/types";
+import type { Report, Likelihood } from "@/lib/types";
 import VerdictBadge from "@/components/VerdictBadge";
 import ScoreGauge from "@/components/ScoreGauge";
 import InfraCard, { Chips, YesNo } from "@/components/InfraCard";
@@ -23,6 +26,7 @@ import ContentAnalysisCard from "@/components/ContentAnalysisCard";
 import NetworkGraph from "@/components/NetworkGraph";
 import LoadingChecklist from "@/components/LoadingChecklist";
 import Disclaimer from "@/components/Disclaimer";
+import Nav from "@/components/Nav";
 
 function fmtDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -78,23 +82,18 @@ function ReportInner() {
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        {/* Header */}
-        <header className="mb-6 flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-slate-300 transition hover:text-white"
-          >
-            <Eye className="h-5 w-5 text-blue-400" />
-            <span className="font-semibold">TruthLens</span>
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-400 transition hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            New analysis
-          </Link>
-        </header>
+        <div className="mb-6">
+          <Nav />
+          <div className="mt-3">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-sm text-slate-400 transition hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              New analysis
+            </Link>
+          </div>
+        </div>
 
         {error ? (
           <ErrorState message={error} />
@@ -151,6 +150,31 @@ function ReportBody({ report }: { report: Report }) {
           <VerdictBadge band={risk.band} confidence={risk.confidence} />
           <ScoreGauge score={risk.score} band={risk.band} />
         </div>
+
+        {/* Adversary-origin flag (operator-configured policy) */}
+        {report.adversaryOrigin.flagged && (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-slate-200">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-band-red" />
+            <span>
+              <strong className="text-band-red">Adversary-country origin.</strong>{" "}
+              {report.adversaryOrigin.matches
+                .map((m) => `${m.country} (${m.source})`)
+                .join(", ")}{" "}
+              matches your configured adversary list.
+            </span>
+          </div>
+        )}
+        {report.adversaryOrigin.cdnMasked && (
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs text-slate-300">
+            <Cloud className="mt-0.5 h-4 w-4 shrink-0 text-purple-300" />
+            <span>
+              Served via{" "}
+              {report.adversaryOrigin.cdnProvider ?? "a CDN"}. The true origin
+              server is masked — origin-country flagging is suppressed to avoid a
+              false-confidence claim.
+            </span>
+          </div>
+        )}
       </section>
 
       {/* Infrastructure cards */}
@@ -190,9 +214,17 @@ function ReportBody({ report }: { report: Report }) {
               { label: "Provider", value: infra.hosting.org },
               {
                 label: "Location",
-                value: [infra.hosting.city, infra.hosting.region, infra.hosting.country]
-                  .filter(Boolean)
-                  .join(", "),
+                value: infra.hosting.isCdn ? (
+                  <span className="inline-flex items-center gap-1 text-purple-300">
+                    <Cloud className="h-3.5 w-3.5" />
+                    CDN edge ({infra.hosting.cdnProvider ?? "CDN"}) — true origin
+                    masked
+                  </span>
+                ) : (
+                  [infra.hosting.city, infra.hosting.region, infra.hosting.country]
+                    .filter(Boolean)
+                    .join(", ")
+                ),
               },
               { label: "Reverse host", value: infra.hosting.hostname },
             ]}
@@ -278,6 +310,12 @@ function ReportBody({ report }: { report: Report }) {
         <NetworkGraph network={report.network} />
       </section>
 
+      {/* Coordination + propagation (attribution addendum) */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <CoordinationCard report={report} />
+        <PropagationCard report={report} />
+      </section>
+
       {/* Content analysis */}
       <section>
         <ContentAnalysisCard content={report.contentAnalysis} />
@@ -287,6 +325,105 @@ function ReportBody({ report }: { report: Report }) {
       <section>
         <EvidenceList evidence={risk.evidence} />
       </section>
+    </div>
+  );
+}
+
+function likelihoodStyle(l: Likelihood) {
+  if (l === "High") return "text-band-red";
+  if (l === "Medium") return "text-band-yellow";
+  return "text-band-green";
+}
+
+function CoordinationCard({ report }: { report: Report }) {
+  const c = report.coordination;
+  return (
+    <div className="rounded-xl border border-surface-border bg-surface-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Users className="h-5 w-5 text-emerald-400" />
+        <h3 className="font-semibold text-slate-200">Coordination likelihood</h3>
+        <span className={`ml-auto text-lg font-bold ${likelihoodStyle(c.likelihood)}`}>
+          {c.likelihood}
+        </span>
+      </div>
+      {c.evidence.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          No coordination signals detected from the available infrastructure.
+        </p>
+      ) : (
+        <ul className="space-y-1.5">
+          {c.evidence.map((e, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm">
+              <span className="mt-0.5 text-emerald-400">•</span>
+              <span>
+                <span className="text-slate-200">{e.label}</span>
+                <span className="text-slate-500"> — {e.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function PropagationCard({ report }: { report: Report }) {
+  const p = report.propagation;
+  return (
+    <div className="rounded-xl border border-surface-border bg-surface-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Share2 className="h-5 w-5 text-blue-400" />
+        <h3 className="font-semibold text-slate-200">Content propagation</h3>
+      </div>
+
+      {p.query && (
+        <p className="mb-3 rounded bg-surface/50 p-2 text-xs italic text-slate-400">
+          Tracing phrase: “{p.query}”
+        </p>
+      )}
+
+      {!p.available ? (
+        <p className="text-sm text-slate-500">{p.note ?? "Unavailable."}</p>
+      ) : p.hits.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          {p.note ?? "No other publishers of this phrase were found."}
+        </p>
+      ) : (
+        <>
+          {p.earliestPublisher && (
+            <p className="mb-2 text-sm">
+              <span className="text-slate-400">Likely origin: </span>
+              <span className="font-medium text-slate-100">
+                {p.earliestPublisher}
+              </span>
+              {p.earliestDate && (
+                <span className="text-slate-500"> ({p.earliestDate})</span>
+              )}
+            </p>
+          )}
+          {p.coordinatedAmplification && (
+            <p className="mb-2 text-xs text-band-red">
+              ⚠ Coordinated amplification: republishers share this
+              operator&apos;s infrastructure.
+            </p>
+          )}
+          <ul className="max-h-56 space-y-1 overflow-y-auto text-sm">
+            {p.hits.map((h, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="text-slate-600">{h.publishedAt ?? "—"}</span>
+                <a
+                  href={h.url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="break-all text-slate-300 hover:text-blue-400"
+                >
+                  {h.domain}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

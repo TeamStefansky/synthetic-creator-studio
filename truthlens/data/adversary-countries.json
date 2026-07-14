@@ -1,0 +1,4 @@
+{
+  "description": "OPERATOR-DEFINED policy list. TruthLens does NOT ship political judgments. Add the ISO 3166-1 alpha-2 country codes YOUR organization considers adversarial/high-risk for origin flagging (e.g. [\"RU\", \"KP\", \"IR\"]). Left empty by default so nothing is flagged until you set a policy. This list is matched against observed server/ASN/registrant countries and is fully auditable.",
+  "codes": []
+}

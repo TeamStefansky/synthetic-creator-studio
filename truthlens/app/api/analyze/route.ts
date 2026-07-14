@@ -21,6 +21,14 @@ import {
 import { analyzeContent } from "@/lib/content-analysis";
 import { computeRisk } from "@/lib/scoring";
 import { buildNetwork } from "@/lib/network";
+import {
+  adversaryConfigured,
+  isAdversaryCountry,
+  detectCdn,
+} from "@/lib/adversary";
+import { assessCoordination } from "@/lib/coordination";
+import { tracePropagation } from "@/lib/propagation";
+import type { AdversaryOrigin } from "@/lib/types";
 import type {
   ArchiveInfo,
   DomainInfo,
@@ -61,6 +69,9 @@ const EMPTY_HOSTING: HostingInfo = {
   region: null,
   country: null,
   hostname: null,
+  isCdn: false,
+  cdnProvider: null,
+  isDatacenter: false,
 };
 
 const EMPTY_SSL: SslInfo = {
@@ -172,8 +183,60 @@ export async function POST(req: NextRequest) {
     reverseIpNeighbors: reverseNeighbors,
   });
 
+  // ---- CDN detection (ASN org + response headers) ------------------------
+  // A CDN edge masks the true origin server, so we must never assert an origin
+  // country when one is detected. Refine the hosting block with header hints.
+  const headerCdn = detectCdn(infrastructure.hosting.org, page?.headers);
+  if (headerCdn.isCdn) {
+    infrastructure.hosting.isCdn = true;
+    infrastructure.hosting.cdnProvider =
+      infrastructure.hosting.cdnProvider ?? headerCdn.provider;
+    infrastructure.hosting.isDatacenter = true;
+  }
+
+  // ---- Adversary-origin flagging (operator-configured policy) ------------
+  const adversaryOrigin: AdversaryOrigin = {
+    configured: adversaryConfigured(),
+    flagged: false,
+    matches: [],
+    cdnMasked: infrastructure.hosting.isCdn,
+    cdnProvider: infrastructure.hosting.cdnProvider,
+  };
+  if (adversaryOrigin.configured && !infrastructure.hosting.isCdn) {
+    // Only assert an origin country when it is NOT masked by a CDN.
+    if (isAdversaryCountry(infrastructure.hosting.country)) {
+      adversaryOrigin.matches.push({
+        source: "hosting",
+        country: infrastructure.hosting.country!,
+      });
+    }
+    if (isAdversaryCountry(infrastructure.domain.registrantCountry)) {
+      adversaryOrigin.matches.push({
+        source: "registrant",
+        country: infrastructure.domain.registrantCountry!,
+      });
+    }
+    adversaryOrigin.flagged = adversaryOrigin.matches.length > 0;
+  }
+  const adversaryDetail = adversaryOrigin.flagged
+    ? `Observed origin country in the adversary list: ${adversaryOrigin.matches
+        .map((m) => `${m.country} (${m.source})`)
+        .join(", ")}.`
+    : null;
+
   // ---- Content analysis (Anthropic) --------------------------------------
   const contentAnalysis = await analyzeContent(fp.articleText);
+
+  // ---- Coordination / bot-farm likelihood --------------------------------
+  const coordination = assessCoordination({
+    network,
+    hosting: infrastructure.hosting,
+    domain: infrastructure.domain,
+    sharesWithFake,
+  });
+
+  // ---- Content-propagation tracer (open web) -----------------------------
+  const propagation = await tracePropagation(fp.articleText, network, domain);
 
   // ---- Risk scoring -------------------------------------------------------
   const risk = computeRisk({
@@ -182,6 +245,7 @@ export async function POST(req: NextRequest) {
     content: contentAnalysis,
     lookalike,
     sharesWithFake,
+    adversary: { flagged: adversaryOrigin.flagged, detail: adversaryDetail },
   });
 
   const report: Report = {
@@ -193,6 +257,9 @@ export async function POST(req: NextRequest) {
     contentAnalysis,
     risk,
     network,
+    adversaryOrigin,
+    coordination,
+    propagation,
   };
 
   await setCached(domain, report);

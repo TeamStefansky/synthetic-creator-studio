@@ -1,16 +1,13 @@
-import { Eye, Network, ListChecks, ServerCog } from "lucide-react";
+import { Network, ListChecks, ServerCog } from "lucide-react";
 import UrlInput from "@/components/UrlInput";
 import Disclaimer from "@/components/Disclaimer";
+import Nav from "@/components/Nav";
 
 export default function LandingPage() {
   return (
     <main className="hero-gradient min-h-screen">
       <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-10 sm:px-6 sm:py-16">
-        {/* Brand */}
-        <header className="flex items-center gap-2">
-          <Eye className="h-6 w-6 text-blue-400" />
-          <span className="text-lg font-semibold tracking-tight">TruthLens</span>
-        </header>
+        <Nav />
 
         {/* Hero */}
         <section className="flex flex-1 flex-col items-center justify-center py-12 text-center">

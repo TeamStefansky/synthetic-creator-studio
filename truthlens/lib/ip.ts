@@ -1,6 +1,7 @@
 // IP / ASN / geolocation via ipinfo.io. Token is optional but raises limits.
 
 import { getJson } from "./httpClient";
+import { detectCdn, isDatacenterOrg } from "./adversary";
 import type { HostingInfo } from "./types";
 
 interface IpInfoResponse {
@@ -32,6 +33,8 @@ export async function lookupIp(ip: string): Promise<HostingInfo | null> {
   const asn = json.asn?.asn ?? fromOrg.asn;
   const org = json.asn?.name ?? fromOrg.name;
 
+  const cdn = detectCdn(org);
+
   return {
     ip: json.ip ?? ip,
     asn: asn ?? null,
@@ -40,5 +43,8 @@ export async function lookupIp(ip: string): Promise<HostingInfo | null> {
     region: json.region ?? null,
     country: json.country ?? null,
     hostname: json.hostname ?? null,
+    isCdn: cdn.isCdn,
+    cdnProvider: cdn.provider,
+    isDatacenter: cdn.isCdn || isDatacenterOrg(org),
   };
 }

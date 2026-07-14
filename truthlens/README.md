@@ -102,6 +102,68 @@ data/                     known-credible.json / known-fake.json seed lists
 components/               UI components
 ```
 
+## Origin & Attribution tools
+
+Beyond the site report, TruthLens includes an **Attribution Tools** section
+(top nav) for tracing content to an origin — including hostile states or bot
+farms — through legitimate means only. It never fetches anyone else's private
+logs.
+
+### Log Analyzer (`/tools/logs`, `POST /api/logs`)
+
+Upload or paste an **access log you own or are authorized to inspect**
+(Apache/Nginx combined or generic CSV — auto-detected). For each unique client
+IP it enriches geo/ASN, classifies **residential vs datacenter/hosting** (a bot
+signal), and flags:
+
+- adversary-country origins (per your configured list),
+- datacenter/hosting ASNs (likely automation, not real readers),
+- the same User-Agent across many distinct IPs (bot-farm signature),
+- high request-rate / synchronized bursts and sequential path-scanning,
+- the real client behind a proxy via `X-Forwarded-For` when present.
+
+It reconstructs each visitor's **content path** (ordered URLs + timestamps) and
+shows summary cards, a country breakdown, a request-volume timeline (bursts
+highlighted), and a sortable top-IP table.
+
+### Email Header Tracer (`/tools/email`, `POST /api/email-trace`)
+
+Paste the **raw source of an email you received**. TruthLens parses every
+`Received:` header, reconstructs the delivery hops **origin-first**, infers the
+true originating external IP + country, enriches each hop, parses
+SPF/DKIM/DMARC, and returns a spoofing verdict.
+
+### Adversary-origin flagging (site report)
+
+`data/adversary-countries.json` is an **operator-editable, empty-by-default**
+ISO-code list — TruthLens ships **no** political judgments. When you populate
+it, the site report flags a server/registrant country that matches, and adds an
+evidence item. **CDN caveat:** if the site sits behind a CDN (Cloudflare,
+Akamai, Fastly, CloudFront…), the true origin is masked, so TruthLens labels the
+location "CDN edge — true origin masked" and suppresses origin-country flagging
+rather than assert a country with false confidence.
+
+### Content-propagation tracer (site report)
+
+Takes a distinctive sentence from the article and searches the **open web** for
+other publishers to find where the content originated (earliest publisher =
+likely origin), and flags **coordinated amplification** when republishers share
+the target's operator infrastructure. Uses `ANTHROPIC_API_KEY` with web search;
+degrades gracefully when unavailable.
+
+### Coordination / bot-farm signal (site report)
+
+Combines already-computed signals — shared-infrastructure siblings, shared
+identifiers with known-fake sites, datacenter hosting, fresh registration — into
+a **Low / Medium / High** coordination likelihood with itemized evidence.
+
+> **Attribution honesty.** There is no legitimate way to read a stranger's
+> private server logs — you analyze your own logs, email headers you possess,
+> and publicly observable infrastructure. Geolocation is approximate; CDNs, VPNs
+> and Tor mask true origin (the tool labels this rather than guessing). The
+> adversary list is your policy, not ours. Attribution is probabilistic —
+> indicators with evidence, never proof.
+
 ## Honest notes
 
 - **Reputation lists are seeds.** There is no perfect free "is this fake" API,
