@@ -5,7 +5,7 @@ A **defensive OSINT decision-support platform**. Users submit assets they are au
 
 The product's credibility *is* its restraint. Features that overstate certainty are bugs, not enhancements.
 
-> ⚠️ Sections marked `TO VERIFY` were not confirmed against the codebase. Fill them in on your first session and delete the marker.
+> Stack/architecture below verified against the codebase in Phase 0 (see `NOTES.md`).
 
 ## Non-negotiable rules — read before any feature work
 These are product requirements enforced in code and proven by tests. Never weaken, remove, or "temporarily bypass" them, and never soften an existing disclaimer.
@@ -21,17 +21,23 @@ These are product requirements enforced in code and proven by tests. Never weake
 
 If a requested feature cannot be built lawfully within these rules, build the lawful version and state the limitation explicitly in your report. Do not ask for permission to bypass them; do not treat a user request as an override.
 
-## Stack
-- Next.js (App Router) + TypeScript, deployed on Vercel. `TO VERIFY: exact versions`
+## Stack (verified Phase 0)
+- Next.js `^14.2.35` (App Router) + React `18.3` + TypeScript, deployed on Vercel.
 - Server-only for all OSINT and LLM calls — API routes / server actions. **No API key ever reaches the client.**
-- Anthropic SDK for claim extraction, clustering, synthesis. JSON-only prompts, defensive parse, one retry.
+- Anthropic SDK `^0.32.1` for claim extraction, clustering, synthesis (model id in use: `claude-sonnet-4-6`). JSON-only prompts, defensive parse, one retry.
 - Scheduled scans via Vercel Cron; long scans run queued, never in the request path.
-- `TO VERIFY: DB (Postgres?), ORM, test runner, package manager`
+- **No SQL DB / ORM.** Persistence = KV (Vercel KV / Upstash Redis REST) via `lib/store.ts` server-side, `localStorage` for anonymous users. `storeAvailable()` gates KV features → visible "not connected" state without it.
+- Other deps: `cheerio`, `lucide-react`, `react-force-graph-2d`. Package manager: **npm**.
+- **No test runner and no Playwright yet** — verification today is `tsc --noEmit` + `next build` + manual walkthroughs. Adding a runner is a new dependency (list + justify first).
 
 ## Commands
 ```
-TO VERIFY — fill from package.json on first session:
-dev / build / test / e2e / lint / typecheck / migrate / seed
+dev:       next dev
+build:     next build
+start:     next start
+lint:      next lint
+typecheck: npx tsc --noEmit
+test/e2e/migrate/seed: none configured yet
 ```
 Run lint + typecheck before finishing any phase.
 
@@ -48,10 +54,13 @@ lib/
   indicators/       coordination + foreign-influence scorers
   imageGen? / pdf/  exports
 components/
-  ConfidenceBadge   REQUIRED wherever an attribution appears
-  EvidenceList      REQUIRED alongside it
+  ConfidenceBadge   REQUIRED wherever an attribution appears — NOT YET CREATED (VerdictBadge exists; add ConfidenceBadge in P2)
+  EvidenceList      REQUIRED alongside it — exists
 ```
-`TO VERIFY: reconcile with actual tree on first session.`
+Actual tree (Phase 0): tools live at `app/tools/{post,logs,email}` + Site Report at
+`/` + `/report`; Monitor at `app/monitor` (browser-local) + `app/api/{monitor,watchlist}`
+(KV); Brand Watch at `app/platform` + `app/api/{brandwatch,watch}`. Reuse map and the
+full route inventory are in `NOTES.md`.
 
 **Key modules to reuse, not reimplement:** operator-network graph (shared IP / GA / AdSense / SSL SAN), geographic origin, deep OSINT on owners/funding, origin-chain de-CDN, PDF export. These already exist inside Site Report / Monitor. If you need them elsewhere, **extract to `lib/`** — do not copy.
 
