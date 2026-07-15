@@ -42,6 +42,24 @@ export default function BrandWatchPage() {
   const [error, setError] = useState<string | null>(null);
   const [auto, setAuto] = useState(true);
   const [activeEntity, setActiveEntity] = useState<string | null>(null);
+  const [watch, setWatch] = useState<{ connected: boolean; watches: any[]; alerts: any[]; reason?: string }>({ connected: false, watches: [], alerts: [] });
+
+  const loadWatch = useCallback(async () => {
+    try {
+      const res = await fetch("/api/watch", { cache: "no-store" });
+      setWatch(await res.json());
+    } catch { /* ignore */ }
+  }, []);
+  useEffect(() => { loadWatch(); }, [loadWatch]);
+
+  const addWatch = useCallback(async (name: string) => {
+    await fetch(`/api/watch?name=${encodeURIComponent(name)}`, { method: "POST" });
+    loadWatch();
+  }, [loadWatch]);
+  const removeWatch = useCallback(async (id: string) => {
+    await fetch(`/api/watch?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    loadWatch();
+  }, [loadWatch]);
 
   const scan = useCallback(async (entity: string, silent = false) => {
     if (entity.length < 2) return;
@@ -117,6 +135,55 @@ export default function BrandWatchPage() {
           NYT, GNews, NewsAPI) and RSS activate when configured — unconfigured ones show as “not connected.”
         </p>
       </div>
+
+      {/* Watchlist — continuous monitoring */}
+      {watch.connected ? (
+        (watch.watches.length > 0 || (activeEntity && !watch.watches.some((w) => w.name === activeEntity))) && (
+          <div className="card">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                <Radar className="h-4 w-4 text-brand-soft" /> Watchlist
+                <span className="text-xs font-normal text-gray-500">· monitored on a schedule</span>
+              </h3>
+              {activeEntity && !watch.watches.some((w) => w.name === activeEntity) && (
+                <button onClick={() => addWatch(activeEntity)}
+                  className="rounded-lg border border-white/10 px-2.5 py-1 text-xs text-brand-soft transition hover:bg-white/[0.04]">
+                  ＋ Watch “{activeEntity}”
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {watch.watches.map((w) => {
+                const wu = STATUS_UI[w.lastStatus] || STATUS_UI.UNKNOWN;
+                return (
+                  <span key={w.id} className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pl-2.5 pr-1.5 text-sm">
+                    <span className={`h-2 w-2 rounded-full ${w.lastStatus ? wu.bar : "bg-gray-600"}`} title={w.lastStatus ? wu.label : "not checked yet"} />
+                    <button onClick={() => { setQuery(w.name); scan(w.name); }} className="text-gray-200 hover:text-white">{w.name}</button>
+                    {typeof w.lastScore === "number" && <span className={`text-xs ${wu.tone}`}>{w.lastScore}</span>}
+                    <button onClick={() => removeWatch(w.id)} title="Stop watching"
+                      className="text-gray-600 opacity-0 transition group-hover:opacity-100 hover:text-risk-high">✕</button>
+                  </span>
+                );
+              })}
+              {!watch.watches.length && <p className="text-xs text-gray-500">No entities watched yet — scan one, then add it.</p>}
+            </div>
+            {watch.alerts.length > 0 && (
+              <div className="mt-3 border-t border-white/[0.05] pt-3">
+                <div className="mb-1 text-xs font-semibold text-gray-400">Recent escalation alerts</div>
+                <div className="space-y-1">
+                  {watch.alerts.slice(0, 4).map((a) => (
+                    <div key={a.id} className="text-xs text-gray-400">🔔 {a.title}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      ) : activeEntity ? (
+        <div className="card border-white/10 text-xs text-gray-500">
+          Continuous monitoring is <span className="text-gray-400">not connected</span>. {watch.reason}
+        </div>
+      ) : null}
 
       {error && (
         <div className="card border-risk-high/40 bg-risk-high/[0.06] text-sm text-risk-high">{error}</div>
