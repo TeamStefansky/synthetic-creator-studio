@@ -47,6 +47,16 @@ describe("ethics gates", () => {
     expect(coord!.score).toBeGreaterThan(0);
   });
 
+  it("rule 2 — earliest node is the earliest-timestamped mention (labeled in UI as observed-only)", () => {
+    const mentions: Mention[] = [
+      { source: "gdelt", id: "1", text: "later", account: "a", timestamp: "2024-03-02T10:00:00Z" },
+      { source: "bluesky", id: "2", text: "earliest one", account: "b", timestamp: "2024-03-01T08:00:00Z" },
+      { source: "reddit", id: "3", text: "middle", account: "c", timestamp: "2024-03-01T20:00:00Z" },
+    ];
+    const r = computeThreat("ACME", mentions, sources);
+    expect(r.earliest?.text).toBe("earliest one");
+  });
+
   it("sentiment rubric is versioned (reproducibility)", () => {
     expect(RUBRIC_VERSION).toMatch(/v\d+$/);
     const r = computeThreat("ACME", [mk("ACME scam fraud lie", "a1")], sources);

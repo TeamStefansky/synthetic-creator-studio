@@ -162,10 +162,16 @@ export function computeThreat(
   const evidence = [...mentions].sort((a, b) => (b.engagement || 0) - (a.engagement || 0)).slice(0, 12);
   const trend = hourBuckets(mentions).slice(-24);
 
+  // Earliest OBSERVED node in the collected data (not the true origin).
+  const timed = mentions.filter((m) => m.timestamp && !isNaN(Date.parse(m.timestamp)));
+  const earliest = timed.length
+    ? timed.reduce((a, b) => (Date.parse(a.timestamp!) <= Date.parse(b.timestamp!) ? a : b))
+    : undefined;
+
   return {
     ...base, score, status,
     indicators: indicators.sort((a, b) => (b.score * b.confidence) - (a.score * a.confidence)),
-    evidence, trend,
+    evidence, trend, earliest,
   };
 }
 

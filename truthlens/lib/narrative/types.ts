@@ -68,4 +68,7 @@ export interface ThreatResult {
   generatedAt: string;
   note?: string;
   narratives?: NarrativeExtraction;
+  /** Earliest-timestamped mention in the collected data. ALWAYS "earliest
+   * observed in collected data" — never asserted as the true origin. */
+  earliest?: Mention;
 }

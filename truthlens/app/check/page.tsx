@@ -18,10 +18,11 @@ import { linkAndRecord, connectionsFor, ClueConnection } from "@/lib/clues";
 import { bandLabel } from "@/lib/ui";
 
 const ENDPOINT: Record<CheckType, string> = {
-  site: "/api/analyze", post: "/api/post-check", logs: "/api/logs", email: "/api/email-trace",
+  site: "/api/analyze", post: "/api/post-check", logs: "/api/logs",
+  email: "/api/email-trace", narrative: "/api/brandwatch",
 };
 const TOOL_ROUTE: Record<CheckType, string> = {
-  site: "/", post: "/tools/post", logs: "/tools/logs", email: "/tools/email",
+  site: "/", post: "/tools/post", logs: "/tools/logs", email: "/tools/email", narrative: "/platform",
 };
 
 function bodyFor(type: CheckType, input: string): any {
@@ -33,6 +34,13 @@ function bodyFor(type: CheckType, input: string): any {
 
 function summarize(type: CheckType, r: any): { headline: string; level: ConfidenceLevel } {
   try {
+    if (type === "narrative") {
+      const lvl: ConfidenceLevel = r.status === "UNDER_ATTACK" ? "High" : r.status === "ELEVATED" ? "Medium"
+        : r.status === "CALM" ? "Low" : "Unknown";
+      const label = r.status === "UNDER_ATTACK" ? "Coordinated push likely" : r.status === "ELEVATED" ? "Elevated activity"
+        : r.status === "CALM" ? "Organic-looking" : "Unknown / no signal";
+      return { headline: `${label}${r.score != null ? ` · ${r.score}/100` : ""} · ${r.totalMentions} mentions`, level: lvl };
+    }
     if (type === "site") {
       const lvl: ConfidenceLevel = r.band === "HIGH_RISK" ? "High" : r.band === "LIKELY_LEGITIMATE" ? "Low" : "Unknown";
       return { headline: `${bandLabel(r.band)}${typeof r.score === "number" ? ` · risk ${r.score}` : ""}`, level: lvl };
@@ -82,17 +90,21 @@ function CheckInner() {
     }
     const pre = params.get("input");
     if (pre) setInput(pre);
+    const t = params.get("type") as CheckType | null;
+    if (t && CHECK_TYPES.some((x) => x.type === t)) setOverride(t);
   }, [params]);
 
   const run = useCallback(async () => {
     const value = input.trim();
     if (!value) return;
-    setRunning(true); setError(null); setRecord(null);
+    setRunning(true); setError(null); setRecord(null); setConnections([]);
     try {
-      const res = await fetch(ENDPOINT[type], {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyFor(type, value)),
-      });
+      const res = type === "narrative"
+        ? await fetch(`/api/brandwatch?entity=${encodeURIComponent(value)}&deep=1`, { cache: "no-store" })
+        : await fetch(ENDPOINT[type], {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(bodyFor(type, value)),
+          });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Check failed");
       const { headline, level } = summarize(type, data);
@@ -183,7 +195,57 @@ function CheckInner() {
               <p className="mt-1.5 text-xs text-gray-500">Observed overlap in collected data — a lead, not proof of a shared operator.</p>
             </div>
           )}
-          {evidence.length > 0 && (
+          {record.type === "narrative" && (
+            <div className="space-y-3 border-t border-white/[0.06] pt-3">
+              {/* Indicators — each with level + signals + alternative */}
+              {Array.isArray(record.result.indicators) && record.result.indicators.map((ind: any) => (
+                <div key={ind.key}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-200">{ind.label}</span>
+                    <ConfidenceBadge level={ind.level} label={ind.level !== "Unknown" ? String(ind.score) : undefined} />
+                  </div>
+                  {ind.signals?.length > 0 && <ul className="mt-1">{ind.signals.map((s: string, i: number) => <li key={i} className="text-xs text-gray-400">• {s}</li>)}</ul>}
+                  <p className="mt-0.5 text-xs text-gray-500"><span className="text-gray-600">Could also be:</span> {ind.alternative}</p>
+                </div>
+              ))}
+              {/* Earliest observable node */}
+              {record.result.earliest && (
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+                  <div className="text-xs font-semibold text-gray-400">Earliest observed in collected data <span className="font-normal">— not the true origin</span></div>
+                  <p className="mt-1 text-gray-300">{record.result.earliest.text}</p>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {record.result.earliest.source}{record.result.earliest.account ? ` · ${record.result.earliest.account}` : ""}{record.result.earliest.timestamp ? ` · ${record.result.earliest.timestamp}` : ""}
+                    {record.result.earliest.url && <> · <a href={record.result.earliest.url} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">source</a></>}
+                  </div>
+                </div>
+              )}
+              {/* Narrative clusters (AI) */}
+              {record.result.narratives?.available && record.result.narratives.clusters?.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-400">Narrative clusters</div>
+                  <div className="mt-1 grid gap-2 sm:grid-cols-2">
+                    {record.result.narratives.clusters.map((c: any, i: number) => (
+                      <div key={i} className="rounded-lg border border-white/[0.06] p-2 text-xs">
+                        <div className="font-medium text-gray-200">{c.label} <span className="text-gray-500">· {c.hostility}</span></div>
+                        <div className="text-gray-400">{c.summary}</div>
+                        <div className="mt-0.5 text-gray-600">Could also be: {c.alternative}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Source appendix */}
+              {Array.isArray(record.result.sources) && (
+                <div className="text-xs text-gray-500">
+                  <span className="font-semibold text-gray-400">Sources:</span>{" "}
+                  {record.result.sources.map((s: any, i: number) => (
+                    <span key={i}>{i > 0 && " · "}{s.source} {s.connected ? `(${s.count})` : "(not connected)"}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {record.type !== "narrative" && evidence.length > 0 && (
             <ul className="space-y-1 border-t border-white/[0.06] pt-3">
               {evidence.slice(0, 8).map((e, i) => (
                 <li key={i} className="text-sm text-gray-400">• {typeof e === "string" ? e : (e.label || e.text || e.signal || JSON.stringify(e).slice(0, 160))}</li>
