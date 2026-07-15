@@ -19,10 +19,11 @@ import { bandLabel } from "@/lib/ui";
 
 const ENDPOINT: Record<CheckType, string> = {
   site: "/api/analyze", post: "/api/post-check", logs: "/api/logs",
-  email: "/api/email-trace", narrative: "/api/brandwatch",
+  email: "/api/email-trace", narrative: "/api/brandwatch", cib: "/api/cib",
 };
 const TOOL_ROUTE: Record<CheckType, string> = {
-  site: "/", post: "/tools/post", logs: "/tools/logs", email: "/tools/email", narrative: "/platform",
+  site: "/", post: "/tools/post", logs: "/tools/logs", email: "/tools/email",
+  narrative: "/platform", cib: "/platform",
 };
 
 function bodyFor(type: CheckType, input: string): any {
@@ -34,6 +35,11 @@ function bodyFor(type: CheckType, input: string): any {
 
 function summarize(type: CheckType, r: any): { headline: string; level: ConfidenceLevel } {
   try {
+    if (type === "cib") {
+      const L = r.likelihood;
+      const lvl: ConfidenceLevel = L === "Strong" ? "High" : L === "Moderate" ? "Medium" : "Low";
+      return { headline: `Coordination Likelihood: ${L} · actor UNDETERMINED`, level: lvl };
+    }
     if (type === "narrative") {
       const lvl: ConfidenceLevel = r.status === "UNDER_ATTACK" ? "High" : r.status === "ELEVATED" ? "Medium"
         : r.status === "CALM" ? "Low" : "Unknown";
@@ -101,6 +107,8 @@ function CheckInner() {
     try {
       const res = type === "narrative"
         ? await fetch(`/api/brandwatch?entity=${encodeURIComponent(value)}&deep=1`, { cache: "no-store" })
+        : type === "cib"
+        ? await fetch(`/api/cib?entity=${encodeURIComponent(value)}`, { cache: "no-store" })
         : await fetch(ENDPOINT[type], {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify(bodyFor(type, value)),
@@ -253,7 +261,28 @@ function CheckInner() {
               )}
             </div>
           )}
-          {record.type !== "narrative" && evidence.length > 0 && (
+          {record.type === "cib" && (
+            <div className="space-y-3 border-t border-white/[0.06] pt-3">
+              {Array.isArray(record.result.signals) && record.result.signals.map((s: any, i: number) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm text-gray-200">{s.name}</span>
+                    <ConfidenceBadge level={(s.confidence === "Not collected" ? "Unknown" : s.confidence) as ConfidenceLevel}
+                      label={s.confidence === "Not collected" ? "not collected" : undefined} />
+                  </div>
+                  <ul className="mt-1">{s.evidence.map((e: string, j: number) => <li key={j} className="text-xs text-gray-400">• {e}</li>)}</ul>
+                </div>
+              ))}
+              <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-200/90">
+                <div className="font-semibold">Attribution &amp; Limitations</div>
+                <p className="mt-1">{record.result.attribution}</p>
+                {Array.isArray(record.result.nextSteps) && (
+                  <ul className="mt-2 list-disc pl-4 text-xs">{record.result.nextSteps.map((n: string, i: number) => <li key={i}>{n}</li>)}</ul>
+                )}
+              </div>
+            </div>
+          )}
+          {record.type !== "narrative" && record.type !== "cib" && evidence.length > 0 && (
             <ul className="space-y-1 border-t border-white/[0.06] pt-3">
               {evidence.slice(0, 8).map((e, i) => (
                 <li key={i} className="text-sm text-gray-400">• {typeof e === "string" ? e : (e.label || e.text || e.signal || JSON.stringify(e).slice(0, 160))}</li>

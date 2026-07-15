@@ -1,7 +1,7 @@
 // Auto-detect what kind of check an input is, so /check can route it to the
 // right existing tool. Pure functions — unit-tested. The user can always override.
 
-export type CheckType = "site" | "post" | "logs" | "email" | "narrative";
+export type CheckType = "site" | "post" | "logs" | "email" | "narrative" | "cib";
 
 export interface Detection {
   type: CheckType;
@@ -12,7 +12,7 @@ export interface Detection {
 
 const LABELS: Record<CheckType, string> = {
   site: "Site Report", post: "Post Check", logs: "Log Analyzer",
-  email: "Email Tracer", narrative: "Narrative Check",
+  email: "Email Tracer", narrative: "Narrative Check", cib: "CIB Analysis",
 };
 
 const SOCIAL_HOSTS = [
