@@ -13,6 +13,8 @@ import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
 import { detectCheckType, CHECK_TYPES, CheckType } from "@/lib/check/detect";
 import { CheckRecord, genId, getLocal, saveLocal, syncShared } from "@/lib/check/history";
+import { extractEntities } from "@/lib/clues/extract";
+import { linkAndRecord, connectionsFor, ClueConnection } from "@/lib/clues";
 import { bandLabel } from "@/lib/ui";
 
 const ENDPOINT: Record<CheckType, string> = {
@@ -62,6 +64,7 @@ function CheckInner() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [record, setRecord] = useState<CheckRecord | null>(null);
+  const [connections, setConnections] = useState<ClueConnection[]>([]);
 
   const detection = detectCheckType(input);
   const type: CheckType = override || detection.type;
@@ -69,7 +72,14 @@ function CheckInner() {
   // Reopen a saved check from history, or prefill from ?input=.
   useEffect(() => {
     const id = params.get("reopen");
-    if (id) { const r = getLocal(id); if (r) { setInput(r.input); setOverride(r.type); setRecord(r); return; } }
+    if (id) {
+      const r = getLocal(id);
+      if (r) {
+        setInput(r.input); setOverride(r.type); setRecord(r);
+        setConnections(connectionsFor(r.id, extractEntities(r.type, r.input, r.result)));
+        return;
+      }
+    }
     const pre = params.get("input");
     if (pre) setInput(pre);
   }, [params]);
@@ -90,6 +100,8 @@ function CheckInner() {
       setRecord(rec);
       saveLocal(rec);
       syncShared(rec);
+      // Clue layer: link repeated entities to earlier checks, then record this one.
+      setConnections(linkAndRecord(rec.id, extractEntities(type, value, data)));
     } catch (e: any) {
       setError(e?.message || "Check failed");
     } finally {
@@ -152,6 +164,25 @@ function CheckInner() {
               Open full {CHECK_TYPES.find((t) => t.type === record.type)?.label} <ExternalLink className="h-3.5 w-3.5" />
             </Link>
           </div>
+          {connections.length > 0 && (
+            <div className="rounded-lg border border-brand/30 bg-brand/[0.06] p-3">
+              <div className="text-xs font-semibold text-brand-soft">Connections to your earlier checks</div>
+              <ul className="mt-1.5 space-y-1">
+                {connections.map((c, i) => (
+                  <li key={i} className="text-sm text-gray-300">
+                    This <span className="font-medium">{c.label}</span> also appeared in {c.checks.length} earlier check{c.checks.length > 1 ? "s" : ""}:{" "}
+                    {c.checks.slice(0, 4).map((ch, j) => (
+                      <span key={ch.id}>
+                        {j > 0 && ", "}
+                        <Link href={`/check?reopen=${encodeURIComponent(ch.id)}`} className="text-brand-soft hover:underline">{ch.headline.slice(0, 40)}</Link>
+                      </span>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1.5 text-xs text-gray-500">Observed overlap in collected data — a lead, not proof of a shared operator.</p>
+            </div>
+          )}
           {evidence.length > 0 && (
             <ul className="space-y-1 border-t border-white/[0.06] pt-3">
               {evidence.slice(0, 8).map((e, i) => (
