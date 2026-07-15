@@ -124,18 +124,41 @@ def find_backups(roots: list[Path] | None = None) -> list[BackupInfo]:
     found: list[BackupInfo] = []
     seen: set[Path] = set()
     for root in roots:
-        if not root.exists():
-            continue
-        # A root may itself be a backup, or contain UDID subfolders.
-        candidates = [root, *[p for p in root.iterdir() if p.is_dir()]]
-        for cand in candidates:
-            rp = cand.resolve()
-            if rp in seen or not _looks_like_backup(cand):
+        try:
+            if not root.exists():
                 continue
-            seen.add(rp)
-            found.append(_read_backup_meta(cand))
+            # A root may itself be a backup, or contain UDID subfolders.
+            subdirs = [p for p in root.iterdir() if p.is_dir()]
+        except OSError:
+            # On macOS the backup folder is protected by TCC: without Full Disk
+            # Access, iterdir()/stat() raise PermissionError. Never crash the
+            # caller — skip this root; the GUI surfaces a "grant access" hint.
+            continue
+        for cand in (root, *subdirs):
+            try:
+                rp = cand.resolve()
+                if rp in seen or not _looks_like_backup(cand):
+                    continue
+                seen.add(rp)
+                found.append(_read_backup_meta(cand))
+            except OSError:
+                continue
     found.sort(key=lambda b: b.last_backup or datetime.min.replace(tzinfo=UTC), reverse=True)
     return found
+
+
+def permission_blocked_roots() -> list[Path]:
+    """Default roots that exist but can't be listed — the classic symptom of
+    macOS Full Disk Access not being granted to the launching app/terminal."""
+    blocked: list[Path] = []
+    for root in default_backup_roots():
+        try:
+            next(iter(root.iterdir()), None)
+        except PermissionError:
+            blocked.append(root)
+        except OSError:
+            pass
+    return blocked
 
 
 # ---------------------------------------------------------------------------
@@ -337,6 +360,17 @@ def main() -> int:  # pragma: no cover - requires a display
             if labels:
                 self.backup_combo.current(0)
                 self._log(f"Found {len(labels)} backup(s).")
+                return
+            blocked = permission_blocked_roots()
+            if blocked:
+                self._log(
+                    "macOS blocked access to your backup folder (Full Disk "
+                    "Access not granted).\n"
+                    "Fix: System Settings → Privacy & Security → Full Disk "
+                    "Access → turn ON your terminal app (Terminal / iTerm), then "
+                    "quit and reopen it and press Rescan.\n"
+                    "Blocked: " + ", ".join(str(b) for b in blocked)
+                )
             else:
                 self._log(
                     "No backups found automatically. Use Browse… to pick a "

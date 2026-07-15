@@ -47,6 +47,14 @@ def test_find_backups_ignores_non_backup_dirs(tmp_path):
     assert gui.find_backups([tmp_path]) == []
 
 
+def test_find_backups_survives_unreadable_root(tmp_path):
+    # A path whose iterdir() raises OSError (here: a file, not a directory —
+    # same graceful-skip path as macOS PermissionError / Full Disk Access).
+    not_a_dir = tmp_path / "not-a-dir"
+    not_a_dir.write_text("x")
+    assert gui.find_backups([not_a_dir]) == []
+
+
 def test_resolve_ioc_paths_falls_back_to_bundled_sample(tmp_path, monkeypatch):
     # From an empty CWD with no iocs/ folder, we get the bundled sample.
     monkeypatch.chdir(tmp_path)
