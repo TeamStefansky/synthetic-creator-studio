@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ShieldAlert, ShieldCheck, ShieldQuestion, Search, Loader2, RefreshCw,
-  TrendingUp, Radar, HelpCircle,
+  TrendingUp, Radar, HelpCircle, FileText, Sparkles,
 } from "lucide-react";
 
 interface Indicator {
@@ -21,7 +21,15 @@ interface ThreatResult {
   entity: string; score: number | null; status: string; totalMentions: number; totalAccounts: number;
   sources: SourceStatus[]; indicators: Indicator[]; evidence: Mention[]; trend: { ts: string; count: number }[];
   rubricVersion: string; generatedAt: string; note?: string; cached?: boolean;
+  narratives?: {
+    available: boolean; reason?: string; assessment: string; coreClaims: string[];
+    clusters: { label: string; summary: string; hostility: string; alternative: string }[];
+  };
 }
+
+const HOST_TONE: Record<string, string> = {
+  high: "text-risk-high bg-risk-high/10", medium: "text-risk-unknown bg-risk-unknown/10", low: "text-risk-legit bg-risk-legit/10",
+};
 
 const STATUS_UI: Record<string, { label: string; tone: string; bar: string; border: string; icon: any }> = {
   UNDER_ATTACK: { label: "Under attack", tone: "text-risk-high", bar: "bg-risk-high", border: "border-risk-high/40", icon: ShieldAlert },
@@ -66,7 +74,8 @@ export default function BrandWatchPage() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/brandwatch?entity=${encodeURIComponent(entity)}`, { cache: "no-store" });
+      // Manual scans run the deep LLM narrative layer; auto-refresh stays light.
+      const res = await fetch(`/api/brandwatch?entity=${encodeURIComponent(entity)}${silent ? "" : "&deep=1"}`, { cache: "no-store" });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Scan failed");
       setResult(data);
@@ -211,6 +220,10 @@ export default function BrandWatchPage() {
                 <div className="text-xs text-gray-500">
                   {result.totalMentions} mentions · {result.totalAccounts} accounts
                 </div>
+                <a href={`/api/brandwatch/report?entity=${encodeURIComponent(result.entity)}`} target="_blank" rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1 text-xs text-brand-soft hover:underline">
+                  <FileText className="h-3.5 w-3.5" /> Export report (PDF)
+                </a>
               </div>
             </div>
             {result.note && <p className="mt-3 text-sm text-gray-400">{result.note}</p>}
@@ -266,6 +279,46 @@ export default function BrandWatchPage() {
               ))}
             </div>
           </div>
+
+          {/* AI narrative layer (deep scan) */}
+          {result.narratives && (
+            <div className="card">
+              <h3 className="mb-3 flex items-center gap-2 font-semibold text-white">
+                <Sparkles className="h-4 w-4 text-brand-soft" /> Narrative analysis
+                <span className="text-xs font-normal text-gray-500">· AI-assisted</span>
+              </h3>
+              {result.narratives.available ? (
+                <>
+                  {result.narratives.assessment && <p className="text-sm text-gray-300">{result.narratives.assessment}</p>}
+                  {result.narratives.coreClaims.length > 0 && (
+                    <div className="mt-3">
+                      <div className="text-xs font-semibold text-gray-400">Core claims circulating</div>
+                      <ul className="mt-1 space-y-0.5">
+                        {result.narratives.coreClaims.map((c, i) => <li key={i} className="text-sm text-gray-300">• {c}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {result.narratives.clusters.map((c, i) => (
+                      <div key={i} className="rounded-lg border border-white/[0.06] p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-gray-200">{c.label}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${HOST_TONE[c.hostility] || HOST_TONE.low}`}>{c.hostility}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-400">{c.summary}</p>
+                        <p className="mt-1.5 text-xs text-gray-500"><span className="text-gray-600">Could also be:</span> {c.alternative}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-gray-600">AI-assisted interpretation — indicators, not verdicts. Verify against the evidence below.</p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  <span className="text-gray-400">Not connected.</span> {result.narratives.reason}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             {result.trend.length > 1 && (

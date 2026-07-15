@@ -38,6 +38,20 @@ export interface Indicator {
   detail: string;
 }
 
+export interface NarrativeCluster {
+  label: string;
+  summary: string;
+  hostility: "low" | "medium" | "high";
+  alternative: string; // "could also be explained by…"
+}
+export interface NarrativeExtraction {
+  available: boolean;
+  coreClaims: string[];
+  clusters: NarrativeCluster[];
+  assessment: string;
+  reason?: string;
+}
+
 export type ThreatStatus = "CALM" | "ELEVATED" | "UNDER_ATTACK" | "UNKNOWN";
 
 export interface ThreatResult {
@@ -53,4 +67,5 @@ export interface ThreatResult {
   rubricVersion: string;
   generatedAt: string;
   note?: string;
+  narratives?: NarrativeExtraction;
 }
