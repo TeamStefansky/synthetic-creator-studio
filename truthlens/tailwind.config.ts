@@ -45,10 +45,16 @@ const config: Config = {
           "0%,100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
         },
+        blink: {
+          "0%, 90%, 100%": { transform: "scaleY(1)" },
+          "94%": { transform: "scaleY(0.1)" },
+          "97%": { transform: "scaleY(1)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
         float: "float 6s ease-in-out infinite",
+        blink: "blink 4.5s ease-in-out infinite",
       },
     },
   },

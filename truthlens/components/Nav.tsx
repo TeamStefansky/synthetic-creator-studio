@@ -23,7 +23,7 @@ export default function Nav() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/" className="group flex items-center gap-2.5 font-semibold">
           <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-glow transition group-hover:scale-105">
-            <Eye className="h-5 w-5 text-white" />
+            <Eye className="h-5 w-5 animate-blink text-white [transform-origin:center]" />
           </span>
           <span className="text-[15px] tracking-tight">
             Truth<span className="text-brand-soft">Lens</span>
