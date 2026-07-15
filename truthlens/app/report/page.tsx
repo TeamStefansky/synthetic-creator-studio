@@ -22,6 +22,7 @@ import InsightsCard from "@/components/InsightsCard";
 import SocialMediaPanel from "@/components/SocialMediaPanel";
 import GeoOriginCard from "@/components/GeoOriginCard";
 import OriginChainCard from "@/components/OriginChainCard";
+import CibPanel from "@/components/CibPanel";
 
 function ReportInner() {
   const params = useSearchParams();
@@ -218,6 +219,9 @@ function ReportInner() {
           </p>
         )}
       </section>
+
+      {/* Coordinated Inauthentic Behavior (CIB) — on-demand, actor UNDETERMINED */}
+      <CibPanel domain={report.domain} />
 
       {/* Content analysis */}
       <ContentAnalysisCard data={report.contentAnalysis} />
