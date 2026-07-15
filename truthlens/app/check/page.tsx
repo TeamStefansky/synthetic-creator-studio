@@ -171,10 +171,18 @@ function CheckInner() {
               <ConfidenceBadge level={record.level as ConfidenceLevel} />
               <span className="font-semibold text-white">{record.headline}</span>
             </div>
-            <Link href={`${TOOL_ROUTE[record.type]}${record.type === "site" ? `?url=${encodeURIComponent(record.input)}` : ""}`}
-              className="flex items-center gap-1 text-xs text-brand-soft hover:underline">
-              Open full {CHECK_TYPES.find((t) => t.type === record.type)?.label} <ExternalLink className="h-3.5 w-3.5" />
-            </Link>
+            <div className="flex items-center gap-3">
+              {record.type === "narrative" && (
+                <a href={`/api/brandwatch/report?entity=${encodeURIComponent(record.input)}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-brand-soft hover:underline">
+                  Export report (PDF) <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
+              <Link href={`${TOOL_ROUTE[record.type]}${record.type === "site" ? `?url=${encodeURIComponent(record.input)}` : ""}`}
+                className="flex items-center gap-1 text-xs text-brand-soft hover:underline">
+                Open full {CHECK_TYPES.find((t) => t.type === record.type)?.label} <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
           {connections.length > 0 && (
             <div className="rounded-lg border border-brand/30 bg-brand/[0.06] p-3">

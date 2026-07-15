@@ -11,6 +11,7 @@ export interface Mention {
   accountId?: string;
   timestamp?: string; // ISO 8601
   lang?: string;
+  country?: string; // source country when the source reports it (e.g. GDELT)
   engagement?: number;
 }
 

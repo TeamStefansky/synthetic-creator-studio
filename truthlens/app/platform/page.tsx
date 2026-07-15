@@ -21,6 +21,7 @@ interface ThreatResult {
   entity: string; score: number | null; status: string; totalMentions: number; totalAccounts: number;
   sources: SourceStatus[]; indicators: Indicator[]; evidence: Mention[]; trend: { ts: string; count: number }[];
   rubricVersion: string; generatedAt: string; note?: string; cached?: boolean;
+  earliest?: Mention;
   narratives?: {
     available: boolean; reason?: string; assessment: string; coreClaims: string[];
     clusters: { label: string; summary: string; hostility: string; alternative: string }[];
@@ -228,6 +229,22 @@ export default function BrandWatchPage() {
             </div>
             {result.note && <p className="mt-3 text-sm text-gray-400">{result.note}</p>}
           </div>
+
+          {/* Earliest observable + Trace */}
+          {result.earliest && (
+            <div className="card">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-white">Earliest observed <span className="font-normal text-gray-500">— in collected data, not the true origin</span></h3>
+                <a href={`/check?type=narrative&input=${encodeURIComponent(result.entity)}`}
+                  className="text-xs text-brand-soft hover:underline">Trace to earliest observable →</a>
+              </div>
+              <p className="text-sm text-gray-300">{result.earliest.text}</p>
+              <div className="mt-1 text-xs text-gray-500">
+                {result.earliest.source}{result.earliest.account ? ` · ${result.earliest.account}` : ""}{result.earliest.timestamp ? ` · ${result.earliest.timestamp}` : ""}
+                {result.earliest.url && <> · <a href={result.earliest.url} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">source</a></>}
+              </div>
+            </div>
+          )}
 
           {/* Sources — connected vs not connected (never faked) */}
           <div className="card">

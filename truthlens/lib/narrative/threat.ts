@@ -6,12 +6,13 @@ import { RUBRIC_VERSION, sentimentScore } from "./sentiment";
 import type { Indicator, Level, Mention, SourceStatus, ThreatResult, ThreatStatus } from "./types";
 
 const WEIGHTS: Record<string, number> = {
-  coordination: 0.24,
-  amplification: 0.18,
-  negative: 0.18,
-  cross_source: 0.16,
-  volume: 0.14,
+  coordination: 0.22,
+  amplification: 0.16,
+  negative: 0.16,
+  cross_source: 0.14,
+  volume: 0.12,
   concentration: 0.10,
+  foreign: 0.10,
 };
 
 function levelFor(score: number): Level {
@@ -149,6 +150,30 @@ export function computeThreat(
     [`Largest single message holds ${topCluster}/${total} mentions`],
     "A single dominant quote or headline that everyone is citing.",
     `top message ${topCluster}/${total}`,
+  ));
+
+  // 7. Foreign-influence — cross-language mirroring + source-country concentration.
+  //    CORRELATION, not proof of state involvement. Unknown when coverage is thin.
+  const langs = mentions.map((m) => m.lang).filter(Boolean) as string[];
+  const countries = mentions.map((m) => m.country).filter(Boolean) as string[];
+  const coverage = (langs.length + countries.length) / (total * 2);
+  const langCounts = new Map<string, number>();
+  for (const l of langs) langCounts.set(l, (langCounts.get(l) || 0) + 1);
+  const multiLang = [...langCounts.values()].filter((n) => n >= 2).length;
+  const countryCounts = new Map<string, number>();
+  for (const c of countries) countryCounts.set(c, (countryCounts.get(c) || 0) + 1);
+  const topCountryShare = countries.length ? Math.max(...countryCounts.values()) / countries.length : 0;
+  const fSignals: string[] = [];
+  if (multiLang >= 2) fSignals.push(`the claim appears in ${multiLang} languages`);
+  if (countryCounts.size) fSignals.push(`${countryCounts.size} source countries (top holds ${Math.round(topCountryShare * 100)}%)`);
+  if (!fSignals.length) fSignals.push("no language/country data available for this set");
+  indicators.push(ind(
+    "foreign", "Foreign-influence pattern",
+    (multiLang - 1) * 26 + topCountryShare * 40,
+    coverage >= 0.3 ? 0.6 : 0.1,
+    fSignals,
+    "A global topic is naturally discussed across many languages and countries — this indicates correlation, not proof of state involvement.",
+    `${langCounts.size} langs · ${countryCounts.size} countries`,
   ));
 
   // Combine (Unknown signals excluded).

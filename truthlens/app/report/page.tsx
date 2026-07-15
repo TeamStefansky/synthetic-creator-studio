@@ -96,6 +96,12 @@ function ReportInner() {
             <a href={report.finalUrl || report.url} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 break-all">
               {report.finalUrl || report.url}
             </a>
+            <div className="mt-1.5">
+              <a href={`/check?type=narrative&input=${encodeURIComponent(report.domain)}`}
+                className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:underline">
+                <Search className="h-3.5 w-3.5" /> Check narratives from this site
+              </a>
+            </div>
           </div>
           <div className="flex items-center gap-5">
             <ScoreGauge score={report.risk.score} band={report.risk.band} />

@@ -57,6 +57,19 @@ describe("ethics gates", () => {
     expect(r.earliest?.text).toBe("earliest one");
   });
 
+  it("rule 3 — foreign-influence indicator states correlation, not proof of state involvement", () => {
+    const mentions: Mention[] = [
+      { source: "gdelt", id: "1", text: "ACME scandal", account: "d1", lang: "eng", country: "Russia", timestamp: "2024-03-01T08:00:00Z" },
+      { source: "gdelt", id: "2", text: "ACME scandal", account: "d2", lang: "eng", country: "Russia", timestamp: "2024-03-01T09:00:00Z" },
+      { source: "gdelt", id: "3", text: "ACME escándalo", account: "d3", lang: "spa", country: "Iran", timestamp: "2024-03-01T10:00:00Z" },
+      { source: "gdelt", id: "4", text: "ACME escándalo", account: "d4", lang: "spa", country: "Iran", timestamp: "2024-03-01T11:00:00Z" },
+    ];
+    const r = computeThreat("ACME", mentions, sources);
+    const f = r.indicators.find((i) => i.key === "foreign");
+    expect(f).toBeDefined();
+    expect(f!.alternative.toLowerCase()).toContain("not proof");
+  });
+
   it("sentiment rubric is versioned (reproducibility)", () => {
     expect(RUBRIC_VERSION).toMatch(/v\d+$/);
     const r = computeThreat("ACME", [mk("ACME scam fraud lie", "a1")], sources);

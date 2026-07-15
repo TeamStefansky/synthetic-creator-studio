@@ -33,7 +33,7 @@ const gdelt: NarrativeSource = {
     const data = await getJson<any>(url, { timeoutMs: 15000, headers: { "User-Agent": UA } });
     return (data?.articles || []).map((a: any): Mention => ({
       source: "gdelt", id: a.url || a.title, text: a.title || "", url: a.url,
-      account: a.domain, accountId: a.domain, lang: a.language,
+      account: a.domain, accountId: a.domain, lang: a.language, country: a.sourcecountry,
       timestamp: parseGdeltDate(a.seendate),
     }));
   },

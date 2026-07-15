@@ -72,6 +72,8 @@ ${r.note ? `<p class="muted">${esc(r.note)}</p>` : ""}
 <h2>Sources</h2><div>${sources}</div>
 <h2>Indicators</h2>${indicators || "<p class='muted'>None.</p>"}
 ${narrHtml}
+${r.earliest ? `<h2>Earliest observed <small>— in collected data, not the true origin</small></h2>
+<blockquote>${esc(r.earliest.text)}<br><small>${esc(r.earliest.source)}${r.earliest.account ? " · " + esc(r.earliest.account) : ""}${r.earliest.timestamp ? " · " + esc(r.earliest.timestamp) : ""}</small></blockquote>` : ""}
 <h2>Evidence <small>— earliest observed in collected data, not proof of origin</small></h2>
 ${evidence || "<p class='muted'>No evidence captured.</p>"}
 <div class="foot">Decision-support tool — not a verdict. Indicators of a coordinated inauthentic campaign, with evidence
