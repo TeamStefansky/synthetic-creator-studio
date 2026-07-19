@@ -9,6 +9,7 @@
 // field: coordination is a behavioural pattern, not proof of who is behind it.
 
 import type { Mention } from "@/lib/narrative/types";
+import { clusterNearDuplicates } from "@/lib/similarity";
 
 export type Likelihood = "None" | "Weak" | "Moderate" | "Strong";
 
@@ -48,22 +49,15 @@ const NEXT_STEPS = [
   "Treat account-profile and linguistic cues as weak — never as proof of a specific origin.",
 ];
 
-function normalizeText(t: string): string {
-  return t.toLowerCase().replace(/https?:\/\/\S+/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
-}
-
 export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
   const generatedAt = new Date().toISOString();
   const total = mentions.length;
   const accounts = new Set(mentions.map((m) => m.accountId || m.account).filter(Boolean)).size;
 
-  // --- Content similarity: near-duplicate ("copypasta") clusters ---
-  const byText = new Map<string, Mention[]>();
-  for (const m of mentions) {
-    const k = normalizeText(m.text).slice(0, 200);
-    if (k) (byText.get(k) || byText.set(k, []).get(k)!).push(m);
-  }
-  const clusters: CibCluster[] = [...byText.values()]
+  // --- Content similarity: near-duplicate clusters (Unicode-aware, catches
+  //     paraphrases + all scripts) via the shared similarity core ---
+  const groups = clusterNearDuplicates(mentions, (m) => m.text);
+  const clusters: CibCluster[] = groups
     .map((g) => ({ items: g, accts: new Set(g.map((m) => m.accountId || m.account)) }))
     .filter((c) => c.accts.size >= 2)
     .sort((a, b) => b.items.length - a.items.length)

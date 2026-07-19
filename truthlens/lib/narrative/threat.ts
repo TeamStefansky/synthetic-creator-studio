@@ -3,6 +3,7 @@
 // the data can't support a signal (never fabricates to fill a panel).
 
 import { RUBRIC_VERSION, sentimentScore } from "./sentiment";
+import { clusterNearDuplicates } from "@/lib/similarity";
 import type { Indicator, Level, Mention, SourceStatus, ThreatResult, ThreatStatus } from "./types";
 
 const WEIGHTS: Record<string, number> = {
@@ -22,9 +23,6 @@ function levelFor(score: number): Level {
 }
 function clamp(v: number): number {
   return Math.max(0, Math.min(100, Math.round(v)));
-}
-function normalizeText(t: string): string {
-  return t.toLowerCase().replace(/https?:\/\/\S+/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function ind(key: string, label: string, score: number, confidence: number,
@@ -57,18 +55,14 @@ export function computeThreat(
     };
   }
 
-  // Cluster by normalized text.
-  const byText = new Map<string, Mention[]>();
-  for (const m of mentions) {
-    const k = normalizeText(m.text).slice(0, 200);
-    if (!k) continue;
-    (byText.get(k) || byText.set(k, []).get(k)!).push(m);
-  }
+  // Cluster by NEAR-duplicate content (Unicode-aware, catches paraphrases and
+  // all scripts) — one shared similarity core.
+  const groups = clusterNearDuplicates(mentions, (m) => m.text);
 
   const indicators: Indicator[] = [];
 
-  // 1. Coordination — identical content from >=2 distinct accounts.
-  const clusters = [...byText.values()].filter(
+  // 1. Coordination — near-identical content from >=2 distinct accounts.
+  const clusters = groups.filter(
     (g) => new Set(g.map((m) => m.accountId || m.account)).size >= 2,
   );
   const coordPosts = clusters.reduce((n, g) => n + g.length, 0);
@@ -83,7 +77,7 @@ export function computeThreat(
   ));
 
   // 2. Amplification — duplicate-content volume (regardless of who posts it).
-  const dupPosts = [...byText.values()].filter((g) => g.length >= 2).reduce((n, g) => n + g.length, 0);
+  const dupPosts = groups.filter((g) => g.length >= 2).reduce((n, g) => n + g.length, 0);
   const dupShare = dupPosts / total;
   indicators.push(ind(
     "amplification", "Amplification pattern",
@@ -108,7 +102,7 @@ export function computeThreat(
   // 4. Cross-source spread.
   const srcCounts = new Map<string, number>();
   for (const m of mentions) srcCounts.set(m.source, (srcCounts.get(m.source) || 0) + 1);
-  const multiSrcClaims = [...byText.values()].filter((g) => new Set(g.map((m) => m.source)).size >= 2).length;
+  const multiSrcClaims = groups.filter((g) => new Set(g.map((m) => m.source)).size >= 2).length;
   const cross = srcCounts.size * 18 + (multiSrcClaims ? 30 : 0);
   indicators.push(ind(
     "cross_source", "Cross-source spread",
@@ -142,7 +136,7 @@ export function computeThreat(
     "Ordinary news-cycle timing — attention spikes around real events.", volDetail));
 
   // 6. Narrative concentration — one storyline dominating.
-  const topCluster = Math.max(0, ...[...byText.values()].map((g) => g.length));
+  const topCluster = Math.max(0, ...groups.map((g) => g.length));
   const concShare = topCluster / total;
   indicators.push(ind(
     "concentration", "Narrative concentration",

@@ -34,19 +34,19 @@ describe("P0 characterization — current (Latin) behavior is preserved", () => 
   });
 });
 
-describe("P0 BUG — non-Latin scripts are silently excluded from clustering", () => {
-  // These SHOULD cluster; today normalizeText strips them to "" so they don't.
-  it.fails("Hebrew: identical posts from ≥2 accounts should cluster (currently don't)", () => {
+describe("P1 — non-Latin scripts now cluster (bug fixed)", () => {
+  // Previously normalizeText stripped these to "" and they never clustered.
+  it("Hebrew: identical posts from ≥2 accounts cluster", () => {
     const m = [mk("בואו נחרים את המותג עכשיו", "a1", 0), mk("בואו נחרים את המותג עכשיו", "a2", 1), mk("בואו נחרים את המותג עכשיו", "a3", 2)];
     expect(analyzeCib("מותג", m).clusters.length).toBeGreaterThanOrEqual(1);
   });
 
-  it.fails("Russian: identical posts from ≥2 accounts should cluster (currently don't)", () => {
+  it("Russian: identical posts from ≥2 accounts cluster", () => {
     const m = [mk("бойкотируйте бренд сейчас", "a1", 0), mk("бойкотируйте бренд сейчас", "a2", 1), mk("бойкотируйте бренд сейчас", "a3", 2)];
     expect(analyzeCib("бренд", m).clusters.length).toBeGreaterThanOrEqual(1);
   });
 
-  it.fails("Hebrew: coordination indicator should fire in the threat engine (currently Unknown/0)", () => {
+  it("Hebrew: coordination indicator fires in the threat engine", () => {
     const m = [mk("תפיצו את זה מיד", "a1", 0), mk("תפיצו את זה מיד", "a2", 1)];
     const coord = computeThreat("x", m, SRC).indicators.find((i) => i.key === "coordination");
     expect(coord!.score).toBeGreaterThan(0);
