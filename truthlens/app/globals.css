@@ -90,8 +90,13 @@ body.embed-mode main {
   border-radius: 9999px;
 }
 
-/* Clean print / PDF output: drop chrome, force light, avoid splitting cards. */
+/* Clean print / PDF output: drop chrome, force light, keep colors legible. */
 @media print {
+  /* Keep background/colored fills instead of letting the browser drop them. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   header,
   footer,
   .no-print {
@@ -113,4 +118,38 @@ body.embed-mode main {
     backdrop-filter: none !important;
     break-inside: avoid;
   }
+
+  /* Washed-out light text → readable dark. */
+  .text-white,
+  .text-gray-100,
+  .text-gray-200,
+  .text-gray-300,
+  .text-gray-400 {
+    color: #111 !important;
+  }
+  .text-gray-500,
+  .text-gray-600 {
+    color: #555 !important;
+  }
+
+  /* Semantic colors → strong print-safe shades (so risk bands stay meaningful). */
+  [class*="text-risk-high"] { color: #b91c1c !important; }
+  [class*="text-risk-unknown"] { color: #b45309 !important; }
+  [class*="text-risk-legit"] { color: #15803d !important; }
+  [class*="text-brand"],
+  [class*="text-indigo"],
+  [class*="text-violet"] { color: #4338ca !important; }
+  [class*="text-yellow"],
+  [class*="text-amber"] { color: #92400e !important; }
+
+  /* Tinted backgrounds → solid light tints so their text stays legible. */
+  [class*="bg-risk-high"] { background: #fee2e2 !important; }
+  [class*="bg-risk-unknown"] { background: #fef3c7 !important; }
+  [class*="bg-risk-legit"] { background: #dcfce7 !important; }
+  [class*="bg-brand"],
+  [class*="bg-indigo"],
+  [class*="bg-violet"] { background: #e0e7ff !important; }
+  [class*="bg-yellow"],
+  [class*="bg-amber"] { background: #fef9c3 !important; }
+  [class*="bg-white/"] { background: #f3f4f6 !important; }
 }
