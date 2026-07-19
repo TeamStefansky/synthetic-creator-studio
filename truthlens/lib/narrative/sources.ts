@@ -39,6 +39,39 @@ const gdelt: NarrativeSource = {
   },
 };
 
+// ---- X / Twitter (key-gated; search needs Basic tier+) -----------------------
+
+const x: NarrativeSource = {
+  name: "x",
+  available: () => !!process.env.X_BEARER_TOKEN,
+  reason: "Set X_BEARER_TOKEN (X/Twitter API — search needs Basic tier or higher).",
+  async search(q) {
+    const token = process.env.X_BEARER_TOKEN!;
+    const params = new URLSearchParams({
+      query: `${q} -is:retweet`,
+      max_results: "50",
+      "tweet.fields": "public_metrics,created_at,lang",
+      expansions: "author_id",
+      "user.fields": "username,name,created_at,public_metrics",
+    });
+    const data = await getJson<any>(`https://api.twitter.com/2/tweets/search/recent?${params.toString()}`, {
+      timeoutMs: 15000, headers: { Authorization: `Bearer ${token}` },
+    });
+    const users = new Map<string, any>((data?.includes?.users || []).map((u: any) => [u.id, u]));
+    return (data?.data || []).map((t: any): Mention => {
+      const u = users.get(t.author_id);
+      const m = t.public_metrics || {};
+      return {
+        source: "x", id: String(t.id), text: t.text || "",
+        url: u?.username ? `https://x.com/${u.username}/status/${t.id}` : undefined,
+        account: u?.username, accountId: String(t.author_id), lang: t.lang,
+        timestamp: t.created_at,
+        engagement: (m.like_count || 0) + (m.retweet_count || 0) + (m.reply_count || 0) + (m.quote_count || 0),
+      };
+    });
+  },
+};
+
 const bluesky: NarrativeSource = {
   name: "bluesky",
   available: () => true,
@@ -188,7 +221,7 @@ const newsapi: NarrativeSource = {
 };
 
 export const SOURCES: NarrativeSource[] = [
-  gdelt, bluesky, hackernews, reddit, rss, guardian, nyt, gnews, newsapi,
+  x, gdelt, bluesky, hackernews, reddit, rss, guardian, nyt, gnews, newsapi,
 ];
 
 /** Run every source in parallel, isolating failures. */
