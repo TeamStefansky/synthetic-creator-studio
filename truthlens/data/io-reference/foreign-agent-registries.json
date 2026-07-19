@@ -1,0 +1,13 @@
+{
+  "_comment": "REFERENCE DATA — ENTITIES (ORGANIZATIONS ONLY) that have made a LAWFUL PUBLIC DISCLOSURE under a foreign-agent registration regime (e.g. US FARA, AU FITS, EU transparency registers). A registration is a PUBLIC ADMINISTRATIVE FILING — it is NOT an accusation, NOT proof of wrongdoing, and NOT proof that any specific content is foreign-directed. Persons are EXCLUDED. Ships EMPTY; populate from official registries (see scripts/refresh-fara.ts). Every entry MUST carry the official `registry` and a `filingUrl`.",
+  "version": "2026-07-19",
+  "schema": {
+    "org": "registrant organization name as filed",
+    "domains": ["registrable domains associated with the org in the public filing"],
+    "registry": "the registration regime (e.g. FARA)",
+    "registrationNo": "official registration/filing number",
+    "filingUrl": "public URL of the filing",
+    "date": "YYYY-MM of the registration/most recent filing"
+  },
+  "entries": []
+}

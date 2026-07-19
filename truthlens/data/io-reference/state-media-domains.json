@@ -1,0 +1,10 @@
+{
+  "_comment": "REFERENCE DATA — publicly-documented STATE-CONTROLLED or STATE-AFFILIATED MEDIA domains. ORGANIZATIONS ONLY, never persons. Ships EMPTY and neutral: TruthLens bakes in no political judgments. Populate ONLY from auditable public sources (e.g. platform state-media labels, peer-reviewed datasets). Every entry MUST carry a `source` provenance URL so the list stays auditable. Matching a domain here is a CORRELATION lead for a human analyst — NEVER proof that any specific post is state-directed. Do not add individuals.",
+  "version": "2026-07-19",
+  "schema": {
+    "domain": "registrable domain, lowercase, no scheme/www (e.g. example.com)",
+    "label": "organization label as publicly documented (org, not a person)",
+    "source": "public provenance URL for this classification"
+  },
+  "entries": []
+}

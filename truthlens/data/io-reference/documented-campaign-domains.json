@@ -1,0 +1,12 @@
+{
+  "_comment": "REFERENCE DATA — domains named in PUBLISHED, ATTRIBUTED influence-operation takedown reports or datasets (e.g. platform CIB disclosures, EU DisinfoLab, Stanford Internet Observatory, DFRLab). ORGANIZATIONS / INFRASTRUCTURE ONLY — never persons. Ships EMPTY. Populate ONLY from published reports; every entry MUST carry `disclosedBy` (the publisher) and a `report` provenance URL. Overlap is a LEAD for a human analyst, not a verdict: a domain once named in a report can later be dormant, reassigned, or legitimately cited.",
+  "version": "2026-07-19",
+  "schema": {
+    "domain": "registrable domain, lowercase, no scheme/www",
+    "campaign": "campaign/operation name as published",
+    "disclosedBy": "publisher of the report (org)",
+    "report": "public URL of the disclosure",
+    "date": "YYYY-MM of the disclosure"
+  },
+  "entries": []
+}
