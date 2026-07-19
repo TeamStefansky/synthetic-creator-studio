@@ -1,7 +1,13 @@
-// Deterministic lexicon sentiment. Versioned rubric so historical scores stay
+// Deterministic lexicon sentiment. Versioned so historical scores stay
 // interpretable (reproducibility rule). No network, no cost, no LLM variance.
 
-export const RUBRIC_VERSION = "sentiment-lexicon-v1";
+// Version of the sentiment LEXICON itself (shown next to the sentiment signal).
+export const SENTIMENT_LEXICON_VERSION = "sentiment-lexicon-v1";
+
+// Version of the overall TruthLens threat-scoring RUBRIC, stamped on every report.
+// Bumped once in P4: foreign-influence v2 plus the documented-campaign / foreign-
+// agent indicators now carry scoring weight, so v2 scores are NOT comparable to v1.
+export const RUBRIC_VERSION = "truthlens-threat-rubric-v2";
 
 const POS = new Set(
   "good great positive win success confirm official effective safe true support help improve trust reliable praise".split(" ")

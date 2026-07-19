@@ -106,5 +106,14 @@ describe("populated reference (mocked fixture) surfaces leads with alternative f
     expect(fa.level).not.toBe("Unknown");
     expect(fa.signals.join(" ")).toMatch(/Example Media LLC/);
     expect(fa.alternative.toLowerCase()).toContain("not an accusation");
+
+    // P4: these indicators now carry scoring weight — a matching domain must raise
+    // the combined score vs the same behaviour with no documented overlap.
+    const clean: Mention[] = [
+      { source: "gdelt", id: "1", text: "acme scandal", account: "clean-a.example", url: "https://clean-a.example/a", timestamp: "2024-03-01T08:00:00Z" },
+      { source: "gdelt", id: "2", text: "acme scandal", account: "clean-b.example", url: "https://clean-b.example/b", timestamp: "2024-03-01T09:00:00Z" },
+    ];
+    const rClean = ct("acme", clean, SRC);
+    expect(r.score!).toBeGreaterThan(rClean.score!);
   });
 });

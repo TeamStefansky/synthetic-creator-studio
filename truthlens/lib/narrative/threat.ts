@@ -2,25 +2,36 @@
 // each carry level + signals + alternative explanation, and returns Unknown when
 // the data can't support a signal (never fabricates to fill a panel).
 
-import { RUBRIC_VERSION, sentimentScore } from "./sentiment";
+import { RUBRIC_VERSION, SENTIMENT_LEXICON_VERSION, sentimentScore } from "./sentiment";
 import { clusterNearDuplicates } from "@/lib/similarity";
 import {
   mentionDomains, campaignMatch, stateMediaMatch, foreignAgentMatch, ioReferenceCounts,
 } from "@/lib/io-reference";
-import type { Indicator, Level, Mention, SourceStatus, ThreatResult, ThreatStatus } from "./types";
+import type {
+  Indicator, Level, Mention, SourceStatus, ThreatResult, ThreatStatus,
+  ForeignEnrichment, MirroringResult,
+} from "./types";
 
+// Rubric v2 (P4): documented_campaign / foreign_agent now carry scoring weight,
+// and foreign covers infrastructure + cross-language mirroring. Weights sum to 1.
 const WEIGHTS: Record<string, number> = {
-  coordination: 0.22,
-  amplification: 0.16,
-  negative: 0.16,
-  cross_source: 0.14,
-  volume: 0.12,
-  concentration: 0.10,
+  coordination: 0.20,
+  amplification: 0.14,
+  negative: 0.14,
+  cross_source: 0.12,
+  volume: 0.10,
+  concentration: 0.08,
   foreign: 0.10,
-  // documented_campaign / foreign_agent are intentionally absent → weight 0.
-  // They render as informational corroboration in P3; scoring weight + the single
-  // RUBRIC_VERSION bump land in P4 so historical scores stay comparable.
+  documented_campaign: 0.08,
+  foreign_agent: 0.04,
 };
+
+export interface ThreatOptions {
+  /** Infrastructure OSINT on amplifying domains (deep scans only). */
+  foreign?: ForeignEnrichment;
+  /** LLM cross-language mirroring read (deep scans only). */
+  mirroring?: MirroringResult;
+}
 
 function levelFor(score: number): Level {
   if (score >= 66) return "High";
@@ -42,6 +53,7 @@ export function computeThreat(
   mentions: Mention[],
   sources: SourceStatus[],
   baseline?: number,
+  opts: ThreatOptions = {},
 ): ThreatResult {
   const generatedAt = new Date().toISOString();
   const total = mentions.length;
@@ -100,7 +112,7 @@ export function computeThreat(
   indicators.push(ind(
     "negative", "Negative sentiment skew",
     -avg * 100, nonZero.length ? Math.min(1, nonZero.length / total) : 0.1,
-    [`Average tone ${avg >= 0 ? "+" : ""}${avg.toFixed(2)} over ${nonZero.length} scored mentions (${RUBRIC_VERSION})`],
+    [`Average tone ${avg >= 0 ? "+" : ""}${avg.toFixed(2)} over ${nonZero.length} scored mentions (${SENTIMENT_LEXICON_VERSION})`],
     "A genuinely bad news event, not a manufactured attack — negativity can be warranted.",
     `avg sentiment ${avg.toFixed(2)}`,
   ));
@@ -152,28 +164,66 @@ export function computeThreat(
     `top message ${topCluster}/${total}`,
   ));
 
-  // 7. Foreign-influence — cross-language mirroring + source-country concentration.
-  //    CORRELATION, not proof of state involvement. Unknown when coverage is thin.
+  // 7. Foreign-influence pattern (v2). Lexical cross-language spread PLUS, when a
+  //    deep scan supplied them: LLM cross-language MIRRORING and INFRASTRUCTURE
+  //    OSINT on the amplifying domains (registrant/hosting-country concentration,
+  //    shared networks). CORRELATION, never proof of state involvement. Unknown
+  //    when coverage is thin.
+  const { foreign, mirroring } = opts;
   const langs = mentions.map((m) => m.lang).filter(Boolean) as string[];
   const countries = mentions.map((m) => m.country).filter(Boolean) as string[];
-  const coverage = (langs.length + countries.length) / (total * 2);
   const langCounts = new Map<string, number>();
   for (const l of langs) langCounts.set(l, (langCounts.get(l) || 0) + 1);
   const multiLang = [...langCounts.values()].filter((n) => n >= 2).length;
   const countryCounts = new Map<string, number>();
   for (const c of countries) countryCounts.set(c, (countryCounts.get(c) || 0) + 1);
   const topCountryShare = countries.length ? Math.max(...countryCounts.values()) / countries.length : 0;
+
   const fSignals: string[] = [];
+  let fScore = (multiLang - 1) * 20 + topCountryShare * 30;
   if (multiLang >= 2) fSignals.push(`the claim appears in ${multiLang} languages`);
   if (countryCounts.size) fSignals.push(`${countryCounts.size} source countries (top holds ${Math.round(topCountryShare * 100)}%)`);
+
+  // Cross-language mirroring (LLM) — only when the deep layer ran.
+  if (mirroring?.available) {
+    if (mirroring.mirrored) {
+      fScore += 25;
+      fSignals.push(`the same core claim is mirrored across ${mirroring.languages.join(", ") || "multiple languages"} (AI cross-language read)`);
+    } else {
+      fSignals.push("no single claim mirrored across languages — diverse topics (AI cross-language read).");
+    }
+  }
+
+  // Infrastructure OSINT on amplifying domains — only when the deep layer ran.
+  if (foreign && foreign.resolved > 0) {
+    if (foreign.topHostingCountry && foreign.hostingShare >= 0.6) {
+      fScore += foreign.hostingShare * 25;
+      fSignals.push(`${Math.round(foreign.hostingShare * 100)}% of ${foreign.resolved} enriched amplifying domains host in ${foreign.topHostingCountry}`);
+    }
+    if (foreign.topRegistrantCountry && foreign.registrantShare >= 0.6) {
+      fScore += foreign.registrantShare * 15;
+      fSignals.push(`${Math.round(foreign.registrantShare * 100)}% share a registrant country (${foreign.topRegistrantCountry})`);
+    }
+    for (const g of foreign.sharedAsn.slice(0, 2)) {
+      fSignals.push(`${g.domains.length} amplifying domains share network ${g.asn}${g.asnOrg ? ` (${g.asnOrg})` : ""}`);
+    }
+    if (foreign.sharedAsn.length) fScore += 15;
+  }
+
   if (!fSignals.length) fSignals.push("no language/country data available for this set");
+
+  // Confidence: strong when the deep OSINT/LLM layer resolved data; otherwise the
+  // thin lexical coverage (Unknown when there is essentially nothing to go on).
+  const lexicalCoverage = (langs.length + countries.length) / (total * 2);
+  const deepConf = (foreign?.resolved || 0) / 20 + (mirroring?.available ? 0.2 : 0);
+  const fConfidence = (foreign?.resolved || mirroring?.available)
+    ? Math.min(0.85, 0.4 + deepConf)
+    : (lexicalCoverage >= 0.3 ? 0.6 : 0.1);
   indicators.push(ind(
     "foreign", "Foreign-influence pattern",
-    (multiLang - 1) * 26 + topCountryShare * 40,
-    coverage >= 0.3 ? 0.6 : 0.1,
-    fSignals,
-    "A global topic is naturally discussed across many languages and countries — this indicates correlation, not proof of state involvement.",
-    `${langCounts.size} langs · ${countryCounts.size} countries`,
+    fScore, fConfidence, fSignals,
+    "A global topic is naturally discussed across many languages and countries, and shared hosting/CDN is ordinary commercial infrastructure — this indicates correlation, not proof of state involvement.",
+    `${langCounts.size} langs · ${countryCounts.size} countries${foreign ? ` · ${foreign.resolved}/${foreign.considered} domains enriched` : ""}`,
   ));
 
   // 8. Documented-campaign / state-media overlap — do any amplifying domains

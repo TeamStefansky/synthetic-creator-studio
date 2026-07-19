@@ -40,6 +40,45 @@ export interface Indicator {
   detail: string;
 }
 
+/** OSINT intel on a single amplifying domain (reuses the shared rdap/dns/ip libs).
+ * Infrastructure facts only — organizations/countries, never a private individual. */
+export interface DomainIntel {
+  domain: string;
+  count: number; // mentions observed from this domain
+  registrantCountry?: string;
+  registrantOrg?: string; // organization only (rdap already drops redacted/privacy)
+  hostingCountry?: string;
+  asn?: string;
+  asnOrg?: string;
+  ageDays?: number;
+  privacyProtected?: boolean;
+}
+
+/** Aggregated infrastructure view across the amplifying domains. */
+export interface ForeignEnrichment {
+  intel: DomainIntel[];
+  considered: number; // domains we looked at
+  resolved: number;   // domains we got any intel for
+  topRegistrantCountry?: string;
+  registrantShare: number; // 0-1 of resolved domains sharing the top registrant country
+  topHostingCountry?: string;
+  hostingShare: number;    // 0-1 of resolved domains sharing the top hosting country
+  sharedAsn: { asn: string; asnOrg?: string; domains: string[] }[];
+  privacyCount: number;
+}
+
+/** Cross-language mirroring — LLM read of whether ONE claim is mirrored across
+ * languages. Correlation, never proof of state involvement. Degrades to
+ * available:false (visible "not connected") when the AI layer is absent. */
+export interface MirroringResult {
+  available: boolean;
+  mirrored: boolean;
+  languages: string[];
+  claim?: string;
+  alternative?: string;
+  reason?: string;
+}
+
 export interface NarrativeCluster {
   label: string;
   summary: string;
