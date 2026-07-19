@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { Loader2, Search, ExternalLink } from "lucide-react";
 import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
+import ToolIntro from "@/components/ToolIntro";
 import { detectCheckType, CHECK_TYPES, CheckType } from "@/lib/check/detect";
 import { CheckRecord, genId, getLocal, saveLocal, syncShared } from "@/lib/check/history";
 import { extractEntities } from "@/lib/clues/extract";
@@ -100,28 +101,29 @@ function CheckInner() {
     if (t && CHECK_TYPES.some((x) => x.type === t)) setOverride(t);
   }, [params]);
 
-  const run = useCallback(async () => {
-    const value = input.trim();
+  const run = useCallback(async (valueArg?: string, typeArg?: CheckType) => {
+    const value = (valueArg ?? input).trim();
     if (!value) return;
+    const t = typeArg ?? type;
     setRunning(true); setError(null); setRecord(null); setConnections([]);
     try {
-      const res = type === "narrative"
+      const res = t === "narrative"
         ? await fetch(`/api/brandwatch?entity=${encodeURIComponent(value)}&deep=1`, { cache: "no-store" })
-        : type === "cib"
+        : t === "cib"
         ? await fetch(`/api/cib?entity=${encodeURIComponent(value)}`, { cache: "no-store" })
-        : await fetch(ENDPOINT[type], {
+        : await fetch(ENDPOINT[t], {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(bodyFor(type, value)),
+            body: JSON.stringify(bodyFor(t, value)),
           });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Check failed");
-      const { headline, level } = summarize(type, data);
-      const rec: CheckRecord = { id: genId(), type, input: value, headline, level, result: data, createdAt: new Date().toISOString() };
+      const { headline, level } = summarize(t, data);
+      const rec: CheckRecord = { id: genId(), type: t, input: value, headline, level, result: data, createdAt: new Date().toISOString() };
       setRecord(rec);
       saveLocal(rec);
       syncShared(rec);
       // Clue layer: link repeated entities to earlier checks, then record this one.
-      setConnections(linkAndRecord(rec.id, extractEntities(type, value, data)));
+      setConnections(linkAndRecord(rec.id, extractEntities(t, value, data)));
     } catch (e: any) {
       setError(e?.message || "Check failed");
     } finally {
@@ -158,7 +160,7 @@ function CheckInner() {
               {t.label}
             </button>
           ))}
-          <button onClick={run} disabled={running || input.trim().length < 2}
+          <button onClick={() => run()} disabled={running || input.trim().length < 2}
             className="ml-auto flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50">
             {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Run check
           </button>
@@ -169,6 +171,24 @@ function CheckInner() {
           </p>
         )}
       </div>
+
+      {!record && !error && !running && (
+        <ToolIntro
+          what={<>Not sure which tool you need? Just paste something here. TruthLens figures out what it is — a <span className="text-gray-200">website</span>, a <span className="text-gray-200">claim or post</span>, a <span className="text-gray-200">brand/topic to watch</span>, <span className="text-gray-200">email headers</span>, or a <span className="text-gray-200">server log</span> — and runs the right check. You can always override the guess with the <span className="text-gray-200">Type</span> buttons.</>}
+          examples={[
+            { label: "Check a website", onClick: () => { setInput("https://www.reuters.com"); setOverride("site"); run("https://www.reuters.com", "site"); } },
+            { label: "Fact-check a claim", onClick: () => { const v = "The Great Wall of China is visible from space with the naked eye"; setInput(v); setOverride("post"); run(v, "post"); } },
+            { label: "Watch a brand/topic", onClick: () => { setInput("Tesla"); setOverride("narrative"); run("Tesla", "narrative"); } },
+          ]}
+          legend={[
+            { label: "High", tone: "high", text: "strong indicators — take it seriously and check the evidence." },
+            { label: "Medium", tone: "unknown", text: "mixed signals — worth a human look." },
+            { label: "Low", tone: "legit", text: "few or weak indicators — looks clean." },
+            { label: "Unknown", tone: "neutral", text: "not enough data to judge. Honestly says so." },
+          ]}
+          note="Every result shows the evidence behind it and an alternative explanation. Indicators, not a verdict."
+        />
+      )}
 
       {error && <div className="card border-risk-high/40 bg-risk-high/[0.06] text-sm text-risk-high">{error}</div>}
 

@@ -31,14 +31,19 @@ export default function ChecksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <LayoutGrid className="h-6 w-6 text-indigo-400" />
-        <h1 className="text-2xl font-bold">Recent shared checks</h1>
+      <div>
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="h-6 w-6 text-indigo-400" />
+          <h1 className="text-2xl font-bold">Recent shared checks</h1>
+        </div>
+        <p className="mt-1.5 max-w-2xl text-sm text-gray-400">
+          Post Checks that people chose to share, newest first. Click any card to open the full result.
+        </p>
       </div>
 
       {!loading && !available && (
         <div className="card flex items-center gap-2 text-sm text-yellow-300/90">
-          <AlertTriangle className="h-4 w-4" /> Sharing/gallery needs a KV store connected (Vercel KV or Upstash).
+          <AlertTriangle className="h-4 w-4 shrink-0" /> The shared gallery isn’t set up on this deployment yet, so there’s nothing to show here. Your own checks are still saved under <Link href="/history" className="underline">History</Link>.
         </div>
       )}
 

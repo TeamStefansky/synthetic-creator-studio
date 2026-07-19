@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { PostCheckResult, PostVerdict } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
+import ToolIntro from "@/components/ToolIntro";
 
 function verdictStyle(v: PostVerdict) {
   switch (v) {
@@ -63,7 +64,8 @@ function PostCheckInner() {
     reader.readAsDataURL(file);
   };
 
-  const run = async () => {
+  const run = async (textArg?: string) => {
+    const t = textArg ?? text;
     setLoading(true);
     setError("");
     setRes(null);
@@ -72,7 +74,7 @@ function PostCheckInner() {
       const r = await fetch("/api/post-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(image ? { text, imageBase64: image.base64, mediaType: image.mediaType } : { text }),
+        body: JSON.stringify(image ? { text: t, imageBase64: image.base64, mediaType: image.mediaType } : { text: t }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Check failed");
@@ -171,12 +173,30 @@ function PostCheckInner() {
           )}
 
           <div className="mt-3 flex items-center gap-3">
-            <button className="btn" onClick={run} disabled={!canRun}>
+            <button className="btn" onClick={() => run()} disabled={!canRun}>
               {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Checking…</> : "Check this post"}
             </button>
             {error && <span className="text-sm text-risk-high">{error}</span>}
           </div>
         </div>
+      )}
+
+      {!res && !loading && !shared && (
+        <ToolIntro
+          what={<>Got a message, tweet, or forwarded claim and want to know if it’s true? Paste the text (or a screenshot). We pull out the factual claims, check each one against the open web, and return a verdict with the sources we used — plus an estimate of whether the text was AI-generated.</>}
+          examplesLabel="Try a claim"
+          examples={[
+            { label: "A viral health myth", onClick: () => { const v = "Drinking celery juice every morning cures cancer."; setText(v); run(v); } },
+            { label: "A checkable fact", onClick: () => { const v = "The James Webb Space Telescope launched in December 2021."; setText(v); run(v); } },
+          ]}
+          legend={[
+            { label: "Likely False", tone: "high", text: "the claims contradict reliable sources." },
+            { label: "Misleading", tone: "unknown", text: "partly true but missing context or spun." },
+            { label: "Likely True", tone: "legit", text: "the claims are supported by reliable sources." },
+            { label: "Opinion / Satire / Unknown", tone: "neutral", text: "not a factual claim, or not enough to verify." },
+          ]}
+          note="“AI-generated likelihood” is a heuristic estimate, not proof. Always read the sources we cite before deciding."
+        />
       )}
 
       {loading && shared && (

@@ -10,6 +10,7 @@ import {
   ShieldAlert, ShieldCheck, ShieldQuestion, Search, Loader2, RefreshCw,
   TrendingUp, Radar, HelpCircle, FileText, Sparkles,
 } from "lucide-react";
+import ToolIntro from "@/components/ToolIntro";
 
 interface Indicator {
   key: string; label: string; level: "Low" | "Medium" | "High" | "Unknown";
@@ -149,56 +150,17 @@ export default function BrandWatchPage() {
 
       {/* First-run guidance — shown until the user runs their first scan */}
       {!result && !loading && !error && (
-        <div className="card space-y-5">
-          <div>
-            <h2 className="text-sm font-semibold text-white">New here? Here’s what this does</h2>
-            <p className="mt-1 max-w-2xl text-sm text-gray-400">
-              Type any <span className="text-gray-200">brand, company, product, person’s public page, or topic</span> and
-              press <span className="text-gray-200">Scan</span>. TruthLens pulls what’s being said about it across public
-              sources right now and shows whether the pattern looks like an <span className="text-gray-200">organic
-              conversation</span> or a <span className="text-gray-200">coordinated push</span> — with the evidence behind
-              every signal. It’s a decision-support tool, not a verdict.
-            </p>
-          </div>
-
-          <div>
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Try an example</div>
-            <div className="flex flex-wrap gap-2">
-              {["Pfizer", "Tesla", "NATO", "OpenAI"].map((ex) => (
-                <button key={ex} onClick={() => { setQuery(ex); scan(ex); }}
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-gray-200 transition hover:border-brand hover:bg-white/[0.06]">
-                  {ex}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">How to read the result</div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="flex items-start gap-2 rounded-lg border border-white/[0.06] px-3 py-2 text-xs">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-risk-legit" />
-                <span className="text-gray-400"><span className="font-semibold text-gray-200">Calm</span> — normal, organic chatter. No coordination signals.</span>
-              </div>
-              <div className="flex items-start gap-2 rounded-lg border border-white/[0.06] px-3 py-2 text-xs">
-                <ShieldQuestion className="mt-0.5 h-4 w-4 shrink-0 text-risk-unknown" />
-                <span className="text-gray-400"><span className="font-semibold text-gray-200">Elevated</span> — some signals worth a human look.</span>
-              </div>
-              <div className="flex items-start gap-2 rounded-lg border border-white/[0.06] px-3 py-2 text-xs">
-                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-risk-high" />
-                <span className="text-gray-400"><span className="font-semibold text-gray-200">Under attack</span> — strong coordination pattern. Verify the evidence.</span>
-              </div>
-              <div className="flex items-start gap-2 rounded-lg border border-white/[0.06] px-3 py-2 text-xs">
-                <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
-                <span className="text-gray-400"><span className="font-semibold text-gray-200">Unknown</span> — not enough data to judge. Honestly says so.</span>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-gray-600">
-              Every signal shows its evidence and an innocent alternative explanation. TruthLens never names a private
-              individual and never claims who is behind a pattern.
-            </p>
-          </div>
-        </div>
+        <ToolIntro
+          what={<>Type any <span className="text-gray-200">brand, company, product, public page, or topic</span> and press <span className="text-gray-200">Scan</span>. TruthLens pulls what’s being said about it across public sources right now and shows whether the pattern looks like an <span className="text-gray-200">organic conversation</span> or a <span className="text-gray-200">coordinated push</span> — with the evidence behind every signal. A decision-support tool, not a verdict.</>}
+          examples={["Pfizer", "Tesla", "NATO", "OpenAI"].map((ex) => ({ label: ex, onClick: () => { setQuery(ex); scan(ex); } }))}
+          legend={[
+            { label: "Calm", tone: "legit", icon: <ShieldCheck className="h-4 w-4 text-risk-legit" />, text: "normal, organic chatter. No coordination signals." },
+            { label: "Elevated", tone: "unknown", icon: <ShieldQuestion className="h-4 w-4 text-risk-unknown" />, text: "some signals worth a human look." },
+            { label: "Under attack", tone: "high", icon: <ShieldAlert className="h-4 w-4 text-risk-high" />, text: "strong coordination pattern. Verify the evidence." },
+            { label: "Unknown", tone: "neutral", icon: <HelpCircle className="h-4 w-4 text-gray-400" />, text: "not enough data to judge. Honestly says so." },
+          ]}
+          note="Every signal shows its evidence and an innocent alternative explanation. TruthLens never names a private individual and never claims who is behind a pattern."
+        />
       )}
 
       {/* Watchlist — continuous monitoring */}

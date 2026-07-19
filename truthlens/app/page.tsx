@@ -21,28 +21,47 @@ export default function HomePage() {
           <span className="gradient-text">TruthLens</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-gray-400">
-          Detect likely fake-news websites and expose the infrastructure behind
-          them. Paste a URL for an itemized credibility-risk report, an
-          operator-network graph, geographic origin, and deep OSINT.
+          Not sure if a website is trustworthy? Paste its address below. TruthLens
+          checks the infrastructure behind it and gives you a plain
+          credibility-risk score with the evidence — not a verdict.
         </p>
 
         <div className="mx-auto mt-9 max-w-xl">
           <UrlInput />
         </div>
 
-        <div className="mx-auto mt-6 max-w-xl">
+        {/* How to read the score — the band legend that otherwise only lived on /about */}
+        <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/[0.08] p-4 text-left shadow-soft">
+          <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-gray-500">How to read the score</div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-risk-legit" /><span className="text-gray-400"><span className="font-semibold text-risk-legit">0–35</span> Likely legitimate</span></div>
+            <div className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-risk-unknown" /><span className="text-gray-400"><span className="font-semibold text-risk-unknown">36–65</span> Unknown</span></div>
+            <div className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-risk-high" /><span className="text-gray-400"><span className="font-semibold text-risk-high">66–100</span> High risk</span></div>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-4 max-w-xl">
           <Disclaimer variant="inline" />
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Feature icon={<Network className="h-5 w-5" />} title="Operator graph" desc="Link a site to siblings via shared IP, GA/AdSense IDs, and SSL SAN." />
-        <Feature icon={<Globe className="h-5 w-5" />} title="Geographic origin" desc="Server, registrant, mail & DNS countries on a mini world map." />
-        <Feature icon={<Telescope className="h-5 w-5" />} title="Deep OSINT" desc="Who's behind the site — owners, affiliations, funding — with sources." />
-        <Link href="/tools/post"><Feature icon={<ShieldQuestion className="h-5 w-5" />} title="Post Check" desc="Paste a post or claim — verify it against sources for a fake/true verdict." linked /></Link>
-        <Link href="/tools/logs"><Feature icon={<ScrollText className="h-5 w-5" />} title="Log Analyzer" desc="Analyze logs you own: flag bots, datacenter ASNs, adversary origins." linked /></Link>
-        <Link href="/tools/email"><Feature icon={<Mail className="h-5 w-5" />} title="Email Tracer" desc="Trace an email's true origin from its headers + spoofing verdict." linked /></Link>
-        <Feature icon={<Eye className="h-5 w-5" />} title="Origin chain" desc="Attempt to reveal the true server behind Cloudflare and other CDNs." />
+      <section className="space-y-3">
+        <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-gray-500">What you get in the report</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Feature icon={<Network className="h-5 w-5" />} title="Related sites" desc="Finds other sites run by the same operator — via shared servers, ad/analytics IDs, and certificates." />
+          <Feature icon={<Globe className="h-5 w-5" />} title="Where it’s based" desc="The countries of its server, owner, mail, and DNS — shown on a mini map." />
+          <Feature icon={<Telescope className="h-5 w-5" />} title="Who’s behind it" desc="Owners, affiliations, and funding where public — always with sources." />
+          <Feature icon={<Eye className="h-5 w-5" />} title="True origin" desc="Attempts to reveal the real server hidden behind Cloudflare and other CDNs." />
+        </div>
+      </section>
+
+      <section className="mt-6 space-y-3">
+        <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-gray-500">More free tools</h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Link href="/tools/post"><Feature icon={<ShieldQuestion className="h-5 w-5" />} title="Post Check" desc="Is a post or claim true? Paste it — we verify it against sources." linked /></Link>
+          <Link href="/tools/logs"><Feature icon={<ScrollText className="h-5 w-5" />} title="Log Analyzer" desc="Check your own site’s traffic logs for bots and coordinated activity." linked /></Link>
+          <Link href="/tools/email"><Feature icon={<Mail className="h-5 w-5" />} title="Email Tracer" desc="Paste an email’s headers to trace its origin and spot spoofing." linked /></Link>
+        </div>
       </section>
     </div>
   );

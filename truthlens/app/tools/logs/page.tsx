@@ -4,6 +4,18 @@ import { useState } from "react";
 import { ScrollText, Upload, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
 import type { LogAnalysisResult, CoordinationResult, IpAggregate } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
+import ToolIntro from "@/components/ToolIntro";
+
+// A tiny sample so a first-timer can see what a result looks like without having
+// to find their own logs. Mixes a search-engine bot, a datacenter burst, and a
+// normal browser visit.
+const SAMPLE_LOG = [
+  '66.249.66.1 - - [10/Oct/2023:13:55:36 +0000] "GET /article HTTP/1.1" 200 1234 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"',
+  '185.220.101.5 - - [10/Oct/2023:13:55:37 +0000] "GET /article HTTP/1.1" 200 1234 "-" "python-requests/2.31"',
+  '185.220.101.6 - - [10/Oct/2023:13:55:37 +0000] "GET /article HTTP/1.1" 200 1234 "-" "python-requests/2.31"',
+  '185.220.101.7 - - [10/Oct/2023:13:55:38 +0000] "GET /article HTTP/1.1" 200 1234 "-" "python-requests/2.31"',
+  '73.15.22.4 - - [10/Oct/2023:14:02:11 +0000] "GET / HTTP/1.1" 200 5120 "https://google.com" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/118"',
+].join("\n");
 
 export default function LogsPage() {
   const [text, setText] = useState("");
@@ -19,7 +31,8 @@ export default function LogsPage() {
     reader.readAsText(file);
   };
 
-  const analyze = async () => {
+  const analyze = async (logArg?: string) => {
+    const log = logArg ?? text;
     setLoading(true);
     setError("");
     setResult(null);
@@ -27,7 +40,7 @@ export default function LogsPage() {
       const r = await fetch("/api/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ log: text }),
+        body: JSON.stringify({ log }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Analysis failed");
@@ -76,12 +89,33 @@ export default function LogsPage() {
           className="h-40 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-xs outline-none focus:border-indigo-400 scroll-thin"
         />
         <div className="mt-3 flex items-center gap-3">
-          <button className="btn" onClick={analyze} disabled={loading || !text.trim()}>
+          <button className="btn" onClick={() => analyze()} disabled={loading || !text.trim()}>
             {loading ? "Analyzing…" : "Analyze log"}
           </button>
           {error && <span className="text-sm text-risk-high">{error}</span>}
         </div>
       </div>
+
+      {!result && !loading && (
+        <ToolIntro
+          heading="What is this, and how do I use it?"
+          what={<>A <span className="text-gray-200">server log</span> is the list of visits your website’s server records — one line per request, with the visitor’s IP address, time, and what they fetched. If you run a site, you can download it from your hosting panel (cPanel “Raw Access Logs”), Cloudflare, Nginx/Apache <span className="font-mono text-[11px]">access.log</span>, or Vercel/Netlify logs. Paste it here and TruthLens flags bots, datacenter traffic, and synchronized bursts that look automated.</>}
+          steps={[
+            <>Export your access log (or drag the file in above).</>,
+            <>Paste it and press <span className="text-gray-200">Analyze log</span>.</>,
+            <>Read the coordination likelihood and the flagged IPs.</>,
+          ]}
+          examplesLabel="No log handy?"
+          examples={[{ label: "Load a sample log", onClick: () => { setText(SAMPLE_LOG); analyze(SAMPLE_LOG); } }]}
+          legend={[
+            { label: "High coordination", tone: "high", text: "many requests look automated / synchronized." },
+            { label: "Medium", tone: "unknown", text: "some automated patterns — worth a look." },
+            { label: "Low", tone: "legit", text: "traffic looks organic." },
+            { label: "Unknown", tone: "neutral", text: "not enough lines to judge." },
+          ]}
+          note="Analyze only logs you own or are authorized to inspect. Geolocation is approximate; CDNs, VPNs, and Tor can mask the true origin."
+        />
+      )}
 
       {result && <Results result={result} coord={coord} />}
 

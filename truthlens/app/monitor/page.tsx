@@ -120,6 +120,12 @@ export default function MonitorPage() {
         </div>
       </div>
 
+      <p className="max-w-2xl text-sm text-gray-400 no-print">
+        Keep a list of websites and re-check their credibility-risk score over time. Add a site, press
+        <span className="text-gray-200"> Check all</span>, and each run adds a point to its trend line so you can
+        see if it’s getting riskier.
+      </p>
+
       {/* Add bar */}
       <form onSubmit={add} className="no-print">
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -140,8 +146,8 @@ export default function MonitorPage() {
 
       {items.length === 0 ? (
         <div className="card text-center text-sm text-gray-400">
-          No sites yet — add one above to start monitoring. For automated background alerts to a webhook,
-          see <Link href="/about" className="text-indigo-400">About</Link>.
+          No sites yet — add one above to start monitoring. Want scheduled checks that alert you automatically?
+          See <Link href="/about" className="text-indigo-400">About</Link>.
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
