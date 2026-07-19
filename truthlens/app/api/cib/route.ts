@@ -3,7 +3,7 @@
 // state/actor. Short KV cache to respect source rate limits.
 
 import { NextRequest, NextResponse } from "next/server";
-import { collectMentions } from "@/lib/narrative/sources";
+import { collectMentions, enrichCreationDates } from "@/lib/narrative/sources";
 import { analyzeCib } from "@/lib/cib/analyze";
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { CibReport } from "@/lib/cib/analyze";
@@ -26,7 +26,11 @@ export async function GET(req: NextRequest) {
     }
   }
   const results = await collectMentions(entity);
-  const report = analyzeCib(entity, results.flatMap((r) => r.mentions));
+  const mentions = results.flatMap((r) => r.mentions);
+  // Enrich account-creation dates (Bluesky) so the creation-clustering signal can
+  // graduate above "Not collected" when the data exists. Best-effort, cached.
+  await enrichCreationDates(mentions);
+  const report = analyzeCib(entity, mentions);
   const withSources = { ...report, sources: results.map((r) => r.status) };
   if (storeAvailable()) await kvSetJson(key, withSources);
   return NextResponse.json(withSources);

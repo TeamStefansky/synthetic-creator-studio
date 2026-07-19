@@ -12,6 +12,7 @@ export interface Mention {
   timestamp?: string; // ISO 8601
   lang?: string;
   country?: string; // source country when the source reports it (e.g. GDELT)
+  accountCreatedAt?: string; // ISO — when the source/enrichment exposes it (e.g. Bluesky)
   engagement?: number;
 }
 

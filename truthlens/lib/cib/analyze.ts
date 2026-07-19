@@ -10,6 +10,10 @@
 
 import type { Mention } from "@/lib/narrative/types";
 import { clusterNearDuplicates } from "@/lib/similarity";
+import {
+  detectBursts, hourBandConcentration, creationClustering,
+  BURST_WINDOW_MIN, HOUR_BAND_HOURS, HOUR_BAND_MIN_SHARE, HOUR_BAND_MIN_DAYS, CREATION_MIN_ACCOUNTS,
+} from "@/lib/narrative/fingerprints";
 
 export type Likelihood = "None" | "Weak" | "Moderate" | "Strong";
 
@@ -35,8 +39,6 @@ export interface CibReport {
   nextSteps: string[];
   generatedAt: string;
 }
-
-const BURST_WINDOW_MIN = 10;
 
 const ATTRIBUTION =
   "Actor is UNDETERMINED. Coordination is a behavioural pattern, not proof of state sponsorship or of who is behind it. " +
@@ -64,17 +66,19 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
     .slice(0, 10)
     .map((c) => ({ text: c.items[0].text.slice(0, 160), accounts: c.accts.size, size: c.items.length, sources: [...new Set(c.items.map((m) => m.source))] }));
 
-  // --- Temporal: synchronized bursts (default 10-min window, >=2 accounts) ---
+  // --- Temporal fingerprints (O(n log n) bursts + posting-hour band) ---
   const timed = mentions.filter((m) => m.timestamp && !isNaN(Date.parse(m.timestamp)))
-    .map((m) => ({ t: Date.parse(m.timestamp!), a: m.accountId || m.account || "?" }))
-    .sort((x, y) => x.t - y.t);
-  let bursts = 0, biggestBurst = 0;
-  for (let i = 0; i < timed.length; i++) {
-    const windowEnd = timed[i].t + BURST_WINDOW_MIN * 60_000;
-    const win = timed.filter((x) => x.t >= timed[i].t && x.t <= windowEnd);
-    const distinct = new Set(win.map((x) => x.a)).size;
-    if (win.length >= 3 && distinct >= 2) { bursts++; biggestBurst = Math.max(biggestBurst, win.length); }
+    .map((m) => ({ t: Date.parse(m.timestamp!), account: m.accountId || m.account || "?" }));
+  const { bursts, biggest: biggestBurst } = detectBursts(timed);
+  const hourBand = hourBandConcentration(timed.map((x) => x.t));
+
+  // --- Account-creation clustering (when the source exposes creation dates) ---
+  const creationByAccount = new Map<string, string>();
+  for (const m of mentions) {
+    const id = m.accountId || m.account;
+    if (id && m.accountCreatedAt) creationByAccount.set(id, m.accountCreatedAt);
   }
+  const creation = creationClustering([...creationByAccount.values()]);
 
   // --- Amplification (partial without a platform repost graph) ---
   const topAcctShare = accounts ? Math.max(...countBy(mentions.map((m) => m.accountId || m.account || "?"))) / total : 0;
@@ -96,6 +100,18 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
       : ["Not enough timestamped items to assess timing."],
     alternative: "A real event breaking at a moment in time naturally produces a burst of independent posts.",
   });
+  // Posting-hour concentration — only meaningful when SUSTAINED across days
+  // (a one-day breaking-news spike must NOT trip this above Low).
+  const bandStrong = hourBand.share >= HOUR_BAND_MIN_SHARE && hourBand.days >= HOUR_BAND_MIN_DAYS;
+  const pad = (h: number) => `${String(h).padStart(2, "0")}:00`;
+  signals.push({
+    name: "Posting-hour concentration",
+    confidence: hourBand.total >= 6 && hourBand.days >= HOUR_BAND_MIN_DAYS ? (bandStrong ? "Medium" : "Low") : "Not collected",
+    evidence: hourBand.total >= 6
+      ? [`${Math.round(hourBand.share * 100)}% of posts fall in the ${pad(hourBand.band[0])}–${pad(hourBand.band[1])} UTC window across ${hourBand.days} day(s).`]
+      : ["Not enough timestamped items across days to assess a posting-hour pattern."],
+    alternative: "A community concentrated in one timezone posts in the same hours — an activity rhythm, never mapped to a country.",
+  });
   signals.push({
     name: "Amplification concentration",
     confidence: accounts >= 3 ? "Low" : "Not collected",
@@ -105,10 +121,14 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
     alternative: "An official or highly active account posting frequently about its own topic.",
   });
   signals.push({
-    name: "Account-profile signals (weak)",
-    confidence: "Not collected",
-    evidence: ["Not collected — requires a platform API (X/Telegram) exposing account age, avatar, follower ratios."],
-    alternative: "n/a — this signal is weak and only ever corroborative, never proof.",
+    name: "Account-creation clustering",
+    confidence: creation.collected >= 2 ? (creation.clustered >= CREATION_MIN_ACCOUNTS ? "Medium" : "Low") : "Not collected",
+    evidence: creation.collected >= 2
+      ? [creation.clustered >= CREATION_MIN_ACCOUNTS
+          ? `${creation.clustered} involved accounts were created within ${creation.windowDays} days (${creation.earliest} → ${creation.latest}).`
+          : `No creation-date clustering (max ${creation.clustered} accounts within ${creation.windowDays} days, over ${creation.collected} with dates).`]
+      : ["Not collected — creation dates available only from sources that expose them (e.g. Bluesky)."],
+    alternative: "A community or campaign can legitimately onboard together around the same launch or event.",
   });
   signals.push({
     name: "Network / who-amplifies-whom (weak)",
@@ -117,13 +137,15 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
     alternative: "n/a — clustering alone never identifies an actor.",
   });
 
-  // --- Grade the Coordination Likelihood from the strong signals ---
+  // --- Grade the Coordination Likelihood from the signals ---
   const hasCopypasta = clusters.length > 0;
   const strongCopypasta = clusters.some((c) => c.accounts >= 3 || c.size >= 4);
+  // Corroborating temporal fingerprints (each SUSTAINED, not a one-day spike).
+  const corroborating = (bandStrong ? 1 : 0) + (creation.clustered >= CREATION_MIN_ACCOUNTS ? 1 : 0);
   const likelihood: Likelihood =
-    hasCopypasta && bursts >= 1 && strongCopypasta ? "Strong"
-      : (hasCopypasta && bursts >= 1) || strongCopypasta ? "Moderate"
-        : hasCopypasta || bursts >= 1 ? "Weak"
+    (hasCopypasta && bursts >= 1 && strongCopypasta) || (strongCopypasta && corroborating >= 1) ? "Strong"
+      : (hasCopypasta && bursts >= 1) || strongCopypasta || (hasCopypasta && corroborating >= 1) ? "Moderate"
+        : hasCopypasta || bursts >= 1 || corroborating >= 1 ? "Weak"
           : "None";
 
   const collectionGaps = [

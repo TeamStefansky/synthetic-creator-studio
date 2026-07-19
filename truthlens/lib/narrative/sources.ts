@@ -6,6 +6,7 @@
 // All sources here query PUBLIC data via official public endpoints.
 
 import { getJson, getText } from "@/lib/http";
+import { cacheGet, cacheSet } from "@/lib/cache";
 import type { Mention, SourceStatus } from "./types";
 
 export interface SourceResult {
@@ -237,6 +238,55 @@ export async function collectMentions(query: string): Promise<SourceResult[]> {
       return { status: { source: s.name, connected: true, count: 0, error: e?.message || "failed" }, mentions: [] };
     }
   }));
+}
+
+// ---- Bluesky account-creation enrichment (behind the adapter pattern) --------
+// Bluesky's public profile endpoint exposes an account's createdAt. We enrich
+// only the accounts already collected, capped and cached per-DID so a report for
+// a given day is reproducible and we never hammer the endpoint. Accounts we
+// cannot resolve simply keep accountCreatedAt undefined → "Not collected".
+
+const BSKY_ENRICH_CAP = 40;          // max profiles resolved per request
+const BSKY_CREATED_TTL = 30 * 86_400_000; // creation date is immutable → long TTL
+
+async function blueskyCreatedAt(actor: string): Promise<string | null> {
+  const cacheKey = `bsky-created:${actor}`;
+  const hit = await cacheGet<string>(cacheKey, BSKY_CREATED_TTL);
+  if (hit) return hit;
+  const url = `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`;
+  const data = await getJson<any>(url, { timeoutMs: 10000, headers: { "User-Agent": UA } });
+  const created = data?.createdAt;
+  if (typeof created === "string" && !isNaN(Date.parse(created))) {
+    await cacheSet(cacheKey, created);
+    return created;
+  }
+  return null;
+}
+
+/** Fill accountCreatedAt on Bluesky mentions in place (best-effort). Failure of
+ * enrichment never affects the mentions themselves — they stay uncollected. */
+export async function enrichCreationDates(mentions: Mention[]): Promise<void> {
+  const actors = new Map<string, string>(); // did → actor id to query
+  for (const m of mentions) {
+    if (m.source !== "bluesky" || m.accountCreatedAt) continue;
+    const id = m.accountId || m.account;
+    if (id) actors.set(id, id);
+  }
+  const ids = [...actors.keys()].slice(0, BSKY_ENRICH_CAP);
+  if (!ids.length) return;
+  const resolved = new Map<string, string>();
+  await Promise.all(ids.map(async (id) => {
+    try {
+      const created = await blueskyCreatedAt(id);
+      if (created) resolved.set(id, created);
+    } catch { /* leave uncollected */ }
+  }));
+  for (const m of mentions) {
+    if (m.source !== "bluesky" || m.accountCreatedAt) continue;
+    const id = m.accountId || m.account;
+    const created = id ? resolved.get(id) : undefined;
+    if (created) m.accountCreatedAt = created;
+  }
 }
 
 // ---- helpers -----------------------------------------------------------------
