@@ -26,6 +26,7 @@ interface ThreatResult {
     available: boolean; reason?: string; assessment: string; coreClaims: string[];
     clusters: { label: string; summary: string; hostility: string; alternative: string }[];
   };
+  archives?: { url: string; archiveUrl: string; status: "archived" | "requested"; timestamp?: string }[];
 }
 
 const HOST_TONE: Record<string, string> = {
@@ -363,11 +364,24 @@ export default function BrandWatchPage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
                       <span className="rounded bg-white/[0.06] px-1.5">{e.source}</span>
                       {e.account && <span>{e.account}</span>}
+                      {(() => {
+                        const arc = e.url ? (result.archives || []).find((a) => a.url === e.url) : undefined;
+                        return arc ? (
+                          <a href={arc.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:underline" title={arc.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested — snapshot may still be processing"}>
+                            {arc.status === "archived" ? "archived ↗" : "archive requested ↗"}
+                          </a>
+                        ) : null;
+                      })()}
                       {e.url && <a href={e.url} target="_blank" rel="noopener noreferrer" className="ml-auto text-brand-soft hover:underline">open ↗</a>}
                     </div>
                   </div>
                 ))}
                 {!result.evidence.length && <p className="text-sm text-gray-500">No evidence captured.</p>}
+                {!!(result.archives && result.archives.length) && (
+                  <p className="pt-1 text-[11px] text-gray-600">
+                    {result.archives.length} evidence URL(s) preserved via the Wayback Machine (deep scan) — so the record survives edits or deletion.
+                  </p>
+                )}
               </div>
             </div>
           </div>

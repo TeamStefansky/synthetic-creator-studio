@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { collectMentions, enrichCreationDates } from "@/lib/narrative/sources";
 import { analyzeCib } from "@/lib/cib/analyze";
+import { archiveEvidence } from "@/lib/archive";
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { CibReport } from "@/lib/cib/analyze";
 
@@ -31,6 +32,11 @@ export async function GET(req: NextRequest) {
   // graduate above "Not collected" when the data exists. Best-effort, cached.
   await enrichCreationDates(mentions);
   const report = analyzeCib(entity, mentions);
+  // Preserve the top evidence URLs (by engagement) before posts change/vanish.
+  const topUrls = [...mentions]
+    .sort((a, b) => (b.engagement || 0) - (a.engagement || 0))
+    .map((m) => m.url);
+  report.archives = await archiveEvidence(topUrls);
   const withSources = { ...report, sources: results.map((r) => r.status) };
   if (storeAvailable()) await kvSetJson(key, withSources);
   return NextResponse.json(withSources);

@@ -111,6 +111,21 @@ export default function CibPanel({ domain }: { domain: string }) {
             </div>
           </div>
 
+          {Array.isArray(r.archives) && r.archives.length > 0 && (
+            <div className="text-xs text-gray-500">
+              <div className="font-semibold text-gray-400">Preserved evidence ({r.archives.length}):</div>
+              <ul className="mt-0.5 space-y-0.5">
+                {r.archives.map((a: any, i: number) => (
+                  <li key={i} className="truncate">
+                    <a href={a.archiveUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" title={a.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested — snapshot may still be processing"}>
+                      {a.status === "archived" ? "archived ↗" : "archive requested ↗"}
+                    </a>{" "}<span className="text-gray-600">{a.url}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {Array.isArray(r.sources) && (
             <p className="text-xs text-gray-500">
               Sources: {r.sources.map((s: any, i: number) => <span key={i}>{i > 0 && " · "}{s.source} {s.connected ? `(${s.count})` : "(not connected)"}</span>)}

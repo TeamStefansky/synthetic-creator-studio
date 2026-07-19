@@ -9,6 +9,7 @@ import { computeThreat } from "@/lib/narrative/threat";
 import { extractNarratives } from "@/lib/narrative/clusters";
 import { foreignEnrichment } from "@/lib/narrative/foreign";
 import { detectMirroring } from "@/lib/narrative/mirroring";
+import { archiveEvidence } from "@/lib/archive";
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { Mention, ThreatResult, NarrativeExtraction, ForeignEnrichment, MirroringResult } from "@/lib/narrative/types";
 
@@ -68,6 +69,9 @@ export async function GET(req: NextRequest) {
       if (storeAvailable() && narratives.available) await kvSetJson(narrKey, narratives);
     }
     result.narratives = narratives;
+
+    // Preserve the top evidence URLs (deep scans only) before they change/vanish.
+    result.archives = await archiveEvidence(result.evidence.map((e) => e.url));
   }
 
   if (storeAvailable()) await kvSetJson(key, result);

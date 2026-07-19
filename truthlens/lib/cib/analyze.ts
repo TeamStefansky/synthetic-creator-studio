@@ -8,7 +8,7 @@
 // carries the verbatim Attribution & Limitations section. Do not add an actor
 // field: coordination is a behavioural pattern, not proof of who is behind it.
 
-import type { Mention } from "@/lib/narrative/types";
+import type { Mention, ArchiveLink } from "@/lib/narrative/types";
 import { clusterNearDuplicates } from "@/lib/similarity";
 import {
   mentionDomains, campaignMatch, stateMediaMatch, foreignAgentMatch, ioReferenceCounts,
@@ -41,6 +41,7 @@ export interface CibReport {
   attribution: string; // always the UNDETERMINED statement
   nextSteps: string[];
   generatedAt: string;
+  archives?: ArchiveLink[]; // preserved copies of the top evidence URLs
 }
 
 const ATTRIBUTION =

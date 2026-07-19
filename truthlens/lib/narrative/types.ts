@@ -93,6 +93,16 @@ export interface NarrativeExtraction {
   reason?: string;
 }
 
+/** A preserved copy of an evidence URL. `archived` = a snapshot is confirmed
+ * available; `requested` = Save Page Now was triggered but not yet confirmed
+ * (honest — we never claim a snapshot that may not exist). */
+export interface ArchiveLink {
+  url: string;
+  archiveUrl: string;
+  status: "archived" | "requested";
+  timestamp?: string;
+}
+
 export type ThreatStatus = "CALM" | "ELEVATED" | "UNDER_ATTACK" | "UNKNOWN";
 
 export interface ThreatResult {
@@ -112,4 +122,6 @@ export interface ThreatResult {
   /** Earliest-timestamped mention in the collected data. ALWAYS "earliest
    * observed in collected data" — never asserted as the true origin. */
   earliest?: Mention;
+  /** Preserved copies of the top evidence URLs (deep scans). */
+  archives?: ArchiveLink[];
 }
