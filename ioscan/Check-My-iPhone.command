@@ -24,9 +24,9 @@ if [ ! -d ".venv" ]; then
   "$PY" -m venv .venv
 fi
 
-# Install / update ioscan into it (quietly).
+# Install / update ioscan + the MVT engine into it (quietly).
 ./.venv/bin/pip install --quiet --upgrade pip >/dev/null 2>&1 || true
-./.venv/bin/pip install --quiet -e . >/dev/null
+./.venv/bin/pip install --quiet -e ".[full]" >/dev/null
 
 # Launch the graphical app.
 echo "Launching…"

@@ -29,10 +29,16 @@ command line, use the graphical app:
    encrypted, and click **Scan now**. When it finishes, a colored verdict banner
    appears and you can open the full HTML report.
 
-> The bundled indicators are only a small **sample**. For a meaningful check,
-> fetch the real Amnesty MVT feeds into an `iocs/` folder first — see
-> [Fetching public IOC feeds](#fetching-public-ioc-feeds-amnesty-mvt). The app
-> tells you which feed set it's using.
+**Full automatic check.** When [MVT](https://github.com/mvt-project/mvt) is
+installed (the `Check-My-iPhone` launchers install it for you via the `full`
+extra, or `pip install -e ".[full]"`), the app runs the complete pipeline for
+you under the hood: it **decrypts** the encrypted backup, **downloads the latest
+Amnesty spyware indicators**, and **checks** the backup against them — then
+interprets the result into one verdict. It correctly separates genuine indicator
+matches from routine, benign events (e.g. carrier-profile install/remove, which
+MVT lists with `matched_indicator: null`), so you don't get a false alarm. If
+MVT isn't present the app falls back to the bundled sample indicators and tells
+you so.
 
 You can also launch the same window from a terminal with `ioscan-gui`.
 

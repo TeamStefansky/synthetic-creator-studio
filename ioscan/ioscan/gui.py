@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from . import CONSENT_NOTICE
+from .mvt_engine import MvtResult, find_mvt_ios, run_full_check
 
 # ---------------------------------------------------------------------------
 # Backup discovery (headless-testable)
@@ -223,6 +224,9 @@ VERDICT_COLORS = {
     "Clean": "#1a7f37",
     "Suspicious": "#9a6700",
     "Compromise indicators found": "#cf222e",
+    # MVT-pipeline verdicts:
+    "Notable events — review": "#9a6700",
+    "Spyware indicators matched": "#cf222e",
 }
 
 
@@ -332,6 +336,16 @@ def main() -> int:  # pragma: no cover - requires a display
 
         # -- helpers -----------------------------------------------------
         def _update_ioc_label(self) -> None:
+            # Prefer the MVT pipeline (real decryption + live Amnesty indicators).
+            if find_mvt_ios():
+                self.ioc_label.config(
+                    text=(
+                        "Engine: MVT (Amnesty) — decrypts the backup and checks it "
+                        "against the latest live spyware indicators. Full check."
+                    ),
+                    foreground="#1a7f37",
+                )
+                return
             paths, real = resolve_ioc_paths()
             if real:
                 self.ioc_label.config(
@@ -341,8 +355,9 @@ def main() -> int:  # pragma: no cover - requires a display
             else:
                 self.ioc_label.config(
                     text=(
-                        "IOC feeds: bundled SAMPLE only (demo). For a real check, "
-                        "fetch Amnesty MVT feeds into an 'iocs/' folder."
+                        "MVT not installed — using bundled SAMPLE indicators only "
+                        "(demo). Install MVT for a real check: "
+                        "python3 -m venv ~/mvt-venv && ~/mvt-venv/bin/pip install mvt"
                     ),
                     foreground="#9a6700",
                 )
@@ -405,24 +420,85 @@ def main() -> int:  # pragma: no cover - requires a display
             self.progress.start(12)
             self._log(f"\n── Scanning: {backup.label} ──")
 
+            pw = self.pw_var.get().strip()
+            emit = lambda m: self.after(0, self._log, m)  # noqa: E731
+
+            if find_mvt_ios():
+                # Full pipeline: decrypt → download indicators → check-backup.
+                if backup.encrypted and not pw:
+                    self._log(
+                        "This backup is encrypted — enter the backup password "
+                        "above so it can be decrypted and scanned."
+                    )
+                work_dir = Path.home() / "ioscan-scans" / backup.path.name
+
+                def work_mvt() -> None:
+                    try:
+                        result = run_full_check(backup.path, pw or None, work_dir, progress=emit)
+                        self.after(0, self._done_mvt, result)
+                    except Exception as exc:
+                        self.after(0, self._failed, str(exc))
+
+                threading.Thread(target=work_mvt, daemon=True).start()
+                return
+
+            # Fallback: bundled native engine (sample indicators only).
             ioc_paths, _ = resolve_ioc_paths()
             output_dir = backup.path.parent / f"ioscan-report-{backup.path.name}"
-            pw = self.pw_var.get().strip()
 
             def work() -> None:
                 try:
                     result, reports = run_scan(
-                        backup.path,
-                        ioc_paths,
-                        pw,
-                        output_dir,
-                        progress=lambda m: self.after(0, self._log, m),
+                        backup.path, ioc_paths, pw, output_dir, progress=emit
                     )
                     self.after(0, self._done, result, reports)
                 except Exception as exc:  # surface any failure to the user
                     self.after(0, self._failed, str(exc))
 
             threading.Thread(target=work, daemon=True).start()
+
+        def _done_mvt(self, result: MvtResult) -> None:
+            self.mvt_result = result
+            self.progress.stop()
+            self.scan_btn.config(state="normal")
+
+            verdict = result.verdict
+            self.banner.config(text=f"  {verdict}  ", bg=VERDICT_COLORS.get(verdict, "#57606a"))
+            self.banner.pack(fill="x", padx=12, pady=6, before=self.log.master)
+
+            self._log(f"\nVerdict: {verdict}")
+            matches = result.indicator_matches
+            notable = result.notable
+            if matches:
+                self._log(f"\n⚠ {len(matches)} indicator match(es) — review carefully:")
+                for f in matches[:15]:
+                    self._log(f"  [{f.level}] {f.module}: {f.message[:160]}")
+                self._log(
+                    "\nA real indicator match warrants a professional exam — "
+                    "contact Access Now (help@accessnow.org) or Citizen Lab."
+                )
+            elif notable:
+                self._log(f"\n{len(notable)} higher-severity event(s) to review:")
+                for f in notable[:15]:
+                    self._log(f"  [{f.level}] {f.module}: {f.message[:160]}")
+            else:
+                self._log("No spyware indicators matched. ✓")
+
+            info = result.informational
+            if info:
+                self._log(
+                    f"\n{len(info)} informational event(s) with no indicator match "
+                    "(normal, e.g. routine carrier-profile install/remove) — not spyware."
+                )
+            if result.results_dir:
+                self._log(f"\nFull MVT results saved to: {result.results_dir}")
+                self.open_btn.config(text="Open results folder")
+                self.open_btn.pack(pady=(0, 10))
+
+            self._log(
+                "\nNote: a backup check is strong but not absolute — it cannot "
+                "100% rule out a brand-new or filesystem-only implant."
+            )
 
         def _done(self, result, reports: dict[str, Path]) -> None:
             self.result = result
@@ -465,6 +541,11 @@ def main() -> int:  # pragma: no cover - requires a display
                 messagebox.showerror("Scan failed", msg)
 
         def _open_report(self) -> None:
+            # MVT run: open the results folder. Native run: open the HTML report.
+            mvt_result = getattr(self, "mvt_result", None)
+            if mvt_result is not None and mvt_result.results_dir:
+                webbrowser.open(Path(mvt_result.results_dir).resolve().as_uri())
+                return
             html = self.reports.get("html")
             if html:
                 webbrowser.open(Path(html).resolve().as_uri())

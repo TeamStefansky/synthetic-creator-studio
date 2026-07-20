@@ -23,9 +23,9 @@ if not exist ".venv" (
   python -m venv .venv
 )
 
-REM Install / update ioscan into it.
+REM Install / update ioscan + the MVT engine into it.
 call ".venv\Scripts\python.exe" -m pip install --quiet --upgrade pip >nul 2>nul
-call ".venv\Scripts\pip.exe" install --quiet -e . >nul
+call ".venv\Scripts\pip.exe" install --quiet -e ".[full]" >nul
 
 REM Launch the graphical app.
 echo Launching...

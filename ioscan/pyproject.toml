@@ -23,6 +23,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.5"]
+# The "Check My iPhone" GUI drives Amnesty's MVT for real encrypted-backup
+# decryption + live indicator feeds. Install with: pip install -e ".[full]".
+full = ["mvt>=2.0"]
 
 [project.scripts]
 ioscan = "ioscan.cli:cli"
