@@ -120,8 +120,15 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
     };
   } catch (e: any) {
     const m = String(e?.message || "error");
-    if (/credit balance|billing|too low|insufficient/i.test(m)) return { ...UNAVAILABLE, note: "Paused — the Anthropic account is out of credits (console.anthropic.com → Plans & Billing)." };
-    if (/429|rate limit/i.test(m)) return { ...UNAVAILABLE, note: "Rate-limited — try again shortly." };
-    return { ...UNAVAILABLE, note: `Post check failed: ${m.slice(0, 160)}.` };
+    // The UI shows `summary || note`, so each failure must set an ACCURATE summary —
+    // the key IS configured here, so never fall back to the "needs ANTHROPIC_API_KEY"
+    // text (that would misreport an out-of-credits/rate-limit as a missing key).
+    if (/credit balance|billing|too low|insufficient/i.test(m))
+      return { ...UNAVAILABLE, summary: "AI fact-checking is temporarily paused — the Anthropic account is out of credits.", note: "Add credits at console.anthropic.com → Plans & Billing, then try again." };
+    if (/401|invalid x-api-key|authentication/i.test(m))
+      return { ...UNAVAILABLE, summary: "AI fact-checking is unavailable — the Anthropic API key appears to be invalid.", note: "Check the ANTHROPIC_API_KEY value in the server environment." };
+    if (/429|rate limit/i.test(m))
+      return { ...UNAVAILABLE, summary: "AI fact-checking is rate-limited — please try again shortly.", note: "Too many requests in a short window." };
+    return { ...UNAVAILABLE, summary: "AI fact-checking couldn’t complete for this post.", note: `Details: ${m.slice(0, 160)}` };
   }
 }
