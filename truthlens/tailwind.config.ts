@@ -34,7 +34,7 @@ const config: Config = {
         // --- Aurora role tokens (new; used as screens conform) ---
         surface: { DEFAULT: "#131314", "2": "#1E1E20", sunken: "#0C0C0D" },
         primary: { DEFAULT: "#7F49E1", hover: "#6E3BD0", active: "#5D32A7" },
-        ink: { DEFAULT: "#EBEBEB", secondary: "#9A9A9F", muted: "#5E5E64" },
+        ink: { DEFAULT: "#EBEBEB", secondary: "#9A9A9F", muted: "#83838A" },
         line: { DEFAULT: "#232324", strong: "#37373A" },
         warm: "#E1804A",
         badge: "#F5D742",

@@ -10,7 +10,7 @@ export const TOKENS = {
   sunken: "#0C0C0D",
   text: "#EBEBEB",
   textSecondary: "#9A9A9F",
-  textMuted: "#5E5E64",
+  textMuted: "#83838A",
   border: "#232324",
   borderStrong: "#37373A",
   primary: "#7F49E1",

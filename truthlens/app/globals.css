@@ -14,7 +14,7 @@
 
   --color-text: #ebebeb;
   --color-text-secondary: #9a9a9f;
-  --color-text-muted: #5e5e64;
+  --color-text-muted: #83838a; /* a11y: AA 4.5:1 on the near-black canvas (ref was #5E5E64 ~3:1) */
 
   --color-border: #232324;
   --color-border-strong: #37373a;
