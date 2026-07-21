@@ -12,6 +12,7 @@ import { Loader2, Search, ExternalLink } from "lucide-react";
 import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import AuthenticityPanel from "@/components/AuthenticityPanel";
 import { detectCheckType, CHECK_TYPES, CheckType } from "@/lib/check/detect";
 import { CheckRecord, genId, getLocal, saveLocal, syncShared } from "@/lib/check/history";
 import { extractEntities } from "@/lib/clues/extract";
@@ -229,6 +230,11 @@ function CheckInner() {
                 ))}
               </ul>
               <p className="mt-1.5 text-xs text-gray-500">Observed overlap in collected data — a lead, not proof of a shared operator.</p>
+            </div>
+          )}
+          {record.type === "cib" && Array.isArray(record.result.authenticity) && record.result.authenticity.length > 0 && (
+            <div className="border-t border-white/[0.06] pt-3">
+              <AuthenticityPanel entity={record.input} accounts={record.result.authenticity} />
             </div>
           )}
           {record.type === "narrative" && (

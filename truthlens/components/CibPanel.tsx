@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { Loader2, Radar, ShieldAlert } from "lucide-react";
 import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
+import AuthenticityPanel from "@/components/AuthenticityPanel";
 
 const TIER: Record<string, { tone: string; ring: string }> = {
   Strong: { tone: "text-risk-high", ring: "border-risk-high/40" },
@@ -110,6 +111,10 @@ export default function CibPanel({ domain }: { domain: string }) {
               <ul className="mt-0.5 list-disc pl-4">{r.nextSteps.map((n: string, i: number) => <li key={i}>{n}</li>)}</ul>
             </div>
           </div>
+
+          {Array.isArray(r.authenticity) && r.authenticity.length > 0 && (
+            <AuthenticityPanel entity={domain} accounts={r.authenticity} />
+          )}
 
           {Array.isArray(r.archives) && r.archives.length > 0 && (
             <div className="text-xs text-gray-500">

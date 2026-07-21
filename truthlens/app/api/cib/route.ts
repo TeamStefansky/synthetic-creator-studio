@@ -7,6 +7,7 @@ import { collectMentions, enrichCreationDates } from "@/lib/narrative/sources";
 import { analyzeCib } from "@/lib/cib/analyze";
 import { archiveEvidence } from "@/lib/archive";
 import { resolvePlatformProvider } from "@/lib/platform/provider";
+import { MODEL_VERSION } from "@/lib/authenticity";
 import type { AccountProfile } from "@/lib/authenticity";
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { CibReport } from "@/lib/cib/analyze";
@@ -66,6 +67,18 @@ export async function GET(req: NextRequest) {
     .map((m) => m.url);
   report.archives = await archiveEvidence(topUrls);
   const withSources = { ...report, sources: results.map((r) => r.status) };
-  if (storeAvailable()) await kvSetJson(key, withSources);
+  if (storeAvailable()) {
+    await kvSetJson(key, withSources);
+    // Dedicated authenticity snapshot (bw:* family) so assessments are
+    // re-openable/comparable over time independently of the CIB cache.
+    if (report.authenticity?.length) {
+      await kvSetJson(`bw:auth:${entity.toLowerCase()}`, {
+        entity,
+        accounts: report.authenticity,
+        assessed_at: report.generatedAt,
+        model_version: MODEL_VERSION,
+      });
+    }
+  }
   return NextResponse.json(withSources);
 }
