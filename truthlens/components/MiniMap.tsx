@@ -1,5 +1,6 @@
 import { CENTROIDS, project } from "@/lib/geo-centroids";
 import { flagEmoji, countryName } from "@/lib/countries";
+import { TOKENS, CLUSTER_PALETTE } from "@/lib/design-tokens";
 
 export interface MapMarker {
   code: string;
@@ -28,10 +29,10 @@ export default function MiniMap({ markers }: { markers: MapMarker[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0a1020]">
+    <div className="overflow-hidden rounded-xl border border-line" style={{ background: TOKENS.sunken }}>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Origin map">
         {/* ocean */}
-        <rect x="0" y="0" width={W} height={H} fill="#0a1020" />
+        <rect x="0" y="0" width={W} height={H} fill={TOKENS.sunken} />
         {/* graticule */}
         {graticule.map((lon) => {
           const [x] = project(0, lon, W, H);
@@ -50,7 +51,7 @@ export default function MiniMap({ markers }: { markers: MapMarker[] }) {
           const [x, y] = project(lat, lon, W, H);
           return (
             <g key={code}>
-              <circle cx={x} cy={y} r={3.5} fill="#818cf8" stroke="#c7d2fe" strokeWidth={0.8}>
+              <circle cx={x} cy={y} r={3.5} fill={TOKENS.primary} stroke={CLUSTER_PALETTE[4]} strokeWidth={0.8}>
                 <title>{`${countryName(code) || code}: ${titles.join(", ")}`}</title>
               </circle>
               <text x={x} y={y - 5} textAnchor="middle" fontSize={9}>

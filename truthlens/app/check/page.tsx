@@ -14,6 +14,7 @@ import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import AuthenticityPanel from "@/components/AuthenticityPanel";
 import { InfluenceNetworkGraph } from "@/components/NetworkGraph";
+import ProgressCurve, { Milestone } from "@/components/ProgressCurve";
 import { detectCheckType, CHECK_TYPES, CheckType } from "@/lib/check/detect";
 import { CheckRecord, genId, getLocal, saveLocal, syncShared } from "@/lib/check/history";
 import { extractEntities } from "@/lib/clues/extract";
@@ -250,6 +251,17 @@ function CheckInner() {
           )}
           {record.type === "social" && (
             <div className="space-y-3 border-t border-white/[0.06] pt-3">
+              {/* Pipeline stages as a milestone progress curve */}
+              {(() => {
+                const r = record.result;
+                const ms: Milestone[] = [
+                  { label: "Profile", state: r.profile?.connected ? "done" : "next" },
+                  { label: "Seed", state: r.seeds?.length ? "done" : "next" },
+                  { label: "Network", state: r.expansion ? "done" : "next" },
+                  { label: "Assessment", state: r.band && r.band !== "Unknown" ? "done" : "active" },
+                ];
+                return <ProgressCurve milestones={ms} />;
+              })()}
               {/* Stage 1 - the seed account */}
               {record.result.profile && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">

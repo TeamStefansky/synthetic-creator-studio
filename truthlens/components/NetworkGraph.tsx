@@ -7,16 +7,17 @@ import { ExternalLink, Search } from "lucide-react";
 import type { OperatorNetwork } from "@/lib/types";
 import type { InfluenceNetwork } from "@/lib/social-analyze/network-map";
 import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
+import { TOKENS, STATUS, CLUSTER_PALETTE } from "@/lib/design-tokens";
 
 // react-force-graph-2d is browser-only; load it client-side without SSR.
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 const KIND_COLOR: Record<string, string> = {
-  target: "#818cf8",
-  domain: "#94a3b8",
-  ip: "#38bdf8",
-  ga: "#f59e0b",
-  adsense: "#10b981",
+  target: TOKENS.primary,
+  domain: TOKENS.textSecondary,
+  ip: CLUSTER_PALETTE[4],   // sky
+  ga: STATUS.unknown,       // amber
+  adsense: CLUSTER_PALETTE[3], // teal
 };
 
 const reportHref = (domain: string) => `/report?url=${encodeURIComponent(domain)}`;
@@ -102,7 +103,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         cooldownTicks={isMobile ? 60 : 120}
         onNodeClick={(n: any) => clickNode(n)}
         onNodeHover={(n: any) => setHovering(!!n)}
-        nodeColor={(n: any) => (n.flaggedFake ? "#ef4444" : KIND_COLOR[n.kind] || "#94a3b8")}
+        nodeColor={(n: any) => (n.flaggedFake ? STATUS.high : KIND_COLOR[n.kind] || TOKENS.textSecondary)}
         nodeCanvasObjectMode={() => "after"}
         nodeCanvasObject={(node: any, ctx: any, scale: number) => {
           // On mobile only label the target node to reduce clutter.
@@ -110,18 +111,18 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
           const label = node.label as string;
           const fontSize = Math.max(10 / scale, 3);
           ctx.font = `${fontSize}px ui-sans-serif, system-ui`;
-          ctx.fillStyle = node.kind === "target" ? "#c7d2fe" : "rgba(229,231,235,0.8)";
+          ctx.fillStyle = node.kind === "target" ? TOKENS.text : "rgba(229,231,235,0.8)";
           ctx.textAlign = "center";
           ctx.fillText(label.length > 28 ? label.slice(0, 27) + "…" : label, node.x, node.y + 9);
         }}
       />
       <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-gray-400">
-        <Legend color="#818cf8" label="Target" />
-        <Legend color="#94a3b8" label="Sibling domain" />
-        <Legend color="#38bdf8" label="IP" />
-        <Legend color="#f59e0b" label="GA id" />
-        <Legend color="#10b981" label="AdSense id" />
-        <Legend color="#ef4444" label="Flagged fake" />
+        <Legend color={KIND_COLOR.target} label="Target" />
+        <Legend color={KIND_COLOR.domain} label="Sibling domain" />
+        <Legend color={KIND_COLOR.ip} label="IP" />
+        <Legend color={KIND_COLOR.ga} label="GA id" />
+        <Legend color={KIND_COLOR.adsense} label="AdSense id" />
+        <Legend color={STATUS.high} label="Flagged fake" />
       </div>
 
       {/* Clickable domain links (tap-friendly; nodes are also clickable). */}
@@ -182,8 +183,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 // and domains only - never people/actors.
 // ---------------------------------------------------------------------------
 
-const CLUSTER_COLORS = ["#818cf8", "#34d399", "#fbbf24", "#fb7185", "#38bdf8", "#f472b6", "#a3e635", "#c084fc"];
-const clusterColor = (c?: number) => (c === undefined ? "#94a3b8" : CLUSTER_COLORS[c % CLUSTER_COLORS.length]);
+const clusterColor = (c?: number) => (c === undefined ? TOKENS.textSecondary : CLUSTER_PALETTE[c % CLUSTER_PALETTE.length]);
 const CONF: Record<string, ConfidenceLevel> = { High: "High", Medium: "Medium", Low: "Low" };
 
 function profileUrl(platform?: string, handle?: string): string | null {
@@ -245,13 +245,13 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
           cooldownTicks={isMobile ? 60 : 120}
           onNodeClick={clickNode}
           onLinkHover={(l: any) => setHoverEdge(l)}
-          nodeColor={(n: any) => (n.kind === "domain" ? "#94a3b8" : clusterColor(n.cluster))}
+          nodeColor={(n: any) => (n.kind === "domain" ? TOKENS.textSecondary : clusterColor(n.cluster))}
           nodeCanvasObjectMode={() => "after"}
           nodeCanvasObject={(node: any, ctx: any, scale: number) => {
             // Rings: earliest-observable (cyan) and flagged-inauthentic (red).
             const r = Math.sqrt(node.val) * (isMobile ? 4 : 5) + 1.5;
-            if (node.flaggedInauthentic) { ctx.strokeStyle = "#fb7185"; ctx.lineWidth = 1.5 / scale; ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI); ctx.stroke(); }
-            if (node.earliestObservable) { ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 1.5 / scale; ctx.beginPath(); ctx.arc(node.x, node.y, r + 2 / scale, 0, 2 * Math.PI); ctx.stroke(); }
+            if (node.flaggedInauthentic) { ctx.strokeStyle = STATUS.high; ctx.lineWidth = 1.5 / scale; ctx.beginPath(); ctx.arc(node.x, node.y, r, 0, 2 * Math.PI); ctx.stroke(); }
+            if (node.earliestObservable) { ctx.strokeStyle = CLUSTER_PALETTE[4]; ctx.lineWidth = 1.5 / scale; ctx.beginPath(); ctx.arc(node.x, node.y, r + 2 / scale, 0, 2 * Math.PI); ctx.stroke(); }
             if (isMobile && node.kind === "domain") return;
             const label = String(node.label || "");
             const fontSize = Math.max(10 / scale, 3);
@@ -274,8 +274,8 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
         <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-gray-400">
           <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 border-t-2 border-brand-soft" /> Observed (real interaction / citation)</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 border-t-2 border-dashed border-white/40" /> Inferred (co-behavior)</span>
-          <Legend color="#38bdf8" label="Earliest observed (not the origin)" />
-          <Legend color="#fb7185" label="Flagged inauthentic (indicator)" />
+          <Legend color={CLUSTER_PALETTE[4]} label="Earliest observed (not the origin)" />
+          <Legend color={STATUS.high} label="Flagged inauthentic (indicator)" />
         </div>
       </div>
 

@@ -7,6 +7,8 @@
 import { useState } from "react";
 import { Radar, ShieldCheck, Bot, Sparkles } from "lucide-react";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import ScoreGauge from "@/components/ScoreGauge";
+import ProgressCurve from "@/components/ProgressCurve";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -99,9 +101,23 @@ export default function DesignShowcase() {
         <span className="text-sm text-risk-high">high</span>
       </Section>
 
-      <p className="text-xs text-ink-muted">
-        Data-viz signature elements (radial tick gauge, milestone progress curve) arrive in Phase 4.
-      </p>
+      <Section title="Signature data-viz - radial tick gauge">
+        <ScoreGauge score={72} band={"HIGH_RISK" as any} />
+        <ScoreGauge score={41} band={"UNKNOWN" as any} />
+        <ScoreGauge score={12} band={"LIKELY_LEGITIMATE" as any} />
+      </Section>
+
+      <section className="card space-y-4">
+        <h2 className="label-muted">Signature data-viz - milestone progress curve</h2>
+        <ProgressCurve
+          milestones={[
+            { label: "Profile", state: "done" },
+            { label: "Seed", state: "done" },
+            { label: "Network", state: "done" },
+            { label: "Assessment", state: "active" },
+          ]}
+        />
+      </section>
     </div>
   );
 }
