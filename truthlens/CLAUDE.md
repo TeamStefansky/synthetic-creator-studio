@@ -125,8 +125,9 @@ ceiling string is "actor UNDETERMINED"; earliest node carries "not the true orig
 collection → Unknown; no posting-hour band mapped to a country; inferred edges never typed observed.
 
 ## Model
-LLM model id comes from ONE constant: `LLM_MODEL` in `lib/llm.ts`
-(`ANTHROPIC_MODEL` env override). No model literal anywhere else in the repo.
+LLM model id comes from ONE constant: `LLM_MODEL` in `lib/llm.ts` — default
+`claude-sonnet-4-6` (widely available), overridable per-environment with
+`ANTHROPIC_MODEL`. No model literal anywhere else in the repo.
 
 ## Data sources (connect in priority order; see docs/BUILD_ORDER.md for the full guide)
 - **Keyless, already on:** GDELT DOC 2.0, Bluesky public AppView, Hacker News, Reddit,
