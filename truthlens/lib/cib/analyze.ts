@@ -49,7 +49,8 @@ export interface CibReport {
   authenticity?: { account: string; assessment: AuthenticityAssessment }[];
 }
 
-const ATTRIBUTION =
+// Exported so Social Analyze shares the SAME frozen framing — one source of truth.
+export const ATTRIBUTION =
   "Actor is UNDETERMINED. Coordination is a behavioural pattern, not proof of state sponsorship or of who is behind it. " +
   "These are hypotheses for a human to evaluate — not a verdict.";
 

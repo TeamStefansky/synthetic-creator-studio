@@ -14,15 +14,17 @@ const SNAPSHOT_TTL = 24 * 60 * 60 * 1000; // per-day reproducibility
 /** Parse a profile reference into {platform, handle}.
  * Supported: bsky.app/profile/<handle|did> URLs, x.com|twitter.com/<handle> URLs,
  * "@name.tld" / "name.tld" (a domain-shaped handle → Bluesky), "@name" (→ X, the
- * canonical @-convention). Post/status URLs are NOT profiles → null. */
+ * canonical @-convention). Post/status URLs (anything after the handle segment)
+ * are NOT profiles → null. */
 export function parseProfileInput(input: string): { platform: SocialPlatform; handle: string } | null {
   const s = (input || "").trim();
   if (!s) return null;
 
-  const bsky = s.match(/bsky\.app\/profile\/([A-Za-z0-9.:_-]+)/i);
+  // Profile page ONLY — bsky.app/profile/<handle>/post/<rkey> is a post, not a profile.
+  const bsky = s.match(/bsky\.app\/profile\/([A-Za-z0-9.:_-]+?)\/?(?:[?#]|$)/i);
   if (bsky) return { platform: "bluesky", handle: bsky[1] };
 
-  const x = s.match(/(?:x|twitter)\.com\/(@?[A-Za-z0-9_]{1,15})(?:[/?#]|$)/i);
+  const x = s.match(/(?:x|twitter)\.com\/(@?[A-Za-z0-9_]{1,15})\/?(?:[?#]|$)/i);
   if (x) {
     const h = x[1].replace(/^@/, "");
     // Reserved paths that are not profiles.
