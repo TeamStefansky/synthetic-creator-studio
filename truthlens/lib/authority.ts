@@ -1,4 +1,4 @@
-// Authority / longevity assessment — legitimacy signals that DON'T depend on
+// Authority / longevity assessment - legitimacy signals that DON'T depend on
 // the seed list, so established outlets are recognized automatically:
 //   - domain age (RDAP)
 //   - web longevity (years since first Wayback snapshot + snapshot volume)

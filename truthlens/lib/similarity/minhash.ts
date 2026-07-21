@@ -1,4 +1,4 @@
-// MinHash signatures — pure TS, deterministic (no Math.random). BigInt math keeps
+// MinHash signatures - pure TS, deterministic (no Math.random). BigInt math keeps
 // the modular arithmetic exact. Jaccard is estimated by the fraction of matching
 // signature positions.
 
@@ -16,7 +16,7 @@ function fnv1a(s: string): bigint {
   return h;
 }
 
-// Deterministic (a, b) coefficients via a fixed LCG — same every run/machine.
+// Deterministic (a, b) coefficients via a fixed LCG - same every run/machine.
 function makeCoeffs(n: number): { a: bigint; b: bigint }[] {
   const out: { a: bigint; b: bigint }[] = [];
   let x = 123456789n;

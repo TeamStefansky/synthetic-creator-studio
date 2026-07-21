@@ -2,8 +2,8 @@
 
 // Coordinated Inauthentic Behavior (CIB) panel for the Site Report. On-demand:
 // collects public mentions of the site and grades a Coordination Likelihood with
-// raw evidence. NEVER attributes to a state/actor — the ceiling is
-// "Strong — actor UNDETERMINED", and the Attribution & Limitations box is always shown.
+// raw evidence. NEVER attributes to a state/actor - the ceiling is
+// "Strong - actor UNDETERMINED", and the Attribution & Limitations box is always shown.
 
 import { useState } from "react";
 import { Loader2, Radar, ShieldAlert } from "lucide-react";
@@ -52,7 +52,7 @@ export default function CibPanel({ domain }: { domain: string }) {
         )}
       </div>
       <p className="mt-1 text-xs text-gray-500">
-        Scans public mentions of this site (news, Bluesky, Hacker News, Reddit) for coordination signals. Indicators — not a verdict.
+        Scans public mentions of this site (news, Bluesky, Hacker News, Reddit) for coordination signals. Indicators - not a verdict.
       </p>
 
       {error && <div className="mt-3 rounded-lg border border-risk-high/40 bg-risk-high/[0.06] p-2 text-sm text-risk-high">{error}</div>}
@@ -99,7 +99,7 @@ export default function CibPanel({ domain }: { domain: string }) {
             </div>
           )}
 
-          {/* Attribution & Limitations — mandatory, verbatim */}
+          {/* Attribution & Limitations - mandatory, verbatim */}
           <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-200/90">
             <div className="font-semibold">Attribution &amp; Limitations</div>
             <p className="mt-1">{r.attribution}</p>
@@ -122,7 +122,7 @@ export default function CibPanel({ domain }: { domain: string }) {
               <ul className="mt-0.5 space-y-0.5">
                 {r.archives.map((a: any, i: number) => (
                   <li key={i} className="truncate">
-                    <a href={a.archiveUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" title={a.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested — snapshot may still be processing"}>
+                    <a href={a.archiveUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" title={a.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested - snapshot may still be processing"}>
                       {a.status === "archived" ? "archived ↗" : "archive requested ↗"}
                     </a>{" "}<span className="text-gray-600">{a.url}</span>
                   </li>

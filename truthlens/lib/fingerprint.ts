@@ -98,7 +98,7 @@ export function fingerprint(
     if (!/\.(png|jpg|jpeg|gif|svg|webp|css|js)$/i.test(e)) emails.add(e.toLowerCase());
   }
 
-  // Multilingual detection — English + Hebrew + common European terms — so
+  // Multilingual detection - English + Hebrew + common European terms - so
   // legitimate non-English outlets aren't penalized for "missing" pages.
   const hasAbout = hasLink(
     $,
@@ -153,7 +153,7 @@ export function extractImages(html: string, baseUrl: string): string[] {
   return Array.from(out).slice(0, 8);
 }
 
-/** SEO health — established publishers tend to ship complete SEO metadata. */
+/** SEO health - established publishers tend to ship complete SEO metadata. */
 export function extractSeo(html: string): SeoInfo {
   const $ = cheerio.load(html || "");
   const title = $("title").first().text().trim() || undefined;

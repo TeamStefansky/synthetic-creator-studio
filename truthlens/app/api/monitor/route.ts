@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
         while (hist.length > 60) hist.shift();
         await kvSetJson(`monitor:hist:${domain}`, hist);
       } else if (cur.band === "HIGH_RISK") {
-        changes = ["HIGH RISK (no history store configured — current-state alert)"];
+        changes = ["HIGH RISK (no history store configured - current-state alert)"];
       }
 
       out.push({ domain, band: cur.band, score: cur.score, changes });
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
   const webhook = process.env.ALERT_WEBHOOK_URL;
   if (alerts.length > 0 && webhook) {
     const text =
-      `🔎 *TruthLens monitor* — ${alerts.length} change(s) detected\n` +
+      `🔎 *TruthLens monitor* - ${alerts.length} change(s) detected\n` +
       alerts.map((a) => `• *${a.domain}* (score ${a.score}): ${a.changes.join("; ")}`).join("\n");
     await fetch(webhook, {
       method: "POST",

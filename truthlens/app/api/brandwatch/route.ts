@@ -1,7 +1,7 @@
-// Brand Watch — in-app, server-side. Collects public mentions of an entity
+// Brand Watch - in-app, server-side. Collects public mentions of an entity
 // across the narrative sources, scores the disinformation-attack indicators, and
 // returns the result. All source/LLM access stays on the server. Runs on the
-// same Vercel deployment as the rest of TruthLens — no external backend.
+// same Vercel deployment as the rest of TruthLens - no external backend.
 
 import { NextRequest, NextResponse } from "next/server";
 import { collectMentions } from "@/lib/narrative/sources";
@@ -20,7 +20,7 @@ const CACHE_MS = 90_000; // short cache so auto-refresh doesn't hammer sources
 
 export async function GET(req: NextRequest) {
   const entity = (req.nextUrl.searchParams.get("entity") || "").trim();
-  // deep=1 adds the (paid, slower) LLM narrative layer — set on manual scans,
+  // deep=1 adds the (paid, slower) LLM narrative layer - set on manual scans,
   // NOT on silent auto-refresh, and cached per day for reproducibility.
   const deep = req.nextUrl.searchParams.get("deep") === "1";
   if (entity.length < 2) {

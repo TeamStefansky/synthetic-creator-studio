@@ -1,4 +1,4 @@
-// Scheduled Brand Watch monitoring — invoked by Vercel Cron (and manual trigger).
+// Scheduled Brand Watch monitoring - invoked by Vercel Cron (and manual trigger).
 // Re-scans every enabled watched entity, snapshots it against a rolling baseline,
 // and dispatches an escalation alert (Telegram / webhook) when status worsens.
 //

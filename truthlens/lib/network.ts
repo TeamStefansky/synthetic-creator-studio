@@ -63,7 +63,7 @@ export function buildNetwork(input: NetworkInput): OperatorNetwork {
     if (ipIsShared) {
       hiddenSharedIpCount = cleanNeighbors.length;
       note = host?.cdnMasksOrigin
-        ? `Behind ${host.cdn || "a CDN"} — this IP is shared by many unrelated sites, so co-tenant domains are hidden. Links shown reflect stronger operator signals (shared analytics/ad IDs and SSL certificates).`
+        ? `Behind ${host.cdn || "a CDN"} - this IP is shared by many unrelated sites, so co-tenant domains are hidden. Links shown reflect stronger operator signals (shared analytics/ad IDs and SSL certificates).`
         : `This IP appears to be shared hosting (${cleanNeighbors.length}+ unrelated domains), so co-tenant domains are hidden to avoid false links. Showing only stronger operator signals.`;
     } else {
       // Dedicated / small set → these neighbors are plausibly operator-linked.

@@ -1,4 +1,4 @@
-// Clue layer — entity extraction. Pulls the linkable entities out of any check
+// Clue layer - entity extraction. Pulls the linkable entities out of any check
 // result (domain, IP, ASN, account, email domain, GA/AdSense IDs, SSL SANs) so
 // repeated entities can be linked across checks. Reuses the SAME signals the
 // Site Report operator-graph uses (shared IP / GA / AdSense / SSL SAN), applied

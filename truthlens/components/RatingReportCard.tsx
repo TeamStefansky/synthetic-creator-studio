@@ -78,7 +78,7 @@ export default function RatingReportCard({
                     {impactStr(it.impact)}
                   </span>
                   <span className="text-gray-300">
-                    <span className="text-gray-100">{it.label}</span> — {it.detail}
+                    <span className="text-gray-100">{it.label}</span> - {it.detail}
                   </span>
                 </li>
               ))}

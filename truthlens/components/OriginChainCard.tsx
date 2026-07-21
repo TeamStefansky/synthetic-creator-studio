@@ -10,7 +10,7 @@ function Hop({
   return (
     <div className={`flex-1 rounded-lg border p-3 ${accent || "border-white/10 bg-bg-elev"}`}>
       <div className="flex items-center gap-1.5 text-xs text-gray-400">{icon}{title}</div>
-      <div className="mt-1 font-mono text-sm text-gray-100">{ip || "—"}</div>
+      <div className="mt-1 font-mono text-sm text-gray-100">{ip || " - "}</div>
       {country && (
         <div className="text-xs text-gray-400">
           {flagEmoji(country)} {countryName(country) || country}
@@ -77,8 +77,8 @@ export default function OriginChainCard({ trace }: { trace: OriginTrace }) {
                 {trace.candidates.map((c) => (
                   <tr key={c.ip} className="border-b border-white/5">
                     <td className="py-1.5 pr-3 font-mono text-xs">{c.ip}</td>
-                    <td className="pr-3">{c.country ? `${flagEmoji(c.country)} ${c.country}` : "—"}{c.isAdversary && <span className="text-risk-high"> ⚠</span>}</td>
-                    <td className="pr-3 max-w-[180px] truncate text-gray-400">{c.asnOrg || "—"}</td>
+                    <td className="pr-3">{c.country ? `${flagEmoji(c.country)} ${c.country}` : " - "}{c.isAdversary && <span className="text-risk-high"> ⚠</span>}</td>
+                    <td className="pr-3 max-w-[180px] truncate text-gray-400">{c.asnOrg || " - "}</td>
                     <td className="text-gray-400">{c.source}</td>
                   </tr>
                 ))}
@@ -93,7 +93,7 @@ export default function OriginChainCard({ trace }: { trace: OriginTrace }) {
       )}
       <p className="mt-1 flex items-start gap-1.5 text-xs text-gray-500">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Origin discovery is probabilistic OSINT from public DNS — candidates, not proof. A well-configured CDN may leak nothing.
+        Origin discovery is probabilistic OSINT from public DNS - candidates, not proof. A well-configured CDN may leak nothing.
       </p>
     </div>
   );

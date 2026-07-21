@@ -1,4 +1,4 @@
-// P3 — IO reference data + indicators. Verifies: pure domain helpers; the SHIPPED
+// P3 - IO reference data + indicators. Verifies: pure domain helpers; the SHIPPED
 // reference is empty so matchers return null and counts are 0 (neutral default);
 // the threat engine renders the two IO indicators as Unknown when the reference is
 // empty (never a reassuring Low) and with ZERO scoring weight (score unchanged);
@@ -48,7 +48,7 @@ describe("shipped reference is EMPTY and neutral", () => {
   });
 });
 
-describe("threat engine — IO indicators with the empty (shipped) reference", () => {
+describe("threat engine - IO indicators with the empty (shipped) reference", () => {
   const mentions: Mention[] = [
     { source: "gdelt", id: "1", text: "acme scandal spreads", account: "somewhere.com", url: "https://somewhere.com/a", timestamp: "2024-03-01T08:00:00Z" },
     { source: "gdelt", id: "2", text: "acme scandal spreads", account: "elsewhere.org", url: "https://elsewhere.org/b", timestamp: "2024-03-01T09:00:00Z" },
@@ -107,7 +107,7 @@ describe("populated reference (mocked fixture) surfaces leads with alternative f
     expect(fa.signals.join(" ")).toMatch(/Example Media LLC/);
     expect(fa.alternative.toLowerCase()).toContain("not an accusation");
 
-    // P4: these indicators now carry scoring weight — a matching domain must raise
+    // P4: these indicators now carry scoring weight - a matching domain must raise
     // the combined score vs the same behaviour with no documented overlap.
     const clean: Mention[] = [
       { source: "gdelt", id: "1", text: "acme scandal", account: "clean-a.example", url: "https://clean-a.example/a", timestamp: "2024-03-01T08:00:00Z" },

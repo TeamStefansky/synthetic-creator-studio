@@ -54,7 +54,7 @@ async function availableSnapshot(url: string): Promise<{ archiveUrl: string; tim
 }
 
 /** Trigger Save Page Now for one URL and return a link. `archived` when a snapshot
- * is confirmed available; `requested` when we only triggered the save (honest — we
+ * is confirmed available; `requested` when we only triggered the save (honest - we
  * never claim a snapshot that may not exist yet). Cached per URL per day. */
 export async function saveToArchive(url: string): Promise<ArchiveLink | null> {
   if (!/^https?:\/\//i.test(url)) return null;
@@ -66,7 +66,7 @@ export async function saveToArchive(url: string): Promise<ArchiveLink | null> {
   try {
     await fetchWithTimeout(`https://web.archive.org/save/${url}`, { timeoutMs: 8000 });
   } catch {
-    /* fire-and-forget — failure here never aborts the report */
+    /* fire-and-forget - failure here never aborts the report */
   }
 
   const avail = await availableSnapshot(url).catch(() => null);

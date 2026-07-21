@@ -1,4 +1,4 @@
-// Google Fact Check Tools API (claims:search). Optional — needs a key.
+// Google Fact Check Tools API (claims:search). Optional - needs a key.
 
 import { getJson } from "./http";
 import type { FactCheckItem } from "./types";

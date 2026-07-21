@@ -1,5 +1,4 @@
-// Avatar hashing for shared-avatar detection. SHA-256 of the image BYTES —
-// an EXACT-file match (the common bot-farm pattern of reusing one avatar file),
+// Avatar hashing for shared-avatar detection. SHA-256 of the image BYTES - // an EXACT-file match (the common bot-farm pattern of reusing one avatar file),
 // deliberately NOT perceptual similarity: near-duplicate (resized/re-encoded)
 // detection needs an image-decoding dependency, which is deferred until listed
 // and justified (CLAUDE.md: no new dependency without listing it first).
@@ -9,7 +8,7 @@ import { createHash } from "crypto";
 import { fetchWithTimeout } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 
-const MAX_BYTES = 1_000_000; // 1MB cap — avatars are small; don't pull arbitrary blobs
+const MAX_BYTES = 1_000_000; // 1MB cap - avatars are small; don't pull arbitrary blobs
 const HASH_TTL = 30 * 86_400_000; // an avatar file's hash is immutable per URL fetch
 
 export async function avatarContentHash(url: string): Promise<string | null> {

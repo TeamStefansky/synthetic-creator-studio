@@ -44,7 +44,7 @@ describe("CIB analysis", () => {
   it("marks account-creation + network signals as 'Not collected' without a platform API", () => {
     const r = analyzeCib("example", [mk("hi", "a", 0)]);
     // No creation dates and no repost graph are available from the free set, so
-    // both must render honestly as "Not collected" — never faked around.
+    // both must render honestly as "Not collected" - never faked around.
     const creation = r.signals.find((s) => /creation/i.test(s.name));
     const network = r.signals.find((s) => /network/i.test(s.name));
     expect(creation?.confidence).toBe("Not collected");

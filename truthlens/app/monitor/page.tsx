@@ -134,7 +134,7 @@ export default function MonitorPage() {
             <input
               value={input}
               onChange={(e) => { setInput(e.target.value); setErr(""); }}
-              placeholder="Add a site to monitor — e.g. example.com"
+              placeholder="Add a site to monitor - e.g. example.com"
               className="w-full rounded-xl border border-white/15 bg-bg-card py-3 pl-9 pr-4 text-base outline-none transition focus:border-indigo-400"
             />
           </div>
@@ -146,7 +146,7 @@ export default function MonitorPage() {
 
       {items.length === 0 ? (
         <div className="card text-center text-sm text-gray-400">
-          No sites yet — add one above to start monitoring. Want scheduled checks that alert you automatically?
+          No sites yet - add one above to start monitoring. Want scheduled checks that alert you automatically?
           See <Link href="/about" className="text-indigo-400">About</Link>.
         </div>
       ) : (

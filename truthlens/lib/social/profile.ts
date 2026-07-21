@@ -1,4 +1,4 @@
-// Profile adapters — official public APIs only (CLAUDE.md rule 5: no scraping,
+// Profile adapters - official public APIs only (CLAUDE.md rule 5: no scraping,
 // no wrappers). Bluesky public AppView is keyless; X requires X_BEARER_TOKEN and
 // renders "source not connected" without it. Snapshots are cached per day so a
 // report for a given day is reproducible (rule 8).
@@ -8,7 +8,7 @@ import { cacheGet, cacheSet } from "@/lib/cache";
 import { avatarContentHash } from "./avatar";
 import type { ProfileSnapshot, SocialPlatform } from "./types";
 
-const UA = "TruthLens/0.1 (account authenticity — public profile lookup)";
+const UA = "TruthLens/0.1 (account authenticity - public profile lookup)";
 const SNAPSHOT_TTL = 24 * 60 * 60 * 1000; // per-day reproducibility
 
 /** Parse a profile reference into {platform, handle}.
@@ -20,7 +20,7 @@ export function parseProfileInput(input: string): { platform: SocialPlatform; ha
   const s = (input || "").trim();
   if (!s) return null;
 
-  // Profile page ONLY — bsky.app/profile/<handle>/post/<rkey> is a post, not a profile.
+  // Profile page ONLY - bsky.app/profile/<handle>/post/<rkey> is a post, not a profile.
   const bsky = s.match(/bsky\.app\/profile\/([A-Za-z0-9.:_-]+?)\/?(?:[?#]|$)/i);
   if (bsky) return { platform: "bluesky", handle: bsky[1] };
 
@@ -31,7 +31,7 @@ export function parseProfileInput(input: string): { platform: SocialPlatform; ha
     if (/^(i|home|search|explore|notifications|messages|settings|intent|hashtag|share|status)$/i.test(h)) return null;
     return { platform: "x", handle: h };
   }
-  if (/^https?:\/\//i.test(s)) return null; // some other URL — not a profile reference
+  if (/^https?:\/\//i.test(s)) return null; // some other URL - not a profile reference
 
   const bare = s.replace(/^@/, "");
   if (/^did:[a-z0-9:.%-]+$/i.test(bare)) return { platform: "bluesky", handle: bare };
@@ -92,7 +92,7 @@ async function fetchXProfile(handle: string): Promise<ProfileSnapshot> {
 }
 
 /** Fetch a ProfileSnapshot (cached per day). Adds the avatar content-hash when an
- * avatar URL was collected — hash failure just leaves the field Not collected. */
+ * avatar URL was collected - hash failure just leaves the field Not collected. */
 export async function fetchProfile(platform: SocialPlatform, handle: string): Promise<ProfileSnapshot> {
   const ck = `social:profile:${platform}:${handle.toLowerCase()}`;
   const cached = await cacheGet<ProfileSnapshot>(ck, SNAPSHOT_TTL);

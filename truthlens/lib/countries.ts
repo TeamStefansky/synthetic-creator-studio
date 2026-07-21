@@ -20,9 +20,9 @@ export function countryName(code?: string): string | undefined {
   }
 }
 
-/** "🇮🇱 Israel (IL)" or "—". */
+/** "🇮🇱 Israel (IL)" or " - ". */
 export function countryLabel(code?: string): string {
-  if (!code) return "—";
+  if (!code) return " - ";
   const name = countryName(code);
   return name && name !== code ? `${flagEmoji(code)} ${name} (${code.toUpperCase()})` : `${flagEmoji(code)} ${code}`;
 }

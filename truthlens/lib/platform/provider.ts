@@ -1,4 +1,4 @@
-// Env-gated provider resolver — mirrors the lib/osint.ts gating pattern:
+// Env-gated provider resolver - mirrors the lib/osint.ts gating pattern:
 // unconfigured → null → the caller degrades gracefully to Phase-1 signals only
 // (a visible lower confidence, never a faked account layer).
 //

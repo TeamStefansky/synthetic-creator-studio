@@ -69,10 +69,10 @@ function parseAuth(headers: string[]): EmailAuthResult {
   const spoofingLikely = !!(fail(spf) && fail(dkim)) || dmarc === "fail";
 
   let verdict: string;
-  if (!spf && !dkim && !dmarc) verdict = "No authentication headers found — cannot assess spoofing.";
-  else if (spoofingLikely) verdict = "Likely spoofed or unauthenticated — SPF/DKIM/DMARC failed.";
-  else if (spf === "pass" || dkim === "pass") verdict = "Authentication checks passed — sender domain looks legitimate.";
-  else verdict = "Mixed/partial authentication — treat with caution.";
+  if (!spf && !dkim && !dmarc) verdict = "No authentication headers found - cannot assess spoofing.";
+  else if (spoofingLikely) verdict = "Likely spoofed or unauthenticated - SPF/DKIM/DMARC failed.";
+  else if (spf === "pass" || dkim === "pass") verdict = "Authentication checks passed - sender domain looks legitimate.";
+  else verdict = "Mixed/partial authentication - treat with caution.";
 
   return { spf, dkim, dmarc, spoofingLikely, verdict };
 }

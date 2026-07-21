@@ -1,11 +1,11 @@
 // Best-effort origin discovery behind a CDN (e.g. Cloudflare), using ONLY
-// public DNS data — legitimate OSINT. When a site is fronted by a CDN the real
+// public DNS data - legitimate OSINT. When a site is fronted by a CDN the real
 // server IP is hidden, but it often leaks through:
 //   - subdomains that aren't proxied (mail, ftp, cpanel, direct, origin, …)
 //   - MX (mail) servers, which are rarely behind the CDN
 //   - SPF records that list the operator's own IPs
 // Any resolved IP that is NOT in a CDN's ASN is a candidate true origin.
-// Results are probabilistic — candidates, not proof.
+// Results are probabilistic - candidates, not proof.
 
 import { resolveHostIp, type DnsRecords } from "./dns";
 import { enrichIp, detectCdn } from "./ip";
@@ -104,9 +104,9 @@ export async function traceOrigin(
     summary =
       candidates.length > 0
         ? `No CDN fronting detected. Found ${candidates.length} additional infrastructure IP(s) via DNS.`
-        : "No CDN detected — the server IP in the report is already the real origin.";
+        : "No CDN detected - the server IP in the report is already the real origin.";
   } else if (candidates.length > 0) {
-    summary = `${cdn} fronts the site, but ${candidates.length} non-CDN IP(s) leaked via DNS — likely the true origin or operator infrastructure.`;
+    summary = `${cdn} fronts the site, but ${candidates.length} non-CDN IP(s) leaked via DNS - likely the true origin or operator infrastructure.`;
   } else {
     summary = `${cdn} fronts the site and no origin IP leaked via these public-DNS techniques. The true origin remains hidden (would require historical-DNS data, which needs a paid source).`;
   }

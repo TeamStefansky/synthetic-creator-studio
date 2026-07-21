@@ -1,4 +1,4 @@
-// Account-authenticity scoring — types. Produces a PROBABILISTIC assessment of
+// Account-authenticity scoring - types. Produces a PROBABILISTIC assessment of
 // an ACCOUNT (never a person): suspicion_score 0–100 + confidence + a fully
 // explainable per-signal breakdown. No binary "fake/real" label exists anywhere
 // in this module (CLAUDE.md: detector, not judge).
@@ -8,12 +8,11 @@ import type { Mention } from "@/lib/narrative/types";
 export type SignalLayer = "account" | "engagement" | "audience" | "comment_net" | "temporal";
 
 /** Band keys per the module spec; UI maps them onto the existing risk tokens.
- * "insufficient_data" replaces any risk label when confidence < MIN_CONFIDENCE —
- * a data-poor account must never show a red band. */
+ * "insufficient_data" replaces any risk label when confidence < MIN_CONFIDENCE -  * a data-poor account must never show a red band. */
 export type AuthenticityBand = "authentic" | "low" | "elevated" | "high" | "insufficient_data";
 
 /** Minimal per-follower metadata from a PUBLIC sample (aggregated, anonymous in
- * use: only counted, never listed in output — GDPR-lean per module spec §9). */
+ * use: only counted, never listed in output - GDPR-lean per module spec §9). */
 export interface FollowerSampleItem {
   username?: string;
   hasAvatar?: boolean;
@@ -22,7 +21,7 @@ export interface FollowerSampleItem {
   followers?: number;
 }
 
-/** Provider-filled account profile (Phase 2). All fields optional — anything the
+/** Provider-filled account profile (Phase 2). All fields optional - anything the
  * platform API didn't expose stays undefined ("Not collected"). */
 export interface AccountProfile {
   platform?: string;
@@ -35,7 +34,7 @@ export interface AccountProfile {
   avatarHash?: string;
   bio?: string;
   /** 0–100 AI-generated likelihood for the avatar (filled only when the
-   * image-detect layer is connected — otherwise Not collected). */
+   * image-detect layer is connected - otherwise Not collected). */
   avatarAiScore?: number;
   /** Public follower sample (500–2000 not needed; ≥20 suffices statistically
    * for the phase-2 audience signals). */
@@ -59,7 +58,7 @@ export interface SignalResult {
 }
 
 export interface AuthenticityAssessment {
-  account: string; // an account handle/id — never a person
+  account: string; // an account handle/id - never a person
   suspicion_score: number; // 0–100
   confidence: number;      // 0–1 = Σ(weight of computed signals)/100
   band: AuthenticityBand;
@@ -75,9 +74,9 @@ export interface AuthenticityInput {
   account: string;
   /** This account's collected mentions. */
   own: Mention[];
-  /** The full entity mention set — peer context for benchmarks + co-behavior. */
+  /** The full entity mention set - peer context for benchmarks + co-behavior. */
   all: Mention[];
-  /** Precomputed near-duplicate groups (reuse the CIB clustering — one source
+  /** Precomputed near-duplicate groups (reuse the CIB clustering - one source
    * of truth, no second implementation). */
   clusters?: Mention[][];
   /** Platform account data (Phase 2, provider-gated). null/undefined → the

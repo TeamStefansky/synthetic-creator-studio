@@ -1,6 +1,6 @@
-// Continuous Brand Watch — server-side. Watchlist + threat-snapshot history in
+// Continuous Brand Watch - server-side. Watchlist + threat-snapshot history in
 // the KV store; scheduled scans recompute each entity against a rolling baseline
-// and dispatch an alert when the status escalates. Alerts INFORM — no action is
+// and dispatch an alert when the status escalates. Alerts INFORM - no action is
 // ever taken against anyone.
 
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
@@ -118,7 +118,7 @@ export async function checkWatch(w: Watch): Promise<ThreatResult> {
     const alert: WatchAlert = {
       id: `${w.id}-${Date.parse(result.generatedAt)}`, entity: w.name, status: result.status, score: result.score,
       title: `Brand Watch: '${w.name}' escalated to ${result.status.replace("_", " ").toLowerCase()} (${result.score ?? "?"}/100)`,
-      body: `Was ${(prev || "unknown").toLowerCase()}. Drivers: ${top || "—"}. ${result.totalMentions} mentions, ${result.totalAccounts} accounts. Indicators with evidence — not a verdict.`,
+      body: `Was ${(prev || "unknown").toLowerCase()}. Drivers: ${top || " - "}. ${result.totalMentions} mentions, ${result.totalAccounts} accounts. Indicators with evidence - not a verdict.`,
       at: result.generatedAt, delivered: false,
     };
     alert.delivered = await dispatch(alert);
@@ -136,7 +136,7 @@ export async function runAllWatched(): Promise<{ checked: number; escalations: n
       const res = await checkWatch(w);
       checked++;
       if (before && before !== "UNKNOWN" && ORDER[res.status] > (ORDER[before] ?? -1)) escalations++;
-    } catch { /* failure isolation — one entity never aborts the batch */ }
+    } catch { /* failure isolation - one entity never aborts the batch */ }
   }
   return { checked, escalations };
 }

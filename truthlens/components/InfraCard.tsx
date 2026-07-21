@@ -37,7 +37,7 @@ export default function InfraCard({
             <div key={r.label} className="flex justify-between gap-3">
               <dt className="text-gray-400">{r.label}</dt>
               <dd className="max-w-[60%] break-words text-right text-gray-100">
-                {r.value ?? "—"}
+                {r.value ?? " - "}
               </dd>
             </div>
           ))}

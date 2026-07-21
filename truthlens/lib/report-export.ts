@@ -1,5 +1,5 @@
 // Detailed rating report + Markdown export. Pure functions computed from the
-// report data — no AI, always available. Explains exactly how the score was
+// report data - no AI, always available. Explains exactly how the score was
 // built so the rating is fully auditable.
 
 import { bandLabel, fmtDate } from "./ui";
@@ -93,13 +93,13 @@ export function reportToMarkdown(
   const arch = i.archive.value;
   const L: string[] = [];
 
-  L.push(`# TruthLens report — ${report.domain}`);
+  L.push(`# TruthLens report - ${report.domain}`);
   L.push("");
-  L.push(`> Decision-support tool — **not a verdict**. Indicators only.`);
+  L.push(`> Decision-support tool - **not a verdict**. Indicators only.`);
   L.push("");
   L.push(`- **URL:** ${report.finalUrl || report.url}`);
   L.push(`- **Analyzed:** ${fmtDate(report.fetchedAt)}`);
-  L.push(`- **Verdict:** ${bandLabel(report.risk.band)} — score ${report.risk.score}/100 — confidence ${report.risk.confidence}`);
+  L.push(`- **Verdict:** ${bandLabel(report.risk.band)} - score ${report.risk.score}/100 - confidence ${report.risk.confidence}`);
   L.push("");
 
   L.push(`## Rating breakdown`);
@@ -113,7 +113,7 @@ export function reportToMarkdown(
   for (const g of rating.groups) {
     L.push(`### ${g.category}  (net ${impactStr(g.subtotal)})`);
     for (const it of g.items) {
-      L.push(`- **${impactStr(it.impact)}** — ${it.label}: ${it.detail}`);
+      L.push(`- **${impactStr(it.impact)}** - ${it.label}: ${it.detail}`);
     }
     L.push("");
   }
@@ -122,15 +122,15 @@ export function reportToMarkdown(
   L.push("");
   L.push(`| Field | Value |`);
   L.push(`|---|---|`);
-  L.push(`| Registrar | ${dom?.registrar || "—"} |`);
+  L.push(`| Registrar | ${dom?.registrar || " - "} |`);
   L.push(`| Created | ${fmtDate(dom?.createdAt)} |`);
-  L.push(`| Registrant | ${dom?.registrantOrg || (dom?.privacyProtected ? "Privacy-protected" : "—")} |`);
-  L.push(`| IP | ${host?.ip || "—"} |`);
-  L.push(`| ASN | ${host?.asn || "—"} ${host?.asnOrg ? "(" + host.asnOrg + ")" : ""} |`);
-  L.push(`| Hosting country | ${host?.cdnMasksOrigin ? "CDN edge (masked)" : host?.country || "—"} |`);
-  L.push(`| SSL issuer | ${ssl?.issuer || "—"} |`);
+  L.push(`| Registrant | ${dom?.registrantOrg || (dom?.privacyProtected ? "Privacy-protected" : " - ")} |`);
+  L.push(`| IP | ${host?.ip || " - "} |`);
+  L.push(`| ASN | ${host?.asn || " - "} ${host?.asnOrg ? "(" + host.asnOrg + ")" : ""} |`);
+  L.push(`| Hosting country | ${host?.cdnMasksOrigin ? "CDN edge (masked)" : host?.country || " - "} |`);
+  L.push(`| SSL issuer | ${ssl?.issuer || " - "} |`);
   L.push(`| SAN siblings | ${ssl?.sanDomains.length || 0} |`);
-  L.push(`| CMS / tech | ${[tech?.cms, ...(tech?.frameworks || [])].filter(Boolean).join(", ") || "—"} |`);
+  L.push(`| CMS / tech | ${[tech?.cms, ...(tech?.frameworks || [])].filter(Boolean).join(", ") || " - "} |`);
   L.push(`| First archived | ${fmtDate(arch?.firstSeen)} (${arch?.snapshotCount || 0} snapshots) |`);
   L.push("");
 
@@ -155,13 +155,13 @@ export function reportToMarkdown(
 
   if (dossier?.available) {
     L.push(`## Deep OSINT findings`);
-    L.push(`_Confidence: ${dossier.confidence}. Open-web research — indicators with sources, not proof._`);
+    L.push(`_Confidence: ${dossier.confidence}. Open-web research - indicators with sources, not proof._`);
     L.push("");
     if (dossier.summary) L.push(dossier.summary);
     L.push("");
     if (dossier.entities.length) {
       L.push(`### People & organizations`);
-      for (const e of dossier.entities) L.push(`- **${e.name}** (${e.role}) — ${e.evidence}`);
+      for (const e of dossier.entities) L.push(`- **${e.name}** (${e.role}) - ${e.evidence}`);
       L.push("");
     }
     if (dossier.affiliations.length) { L.push(`### Affiliations`); dossier.affiliations.forEach((a) => L.push(`- ${a}`)); L.push(""); }

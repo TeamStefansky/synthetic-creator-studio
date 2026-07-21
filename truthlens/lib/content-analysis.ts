@@ -100,13 +100,13 @@ ${text.slice(0, 6000)}
   } catch (e: any) {
     const msg = String(e?.message || "error");
     if (/credit balance|billing|too low|insufficient/i.test(msg)) {
-      return { ...UNAVAILABLE, summary: "Content analysis paused — the Anthropic account is out of credits. Add credits at console.anthropic.com (Plans & Billing) to re-enable. Everything else in this report still works." };
+      return { ...UNAVAILABLE, summary: "Content analysis paused - the Anthropic account is out of credits. Add credits at console.anthropic.com (Plans & Billing) to re-enable. Everything else in this report still works." };
     }
     if (/401|invalid x-api-key|authentication/i.test(msg)) {
-      return { ...UNAVAILABLE, summary: "Content analysis unavailable — the ANTHROPIC_API_KEY appears invalid." };
+      return { ...UNAVAILABLE, summary: "Content analysis unavailable - the ANTHROPIC_API_KEY appears invalid." };
     }
     if (/429|rate limit/i.test(msg)) {
-      return { ...UNAVAILABLE, summary: "Content analysis temporarily rate-limited — try again shortly." };
+      return { ...UNAVAILABLE, summary: "Content analysis temporarily rate-limited - try again shortly." };
     }
     return { ...UNAVAILABLE, summary: `Content analysis failed: ${msg.slice(0, 160)}.` };
   }

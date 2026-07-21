@@ -1,4 +1,4 @@
-// Author-timeline collection — official public APIs only. Bluesky getAuthorFeed
+// Author-timeline collection - official public APIs only. Bluesky getAuthorFeed
 // is keyless; X needs X_BEARER_TOKEN (two calls: id lookup + timeline) and
 // renders "not connected" without it. Reposts are skipped (we assess the
 // account's OWN content). Cached per day for reproducibility.
@@ -8,7 +8,7 @@ import { cacheGet, cacheSet } from "@/lib/cache";
 import type { Mention } from "@/lib/narrative/types";
 import type { SocialPlatform } from "./types";
 
-const UA = "TruthLens/0.1 (account authenticity — public timeline lookup)";
+const UA = "TruthLens/0.1 (account authenticity - public timeline lookup)";
 const TIMELINE_TTL = 24 * 60 * 60 * 1000;
 const LIMIT = 50;
 
@@ -26,7 +26,7 @@ async function blueskyAuthorPosts(handle: string): Promise<AuthorPosts> {
   }
   const posts: Mention[] = [];
   for (const item of data.feed) {
-    if (item?.reason) continue; // a repost — not the account's own content
+    if (item?.reason) continue; // a repost - not the account's own content
     const p = item?.post;
     if (!p?.record?.text) continue;
     const rkey = String(p.uri || "").split("/").pop();

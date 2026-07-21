@@ -1,7 +1,7 @@
-// Stage 2 — seed extraction. Finds the narrative(s) an account is pushing from
+// Stage 2 - seed extraction. Finds the narrative(s) an account is pushing from
 // its OWN posts: near-duplicate clusters (the repeated message = the campaign
 // line) become seeds, each with a Unicode-safe search query for the network-
-// expansion stage. Deterministic, no LLM, no network — the same posts always
+// expansion stage. Deterministic, no LLM, no network - the same posts always
 // yield the same seeds (reproducibility).
 
 import { clusterNearDuplicates, normalizeText } from "@/lib/similarity";
@@ -19,8 +19,7 @@ export interface Seed {
 const MIN_POST_LEN = 20; // ignore emoji/filler posts as seed material
 const QUERY_TERMS = 4;
 
-/** Top informative terms of a text: longest distinct normalized words —
- * a language-agnostic, deterministic proxy for informativeness. */
+/** Top informative terms of a text: longest distinct normalized words -  * a language-agnostic, deterministic proxy for informativeness. */
 export function topTerms(text: string, n = QUERY_TERMS): string[] {
   const words = normalizeText(text).split(" ").filter((w) => w.length >= 4);
   const uniq = [...new Set(words)];

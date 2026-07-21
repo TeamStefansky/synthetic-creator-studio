@@ -1,7 +1,7 @@
 // Social amplification + bot analysis via the X (Twitter) API v2 recent search.
 // Finds accounts spreading a domain/quote, scores each for inauthenticity, and
 // surfaces the top spreaders. Needs X_BEARER_TOKEN (paid X API tier).
-// Probabilistic heuristics — indicators, not proof.
+// Probabilistic heuristics - indicators, not proof.
 
 import { getJson } from "./http";
 import type { SocialResult, SocialAccount } from "./types";

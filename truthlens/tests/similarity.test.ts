@@ -4,7 +4,7 @@ import { shingle } from "../lib/similarity/shingle";
 import { minhash, jaccard } from "../lib/similarity/minhash";
 import { signatureOf, clusterNearDuplicates, JACCARD_THRESHOLD } from "../lib/similarity";
 
-describe("normalizeText — Unicode aware", () => {
+describe("normalizeText - Unicode aware", () => {
   it("keeps Hebrew / Russian / CJK letters (not stripped to empty)", () => {
     expect(normalizeText("בואו נחרים!")).toBe("בואו נחרים");
     expect(normalizeText("Бойкот, сейчас")).toBe("бойкот сейчас");

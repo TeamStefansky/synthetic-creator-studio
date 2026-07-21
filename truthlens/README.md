@@ -3,33 +3,33 @@
 A decision-support tool that detects **likely** fake-news websites and exposes
 the infrastructure behind them. Paste a URL and get:
 
-1. **Infrastructure exposure** — domain registration, hosting/IP/ASN, mail,
+1. **Infrastructure exposure** - domain registration, hosting/IP/ASN, mail,
    SSL certificates (and the sibling domains on them), tech stack, and archive
    history.
-2. **Credibility risk rating** — a badge (LIKELY LEGITIMATE / UNKNOWN / HIGH
+2. **Credibility risk rating** - a badge (LIKELY LEGITIMATE / UNKNOWN / HIGH
    RISK), a 0–100 score, a confidence level, and a **transparent, itemized list
    of every signal** that produced the score.
-3. **Legitimacy / authority layer** — domain age, web longevity (Wayback),
+3. **Legitimacy / authority layer** - domain age, web longevity (Wayback),
    archive volume, optional Open PageRank, and SEO completeness recognize
    established outlets automatically. A researched allowlist of ~450 leading
    global outlets (incl. comprehensive Israeli coverage) plus a high-authority
    signal **guarantee a site is never rated HIGH RISK**.
-4. **Deep OSINT research** (on-demand) — investigates who is behind a site
+4. **Deep OSINT research** (on-demand) - investigates who is behind a site
    across the open web (owners, affiliations, social presence, funding,
    reputation, controversies, related sites) with sources.
-5. **Detailed rating report** — the score broken down by category with every
+5. **Detailed rating report** - the score broken down by category with every
    weight, downloadable as Markdown or printable to PDF.
-6. **Narrative intelligence** — main narratives, propaganda techniques,
+6. **Narrative intelligence** - main narratives, propaganda techniques,
    manipulation tactics, intent, target audience, and an authenticity
    (organic vs coordinated) indicator.
-7. **Insights Q&A** — ask the finished report anything; answers are grounded
+7. **Insights Q&A** - ask the finished report anything; answers are grounded
    only in the report's own data (needs `ANTHROPIC_API_KEY`).
 
 Plus an **Attribution Tools** suite (log analyzer, email-header tracer) and an
 operator-network graph that links a site to siblings via shared IP, GA/AdSense
 IDs, and SSL SANs.
 
-> **Framing — read this first.** We cannot automatically determine truth. We
+> **Framing - read this first.** We cannot automatically determine truth. We
 > surface verifiable infrastructure facts and compute a *risk* score from
 > observable signals. The product always shows the **evidence**, never just a
 > verdict. **"Unknown" is a valid and common result.** Everything is framed as
@@ -49,14 +49,14 @@ cp .env.example .env.local   # optional: fill in keys
 npm run dev                  # http://localhost:3000
 ```
 
-The app **runs out of the box on free public endpoints** — no keys required for
+The app **runs out of the box on free public endpoints** - no keys required for
 the infrastructure exposure, scoring, and network graph. Keys only unlock
 optional layers (see below).
 
 ## Deploy a public instance
 
 TruthLens is a server app (analysis runs in API routes), so it needs a Node host
-— a static export won't work for the live features.
+ - a static export won't work for the live features.
 
 ### Vercel (recommended for Next.js)
 
@@ -64,7 +64,7 @@ TruthLens is a server app (analysis runs in API routes), so it needs a Node host
 
 The button pre-sets the **root directory to `truthlens`** (the app lives in a
 subdirectory). Add any optional keys as Environment Variables in the Vercel
-project settings, then deploy — you'll get a public `*.vercel.app` URL.
+project settings, then deploy - you'll get a public `*.vercel.app` URL.
 
 ### Render (Docker blueprint)
 
@@ -79,7 +79,7 @@ any other container host too.
 
 ## Environment variables
 
-All optional — core features work without any of them.
+All optional - core features work without any of them.
 
 | Var | Purpose | Without it |
 |---|---|---|
@@ -87,9 +87,9 @@ All optional — core features work without any of them.
 | `GOOGLE_FACTCHECK_KEY` | Google Fact Check Tools API | Fact-check layer skipped |
 | `IPINFO_TOKEN` | Higher-accuracy / higher-limit IP geo & ASN | Falls back to free ip-api.com (throttled) |
 | `OPENPAGERANK_KEY` | 0–10 domain-authority signal for the legitimacy layer | Authority estimated from domain age + Wayback longevity |
-| `X_BEARER_TOKEN` | X (Twitter) API v2 — social amplification + bot analysis | Social panel shows "unavailable" |
+| `X_BEARER_TOKEN` | X (Twitter) API v2 - social amplification + bot analysis | Social panel shows "unavailable" |
 | `SIGHTENGINE_API_USER` + `SIGHTENGINE_API_SECRET` | AI-generated / deepfake **image** detection (primary) | Image detection disabled |
-| `HIVE_API_KEY` | Image detection fallback (Hive) | — |
+| `HIVE_API_KEY` | Image detection fallback (Hive) | - |
 | `MONITOR_DOMAINS`, `ALERT_WEBHOOK_URL`, `CRON_SECRET` | Daily monitoring (`/api/monitor` via Vercel Cron) → alert to a Slack-style webhook | Monitoring inactive |
 | Vercel KV (`KV_REST_API_URL`/`KV_REST_API_TOKEN`) or Upstash (`UPSTASH_REDIS_REST_URL`/`_TOKEN`) | History store so monitoring detects **changes/spikes** (band worsened, score jump, coordination up, narrative/amplification spike) instead of just current state | Monitoring alerts on current HIGH RISK only |
 | `SEARCH_API_KEY` | Reserved for an alternate web-search provider | Propagation relies on Claude `web_search` + Wayback |
@@ -101,7 +101,7 @@ All optional — core features work without any of them.
 DNS-over-HTTPS (`dns.google`), RDAP (`rdap.org`), IP/ASN/geo (`ipinfo.io` →
 `ip-api.com`), SSL/SAN (`crt.sh`), archive (`web.archive.org` CDX), fact checks
 (Google Fact Check Tools), reverse IP (`hackertarget.com`, rate-limited). All
-calls happen **server-side only** — keys never reach the client. Results are
+calls happen **server-side only** - keys never reach the client. Results are
 cached on disk + in memory for 24h, keyed by domain, to respect rate limits.
 
 ## Architecture
@@ -150,7 +150,7 @@ Paste raw email source you possess. Parses `Received:` hops bottom-to-top
 reads `Authentication-Results` (SPF/DKIM/DMARC) for a spoofing verdict.
 
 ### Adversary-country policy
-`data/adversary-countries.json` ships **empty** by design — no political
+`data/adversary-countries.json` ships **empty** by design - no political
 judgments are baked in. Add the ISO alpha-2 codes *you* consider higher-risk and
 the tool will match against them (in the site report, logs, and email tracer).
 
@@ -158,10 +158,10 @@ the tool will match against them (in the site report, logs, and email tracer).
 
 - **Geolocation is approximate; CDNs/VPNs/Tor mask true origin.** When a CDN
   (Cloudflare/Akamai/Fastly/…) is detected, the report labels the location as
-  "CDN edge — true origin masked" instead of asserting a country.
+  "CDN edge - true origin masked" instead of asserting a country.
 - **Reputation lists are seeds.** Expand `data/known-*.json` for stronger signals.
 - **Reverse-image / social tracing need paid APIs** and are gated behind keys.
-- **Attribution is probabilistic** — strong infra + propagation signals point to
+- **Attribution is probabilistic** - strong infra + propagation signals point to
   a *likely* origin, not proof. It is presented as indicators with evidence.
 - **Free APIs rate-limit.** That's why everything is cached for 24h.
 

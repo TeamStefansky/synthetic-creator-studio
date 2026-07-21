@@ -36,7 +36,7 @@ export function normalizeUrl(input: string): NormalizedUrl {
   };
 }
 
-/** Levenshtein edit distance — used for typosquatting detection in scoring. */
+/** Levenshtein edit distance - used for typosquatting detection in scoring. */
 export function editDistance(a: string, b: string): number {
   const m = a.length;
   const n = b.length;

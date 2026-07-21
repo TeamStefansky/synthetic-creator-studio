@@ -59,9 +59,9 @@ export default function OsintPanel({
 
       {!dossier && !loading && !error && (
         <p className="text-sm text-gray-400">
-          Investigate who is behind this site across the open web — owners,
+          Investigate who is behind this site across the open web - owners,
           affiliations, social presence, funding, reputation, controversies, and
-          related sites — with sources. Runs on demand (uses Claude web search).
+          related sites - with sources. Runs on demand (uses Claude web search).
         </p>
       )}
 

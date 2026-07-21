@@ -1,4 +1,4 @@
-// P5 — evidence archival (Save Page Now). Network is stubbed via global fetch so
+// P5 - evidence archival (Save Page Now). Network is stubbed via global fetch so
 // the pure orchestration is testable: cap, dedup, non-http skipping, honest
 // archived/requested status, and per-URL caching (no double-trigger same day).
 

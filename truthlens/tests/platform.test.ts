@@ -1,4 +1,4 @@
-// [2] Authenticity — Phase 2: platform provider + account/audience signals.
+// [2] Authenticity - Phase 2: platform provider + account/audience signals.
 // Verify per the prompt: with the stub provider's profile injected, phase-2
 // signals compute and confidence rises above the phase-1 ceiling; with the
 // provider absent, phase-1 behavior is unchanged; the resolver is env-gated
@@ -26,7 +26,7 @@ function input(account: string, own: Mention[], others: Mention[], profile?: any
   return { account, own, all, clusters: clusterNearDuplicates(all, (m) => m.text), profile: profile ?? null };
 }
 
-describe("resolvePlatformProvider — env-gated like lib/osint.ts", () => {
+describe("resolvePlatformProvider - env-gated like lib/osint.ts", () => {
   const saved = process.env.PLATFORM_PROVIDER;
   it("unset → null (Phase-1 only, graceful); stub/official → the matching adapter", () => {
     delete process.env.PLATFORM_PROVIDER;
@@ -42,7 +42,7 @@ describe("resolvePlatformProvider — env-gated like lib/osint.ts", () => {
   });
 });
 
-describe("phase-2 signals — computed with a profile, null without", () => {
+describe("phase-2 signals - computed with a profile, null without", () => {
   const bot = botShapedFixture("botacct");
   const normal = ordinaryFixture("reader");
   const own = [mk("s", "post one about things", T0), mk("s", "post two about stuff", T0 + HOUR)];

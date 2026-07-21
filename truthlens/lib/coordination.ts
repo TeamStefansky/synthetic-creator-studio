@@ -1,6 +1,6 @@
 // Bot-farm / coordination likelihood. Combines signals already available from
 // the operator graph, log analysis, and propagation into a Low/Medium/High
-// indicator with the contributing evidence listed. Probabilistic — indicators,
+// indicator with the contributing evidence listed. Probabilistic - indicators,
 // not proof.
 
 import type {
@@ -58,6 +58,6 @@ export function assessCoordination(input: CoordinationInput): CoordinationResult
     level,
     score,
     signals,
-    note: "Coordination likelihood is an indicator built from observable signals — not proof of a single operator.",
+    note: "Coordination likelihood is an indicator built from observable signals - not proof of a single operator.",
   };
 }

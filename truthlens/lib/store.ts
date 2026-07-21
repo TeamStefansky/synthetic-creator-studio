@@ -1,4 +1,4 @@
-// Tiny KV store over the Upstash Redis REST protocol — works with both
+// Tiny KV store over the Upstash Redis REST protocol - works with both
 // Vercel KV (KV_REST_API_URL / KV_REST_API_TOKEN) and Upstash directly
 // (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN). No SDK, just fetch.
 // Used to persist monitoring snapshots so we can detect changes over time.

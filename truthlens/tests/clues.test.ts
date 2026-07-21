@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { extractEntities, entityKey } from "../lib/clues/extract";
 
-describe("clue layer — entity extraction", () => {
+describe("clue layer - entity extraction", () => {
   it("pulls domain + IP + GA + AdSense + SSL SAN from a site report", () => {
     const result = {
       domain: "example.com",

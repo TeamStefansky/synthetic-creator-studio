@@ -1,8 +1,8 @@
 // Foreign-influence enrichment (v2). Reuses the shared OSINT libs (rdap / dns / ip)
 // on the amplifying DOMAINS behind a narrative to surface INFRASTRUCTURE
-// correlations — registrant/hosting-country concentration and shared networks.
+// correlations - registrant/hosting-country concentration and shared networks.
 //
-// HARD RULES: infrastructure facts only (domains, ASNs, countries, orgs) — never a
+// HARD RULES: infrastructure facts only (domains, ASNs, countries, orgs) - never a
 // private individual. Every downstream signal renders "correlation, not proof of
 // state involvement". Network calls are cached per-day and capped (reproducibility
 // + politeness). Missing intel degrades to a smaller `resolved` count, never faked.
@@ -62,7 +62,7 @@ function topShare(values: (string | undefined)[]): { top?: string; share: number
   return { top, share: best / n };
 }
 
-/** Pure aggregation over already-collected intel (no network) — testable. */
+/** Pure aggregation over already-collected intel (no network) - testable. */
 export function summarizeForeign(intel: DomainIntel[]): ForeignEnrichment {
   const resolvedList = intel.filter((d) => d.registrantCountry || d.hostingCountry || d.asn);
   const reg = topShare(intel.map((d) => d.registrantCountry));

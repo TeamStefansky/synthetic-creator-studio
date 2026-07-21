@@ -11,7 +11,7 @@ function mk(text: string, account: string, source = "bluesky"): Mention {
 }
 
 describe("ethics gates", () => {
-  it("rule 4 — no signals yields Unknown, not a fabricated score", () => {
+  it("rule 4 - no signals yields Unknown, not a fabricated score", () => {
     const r = computeThreat("ACME", [], sources);
     expect(r.status).toBe("UNKNOWN");
     expect(r.score).toBeNull();
@@ -19,7 +19,7 @@ describe("ethics gates", () => {
     expect(r.note).toBeTruthy();
   });
 
-  it("rule 3 — every indicator carries a level, signals, and an alternative", () => {
+  it("rule 3 - every indicator carries a level, signals, and an alternative", () => {
     const mentions = [
       mk("ACME leaked all customer data", "a1"),
       mk("ACME leaked all customer data", "a2"),
@@ -47,7 +47,7 @@ describe("ethics gates", () => {
     expect(coord!.score).toBeGreaterThan(0);
   });
 
-  it("rule 2 — earliest node is the earliest-timestamped mention (labeled in UI as observed-only)", () => {
+  it("rule 2 - earliest node is the earliest-timestamped mention (labeled in UI as observed-only)", () => {
     const mentions: Mention[] = [
       { source: "gdelt", id: "1", text: "later", account: "a", timestamp: "2024-03-02T10:00:00Z" },
       { source: "bluesky", id: "2", text: "earliest one", account: "b", timestamp: "2024-03-01T08:00:00Z" },
@@ -57,7 +57,7 @@ describe("ethics gates", () => {
     expect(r.earliest?.text).toBe("earliest one");
   });
 
-  it("rule 3 — foreign-influence indicator states correlation, not proof of state involvement", () => {
+  it("rule 3 - foreign-influence indicator states correlation, not proof of state involvement", () => {
     const mentions: Mention[] = [
       { source: "gdelt", id: "1", text: "ACME scandal", account: "d1", lang: "eng", country: "Russia", timestamp: "2024-03-01T08:00:00Z" },
       { source: "gdelt", id: "2", text: "ACME scandal", account: "d2", lang: "eng", country: "Russia", timestamp: "2024-03-01T09:00:00Z" },

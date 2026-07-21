@@ -1,7 +1,7 @@
-// "Is this post fake?" — fact-checks a pasted social post or article text.
+// "Is this post fake?" - fact-checks a pasted social post or article text.
 // Extracts the check-worthy claims, verifies them against the open web via the
 // Anthropic web_search tool, and returns a structured verdict with sources.
-// Gated behind ANTHROPIC_API_KEY. Indicators with sources — not a final ruling.
+// Gated behind ANTHROPIC_API_KEY. Indicators with sources - not a final ruling.
 
 import Anthropic from "@anthropic-ai/sdk";
 import { LLM_MODEL } from "./llm";
@@ -67,7 +67,7 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
       max_tokens: 2500,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 } as any],
       system:
-        "You are a rigorous fact-checker. Identify the concrete, check-worthy factual claims in the text, verify them using web_search against reliable sources, and judge them. Distinguish fact from opinion/satire. Cite real sources. Never fabricate. Be calibrated: use 'Unverified' when evidence is thin. Output is consumed by software — end with a single JSON object and nothing after it.",
+        "You are a rigorous fact-checker. Identify the concrete, check-worthy factual claims in the text, verify them using web_search against reliable sources, and judge them. Distinguish fact from opinion/satire. Cite real sources. Never fabricate. Be calibrated: use 'Unverified' when evidence is thin. Output is consumed by software - end with a single JSON object and nothing after it.",
       messages: [
         {
           role: "user",
@@ -77,7 +77,7 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
               : []),
             {
               type: "text",
-              text: `Fact-check this ${input.image ? "post shown in the screenshot — first read the text and claims visible in the image (and note who posted it, if shown)" : "post/claim"}. Verify its factual claims against the open web, then output ONE JSON object (no text after it):
+              text: `Fact-check this ${input.image ? "post shown in the screenshot - first read the text and claims visible in the image (and note who posted it, if shown)" : "post/claim"}. Verify its factual claims against the open web, then output ONE JSON object (no text after it):
 {
   "verdict": "Likely False | Misleading | Unverified | Likely True | Opinion or Satire",
   "confidence": "Low | Medium | High",
@@ -117,19 +117,18 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
         .map((s: any) => ({ title: String(s?.title || s?.url || ""), url: String(s?.url || "") }))
         .filter((s) => s.url)
         .slice(0, 20),
-      note: "Fact-check with sources — indicators, not a final legal ruling. Verify the sources yourself.",
+      note: "Fact-check with sources - indicators, not a final legal ruling. Verify the sources yourself.",
     };
   } catch (e: any) {
     const m = String(e?.message || "error");
-    // The UI shows `summary || note`, so each failure must set an ACCURATE summary —
-    // the key IS configured here, so never fall back to the "needs ANTHROPIC_API_KEY"
+    // The UI shows `summary || note`, so each failure must set an ACCURATE summary -     // the key IS configured here, so never fall back to the "needs ANTHROPIC_API_KEY"
     // text (that would misreport an out-of-credits/rate-limit as a missing key).
     if (/credit balance|billing|too low|insufficient/i.test(m))
-      return { ...UNAVAILABLE, summary: "AI fact-checking is temporarily paused — the Anthropic account is out of credits.", note: "Add credits at console.anthropic.com → Plans & Billing, then try again." };
+      return { ...UNAVAILABLE, summary: "AI fact-checking is temporarily paused - the Anthropic account is out of credits.", note: "Add credits at console.anthropic.com → Plans & Billing, then try again." };
     if (/401|invalid x-api-key|authentication/i.test(m))
-      return { ...UNAVAILABLE, summary: "AI fact-checking is unavailable — the Anthropic API key appears to be invalid.", note: "Check the ANTHROPIC_API_KEY value in the server environment." };
+      return { ...UNAVAILABLE, summary: "AI fact-checking is unavailable - the Anthropic API key appears to be invalid.", note: "Check the ANTHROPIC_API_KEY value in the server environment." };
     if (/429|rate limit/i.test(m))
-      return { ...UNAVAILABLE, summary: "AI fact-checking is rate-limited — please try again shortly.", note: "Too many requests in a short window." };
+      return { ...UNAVAILABLE, summary: "AI fact-checking is rate-limited - please try again shortly.", note: "Too many requests in a short window." };
     return { ...UNAVAILABLE, summary: "AI fact-checking couldn’t complete for this post.", note: `Details: ${m.slice(0, 160)}` };
   }
 }

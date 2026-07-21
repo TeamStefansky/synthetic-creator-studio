@@ -6,13 +6,13 @@ export interface Mention {
   id: string;
   text: string;
   url?: string;
-  /** An account handle/display name — an account, never a claim about a private individual. */
+  /** An account handle/display name - an account, never a claim about a private individual. */
   account?: string;
   accountId?: string;
   timestamp?: string; // ISO 8601
   lang?: string;
   country?: string; // source country when the source reports it (e.g. GDELT)
-  accountCreatedAt?: string; // ISO — when the source/enrichment exposes it (e.g. Bluesky)
+  accountCreatedAt?: string; // ISO - when the source/enrichment exposes it (e.g. Bluesky)
   engagement?: number;
 }
 
@@ -28,7 +28,7 @@ export interface SourceStatus {
 export type Level = "Low" | "Medium" | "High" | "Unknown";
 
 /** Every indicator carries a level, the signals behind it, and an explicit
- * alternative explanation — per the project's non-negotiable rules. */
+ * alternative explanation - per the project's non-negotiable rules. */
 export interface Indicator {
   key: string;
   label: string;
@@ -41,7 +41,7 @@ export interface Indicator {
 }
 
 /** OSINT intel on a single amplifying domain (reuses the shared rdap/dns/ip libs).
- * Infrastructure facts only — organizations/countries, never a private individual. */
+ * Infrastructure facts only - organizations/countries, never a private individual. */
 export interface DomainIntel {
   domain: string;
   count: number; // mentions observed from this domain
@@ -67,7 +67,7 @@ export interface ForeignEnrichment {
   privacyCount: number;
 }
 
-/** Cross-language mirroring — LLM read of whether ONE claim is mirrored across
+/** Cross-language mirroring - LLM read of whether ONE claim is mirrored across
  * languages. Correlation, never proof of state involvement. Degrades to
  * available:false (visible "not connected") when the AI layer is absent. */
 export interface MirroringResult {
@@ -95,7 +95,7 @@ export interface NarrativeExtraction {
 
 /** A preserved copy of an evidence URL. `archived` = a snapshot is confirmed
  * available; `requested` = Save Page Now was triggered but not yet confirmed
- * (honest — we never claim a snapshot that may not exist). */
+ * (honest - we never claim a snapshot that may not exist). */
 export interface ArchiveLink {
   url: string;
   archiveUrl: string;
@@ -120,7 +120,7 @@ export interface ThreatResult {
   note?: string;
   narratives?: NarrativeExtraction;
   /** Earliest-timestamped mention in the collected data. ALWAYS "earliest
-   * observed in collected data" — never asserted as the true origin. */
+   * observed in collected data" - never asserted as the true origin. */
   earliest?: Mention;
   /** Preserved copies of the top evidence URLs (deep scans). */
   archives?: ArchiveLink[];

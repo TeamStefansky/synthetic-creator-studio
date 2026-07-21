@@ -1,4 +1,4 @@
-// Stub provider — deterministic fixtures for tests/dev. Enabled only via
+// Stub provider - deterministic fixtures for tests/dev. Enabled only via
 // PLATFORM_PROVIDER=stub; never in normal production use. Exists so wiring a
 // real vendor later is a drop-in (module spec constraint), and so phase-2
 // signal behavior is testable without any network.

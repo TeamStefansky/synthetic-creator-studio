@@ -1,4 +1,4 @@
-// P4 — foreign-influence v2 + cross-language mirroring + the single rubric bump.
+// P4 - foreign-influence v2 + cross-language mirroring + the single rubric bump.
 // summarizeForeign is pure (no network) and fully testable; the network/LLM paths
 // are covered for graceful degradation. All framing stays "correlation, not proof".
 

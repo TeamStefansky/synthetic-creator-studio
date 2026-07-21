@@ -109,8 +109,8 @@ function PostCheckInner() {
         await navigator.clipboard.writeText(`${window.location.origin}/tools/post?s=${id}`);
         setShareMsg("Share link copied to clipboard!");
       } else {
-        await navigator.clipboard.writeText(`TruthLens Post Check — ${res.verdict} (${res.confidence} confidence)\n${res.summary}`);
-        setShareMsg("No share store configured — copied a text summary instead.");
+        await navigator.clipboard.writeText(`TruthLens Post Check - ${res.verdict} (${res.confidence} confidence)\n${res.summary}`);
+        setShareMsg("No share store configured - copied a text summary instead.");
       }
     } catch {
       setShareMsg("Could not create share link.");
@@ -134,10 +134,10 @@ function PostCheckInner() {
       <div>
         <div className="flex items-center gap-2">
           <ShieldQuestion className="h-6 w-6 text-indigo-400" />
-          <h1 className="text-2xl font-bold">Post Check — is it fake?</h1>
+          <h1 className="text-2xl font-bold">Post Check - is it fake?</h1>
         </div>
         <p className="mt-1 text-sm text-gray-400">
-          Paste a post, message, or claim — <strong>or upload a screenshot</strong> — and we extract the
+          Paste a post, message, or claim - <strong>or upload a screenshot</strong> - and we extract the
           claims, verify them against the open web, and return a verdict with sources.
         </p>
         <Link href="/checks" className="mt-2 inline-flex items-center gap-1.5 text-sm text-indigo-400 hover:underline">
@@ -150,7 +150,7 @@ function PostCheckInner() {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste the post / claim / forwarded message here — or a URL to an article…"
+            placeholder="Paste the post / claim / forwarded message here - or a URL to an article…"
             className="h-32 w-full rounded-xl border border-white/15 bg-bg-elev p-3 text-sm outline-none focus:border-indigo-400 scroll-thin"
           />
 
@@ -183,7 +183,7 @@ function PostCheckInner() {
 
       {!res && !loading && !shared && (
         <ToolIntro
-          what={<>Got a message, tweet, or forwarded claim and want to know if it’s true? Paste the text (or a screenshot). We pull out the factual claims, check each one against the open web, and return a verdict with the sources we used — plus an estimate of whether the text was AI-generated.</>}
+          what={<>Got a message, tweet, or forwarded claim and want to know if it’s true? Paste the text (or a screenshot). We pull out the factual claims, check each one against the open web, and return a verdict with the sources we used - plus an estimate of whether the text was AI-generated.</>}
           examplesLabel="Try a claim"
           examples={[
             { label: "A viral health myth", onClick: () => { const v = "Drinking celery juice every morning cures cancer."; setText(v); run(v); } },

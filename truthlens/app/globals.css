@@ -24,7 +24,7 @@ body {
 }
 
 @layer components {
-  /* Reusable card surface — subtle glass + gradient hairline border. */
+  /* Reusable card surface - subtle glass + gradient hairline border. */
   .card {
     @apply relative rounded-2xl border border-white/[0.08] p-5 shadow-soft;
     background:

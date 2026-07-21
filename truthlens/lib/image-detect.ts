@@ -1,6 +1,6 @@
 // AI-generated / deepfake image detection. Primary provider: Sightengine
 // (simple GET). Fallback: Hive. Both are paid; without keys this degrades to
-// "unavailable". Probabilistic — indicators, not proof.
+// "unavailable". Probabilistic - indicators, not proof.
 
 import { getJson } from "./http";
 import { fetchWithTimeout } from "./http";
@@ -80,7 +80,7 @@ export async function detectImages(urls: string[]): Promise<MediaResult> {
   const targets = Array.from(new Set(urls)).filter((u) => /^https?:\/\//.test(u)).slice(0, 5);
   const results: ImageVerdict[] = [];
   for (const u of targets) {
-    const v = await detectOne(u); // sequential — respect provider rate limits
+    const v = await detectOne(u); // sequential - respect provider rate limits
     if (v) results.push(v);
   }
   return {

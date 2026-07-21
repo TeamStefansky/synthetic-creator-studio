@@ -1,6 +1,6 @@
-// [3] Social Analyze — profile-seeded pipeline. Network fully stubbed.
+// [3] Social Analyze - profile-seeded pipeline. Network fully stubbed.
 // Ethics gates: the band vocabulary is EXACTLY Unknown/Low/Moderate/"Strong
-// coordination — actor UNDETERMINED"; nothing collected → Unknown (never a
+// coordination - actor UNDETERMINED"; nothing collected → Unknown (never a
 // fabricated grade); the verbatim attribution ships on every report; no
 // person/actor/operator field anywhere.
 
@@ -120,7 +120,7 @@ describe("runSocialAnalyze (full pipeline, stubbed network)", () => {
     const r = await runSocialAnalyze(`https://bsky.app/profile/${handle}`);
     expect("error" in r).toBe(false);
     if ("error" in r) return;
-    expect(r.band).toBe("Strong coordination — actor UNDETERMINED");
+    expect(r.band).toBe("Strong coordination - actor UNDETERMINED");
     expect(r.seeds.length).toBeGreaterThanOrEqual(1);
     expect(r.expansion!.accounts).toBeGreaterThanOrEqual(4);
     expect(r.attribution).toMatch(/UNDETERMINED/);

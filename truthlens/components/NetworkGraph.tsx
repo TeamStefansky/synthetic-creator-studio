@@ -67,7 +67,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
     [network],
   );
 
-  // Clickable list of every domain node (target + siblings) — reliable on mobile.
+  // Clickable list of every domain node (target + siblings) - reliable on mobile.
   const domainLinks = useMemo(
     () =>
       network.nodes
@@ -79,7 +79,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
   if (network.nodes.length <= 1) {
     return (
       <p className="text-sm text-gray-500">
-        No connected sibling domains or shared identifiers found — the operator
+        No connected sibling domains or shared identifiers found - the operator
         network is just this domain.
       </p>
     );
@@ -127,7 +127,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
       {/* Clickable domain links (tap-friendly; nodes are also clickable). */}
       <div className="border-t border-white/10 px-3 py-2.5">
         <div className="label-muted mb-1.5">
-          Linked domains — analyze in TruthLens, or open the site
+          Linked domains - analyze in TruthLens, or open the site
         </div>
         <div className="flex flex-wrap gap-1.5">
           {domainLinks.map((d) => (
@@ -179,7 +179,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 // OBSERVED edges solid vs INFERRED edges dashed (with a legend); earliest and
 // flagged-inauthentic nodes badged; hovering an edge shows its evidence +
 // alternative. Below the graph: cluster + core/bridge lists. Nodes are accounts
-// and domains only — never people/actors.
+// and domains only - never people/actors.
 // ---------------------------------------------------------------------------
 
 const CLUSTER_COLORS = ["#818cf8", "#34d399", "#fbbf24", "#fb7185", "#38bdf8", "#f472b6", "#a3e635", "#c084fc"];
@@ -224,7 +224,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
   if (network.insufficient) {
     return (
       <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">
-        Insufficient data to map a network — {network.note || "too few connected nodes/edges in the collected set."}
+        Insufficient data to map a network - {network.note || "too few connected nodes/edges in the collected set."}
       </div>
     );
   }
@@ -281,7 +281,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
 
       {network.observedEdgeKinds.length === 0 && (
         <p className="text-xs text-gray-500">
-          No OBSERVED interaction edges — the connected sources don’t expose a repost/reply/quote graph (that needs a paid platform API). All lines shown are inferred co-behavior.
+          No OBSERVED interaction edges - the connected sources don’t expose a repost/reply/quote graph (that needs a paid platform API). All lines shown are inferred co-behavior.
         </p>
       )}
 
@@ -303,7 +303,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
                   {c.dominantEdgeKinds.length ? `co-behavior: ${c.dominantEdgeKinds.join(", ")}` : "no dominant co-behavior"}
                   {c.languages.length ? ` · ${c.multiLanguage ? "multi-language: " : "language: "}${c.languages.join(", ")}` : ""}
                 </div>
-                <div className="text-gray-600">A tightly co-behaving group — not an organization or actor.</div>
+                <div className="text-gray-600">A tightly co-behaving group - not an organization or actor.</div>
               </div>
             ))}
           </div>
@@ -319,7 +319,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
       )}
 
       <p className="text-xs text-gray-500">
-        Structure of a coordinated cluster — accounts and domains, never a person or actor. A visual line is a claim: it carries its evidence and an innocent alternative. Solid = observed fact; dashed = inferred co-behavior.
+        Structure of a coordinated cluster - accounts and domains, never a person or actor. A visual line is a claim: it carries its evidence and an innocent alternative. Solid = observed fact; dashed = inferred co-behavior.
       </p>
     </div>
   );

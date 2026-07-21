@@ -1,12 +1,12 @@
-// Social Analyze — the profile-seeded pipeline (BUILD_ORDER [3]).
+// Social Analyze - the profile-seeded pipeline (BUILD_ORDER [3]).
 //   Stage 1  ProfileSnapshot + the account's own posts + authenticity assessment
 //   Stage 2  seed extraction (the narrative the account pushes)
 //   Stage 3  network expansion: collect public mentions of each seed across all
 //            connected sources, then CIB analysis over the merged set
-//   Stage 4  report: an influence-op BAND with reasons — the ceiling is
-//            "Strong coordination — actor UNDETERMINED", never an actor.
+//   Stage 4  report: an influence-op BAND with reasons - the ceiling is
+//            "Strong coordination - actor UNDETERMINED", never an actor.
 //
-// HARD RULES: assesses ACCOUNTS and narratives — never a person; sources that
+// HARD RULES: assesses ACCOUNTS and narratives - never a person; sources that
 // aren't connected are reported as gaps, never faked; Unknown is the answer
 // when nothing could be collected. Detector, not judge.
 
@@ -27,7 +27,7 @@ import type { Seed } from "./seed";
 
 export const SOCIAL_ANALYZE_VERSION = "social-analyze-v1";
 
-export type InfluenceBand = "Unknown" | "Low" | "Moderate" | "Strong coordination — actor UNDETERMINED";
+export type InfluenceBand = "Unknown" | "Low" | "Moderate" | "Strong coordination - actor UNDETERMINED";
 
 export interface SocialAnalyzeReport {
   version: string;
@@ -76,7 +76,7 @@ function mergeStatuses(runs: SourceStatus[][]): SourceStatus[] {
 export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyzeReport | { error: string }> {
   const parsed = parseProfileInput(profileRef);
   if (!parsed) {
-    return { error: "Not a recognizable profile reference — paste a bsky.app/profile/… or x.com/… profile link, or an @handle." };
+    return { error: "Not a recognizable profile reference - paste a bsky.app/profile/… or x.com/… profile link, or an @handle." };
   }
   const generatedAt = new Date().toISOString();
   const gaps: string[] = [];
@@ -92,7 +92,7 @@ export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyz
   // --- Stage 2: seeds from the account's own content ---
   const seeds = extractSeeds(own);
   if (own.length && !seeds.length) gaps.push("No seed narrative extracted (posts too short/diverse).");
-  if (!own.length) gaps.push("No own posts collected — network expansion skipped.");
+  if (!own.length) gaps.push("No own posts collected - network expansion skipped.");
 
   // --- Stage 3: expand each seed across the connected sources, then CIB ---
   let expansion: SocialAnalyzeReport["expansion"];
@@ -138,7 +138,7 @@ export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyz
     }
 
     expansion = { ...analyzeCib(parsed.handle, merged, profiles), sources: statuses };
-    if (!anySourceConnected) gaps.push("No expansion source connected — amplification not assessed.");
+    if (!anySourceConnected) gaps.push("No expansion source connected - amplification not assessed.");
 
     // Influence-network map over the merged set. Authenticity bands (from the
     // CIB per-account assessments) flag nodes as indicators, never verdicts.
@@ -162,7 +162,7 @@ export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyz
   const expandedBeyondOwn = merged.length > own.length;
   const band: InfluenceBand =
     !expansion || (!anySourceConnected && !expandedBeyondOwn) ? "Unknown"
-      : expansion.likelihood === "Strong" ? "Strong coordination — actor UNDETERMINED"
+      : expansion.likelihood === "Strong" ? "Strong coordination - actor UNDETERMINED"
         : expansion.likelihood === "Moderate" ? "Moderate"
           : "Low";
 

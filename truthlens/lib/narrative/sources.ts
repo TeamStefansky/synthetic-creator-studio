@@ -1,7 +1,7 @@
-// NarrativeSource adapters — server-side only. Each declares its access model
+// NarrativeSource adapters - server-side only. Each declares its access model
 // and returns normalized Mentions plus a connection status. A source that is
 // unavailable/unauthorized reports connected:false (rendered as "source not
-// connected") — never simulated. Failure of one source never aborts the batch.
+// connected") - never simulated. Failure of one source never aborts the batch.
 //
 // All sources here query PUBLIC data via official public endpoints.
 
@@ -45,7 +45,7 @@ const gdelt: NarrativeSource = {
 const x: NarrativeSource = {
   name: "x",
   available: () => !!process.env.X_BEARER_TOKEN,
-  reason: "Set X_BEARER_TOKEN (X/Twitter API — search needs Basic tier or higher).",
+  reason: "Set X_BEARER_TOKEN (X/Twitter API - search needs Basic tier or higher).",
   async search(q) {
     const token = process.env.X_BEARER_TOKEN!;
     const params = new URLSearchParams({
@@ -264,7 +264,7 @@ async function blueskyCreatedAt(actor: string): Promise<string | null> {
 }
 
 /** Fill accountCreatedAt on Bluesky mentions in place (best-effort). Failure of
- * enrichment never affects the mentions themselves — they stay uncollected. */
+ * enrichment never affects the mentions themselves - they stay uncollected. */
 export async function enrichCreationDates(mentions: Mention[]): Promise<void> {
   const actors = new Map<string, string>(); // did → actor id to query
   for (const m of mentions) {

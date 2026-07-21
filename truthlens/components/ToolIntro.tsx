@@ -99,7 +99,7 @@ export default function ToolIntro({
                   <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${DOT[l.tone || "neutral"]}`} />
                 )}
                 <span className="text-gray-400">
-                  <span className={`font-semibold ${TEXT[l.tone || "neutral"]}`}>{l.label}</span> — {l.text}
+                  <span className={`font-semibold ${TEXT[l.tone || "neutral"]}`}>{l.label}</span> - {l.text}
                 </span>
               </div>
             ))}

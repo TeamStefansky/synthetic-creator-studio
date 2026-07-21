@@ -1,6 +1,6 @@
 // Scoring core: weighted aggregation → suspicion_score, confidence, band.
 // score = Σ(subscore × weight); confidence = Σ(weight of computed)/100.
-// confidence < MIN_CONFIDENCE → band "insufficient_data" — a data-poor account
+// confidence < MIN_CONFIDENCE → band "insufficient_data" - a data-poor account
 // never gets a risk label (module spec §4 + false-positive guardrails §8).
 
 import { BANDS, MIN_CONFIDENCE } from "./config";

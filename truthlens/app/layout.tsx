@@ -4,7 +4,7 @@ import Nav from "@/components/Nav";
 import Disclaimer from "@/components/Disclaimer";
 
 export const metadata: Metadata = {
-  title: "TruthLens — fake-news risk & infrastructure exposure",
+  title: "TruthLens - fake-news risk & infrastructure exposure",
   description:
     "Paste a URL to expose the infrastructure behind a site and get a transparent credibility-risk rating. Decision-support tool, not a verdict.",
 };

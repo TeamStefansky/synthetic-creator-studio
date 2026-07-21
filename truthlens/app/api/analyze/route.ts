@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
     media: { images },
   };
 
-  // Cache the report for 24h — but NOT when content analysis failed despite a
+  // Cache the report for 24h - but NOT when content analysis failed despite a
   // configured key (e.g. out of credits / rate-limited). That keeps a transient
   // failure from being pinned for 24h, so a retry works once it's resolved.
   const contentTransientlyFailed =

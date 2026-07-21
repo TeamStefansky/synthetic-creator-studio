@@ -1,4 +1,4 @@
-// Temporal fingerprints — pure functions, no network. Classic influence-op tells:
+// Temporal fingerprints - pure functions, no network. Classic influence-op tells:
 // synchronized bursts, posting-hour concentration inconsistent with an organic
 // spread, and account-creation clustering. Every output is an indicator with
 // level + evidence + an innocent alternative; timing NEVER maps to a country.

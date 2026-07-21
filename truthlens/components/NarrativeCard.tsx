@@ -23,7 +23,7 @@ function Chips({ items, tone }: { items: string[]; tone: "neutral" | "warn" }) {
 // Authenticity = inverse of coordination likelihood (Cyabra-style framing).
 function authenticity(report: Report): { label: string; tone: string; detail: string } {
   const level = report.coordination?.level;
-  if (level === "High") return { label: "Coordinated / Inauthentic", tone: "text-risk-high", detail: "Strong coordination signals — likely orchestrated, not organic." };
+  if (level === "High") return { label: "Coordinated / Inauthentic", tone: "text-risk-high", detail: "Strong coordination signals - likely orchestrated, not organic." };
   if (level === "Medium") return { label: "Mixed", tone: "text-risk-unknown", detail: "Some coordination signals present." };
   return { label: "Likely Organic", tone: "text-risk-legit", detail: "No strong coordination signals detected." };
 }

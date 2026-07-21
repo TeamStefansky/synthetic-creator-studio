@@ -41,7 +41,7 @@ export default function InsightsCard({ report }: { report: Report }) {
     <div className="card">
       <div className="mb-3 flex items-center gap-2">
         <MessageSquare className="h-5 w-5 text-indigo-400" />
-        <h2 className="text-lg font-semibold">Insights — ask this report</h2>
+        <h2 className="text-lg font-semibold">Insights - ask this report</h2>
       </div>
 
       <form
@@ -85,7 +85,7 @@ export default function InsightsCard({ report }: { report: Report }) {
           )}
         </div>
       )}
-      <p className="mt-2 text-xs text-gray-500">Answers are grounded only in this report&rsquo;s data — indicators, not verdicts.</p>
+      <p className="mt-2 text-xs text-gray-500">Answers are grounded only in this report&rsquo;s data - indicators, not verdicts.</p>
     </div>
   );
 }

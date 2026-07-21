@@ -2,7 +2,7 @@
 // across languages (a classic influence-op tell) versus independent conversations
 // that merely happen to be multilingual. Server-side only, JSON-only prompt with
 // defensive parse + one retry. Degrades to a visible "not connected" state when
-// there is no ANTHROPIC_API_KEY — never faked. Output is CORRELATION, never proof
+// there is no ANTHROPIC_API_KEY - never faked. Output is CORRELATION, never proof
 // of state involvement, and never attributes to a named private individual.
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -27,7 +27,7 @@ export async function detectMirroring(entity: string, mentions: Mention[]): Prom
   if (!key) return UNAVAILABLE("AI cross-language layer not connected (no ANTHROPIC_API_KEY).");
 
   const langs = [...new Set(mentions.map((m) => (m.lang || "").slice(0, 3)).filter(Boolean))];
-  if (langs.length < 2) return UNAVAILABLE("Fewer than two languages present — no cross-language mirroring to assess.", langs);
+  if (langs.length < 2) return UNAVAILABLE("Fewer than two languages present - no cross-language mirroring to assess.", langs);
 
   // Sample a few mentions per language so the model sees the spread.
   const byLang = new Map<string, Mention[]>();
@@ -83,9 +83,9 @@ ${sample}
     return (await once()) || (await once()) || UNAVAILABLE("AI cross-language analysis returned unparseable output.", langs);
   } catch (e: any) {
     const m = String(e?.message || "error");
-    if (/credit balance|billing|too low|insufficient/i.test(m)) return UNAVAILABLE("AI cross-language analysis paused — Anthropic account out of credits.", langs);
-    if (/401|invalid x-api-key|authentication/i.test(m)) return UNAVAILABLE("AI cross-language analysis unavailable — ANTHROPIC_API_KEY appears invalid.", langs);
-    if (/429|rate limit/i.test(m)) return UNAVAILABLE("AI cross-language analysis rate-limited — try again shortly.", langs);
+    if (/credit balance|billing|too low|insufficient/i.test(m)) return UNAVAILABLE("AI cross-language analysis paused - Anthropic account out of credits.", langs);
+    if (/401|invalid x-api-key|authentication/i.test(m)) return UNAVAILABLE("AI cross-language analysis unavailable - ANTHROPIC_API_KEY appears invalid.", langs);
+    if (/429|rate limit/i.test(m)) return UNAVAILABLE("AI cross-language analysis rate-limited - try again shortly.", langs);
     return UNAVAILABLE(`AI cross-language analysis failed: ${m.slice(0, 140)}.`, langs);
   }
 }

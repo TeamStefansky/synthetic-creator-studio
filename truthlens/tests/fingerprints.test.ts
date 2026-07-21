@@ -1,7 +1,7 @@
-// P2 — temporal fingerprint tests. Synthetic timelines exercise burst detection,
+// P2 - temporal fingerprint tests. Synthetic timelines exercise burst detection,
 // posting-hour concentration, and account-creation clustering. The load-bearing
 // counter-scenario: a genuine breaking-news spike (many accounts, one day, one
-// hour) must NOT trip the posting-hour band above Low — sustained concentration
+// hour) must NOT trip the posting-hour band above Low - sustained concentration
 // across days is the influence-op tell, a one-day spike is normal.
 
 import { describe, it, expect } from "vitest";
@@ -14,7 +14,7 @@ import type { Mention } from "../lib/narrative/types";
 
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
-// A fixed base instant (no Date.now — tests must be reproducible).
+// A fixed base instant (no Date.now - tests must be reproducible).
 const BASE = Date.UTC(2024, 0, 1, 0, 0, 0);
 
 describe("detectBursts", () => {
@@ -47,7 +47,7 @@ describe("detectBursts", () => {
 
 describe("hourBandConcentration", () => {
   it("COUNTER-SCENARIO: a one-day breaking-news spike does not sustain across days", () => {
-    // 30 accounts all post within the same UTC hour on ONE day — a real event.
+    // 30 accounts all post within the same UTC hour on ONE day - a real event.
     const ts = Array.from({ length: 30 }, (_, i) => BASE + 13 * HOUR + i * 1000);
     const band = hourBandConcentration(ts);
     // Share is high (all in one band) but it spans a single day → NOT sustained.
@@ -98,13 +98,13 @@ describe("creationClustering", () => {
   });
 });
 
-describe("analyzeCib — breaking-news does not over-grade on timing alone", () => {
+describe("analyzeCib - breaking-news does not over-grade on timing alone", () => {
   function mk(text: string, account: string, tMs: number): Mention {
     return { source: "bluesky", id: `${account}-${tMs}`, text, account, accountId: account,
       timestamp: new Date(tMs).toISOString() };
   }
   it("distinct organic reactions in a one-day spike do not reach Strong via the hour band", () => {
-    // 12 distinct accounts, distinct wording, all one day, one hour — no copypasta.
+    // 12 distinct accounts, distinct wording, all one day, one hour - no copypasta.
     const m = Array.from({ length: 12 }, (_, i) =>
       mk(`my own independent reaction number ${i} to the news today`, `acct${i}`, BASE + 13 * HOUR + i * 90_000));
     const r = analyzeCib("event", m);

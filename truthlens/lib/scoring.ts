@@ -93,7 +93,7 @@ export function scoreReport(input: ScoringInput): RiskResult {
 
   // ---- Hosting / ASN ----
   if (host?.cdnMasksOrigin) {
-    evidence.push({ label: "Behind a CDN", impact: 0, detail: `${host.cdn} edge detected — true origin server is masked; geolocation reflects the CDN, not the operator.` });
+    evidence.push({ label: "Behind a CDN", impact: 0, detail: `${host.cdn} edge detected - true origin server is masked; geolocation reflects the CDN, not the operator.` });
   } else if (host?.hostingType === "datacenter") {
     // Datacenter hosting alone is normal for sites; only a mild signal here.
     add("Datacenter / hosting ASN", +8, `Served from ${host.asnOrg || "a hosting/datacenter ASN"} (offshore/bulletproof hosts raise risk).`);
@@ -151,9 +151,9 @@ export function scoreReport(input: ScoringInput): RiskResult {
       else if (authority.waybackYears >= 5) add("Established web presence", -10, `First archived ~${Math.round(authority.waybackYears)} years ago (Wayback).`);
       else if (authority.waybackYears >= 3) add("Multi-year web presence", -5, `First archived ~${Math.round(authority.waybackYears)} years ago (Wayback).`);
     }
-    if (authority.snapshotCount >= 1000) add("Extensively archived", -6, `${authority.snapshotCount}+ Wayback snapshots — heavily crawled, established site.`);
+    if (authority.snapshotCount >= 1000) add("Extensively archived", -6, `${authority.snapshotCount}+ Wayback snapshots - heavily crawled, established site.`);
     if (authority.openPageRank != null) {
-      if (authority.openPageRank >= 6) add("High domain authority", -15, `Open PageRank ${authority.openPageRank}/10 — a high-authority domain.`);
+      if (authority.openPageRank >= 6) add("High domain authority", -15, `Open PageRank ${authority.openPageRank}/10 - a high-authority domain.`);
       else if (authority.openPageRank >= 4) add("Moderate domain authority", -8, `Open PageRank ${authority.openPageRank}/10.`);
     }
     void yrs;
@@ -178,10 +178,10 @@ export function scoreReport(input: ScoringInput): RiskResult {
   // ---- Safety caps: recognized/established outlets are never HIGH RISK ----
   if (reputation.matchedCredible && score > 35) {
     score = 35;
-    evidence.push({ label: "Recognized credible outlet — capped", impact: 0, detail: "On the researched leading-outlets allowlist: capped out of the HIGH RISK band." });
+    evidence.push({ label: "Recognized credible outlet - capped", impact: 0, detail: "On the researched leading-outlets allowlist: capped out of the HIGH RISK band." });
   } else if (authority?.level === "high" && score > 60) {
     score = 60;
-    evidence.push({ label: "Established high-authority site — capped", impact: 0, detail: "Long-lived, high-authority domain: capped out of the HIGH RISK band (still flag-worthy → Unknown)." });
+    evidence.push({ label: "Established high-authority site - capped", impact: 0, detail: "Long-lived, high-authority domain: capped out of the HIGH RISK band (still flag-worthy → Unknown)." });
   }
 
   // ---- Confidence ----

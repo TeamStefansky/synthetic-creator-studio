@@ -1,5 +1,5 @@
 // Auto-detect what kind of check an input is, so /check can route it to the
-// right existing tool. Pure functions — unit-tested. The user can always override.
+// right existing tool. Pure functions - unit-tested. The user can always override.
 
 import { parseProfileInput } from "@/lib/social/profile";
 
@@ -34,7 +34,7 @@ function det(type: CheckType, reason: string, confidence: Detection["confidence"
 /** Best-effort classification of a raw input string. */
 export function detectCheckType(input: string): Detection {
   const text = (input || "").trim();
-  if (!text) return det("post", "Empty input — defaulting to Post Check.", "Low");
+  if (!text) return det("post", "Empty input - defaulting to Post Check.", "Low");
 
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
 
@@ -66,7 +66,7 @@ export function detectCheckType(input: string): Detection {
     const prof = parseProfileInput(text);
     if (prof && (urlMatch || text.startsWith("@"))) {
       return det("social",
-        `A ${prof.platform === "x" ? "X" : "Bluesky"} profile — analyzing the account and the narrative it amplifies.`,
+        `A ${prof.platform === "x" ? "X" : "Bluesky"} profile - analyzing the account and the narrative it amplifies.`,
         urlMatch ? "High" : "Medium");
     }
   }
@@ -74,13 +74,13 @@ export function detectCheckType(input: string): Detection {
   if (oneToken && (urlMatch || bareDomain)) {
     const host = (urlMatch?.[1] || text).replace(/^www\./, "").split("/")[0].toLowerCase();
     if (SOCIAL_HOSTS.some((h) => host === h || host.endsWith("." + h))) {
-      return det("post", `A ${host} link — checking the post/claim it contains.`, "Medium");
+      return det("post", `A ${host} link - checking the post/claim it contains.`, "Medium");
     }
-    return det("site", "A website URL / domain — running an infrastructure & credibility report.", "High");
+    return det("site", "A website URL / domain - running an infrastructure & credibility report.", "High");
   }
 
   // Otherwise: free text → a claim / post to fact-check.
-  return det("post", "Free text — treating it as a claim/post to fact-check.", "Medium");
+  return det("post", "Free text - treating it as a claim/post to fact-check.", "Medium");
 }
 
 export const CHECK_TYPES: { type: CheckType; label: string }[] =

@@ -1,4 +1,4 @@
-// [2] Account Authenticity — P1: ProfileSnapshot layer.
+// [2] Account Authenticity - P1: ProfileSnapshot layer.
 // Network is stubbed via global fetch. Ethics gates: X without a token renders
 // "not connected" (never faked, and no network call is even attempted); snapshots
 // carry no person/actor/operator field; avatar hash is deterministic exact-match.
@@ -54,7 +54,7 @@ describe("parseProfileInput", () => {
   });
 });
 
-describe("fetchProfile — Bluesky (keyless)", () => {
+describe("fetchProfile - Bluesky (keyless)", () => {
   it("maps the public AppView profile onto a ProfileSnapshot", async () => {
     const handle = `acct-${RUN}.bsky.social`;
     stubFetch((url) => {
@@ -87,7 +87,7 @@ describe("fetchProfile — Bluesky (keyless)", () => {
   });
 });
 
-describe("fetchProfile — X (key-gated, honest)", () => {
+describe("fetchProfile - X (key-gated, honest)", () => {
   it("without X_BEARER_TOKEN → connected:false with reason, and NO network call", async () => {
     const saved = process.env.X_BEARER_TOKEN;
     delete process.env.X_BEARER_TOKEN;
@@ -95,7 +95,7 @@ describe("fetchProfile — X (key-gated, honest)", () => {
     const s = await fetchProfile("x", `nokey_${RUN}`);
     expect(s.connected).toBe(false);
     expect(s.reason).toMatch(/X_BEARER_TOKEN/);
-    expect(fetchCalls.length).toBe(0); // never even tried — nothing to fake
+    expect(fetchCalls.length).toBe(0); // never even tried - nothing to fake
     if (saved) process.env.X_BEARER_TOKEN = saved;
   });
 });

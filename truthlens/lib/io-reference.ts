@@ -1,13 +1,13 @@
-// IO reference data — publicly-documented, ORGANIZATION-ONLY reference sets used
+// IO reference data - publicly-documented, ORGANIZATION-ONLY reference sets used
 // to surface CORROBORATION leads, never verdicts:
 //   • state-affiliated media domains (publicly documented)
 //   • domains named in published influence-op takedown reports
 //   • orgs with a lawful foreign-agent public disclosure (e.g. FARA)
 //
-// HARD RULES (CLAUDE.md): these lists ship EMPTY and neutral — TruthLens bakes in
+// HARD RULES (CLAUDE.md): these lists ship EMPTY and neutral - TruthLens bakes in
 // no political judgments; an operator/curator populates them from auditable public
 // sources. A match is a LEAD for a human analyst, never proof that a specific post
-// is state-directed or part of a campaign. No persons — organizations only.
+// is state-directed or part of a campaign. No persons - organizations only.
 // An EMPTY reference means "cannot assess" → Unknown, NEVER "clean".
 
 import stateMediaData from "@/data/io-reference/state-media-domains.json";
@@ -29,7 +29,7 @@ export function normalizeDomain(input?: string): string {
   s = s.split("@").pop() || s; // userinfo
   s = s.split(":")[0]; // port
   s = s.replace(/^www\./, "");
-  // must look like a domain (has a dot, valid chars) — otherwise not a host
+  // must look like a domain (has a dot, valid chars) - otherwise not a host
   return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(s) ? s : "";
 }
 

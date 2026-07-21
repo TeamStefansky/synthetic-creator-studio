@@ -1,5 +1,5 @@
 // ============================================================================
-// TruthLens — shared TypeScript types for the whole report object and the
+// TruthLens - shared TypeScript types for the whole report object and the
 // attribution tools. Keeping these in one place means lib modules, API routes,
 // and components all agree on shape.
 // ============================================================================
@@ -76,7 +76,7 @@ export interface ArchiveInfo {
   snapshotCount: number;
 }
 
-// SEO health extracted from the page — a proxy for a professional publisher.
+// SEO health extracted from the page - a proxy for a professional publisher.
 export interface SeoInfo {
   title?: string;
   metaDescription?: string;
@@ -89,7 +89,7 @@ export interface SeoInfo {
   seoScore: number; // 0-100 completeness
 }
 
-// Authority / longevity — legitimacy signals independent of the seed list.
+// Authority / longevity - legitimacy signals independent of the seed list.
 export interface AuthorityInfo {
   domainAgeYears?: number;
   waybackYears?: number; // years since first Wayback snapshot
@@ -215,16 +215,16 @@ export interface GraphNode {
   flaggedFake?: boolean;
   // --- Influence-network-map extensions (additive; unused by the operator graph) ---
   platform?: string;
-  /** 0–1 for node sizing. Computed from COLLECTED signals only — never fabricated
+  /** 0–1 for node sizing. Computed from COLLECTED signals only - never fabricated
    * from a "Not collected" reach field. */
   influence?: number;
   /** Cluster id from community detection (see lib/social-analyze/network-map.ts). */
   cluster?: number;
   firstSeen?: string; // ISO
   /** Earliest node(s) in the collected timeline. ALWAYS labeled "earliest observed
-   * in collected data — not the true origin" (rule 2). */
+   * in collected data - not the true origin" (rule 2). */
   earliestObservable?: boolean;
-  /** From Stage-1 authenticity — an INDICATOR, never a verdict. */
+  /** From Stage-1 authenticity - an INDICATOR, never a verdict. */
   flaggedInauthentic?: boolean;
   /** This node appeared in the user's earlier checks (clue layer). */
   seenInChecks?: number;

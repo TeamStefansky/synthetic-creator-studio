@@ -1,4 +1,4 @@
-// Social Analyze endpoint — profile-seeded influence-op detection. Server-side
+// Social Analyze endpoint - profile-seeded influence-op detection. Server-side
 // only. Short KV cache to respect source rate limits; a report for a given day
 // is reproducible (all collectors cache per day underneath).
 

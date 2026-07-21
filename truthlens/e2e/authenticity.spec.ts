@@ -35,7 +35,7 @@ const FIXTURE = {
       missing_signals: ["growth_velocity"],
       assessed_at: "2024-06-01T00:00:00Z",
       model_version: "authenticity-v1",
-      note: "Probabilistic assessment of an ACCOUNT's behavior — never a claim about a person.",
+      note: "Probabilistic assessment of an ACCOUNT's behavior - never a claim about a person.",
     },
   }],
 };
@@ -56,7 +56,7 @@ test("CIB check renders the authenticity panel: band chip, score, confidence, ev
   // Authenticity panel: account, band chip, score, confidence, evidence, alternative.
   await expect(page.getByText("Account authenticity")).toBeVisible();
   await expect(page.getByText("amplifier_84729153", { exact: true })).toBeVisible();
-  const chip = page.getByText("Elevated — review");
+  const chip = page.getByText("Elevated - review");
   await expect(chip).toBeVisible();
   await expect(chip).toHaveClass(/text-risk-unknown/); // risk-token colour, never a red chip for non-high
   await expect(page.getByText(/suspicion 62\.5\/100/)).toBeVisible();
@@ -67,7 +67,7 @@ test("CIB check renders the authenticity panel: band chip, score, confidence, ev
   await expect(page.getByText(/never a claim about a person/i).first()).toBeVisible();
 });
 
-test("insufficient data renders a gray chip and no score — never a risk label", async ({ page }) => {
+test("insufficient data renders a gray chip and no score - never a risk label", async ({ page }) => {
   const poor = JSON.parse(JSON.stringify(FIXTURE));
   poor.authenticity[0].assessment = {
     ...poor.authenticity[0].assessment,

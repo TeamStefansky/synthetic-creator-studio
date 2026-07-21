@@ -1,5 +1,5 @@
 // Access-log analyzer. Works ONLY on logs the user owns or is authorized to
-// inspect — there is NO third-party log access here. Parses Apache/Nginx
+// inspect - there is NO third-party log access here. Parses Apache/Nginx
 // "combined" format and generic CSV, enriches unique IPs, and flags bot/farm
 // and adversary-origin signals plus reconstructs each visitor's content path.
 
@@ -191,7 +191,7 @@ export async function analyzeLog(raw: string): Promise<LogAnalysisResult> {
     }
     if (a.enrichment.hostingType === "datacenter") {
       flags.push("datacenter_asn");
-      reasons.push(`Datacenter/hosting ASN (${a.enrichment.asnOrg || "?"}) — likely a bot, not a real reader.`);
+      reasons.push(`Datacenter/hosting ASN (${a.enrichment.asnOrg || "?"}) - likely a bot, not a real reader.`);
       datacenterIps++;
     }
     if (a.userAgents.some((ua) => sharedUaSet.has(ua))) {

@@ -1,4 +1,4 @@
-// Content-propagation tracer — OPEN WEB ONLY (no private logs). Takes a
+// Content-propagation tracer - OPEN WEB ONLY (no private logs). Takes a
 // distinctive quote and finds other pages publishing the same text, then
 // identifies the earliest-known publisher as the likely origin.
 //

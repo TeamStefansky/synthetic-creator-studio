@@ -1,4 +1,4 @@
-// ConfidenceBadge — REQUIRED wherever an attribution / indicator renders.
+// ConfidenceBadge - REQUIRED wherever an attribution / indicator renders.
 // A confidence level is never shown without its evidence (see EvidenceList).
 
 export type ConfidenceLevel = "Low" | "Medium" | "High" | "Unknown";
@@ -22,7 +22,7 @@ export default function ConfidenceBadge({
   const tone = TONE[level] || TONE.Unknown;
   return (
     <span
-      title={level === "Unknown" ? "Unknown — no signals; a valid, correct result" : `${level} confidence`}
+      title={level === "Unknown" ? "Unknown - no signals; a valid, correct result" : `${level} confidence`}
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${tone} ${className}`}
     >
       {label ? `${label} · ` : ""}{level}

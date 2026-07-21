@@ -1,8 +1,8 @@
-// [4] Influence-Network Map — P1 (builder). Verify per the prompt: observed vs
+// [4] Influence-Network Map - P1 (builder). Verify per the prompt: observed vs
 // inferred edges are correctly typed; a co-behavior-only fixture produces ONLY
 // inferred edges (never an observed interaction); NO edge exists without evidence
 // + alternative; the builder is deterministic and makes no network calls; too
-// little data → insufficient. Nodes are accounts/domains — never people/actors.
+// little data → insufficient. Nodes are accounts/domains - never people/actors.
 
 import { describe, it, expect } from "vitest";
 import { buildNetworkMap } from "../lib/social-analyze/network-map";
@@ -22,7 +22,7 @@ const snap = (handle: string, extra: Partial<ProfileSnapshot> = {}): ProfileSnap
 
 const PUSH = "the ministry secretly diverted the disaster relief funds to private contractors";
 
-describe("buildNetworkMap — edge typing", () => {
+describe("buildNetworkMap - edge typing", () => {
   it("co-behavior-only fixture (no citations) → ONLY inferred edges", () => {
     const mentions = [
       mk("a1", PUSH, T0), mk("a2", PUSH, T0 + MIN), mk("a3", PUSH, T0 + 2 * MIN),
@@ -96,7 +96,7 @@ describe("buildNetworkMap — edge typing", () => {
   });
 });
 
-describe("buildNetworkMap — influence, determinism, insufficiency, ethics", () => {
+describe("buildNetworkMap - influence, determinism, insufficiency, ethics", () => {
   it("influence is 0–1, higher for the more-echoed / higher-engagement account", () => {
     const mentions = [
       ...[0, 1, 2, 3].map((k) => mk("hub", PUSH, T0 + k * MIN, { engagement: 500 })),
@@ -141,13 +141,13 @@ describe("buildNetworkMap — influence, determinism, insufficiency, ethics", ()
   });
 });
 
-describe("buildNetworkMap — clusters, core/bridge, overlays (P2)", () => {
+describe("buildNetworkMap - clusters, core/bridge, overlays (P2)", () => {
   const TX = "cluster X shared campaign line about the diverted relief funds scandal";
   const TY = "cluster Y separate shared campaign line about the rigged ballot machines";
 
   // Two tight identical-content clusters, joined by ONE injection account that
   // posts distinct content but synchronizes timing with a member of each cluster
-  // twice — the classic cross-community injection pattern.
+  // twice - the classic cross-community injection pattern.
   function twoClustersOneBridge(): Mention[] {
     const H = 60 * MIN;
     return [
@@ -194,11 +194,11 @@ describe("buildNetworkMap — clusters, core/bridge, overlays (P2)", () => {
     expect(g.core[0].alternative).toMatch(/not.*coordinated|naturally/i);
   });
 
-  it("earliest-observable overlay marks the earliest account — never as the true origin", () => {
+  it("earliest-observable overlay marks the earliest account - never as the true origin", () => {
     const g = buildNetworkMap({ mentions: twoClustersOneBridge() });
     const earliest = g.nodes.filter((n) => n.earliestObservable);
     expect(earliest.map((n) => n.id)).toEqual(["x1"]); // T0 is the earliest post
-    // The flag is the only origin claim — there is no "origin" field on the node.
+    // The flag is the only origin claim - there is no "origin" field on the node.
     expect(JSON.stringify(g).toLowerCase()).not.toContain('"origin"');
   });
 

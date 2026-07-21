@@ -1,4 +1,4 @@
-// P0 — characterization tests for the influence-ops engine upgrade.
+// P0 - characterization tests for the influence-ops engine upgrade.
 // Captures CURRENT clustering behavior and DEMONSTRATES the non-Latin bug.
 // The `it.fails(...)` blocks below assert the DESIRED (post-fix) behavior and
 // therefore PASS today only because the body throws (the bug). In P1 (Unicode
@@ -18,7 +18,7 @@ function mk(text: string, account: string, minute: number): Mention {
   };
 }
 
-describe("P0 characterization — current (Latin) behavior is preserved", () => {
+describe("P0 characterization - current (Latin) behavior is preserved", () => {
   it("English: identical posts from ≥2 accounts cluster and grade above None", () => {
     const m = [mk("boycott the brand now", "a1", 0), mk("boycott the brand now", "a2", 1), mk("boycott the brand now", "a3", 2)];
     const r = analyzeCib("brand", m);
@@ -34,7 +34,7 @@ describe("P0 characterization — current (Latin) behavior is preserved", () => 
   });
 });
 
-describe("P1 — non-Latin scripts now cluster (bug fixed)", () => {
+describe("P1 - non-Latin scripts now cluster (bug fixed)", () => {
   // Previously normalizeText stripped these to "" and they never clustered.
   it("Hebrew: identical posts from ≥2 accounts cluster", () => {
     const m = [mk("בואו נחרים את המותג עכשיו", "a1", 0), mk("בואו נחרים את המותג עכשיו", "a2", 1), mk("בואו נחרים את המותג עכשיו", "a3", 2)];

@@ -1,6 +1,6 @@
 "use client";
 
-// /check — one entry point for every check. Auto-detects the input type, lets the
+// /check - one entry point for every check. Auto-detects the input type, lets the
 // user override, runs the EXISTING tool's API (logic reused, not reimplemented),
 // renders a confidence-badged summary, and auto-saves to history. The standalone
 // tool routes still work unchanged.
@@ -152,7 +152,7 @@ function CheckInner() {
         <h1 className="text-xl font-bold tracking-tight text-white">Check</h1>
         <p className="mt-1.5 max-w-2xl text-sm text-gray-400">
           Paste a URL, a post link, a claim, email headers, or a log. We detect the type and run the
-          right check. Indicators with evidence — not a verdict.
+          right check. Indicators with evidence - not a verdict.
         </p>
       </div>
 
@@ -179,23 +179,23 @@ function CheckInner() {
         </div>
         {input.trim() && (
           <p className="mt-2 text-xs text-gray-500">
-            Detected: <span className="text-gray-300">{detection.label}</span> ({detection.confidence.toLowerCase()} confidence) — {detection.reason} You can override above.
+            Detected: <span className="text-gray-300">{detection.label}</span> ({detection.confidence.toLowerCase()} confidence) - {detection.reason} You can override above.
           </p>
         )}
       </div>
 
       {!record && !error && !running && (
         <ToolIntro
-          what={<>Not sure which tool you need? Just paste something here. TruthLens figures out what it is — a <span className="text-gray-200">website</span>, a <span className="text-gray-200">claim or post</span>, a <span className="text-gray-200">brand/topic to watch</span>, <span className="text-gray-200">email headers</span>, or a <span className="text-gray-200">server log</span> — and runs the right check. You can always override the guess with the <span className="text-gray-200">Type</span> buttons.</>}
+          what={<>Not sure which tool you need? Just paste something here. TruthLens figures out what it is - a <span className="text-gray-200">website</span>, a <span className="text-gray-200">claim or post</span>, a <span className="text-gray-200">brand/topic to watch</span>, <span className="text-gray-200">email headers</span>, or a <span className="text-gray-200">server log</span> - and runs the right check. You can always override the guess with the <span className="text-gray-200">Type</span> buttons.</>}
           examples={[
             { label: "Check a website", onClick: () => { setInput("https://www.reuters.com"); setOverride("site"); run("https://www.reuters.com", "site"); } },
             { label: "Fact-check a claim", onClick: () => { const v = "The Great Wall of China is visible from space with the naked eye"; setInput(v); setOverride("post"); run(v, "post"); } },
             { label: "Watch a brand/topic", onClick: () => { setInput("Tesla"); setOverride("narrative"); run("Tesla", "narrative"); } },
           ]}
           legend={[
-            { label: "High", tone: "high", text: "strong indicators — take it seriously and check the evidence." },
-            { label: "Medium", tone: "unknown", text: "mixed signals — worth a human look." },
-            { label: "Low", tone: "legit", text: "few or weak indicators — looks clean." },
+            { label: "High", tone: "high", text: "strong indicators - take it seriously and check the evidence." },
+            { label: "Medium", tone: "unknown", text: "mixed signals - worth a human look." },
+            { label: "Low", tone: "legit", text: "few or weak indicators - looks clean." },
             { label: "Unknown", tone: "neutral", text: "not enough data to judge. Honestly says so." },
           ]}
           note="Every result shows the evidence behind it and an alternative explanation. Indicators, not a verdict."
@@ -240,7 +240,7 @@ function CheckInner() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-1.5 text-xs text-gray-500">Observed overlap in collected data — a lead, not proof of a shared operator.</p>
+              <p className="mt-1.5 text-xs text-gray-500">Observed overlap in collected data - a lead, not proof of a shared operator.</p>
             </div>
           )}
           {record.type === "cib" && Array.isArray(record.result.authenticity) && record.result.authenticity.length > 0 && (
@@ -250,7 +250,7 @@ function CheckInner() {
           )}
           {record.type === "social" && (
             <div className="space-y-3 border-t border-white/[0.06] pt-3">
-              {/* Stage 1 — the seed account */}
+              {/* Stage 1 - the seed account */}
               {record.result.profile && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -260,7 +260,7 @@ function CheckInner() {
                     </span>
                     <span className="text-xs text-gray-500">
                       {record.result.profile.connected
-                        ? <>followers {record.result.profile.followers ?? "—"} · following {record.result.profile.follows ?? "—"} · posts {record.result.profile.posts ?? "—"}{record.result.profile.createdAt ? ` · since ${String(record.result.profile.createdAt).slice(0, 10)}` : ""}</>
+                        ? <>followers {record.result.profile.followers ?? " - "} · following {record.result.profile.follows ?? " - "} · posts {record.result.profile.posts ?? " - "}{record.result.profile.createdAt ? ` · since ${String(record.result.profile.createdAt).slice(0, 10)}` : ""}</>
                         : "profile not collected"}
                     </span>
                   </div>
@@ -270,10 +270,10 @@ function CheckInner() {
                 <AuthenticityPanel entity={record.input}
                   accounts={[{ account: record.result.authenticity.account, assessment: record.result.authenticity }]} />
               )}
-              {/* Stage 2 — the narrative the account pushes */}
+              {/* Stage 2 - the narrative the account pushes */}
               {Array.isArray(record.result.seeds) && record.result.seeds.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400">Seed narrative(s) — what this account is pushing</div>
+                  <div className="text-xs font-semibold text-gray-400">Seed narrative(s) - what this account is pushing</div>
                   <ul className="mt-1 space-y-1">
                     {record.result.seeds.map((s: any, i: number) => (
                       <li key={i} className="rounded-lg border border-white/[0.06] p-2 text-xs text-gray-300">
@@ -283,14 +283,14 @@ function CheckInner() {
                   </ul>
                 </div>
               )}
-              {/* Stage 3 — amplification across sources */}
+              {/* Stage 3 - amplification across sources */}
               {record.result.expansion?.authenticity?.length > 0 && (
                 <AuthenticityPanel entity={record.input} accounts={record.result.expansion.authenticity} />
               )}
               {/* Influence-network map */}
               {record.result.networkMap && !record.result.networkMap.insufficient && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400">Influence-network map — who amplifies the narrative</div>
+                  <div className="text-xs font-semibold text-gray-400">Influence-network map - who amplifies the narrative</div>
                   <div className="mt-1.5"><InfluenceNetworkGraph network={record.result.networkMap} /></div>
                 </div>
               )}
@@ -312,7 +312,7 @@ function CheckInner() {
           )}
           {record.type === "narrative" && (
             <div className="space-y-3 border-t border-white/[0.06] pt-3">
-              {/* Indicators — each with level + signals + alternative */}
+              {/* Indicators - each with level + signals + alternative */}
               {Array.isArray(record.result.indicators) && record.result.indicators.map((ind: any) => (
                 <div key={ind.key}>
                   <div className="flex items-center justify-between text-sm">
@@ -326,7 +326,7 @@ function CheckInner() {
               {/* Earliest observable node */}
               {record.result.earliest && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-                  <div className="text-xs font-semibold text-gray-400">Earliest observed in collected data <span className="font-normal">— not the true origin</span></div>
+                  <div className="text-xs font-semibold text-gray-400">Earliest observed in collected data <span className="font-normal"> - not the true origin</span></div>
                   <p className="mt-1 text-gray-300">{record.result.earliest.text}</p>
                   <div className="mt-1 text-xs text-gray-500">
                     {record.result.earliest.source}{record.result.earliest.account ? ` · ${record.result.earliest.account}` : ""}{record.result.earliest.timestamp ? ` · ${record.result.earliest.timestamp}` : ""}

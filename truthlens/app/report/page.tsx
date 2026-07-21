@@ -124,14 +124,14 @@ function ReportInner() {
               { label: "Registrar", value: dom?.registrar },
               { label: "Created", value: fmtDate(dom?.createdAt) },
               { label: "Expires", value: fmtDate(dom?.expiresAt) },
-              { label: "Registrant", value: dom?.registrantOrg || (dom?.privacyProtected ? "Privacy-protected" : "—") },
+              { label: "Registrant", value: dom?.registrantOrg || (dom?.privacyProtected ? "Privacy-protected" : " - ") },
               { label: "Country", value: dom?.registrantCountry },
-              { label: "Age (days)", value: dom?.ageDays != null ? String(dom.ageDays) : "—" },
+              { label: "Age (days)", value: dom?.ageDays != null ? String(dom.ageDays) : " - " },
             ]}
           />
           <InfraCard
             title="Hosting" icon={<Server className="h-5 w-5" />} data={i.hosting}
-            note={host?.cdnMasksOrigin ? `${host.cdn} edge — true origin server is masked. Country reflects the CDN, not the operator.` : undefined}
+            note={host?.cdnMasksOrigin ? `${host.cdn} edge - true origin server is masked. Country reflects the CDN, not the operator.` : undefined}
             rows={[
               { label: "IP", value: host?.ip },
               { label: "ASN", value: host?.asn },
@@ -143,11 +143,11 @@ function ReportInner() {
           <InfraCard
             title="Mail" icon={<Mail className="h-5 w-5" />} data={i.mail}
             rows={[
-              { label: "MX", value: mail?.mxProviders.slice(0, 3).join(", ") || "—" },
+              { label: "MX", value: mail?.mxProviders.slice(0, 3).join(", ") || " - " },
               { label: "SPF", value: mail?.spf ? "✓" : "✗" },
               { label: "DKIM", value: mail?.dkim ? "✓" : "?" },
               { label: "DMARC", value: mail?.dmarc ? "✓" : "✗" },
-              { label: "Emails found", value: mail?.emailsFound.slice(0, 2).join(", ") || "—" },
+              { label: "Emails found", value: mail?.emailsFound.slice(0, 2).join(", ") || " - " },
             ]}
           />
           <InfraCard
@@ -155,33 +155,33 @@ function ReportInner() {
             rows={[
               { label: "Issuer", value: ssl?.issuer },
               { label: "Valid to", value: fmtDate(ssl?.validTo) },
-              { label: "Certs seen", value: ssl?.certCount != null ? String(ssl.certCount) : "—" },
-              { label: "SAN domains", value: ssl?.sanDomains.length ? `${ssl.sanDomains.length} sibling(s)` : "—" },
+              { label: "Certs seen", value: ssl?.certCount != null ? String(ssl.certCount) : " - " },
+              { label: "SAN domains", value: ssl?.sanDomains.length ? `${ssl.sanDomains.length} sibling(s)` : " - " },
             ]}
           />
           <InfraCard
             title="Tech" icon={<Cpu className="h-5 w-5" />} data={i.tech}
             rows={[
               { label: "CMS", value: tech?.cms },
-              { label: "Frameworks", value: tech?.frameworks.join(", ") || "—" },
-              { label: "Ad networks", value: tech?.adNetworks.join(", ") || "—" },
-              { label: "Trackers", value: tech?.trackers.join(", ") || "—" },
-              { label: "GA / AdSense", value: [...(tech?.gaIds || []), ...(tech?.adsenseIds || [])].join(", ") || "—" },
+              { label: "Frameworks", value: tech?.frameworks.join(", ") || " - " },
+              { label: "Ad networks", value: tech?.adNetworks.join(", ") || " - " },
+              { label: "Trackers", value: tech?.trackers.join(", ") || " - " },
+              { label: "GA / AdSense", value: [...(tech?.gaIds || []), ...(tech?.adsenseIds || [])].join(", ") || " - " },
             ]}
           />
           <InfraCard
             title="Archive" icon={<History className="h-5 w-5" />} data={i.archive}
             rows={[
               { label: "First seen", value: fmtDate(arch?.firstSeen) },
-              { label: "Snapshots", value: arch?.snapshotCount != null ? String(arch.snapshotCount) : "—" },
+              { label: "Snapshots", value: arch?.snapshotCount != null ? String(arch.snapshotCount) : " - " },
             ]}
           />
           <InfraCard
             title="Authority & Longevity" icon={<TrendingUp className="h-5 w-5" />} data={i.authority}
             rows={[
-              { label: "Domain age (yrs)", value: authority?.domainAgeYears != null ? String(authority.domainAgeYears) : "—" },
-              { label: "Web presence (yrs)", value: authority?.waybackYears != null ? String(authority.waybackYears) : "—" },
-              { label: "Archive snapshots", value: authority?.snapshotCount != null ? String(authority.snapshotCount) : "—" },
+              { label: "Domain age (yrs)", value: authority?.domainAgeYears != null ? String(authority.domainAgeYears) : " - " },
+              { label: "Web presence (yrs)", value: authority?.waybackYears != null ? String(authority.waybackYears) : " - " },
+              { label: "Archive snapshots", value: authority?.snapshotCount != null ? String(authority.snapshotCount) : " - " },
               { label: "Open PageRank", value: authority?.openPageRank != null ? `${authority.openPageRank}/10` : "n/a" },
               { label: "Authority level", value: authority?.level },
             ]}
@@ -189,7 +189,7 @@ function ReportInner() {
           <InfraCard
             title="SEO Health" icon={<Search className="h-5 w-5" />} data={i.seo}
             rows={[
-              { label: "SEO score", value: seo?.seoScore != null ? `${seo.seoScore}/100` : "—" },
+              { label: "SEO score", value: seo?.seoScore != null ? `${seo.seoScore}/100` : " - " },
               { label: "Meta description", value: seo?.metaDescription ? "✓" : "✗" },
               { label: "Open Graph", value: seo?.hasOpenGraph ? "✓" : "✗" },
               { label: "Structured data", value: seo?.hasStructuredData ? "✓" : "✗" },
@@ -202,7 +202,7 @@ function ReportInner() {
       {/* Geographic origin (server + registrant countries) */}
       <GeoOriginCard report={report} />
 
-      {/* Origin chain — attempt to reveal the true server behind a CDN */}
+      {/* Origin chain - attempt to reveal the true server behind a CDN */}
       {report.originTrace && <OriginChainCard trace={report.originTrace} />}
 
       {/* Network graph */}
@@ -220,7 +220,7 @@ function ReportInner() {
         )}
       </section>
 
-      {/* Coordinated Inauthentic Behavior (CIB) — on-demand, actor UNDETERMINED */}
+      {/* Coordinated Inauthentic Behavior (CIB) - on-demand, actor UNDETERMINED */}
       <CibPanel domain={report.domain} />
 
       {/* Content analysis */}
@@ -229,7 +229,7 @@ function ReportInner() {
       {/* Narrative intelligence + authenticity (Cyabra-style) */}
       <NarrativeCard report={report} />
 
-      {/* Insights — ask the report anything */}
+      {/* Insights - ask the report anything */}
       <InsightsCard report={report} />
 
       {/* Propagation + coordination */}
@@ -258,7 +258,7 @@ function ReportInner() {
                   {report.propagation.hits.map((h, idx) => (
                     <li key={idx} className="flex justify-between gap-2">
                       <span className="truncate text-gray-300">{h.domain}</span>
-                      <span className="shrink-0 text-gray-500">{h.publishedAt || "—"}</span>
+                      <span className="shrink-0 text-gray-500">{h.publishedAt || " - "}</span>
                     </li>
                   ))}
                 </ul>
@@ -285,7 +285,7 @@ function ReportInner() {
               <ul className="space-y-1.5 text-sm">
                 {report.coordination.signals.map((s, idx) => (
                   <li key={idx} className="text-gray-300">
-                    <span className="font-medium">{s.label}</span> — <span className="text-gray-400">{s.detail}</span>
+                    <span className="font-medium">{s.label}</span> - <span className="text-gray-400">{s.detail}</span>
                   </li>
                 ))}
               </ul>

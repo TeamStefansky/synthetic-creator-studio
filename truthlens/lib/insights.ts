@@ -1,4 +1,4 @@
-// "Insights" — a Cyabra-style AI Q&A over a finished TruthLens report. The user
+// "Insights" - a Cyabra-style AI Q&A over a finished TruthLens report. The user
 // asks a question; Claude answers grounded ONLY in the report data, citing the
 // signals it used. Server-side; gated behind ANTHROPIC_API_KEY.
 
@@ -19,7 +19,7 @@ function digest(r: Report): string {
   const lines: string[] = [];
   lines.push(`Domain: ${r.domain} (final URL ${r.finalUrl || r.url})`);
   lines.push(`Verdict: ${r.risk.band}, score ${r.risk.score}/100, confidence ${r.risk.confidence}`);
-  lines.push(`Evidence: ${r.risk.evidence.map((e) => `${e.label} (${e.impact > 0 ? "+" : ""}${e.impact}) — ${e.detail}`).join("; ")}`);
+  lines.push(`Evidence: ${r.risk.evidence.map((e) => `${e.label} (${e.impact > 0 ? "+" : ""}${e.impact}) - ${e.detail}`).join("; ")}`);
   if (i.domain.value) lines.push(`Domain info: registrar ${i.domain.value.registrar || "?"}, created ${i.domain.value.createdAt || "?"}, registrant ${i.domain.value.registrantOrg || (i.domain.value.privacyProtected ? "privacy-protected" : "?")}, country ${i.domain.value.registrantCountry || "?"}`);
   if (i.hosting.value) lines.push(`Hosting: IP ${i.hosting.value.ip}, ASN ${i.hosting.value.asnOrg}, country ${i.hosting.value.cdnMasksOrigin ? "CDN edge (masked)" : i.hosting.value.country}, CDN ${i.hosting.value.cdn || "none"}`);
   if (i.authority.value) lines.push(`Authority: domain age ${i.authority.value.domainAgeYears ?? "?"}y, web presence ${i.authority.value.waybackYears ?? "?"}y, level ${i.authority.value.level}`);
@@ -33,7 +33,7 @@ function digest(r: Report): string {
     if (c.propagandaTechniques.length) lines.push(`Techniques: ${c.propagandaTechniques.join(", ")}`);
     if (c.redFlags.length) lines.push(`Red flags: ${c.redFlags.join("; ")}`);
   }
-  if (r.coordination) lines.push(`Coordination likelihood: ${r.coordination.level} — ${r.coordination.signals.map((s) => s.label).join(", ") || "no signals"}`);
+  if (r.coordination) lines.push(`Coordination likelihood: ${r.coordination.level} - ${r.coordination.signals.map((s) => s.label).join(", ") || "no signals"}`);
   if (r.propagation?.hits.length) lines.push(`Propagation: earliest publisher ${r.propagation.earliestPublisher || "?"}, ${r.propagation.hits.length} republisher(s)`);
   return lines.join("\n");
 }
@@ -63,8 +63,8 @@ export async function answerReportQuestion(report: Report, question: string): Pr
   } catch (e: any) {
     const m = String(e?.message || "error");
     if (/credit balance|billing|too low|insufficient/i.test(m))
-      return { available: false, answer: "Insights paused — the Anthropic account is out of credits (console.anthropic.com → Plans & Billing)." };
-    if (/429|rate limit/i.test(m)) return { available: false, answer: "Rate-limited — try again shortly." };
+      return { available: false, answer: "Insights paused - the Anthropic account is out of credits (console.anthropic.com → Plans & Billing)." };
+    if (/429|rate limit/i.test(m)) return { available: false, answer: "Rate-limited - try again shortly." };
     return { available: false, answer: `Insights failed: ${m.slice(0, 160)}.` };
   }
 }

@@ -1,4 +1,4 @@
-// Brand Watch threat scoring — pure logic, no network. Produces indicators that
+// Brand Watch threat scoring - pure logic, no network. Produces indicators that
 // each carry level + signals + alternative explanation, and returns Unknown when
 // the data can't support a signal (never fabricates to fill a panel).
 
@@ -68,18 +68,18 @@ export function computeThreat(
     return {
       ...base, score: null, status: "UNKNOWN", indicators: [], evidence: [], trend: [],
       note: anyConnected
-        ? "No public mentions found for this entity in the connected sources — Unknown, not necessarily calm."
+        ? "No public mentions found for this entity in the connected sources - Unknown, not necessarily calm."
         : "No sources connected. Add source keys (or check connectivity) to get a reading.",
     };
   }
 
   // Cluster by NEAR-duplicate content (Unicode-aware, catches paraphrases and
-  // all scripts) — one shared similarity core.
+  // all scripts) - one shared similarity core.
   const groups = clusterNearDuplicates(mentions, (m) => m.text);
 
   const indicators: Indicator[] = [];
 
-  // 1. Coordination — near-identical content from >=2 distinct accounts.
+  // 1. Coordination - near-identical content from >=2 distinct accounts.
   const clusters = groups.filter(
     (g) => new Set(g.map((m) => m.accountId || m.account)).size >= 2,
   );
@@ -90,18 +90,18 @@ export function computeThreat(
     coordShare * 130, total >= 5 ? 0.9 : 0.5,
     [`${clusters.length} identical-content clusters across distinct accounts`,
      `${coordPosts}/${total} mentions are near-duplicates`],
-    "Organic virality — many people independently resharing the same headline or quote.",
+    "Organic virality - many people independently resharing the same headline or quote.",
     `${clusters.length} clusters · ${coordPosts}/${total} mentions`,
   ));
 
-  // 2. Amplification — duplicate-content volume (regardless of who posts it).
+  // 2. Amplification - duplicate-content volume (regardless of who posts it).
   const dupPosts = groups.filter((g) => g.length >= 2).reduce((n, g) => n + g.length, 0);
   const dupShare = dupPosts / total;
   indicators.push(ind(
     "amplification", "Amplification pattern",
     dupShare * 120, total >= 5 ? 0.8 : 0.4,
     [`${dupPosts}/${total} mentions repeat identical text`],
-    "Syndication — outlets and aggregators republishing the same wire copy.",
+    "Syndication - outlets and aggregators republishing the same wire copy.",
     `${dupPosts}/${total} duplicate mentions`,
   ));
 
@@ -113,7 +113,7 @@ export function computeThreat(
     "negative", "Negative sentiment skew",
     -avg * 100, nonZero.length ? Math.min(1, nonZero.length / total) : 0.1,
     [`Average tone ${avg >= 0 ? "+" : ""}${avg.toFixed(2)} over ${nonZero.length} scored mentions (${SENTIMENT_LEXICON_VERSION})`],
-    "A genuinely bad news event, not a manufactured attack — negativity can be warranted.",
+    "A genuinely bad news event, not a manufactured attack - negativity can be warranted.",
     `avg sentiment ${avg.toFixed(2)}`,
   ));
 
@@ -131,7 +131,7 @@ export function computeThreat(
     `${srcCounts.size} sources${multiSrcClaims ? ` · ${multiSrcClaims} cross-platform claims` : ""}`,
   ));
 
-  // 5. Volume burst — vs a stored baseline, else hourly buckets in-window.
+  // 5. Volume burst - vs a stored baseline, else hourly buckets in-window.
   let volScore = 0, volConf = 0.2, volSignals: string[] = ["Not enough history for a baseline"], volDetail = "insufficient history";
   if (baseline && baseline > 0) {
     const ratio = total / baseline;
@@ -151,9 +151,9 @@ export function computeThreat(
     }
   }
   indicators.push(ind("volume", "Volume burst", volScore, volConf, volSignals,
-    "Ordinary news-cycle timing — attention spikes around real events.", volDetail));
+    "Ordinary news-cycle timing - attention spikes around real events.", volDetail));
 
-  // 6. Narrative concentration — one storyline dominating.
+  // 6. Narrative concentration - one storyline dominating.
   const topCluster = Math.max(0, ...groups.map((g) => g.length));
   const concShare = topCluster / total;
   indicators.push(ind(
@@ -184,17 +184,17 @@ export function computeThreat(
   if (multiLang >= 2) fSignals.push(`the claim appears in ${multiLang} languages`);
   if (countryCounts.size) fSignals.push(`${countryCounts.size} source countries (top holds ${Math.round(topCountryShare * 100)}%)`);
 
-  // Cross-language mirroring (LLM) — only when the deep layer ran.
+  // Cross-language mirroring (LLM) - only when the deep layer ran.
   if (mirroring?.available) {
     if (mirroring.mirrored) {
       fScore += 25;
       fSignals.push(`the same core claim is mirrored across ${mirroring.languages.join(", ") || "multiple languages"} (AI cross-language read)`);
     } else {
-      fSignals.push("no single claim mirrored across languages — diverse topics (AI cross-language read).");
+      fSignals.push("no single claim mirrored across languages - diverse topics (AI cross-language read).");
     }
   }
 
-  // Infrastructure OSINT on amplifying domains — only when the deep layer ran.
+  // Infrastructure OSINT on amplifying domains - only when the deep layer ran.
   if (foreign && foreign.resolved > 0) {
     if (foreign.topHostingCountry && foreign.hostingShare >= 0.6) {
       fScore += foreign.hostingShare * 25;
@@ -222,11 +222,11 @@ export function computeThreat(
   indicators.push(ind(
     "foreign", "Foreign-influence pattern",
     fScore, fConfidence, fSignals,
-    "A global topic is naturally discussed across many languages and countries, and shared hosting/CDN is ordinary commercial infrastructure — this indicates correlation, not proof of state involvement.",
+    "A global topic is naturally discussed across many languages and countries, and shared hosting/CDN is ordinary commercial infrastructure - this indicates correlation, not proof of state involvement.",
     `${langCounts.size} langs · ${countryCounts.size} countries${foreign ? ` · ${foreign.resolved}/${foreign.considered} domains enriched` : ""}`,
   ));
 
-  // 8. Documented-campaign / state-media overlap — do any amplifying domains
+  // 8. Documented-campaign / state-media overlap - do any amplifying domains
   //    appear in a PUBLISHED IO takedown report or a documented state-media list?
   //    Weight 0 for now (informational; scoring wiring + rubric bump land in P4).
   //    Reference ships EMPTY → Unknown ("cannot assess"), never a reassuring Low.
@@ -237,8 +237,8 @@ export function computeThreat(
     for (const m of mentions) {
       for (const d of mentionDomains(m)) {
         const c = campaignMatch(d), s = stateMediaMatch(d);
-        if (c) campaignHits.push(`${d} — documented in “${c.campaign || "campaign"}” (${c.disclosedBy || "report"})`);
-        else if (s) campaignHits.push(`${d} — documented state-affiliated media${s.label ? ` (${s.label})` : ""}`);
+        if (c) campaignHits.push(`${d} - documented in “${c.campaign || "campaign"}” (${c.disclosedBy || "report"})`);
+        else if (s) campaignHits.push(`${d} - documented state-affiliated media${s.label ? ` (${s.label})` : ""}`);
       }
     }
   }
@@ -248,15 +248,15 @@ export function computeThreat(
     uniqCampaignHits.length ? 80 : 0,
     campaignRef === 0 ? 0 : (uniqCampaignHits.length ? 0.85 : 0.6),
     campaignRef === 0
-      ? ["Reference dataset not populated (0 entries) — populate data/io-reference/ to enable this check."]
+      ? ["Reference dataset not populated (0 entries) - populate data/io-reference/ to enable this check."]
       : (uniqCampaignHits.length
           ? uniqCampaignHits.slice(0, 6)
           : [`No overlap with the ${campaignRef} documented reference domain(s).`]),
-    "Appearing on or citing a documented outlet is not proof this specific content is part of that campaign — syndication and legitimate citation also produce overlap.",
+    "Appearing on or citing a documented outlet is not proof this specific content is part of that campaign - syndication and legitimate citation also produce overlap.",
     campaignRef === 0 ? "reference empty" : `${uniqCampaignHits.length} matched domain(s) / ${campaignRef} ref`,
   ));
 
-  // 9. Registered foreign-agent nexus — do amplifying domains belong to an org
+  // 9. Registered foreign-agent nexus - do amplifying domains belong to an org
   //    with a LAWFUL public foreign-agent disclosure (e.g. FARA)? A registration
   //    is a public administrative filing, NOT an accusation. Weight 0 for now.
   const faHits: string[] = [];
@@ -264,7 +264,7 @@ export function computeThreat(
     for (const m of mentions) {
       for (const d of mentionDomains(m)) {
         const fa = foreignAgentMatch(d);
-        if (fa) faHits.push(`${d} — ${fa.org} (${fa.registry || "registry"}${fa.registrationNo ? ` #${fa.registrationNo}` : ""})`);
+        if (fa) faHits.push(`${d} - ${fa.org} (${fa.registry || "registry"}${fa.registrationNo ? ` #${fa.registrationNo}` : ""})`);
       }
     }
   }
@@ -274,11 +274,11 @@ export function computeThreat(
     uniqFaHits.length ? 70 : 0,
     refCounts.foreignAgents === 0 ? 0 : (uniqFaHits.length ? 0.8 : 0.6),
     refCounts.foreignAgents === 0
-      ? ["Reference dataset not populated (0 entries) — populate data/io-reference/foreign-agent-registries.json (see scripts/refresh-fara.ts)."]
+      ? ["Reference dataset not populated (0 entries) - populate data/io-reference/foreign-agent-registries.json (see scripts/refresh-fara.ts)."]
       : (uniqFaHits.length
           ? uniqFaHits.slice(0, 6)
           : [`No overlap with the ${refCounts.foreignAgents} registered foreign-agent domain(s).`]),
-    "A foreign-agent registration is a lawful public disclosure, not an accusation — registered entities also produce ordinary, legitimate content.",
+    "A foreign-agent registration is a lawful public disclosure, not an accusation - registered entities also produce ordinary, legitimate content.",
     refCounts.foreignAgents === 0 ? "reference empty" : `${uniqFaHits.length} matched domain(s)`,
   ));
 

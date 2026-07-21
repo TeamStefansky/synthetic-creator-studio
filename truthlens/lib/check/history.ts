@@ -1,4 +1,4 @@
-// Check history. Every check is persisted automatically — no "save" button.
+// Check history. Every check is persisted automatically - no "save" button.
 // Anonymous users: browser localStorage (works with zero config). When a KV
 // store is configured, checks are also synced to a shared server-side feed.
 

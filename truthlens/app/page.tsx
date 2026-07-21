@@ -23,14 +23,14 @@ export default function HomePage() {
         <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-gray-400">
           Not sure if a website is trustworthy? Paste its address below. TruthLens
           checks the infrastructure behind it and gives you a plain
-          credibility-risk score with the evidence — not a verdict.
+          credibility-risk score with the evidence - not a verdict.
         </p>
 
         <div className="mx-auto mt-9 max-w-xl">
           <UrlInput />
         </div>
 
-        {/* How to read the score — the band legend that otherwise only lived on /about */}
+        {/* How to read the score - the band legend that otherwise only lived on /about */}
         <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/[0.08] p-4 text-left shadow-soft">
           <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-gray-500">How to read the score</div>
           <div className="grid gap-2 sm:grid-cols-3">
@@ -48,9 +48,9 @@ export default function HomePage() {
       <section className="space-y-3">
         <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-gray-500">What you get in the report</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Feature icon={<Network className="h-5 w-5" />} title="Related sites" desc="Finds other sites run by the same operator — via shared servers, ad/analytics IDs, and certificates." />
-          <Feature icon={<Globe className="h-5 w-5" />} title="Where it’s based" desc="The countries of its server, owner, mail, and DNS — shown on a mini map." />
-          <Feature icon={<Telescope className="h-5 w-5" />} title="Who’s behind it" desc="Owners, affiliations, and funding where public — always with sources." />
+          <Feature icon={<Network className="h-5 w-5" />} title="Related sites" desc="Finds other sites run by the same operator - via shared servers, ad/analytics IDs, and certificates." />
+          <Feature icon={<Globe className="h-5 w-5" />} title="Where it’s based" desc="The countries of its server, owner, mail, and DNS - shown on a mini map." />
+          <Feature icon={<Telescope className="h-5 w-5" />} title="Who’s behind it" desc="Owners, affiliations, and funding where public - always with sources." />
           <Feature icon={<Eye className="h-5 w-5" />} title="True origin" desc="Attempts to reveal the real server hidden behind Cloudflare and other CDNs." />
         </div>
       </section>
@@ -58,7 +58,7 @@ export default function HomePage() {
       <section className="mt-6 space-y-3">
         <h2 className="text-[11px] font-medium uppercase tracking-[0.12em] text-gray-500">More free tools</h2>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Link href="/tools/post"><Feature icon={<ShieldQuestion className="h-5 w-5" />} title="Post Check" desc="Is a post or claim true? Paste it — we verify it against sources." linked /></Link>
+          <Link href="/tools/post"><Feature icon={<ShieldQuestion className="h-5 w-5" />} title="Post Check" desc="Is a post or claim true? Paste it - we verify it against sources." linked /></Link>
           <Link href="/tools/logs"><Feature icon={<ScrollText className="h-5 w-5" />} title="Log Analyzer" desc="Check your own site’s traffic logs for bots and coordinated activity." linked /></Link>
           <Link href="/tools/email"><Feature icon={<Mail className="h-5 w-5" />} title="Email Tracer" desc="Paste an email’s headers to trace its origin and spot spoofing." linked /></Link>
         </div>

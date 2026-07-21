@@ -1,6 +1,6 @@
-// Phase-1 signal functions — pure, deterministic, mention-derived. Each returns
+// Phase-1 signal functions - pure, deterministic, mention-derived. Each returns
 // { subscore ∈ [0,1], evidence } or null when its input data is unavailable
-// (null = SKIPPED, lowers confidence — never zeroed, never guessed).
+// (null = SKIPPED, lowers confidence - never zeroed, never guessed).
 // No single signal is proof; every one carries an innocent alternative.
 
 import { normalizeText } from "@/lib/similarity";
@@ -24,7 +24,7 @@ export const ALTERNATIVES: Record<string, string> = {
   post_to_follower_ratio: "Brands and public figures post rarely yet hold large audiences.",
   engagement_rate_deviation: "Audience quality and topic swings move engagement far from peers legitimately.",
   engagement_uniformity: "A steady niche audience can produce similar engagement on every post.",
-  like_comment_ratio: "Some formats attract likes without discussion — a normal audience habit.",
+  like_comment_ratio: "Some formats attract likes without discussion - a normal audience habit.",
   engagement_velocity: "A tight-knit audience in one timezone reacts at a steady rhythm.",
   suspicious_follower_pct: "Dormant lurker followers are common on older real accounts.",
   geo_language_mismatch: "A diaspora or international audience legitimately follows content in another language.",
@@ -61,7 +61,7 @@ const ts = (m: Mention): number | null => {
 const acctOf = (m: Mention) => m.accountId || m.account || "";
 const othersOf = (inp: AuthenticityInput) => inp.all.filter((m) => acctOf(m) !== inp.account);
 
-// ---------- Layer B — engagement ----------
+// ---------- Layer B - engagement ----------
 
 export const engagement_rate_deviation: SignalFn = (inp) => {
   const own = inp.own.map((m) => m.engagement).filter(fin);
@@ -128,7 +128,7 @@ export const engagement_velocity: SignalFn = (inp) => {
   return { subscore: clamp01(1 - v), evidence: { cvPerHour: r2(v), posts: rates.length } };
 };
 
-// ---------- Layer C — audience (Phase-1 part) ----------
+// ---------- Layer C - audience (Phase-1 part) ----------
 
 export const geo_language_mismatch: SignalFn = (inp) => {
   const norm = (l?: string) => (l || "").slice(0, 2).toLowerCase();
@@ -148,7 +148,7 @@ export const geo_language_mismatch: SignalFn = (inp) => {
   };
 };
 
-// ---------- Layer D — comment network ----------
+// ---------- Layer D - comment network ----------
 
 export const repeat_commenter_cross_profile: SignalFn = (inp) => {
   if (inp.own.length < 2 || !inp.clusters) return null;
@@ -223,7 +223,7 @@ export const comment_language_mismatch: SignalFn = (inp) => {
   };
 };
 
-// ---------- Layer E — temporal ----------
+// ---------- Layer E - temporal ----------
 
 export const always_on_activity: SignalFn = (inp) => {
   const ownT = inp.own.map(ts).filter((t): t is number => t !== null);
@@ -270,7 +270,7 @@ export const coordinated_posting: SignalFn = (inp) => {
   };
 };
 
-// ---------- Layer A — account (Phase 2, provider-derived) ----------
+// ---------- Layer A - account (Phase 2, provider-derived) ----------
 
 export const follower_following_ratio: SignalFn = (inp) => {
   const p = inp.profile;
@@ -338,12 +338,12 @@ export const post_to_follower_ratio: SignalFn = (inp) => {
   if (!p || !fin(p.posts) || !fin(p.followers)) return null;
   if (p.followers < 1000) return null; // small accounts: the ratio carries no signal
   const ratio = p.posts / Math.max(p.followers, 1);
-  // Large audience with almost no content — the bought-followers shape.
+  // Large audience with almost no content - the bought-followers shape.
   const subscore = ratio >= 0.001 ? 0 : clamp01((0.001 - ratio) / 0.001);
   return { subscore, evidence: { posts: p.posts, followers: p.followers } };
 };
 
-// ---------- Layer C — audience (Phase 2, follower-sample-derived) ----------
+// ---------- Layer C - audience (Phase 2, follower-sample-derived) ----------
 
 const lowQuality = (f: { hasAvatar?: boolean; hasBio?: boolean; posts?: number; followers?: number }) =>
   f.hasAvatar === false && (f.hasBio === false || f.posts === 0 || f.followers === 0);

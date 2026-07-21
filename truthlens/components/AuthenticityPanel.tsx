@@ -1,8 +1,8 @@
 "use client";
 
-// Authenticity panel — per-amplifying-account inauthenticity assessment:
+// Authenticity panel - per-amplifying-account inauthenticity assessment:
 // 0–100 suspicion score + confidence + ranked contributing signals with
-// evidence and an innocent alternative. PROBABILISTIC — never a binary
+// evidence and an innocent alternative. PROBABILISTIC - never a binary
 // fake/real label, never an assessment of a person. Bands map onto the
 // existing risk tokens; insufficient data renders gray, never red.
 
@@ -26,7 +26,7 @@ export interface AccountAssessment {
 const BAND_UI: Record<string, { label: string; chip: string }> = {
   authentic: { label: "Likely authentic", chip: "bg-risk-legit/15 text-risk-legit" },
   low: { label: "Low concern", chip: "bg-risk-unknown/15 text-risk-unknown" },
-  elevated: { label: "Elevated — review", chip: "bg-risk-unknown/15 text-risk-unknown" },
+  elevated: { label: "Elevated - review", chip: "bg-risk-unknown/15 text-risk-unknown" },
   high: { label: "High likelihood inauthentic", chip: "bg-risk-high/15 text-risk-high" },
   insufficient_data: { label: "Insufficient data", chip: "bg-white/[0.06] text-gray-400" },
 };
@@ -44,7 +44,7 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
         `tl:auth:${entity.toLowerCase()}`,
         JSON.stringify({ entity, accounts, savedAt: new Date().toISOString() }),
       );
-    } catch { /* private mode etc. — non-essential */ }
+    } catch { /* private mode etc. - non-essential */ }
   }, [entity, accounts]);
 
   if (!accounts?.length) return null;
@@ -53,7 +53,7 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
     <div>
       <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-200">
         <UserCheck className="h-4 w-4" /> Account authenticity
-        <span className="text-xs font-normal text-gray-500">— suspicion score per amplifying account, with evidence</span>
+        <span className="text-xs font-normal text-gray-500"> - suspicion score per amplifying account, with evidence</span>
       </div>
       <div className="space-y-3">
         {accounts.map(({ account, assessment: a }) => {
@@ -85,7 +85,7 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
               )}
               {a.missing_signals.length > 0 && (
                 <p className="mt-2 text-[11px] text-gray-600">
-                  {a.missing_signals.length} signal(s) not collected (lowering confidence) — never guessed.
+                  {a.missing_signals.length} signal(s) not collected (lowering confidence) - never guessed.
                 </p>
               )}
             </div>
@@ -93,7 +93,7 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
         })}
       </div>
       <p className="mt-2 text-xs text-gray-500">
-        Probabilistic indicators about ACCOUNTS — never a claim about a person, and never a verdict. Review the evidence.
+        Probabilistic indicators about ACCOUNTS - never a claim about a person, and never a verdict. Review the evidence.
       </p>
     </div>
   );

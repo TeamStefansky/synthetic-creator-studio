@@ -1,7 +1,7 @@
-# TruthLens — Design Audit (Phase 0)
+# TruthLens - Design Audit (Phase 0)
 
 Current state vs. the **Aurora Dark** target (`design-system-portable.md`). No screens
-touched yet — this is the gate before any token/component work.
+touched yet - this is the gate before any token/component work.
 
 ## Stack (detected)
 - **Next.js 14.2.35 (App Router) · React 18.3 · TypeScript · Tailwind 3.4.15.**
@@ -16,7 +16,7 @@ touched yet — this is the gate before any token/component work.
 
 ## What exists now (scripted, ranked by frequency)
 
-### Color roles — current Tailwind theme (`tailwind.config.ts`)
+### Color roles - current Tailwind theme (`tailwind.config.ts`)
 | Role | Current | Aurora target | Gap |
 |---|---|---|---|
 | bg / canvas | `bg-base #070a12` | `#050506` | slightly bluer/lighter → go near-pure-black |
@@ -27,7 +27,7 @@ touched yet — this is the gate before any token/component work.
 | gradient | indigo→violet, **vertical** (`#6d70f2→#4f46e5` in `.btn`; white→`#b9c0ff` in `.gradient-text`) | **120° orange→magenta→purple** `#E1804A→#A25DA7→#7F49E1` | wrong hue + direction + used too broadly |
 | text | body `#e5e7eb` / `text-gray-200` | `#EBEBEB` | ✅ already soft off-white |
 | text secondary/muted | `gray-400` (102×) / `gray-500` (103×) | `#9A9A9F` / `#5E5E64` | map gray-scale → 2 role tokens |
-| risk-legit | `#34d399` | (status success `#22C55E`) | functional traffic-light — see gate Q1 |
+| risk-legit | `#34d399` | (status success `#22C55E`) | functional traffic-light - see gate Q1 |
 | risk-unknown | `#fbbf24` | (status warning `#F5A623`) | " |
 | risk-high | `#fb7185` | (status danger `#F0454F`) | " |
 | badge (yellow) | *(inline `yellow-*`)* | `badge #F5D742` | promote to a token |
@@ -39,7 +39,7 @@ touched yet — this is the gate before any token/component work.
 → **~600 color-class sites** to migrate to role tokens; `indigo-*`/`violet-*` (~50) are the
 current "brand" and must become Aurora primary/gradient.
 
-### Raw hex literals in code (`.ts`/`.tsx`) — ~60 distinct
+### Raw hex literals in code (`.ts`/`.tsx`) - ~60 distinct
 Concentrated in **canvas/SVG data-viz** that can't use Tailwind classes:
 `NetworkGraph.tsx` (cluster palette `#818cf8 #34d399 #fbbf24 #fb7185 #38bdf8 #f472b6 #a3e635 #c084fc`,
 edge/ring colors), `ScoreGauge.tsx`, `MiniMap.tsx`, `AuthenticityPanel`/`CibPanel` tone maps.
@@ -69,7 +69,7 @@ ToolIntro, AuthenticityPanel, CibPanel, SocialMediaPanel, InfraCard, OsintPanel,
 3. **Shell is top-nav, not the icon-sidebar-with-gradient-tiles** Aurora signature.
 4. **Depth via glass blur + shadows** (`.card` backdrop-blur, `shadow-soft`). Aurora = surface
    steps + hairlines, minimal shadow (soft glow only under the gradient).
-5. **Ambient body glows are indigo/sky/purple** radial gradients — off-language; Aurora canvas
+5. **Ambient body glows are indigo/sky/purple** radial gradients - off-language; Aurora canvas
    is flatter near-black.
 6. **Two token homes + ~60 inline hex + ~600 palette classes** = no single source of truth.
 7. **Accessibility: no `prefers-reduced-motion`** despite `fade-up`/`float`/`blink` animations. Must add.
@@ -79,13 +79,13 @@ ToolIntro, AuthenticityPanel, CibPanel, SocialMediaPanel, InfraCard, OsintPanel,
 ## What already aligns (keep)
 - Dark-only, near-black canvas, soft off-white body text (`#e5e7eb`), hairline borders,
   role-named risk tokens, `lucide-react` icons, `.card`/`.btn` component layer (good bones to retune),
-  `gradient-text` mechanism (`background-clip:text`) — right technique, wrong colors.
+  `gradient-text` mechanism (`background-clip:text`) - right technique, wrong colors.
 
 ## Risk & scope notes
-- **Behavior/flows are preserved** — this is a reskin. The influence-detection engines,
+- **Behavior/flows are preserved** - this is a reskin. The influence-detection engines,
   CIB/authenticity logic, and copy don't change.
 - **FROZEN safeguards untouched:** the Disclaimer strings, "not a verdict" framing, "actor
-  UNDETERMINED", "earliest observed… not the true origin", and `tests/ethics.test.ts` — a restyle
+  UNDETERMINED", "earliest observed… not the true origin", and `tests/ethics.test.ts` - a restyle
   must not alter any of these; the audit only maps their *presentation*.
 - Largest lifts: (a) the sidebar shell, (b) introducing display type at Aurora's scale without
   breaking dense analyst layouts, (c) migrating ~60 canvas hex into shared JS tokens.

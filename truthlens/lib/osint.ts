@@ -1,4 +1,4 @@
-// Deep OSINT research on a site — open-web only. Uses the Anthropic web_search
+// Deep OSINT research on a site - open-web only. Uses the Anthropic web_search
 // server tool to investigate who is behind a domain and how it is regarded,
 // returning a structured, cited dossier. On-demand (slow/costly), gated behind
 // ANTHROPIC_API_KEY. Everything is presented as research findings with sources,
@@ -55,7 +55,7 @@ export async function researchDomain(
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return UNAVAILABLE;
 
-  // Cache dossiers for 24h — this is the expensive path.
+  // Cache dossiers for 24h - this is the expensive path.
   const cached = await cacheGet<OsintDossier>(`osint:${domain}`);
   if (cached) return cached;
 
@@ -71,7 +71,7 @@ export async function researchDomain(
       max_tokens: 3000,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6 } as any],
       system:
-        "You are an OSINT analyst. Investigate ONLY using open, public web sources. Attribute findings to sources. Distinguish confirmed facts from inference. Never fabricate people, links, or URLs — if unknown, say so. Output is consumed by software: end with a single JSON object and nothing after it.",
+        "You are an OSINT analyst. Investigate ONLY using open, public web sources. Attribute findings to sources. Distinguish confirmed facts from inference. Never fabricate people, links, or URLs - if unknown, say so. Output is consumed by software: end with a single JSON object and nothing after it.",
       messages: [
         {
           role: "user",
@@ -125,7 +125,7 @@ Only include items you actually found evidence for. Leave arrays empty if nothin
         .filter((c) => c.url)
         .slice(0, 40),
       confidence: normConfidence(parsed.confidence),
-      note: "OSINT findings from open-web research — indicators with sources, not proof. Verify before acting.",
+      note: "OSINT findings from open-web research - indicators with sources, not proof. Verify before acting.",
     };
 
     await cacheSet(`osint:${domain}`, dossier);
@@ -133,13 +133,13 @@ Only include items you actually found evidence for. Leave arrays empty if nothin
   } catch (e: any) {
     const msg = String(e?.message || "error");
     if (/credit balance|billing|too low|insufficient/i.test(msg)) {
-      return { ...UNAVAILABLE, note: "OSINT research paused — the Anthropic account is out of credits. Add credits at console.anthropic.com (Plans & Billing) to re-enable." };
+      return { ...UNAVAILABLE, note: "OSINT research paused - the Anthropic account is out of credits. Add credits at console.anthropic.com (Plans & Billing) to re-enable." };
     }
     if (/401|invalid x-api-key|authentication/i.test(msg)) {
-      return { ...UNAVAILABLE, note: "OSINT research unavailable — the ANTHROPIC_API_KEY appears invalid." };
+      return { ...UNAVAILABLE, note: "OSINT research unavailable - the ANTHROPIC_API_KEY appears invalid." };
     }
     if (/429|rate limit/i.test(msg)) {
-      return { ...UNAVAILABLE, note: "OSINT research temporarily rate-limited — try again shortly." };
+      return { ...UNAVAILABLE, note: "OSINT research temporarily rate-limited - try again shortly." };
     }
     return { ...UNAVAILABLE, note: `OSINT research failed: ${msg.slice(0, 160)}.` };
   }

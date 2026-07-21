@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 
-export const metadata = { title: "TruthLens — how it works" };
+export const metadata = { title: "TruthLens - how it works" };
 
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
@@ -32,7 +32,7 @@ export default function AboutPage() {
         <p className="mx-auto mt-3 max-w-2xl text-gray-400">
           TruthLens exposes the infrastructure behind a website and computes a
           transparent credibility-risk rating from observable signals. It is a
-          decision-support tool — it surfaces evidence and indicators, never a verdict.
+          decision-support tool - it surfaces evidence and indicators, never a verdict.
         </p>
       </header>
 
@@ -42,12 +42,12 @@ export default function AboutPage() {
           <Section icon={<FileSearch className="h-5 w-5" />} title="Infrastructure exposure">
             Who is behind a site: domain registration (WHOIS/RDAP), hosting IP/ASN,
             mail, SSL certificates and their sibling domains, tech stack, and
-            archive history — all from free, public sources, server-side.
+            archive history - all from free, public sources, server-side.
           </Section>
           <Section icon={<Gauge className="h-5 w-5" />} title="Credibility risk rating">
             A badge (Likely Legitimate / Unknown / High Risk), a 0–100 score, a
-            confidence level, and an itemized list of every signal — with its
-            weight — that produced the score.
+            confidence level, and an itemized list of every signal - with its
+            weight - that produced the score.
           </Section>
         </div>
       </section>
@@ -71,12 +71,12 @@ export default function AboutPage() {
             established sites automatically.
           </Section>
           <Section icon={<Globe className="h-5 w-5" />} title="Geographic origin">
-            Server, registrant, mail (MX) and DNS (NS) countries — with flags and a
+            Server, registrant, mail (MX) and DNS (NS) countries - with flags and a
             mini world map. CDNs are labeled &ldquo;true origin masked.&rdquo;
           </Section>
           <Section icon={<Route className="h-5 w-5" />} title="Origin chain">
             Attempts to reveal the real server behind a CDN via non-proxied
-            subdomains, MX servers, and SPF — probabilistic candidates, not proof.
+            subdomains, MX servers, and SPF - probabilistic candidates, not proof.
           </Section>
           <Section icon={<Network className="h-5 w-5" />} title="Operator network">
             Links a site to siblings via shared IP, GA/AdSense IDs, and SSL SAN.
@@ -84,7 +84,7 @@ export default function AboutPage() {
           </Section>
           <Section icon={<Brain className="h-5 w-5" />} title="Narrative intelligence">
             Main narratives, propaganda techniques, manipulation tactics, intent,
-            and target audience — plus an organic-vs-coordinated authenticity read.
+            and target audience - plus an organic-vs-coordinated authenticity read.
           </Section>
           <Section icon={<MessageSquare className="h-5 w-5" />} title="Insights Q&A">
             Ask the finished report anything; answers are grounded only in its own
@@ -99,8 +99,8 @@ export default function AboutPage() {
             deepfakes via Sightengine or Hive.
           </Section>
           <Section icon={<Telescope className="h-5 w-5" />} title="Deep OSINT">
-            (Optional key) Open-web research on who is behind a site — owners,
-            affiliations, funding, controversies — with sources.
+            (Optional key) Open-web research on who is behind a site - owners,
+            affiliations, funding, controversies - with sources.
           </Section>
           <Section icon={<Activity className="h-5 w-5" />} title="Monitoring & alerts">
             Watch a list of domains; the daily job detects changes (band worsened,
@@ -120,9 +120,9 @@ export default function AboutPage() {
       <section>
         <h2 className="mb-3 text-lg font-semibold">Honest limitations</h2>
         <div className="card space-y-2 text-sm text-gray-400">
-          <p>• We cannot automatically determine truth — we surface verifiable facts and compute a risk score from observable signals.</p>
+          <p>• We cannot automatically determine truth - we surface verifiable facts and compute a risk score from observable signals.</p>
           <p>• Geolocation is approximate; CDNs/VPNs/Tor mask true origin, and the tool says so rather than guessing.</p>
-          <p>• Attribution and origin discovery are probabilistic — indicators with evidence, not proof.</p>
+          <p>• Attribution and origin discovery are probabilistic - indicators with evidence, not proof.</p>
           <p>• The adversary-country list ships empty; you set your own policy. Reputation lists are seeds you can expand.</p>
           <p>• Some layers (content analysis, OSINT, social, deepfake, monitoring history) rely on optional API keys and degrade gracefully without them.</p>
         </div>

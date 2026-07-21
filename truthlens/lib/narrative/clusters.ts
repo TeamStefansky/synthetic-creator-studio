@@ -1,6 +1,6 @@
 // LLM narrative clustering + claim extraction for Brand Watch. Server-side only,
 // JSON-only prompt with defensive parse + one retry. Degrades to a visible
-// "AI layer not connected" state when no ANTHROPIC_API_KEY — never faked.
+// "AI layer not connected" state when no ANTHROPIC_API_KEY - never faked.
 // Output is interpretive: each cluster carries an explicit alternative reading.
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -38,7 +38,7 @@ Below are public mentions. Identify the distinct NARRATIVES/CLAIMS circulating a
 Return JSON with EXACTLY this schema (no prose, no fences):
 {"coreClaims":["the main claim(s) being pushed, short"],
  "clusters":[{"label":"short cluster name","summary":"1 sentence","hostility":"low|medium|high","alternative":"a plausible non-malicious explanation for this cluster"}],
- "assessment":"1-2 sentence neutral read of whether this looks like an organic conversation or a pushed/coordinated narrative — hedged, indicators not verdict"}
+ "assessment":"1-2 sentence neutral read of whether this looks like an organic conversation or a pushed/coordinated narrative - hedged, indicators not verdict"}
 
 Mentions:
 """
@@ -71,9 +71,9 @@ ${sample}
     return (await once()) || (await once()) || UNAVAILABLE("AI narrative analysis returned unparseable output.");
   } catch (e: any) {
     const m = String(e?.message || "error");
-    if (/credit balance|billing|too low|insufficient/i.test(m)) return UNAVAILABLE("AI narrative analysis paused — Anthropic account out of credits.");
-    if (/401|invalid x-api-key|authentication/i.test(m)) return UNAVAILABLE("AI narrative analysis unavailable — ANTHROPIC_API_KEY appears invalid.");
-    if (/429|rate limit/i.test(m)) return UNAVAILABLE("AI narrative analysis rate-limited — try again shortly.");
+    if (/credit balance|billing|too low|insufficient/i.test(m)) return UNAVAILABLE("AI narrative analysis paused - Anthropic account out of credits.");
+    if (/401|invalid x-api-key|authentication/i.test(m)) return UNAVAILABLE("AI narrative analysis unavailable - ANTHROPIC_API_KEY appears invalid.");
+    if (/429|rate limit/i.test(m)) return UNAVAILABLE("AI narrative analysis rate-limited - try again shortly.");
     return UNAVAILABLE(`AI narrative analysis failed: ${m.slice(0, 140)}.`);
   }
 }

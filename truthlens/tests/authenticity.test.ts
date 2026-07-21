@@ -1,4 +1,4 @@
-// [2] Authenticity module — Phase 1 (mention-derived signals + scoring core).
+// [2] Authenticity module - Phase 1 (mention-derived signals + scoring core).
 // Spec: every phase-1 signal has ≥1 computed test AND a null/insufficient-data
 // case; skipped signals lower confidence (never zeroed); confidence below
 // MIN_CONFIDENCE → "insufficient_data", never a risk band; deterministic output.
@@ -44,7 +44,7 @@ function peers(): Mention[] {
   return out;
 }
 
-describe("phase-1 signals — computed + insufficient cases", () => {
+describe("phase-1 signals - computed + insufficient cases", () => {
   it("engagement_rate_deviation: far off the peer benchmark → high; <2 posts → null", () => {
     const own = [mk("s", "a post about things", T0, { engagement: 900 }), mk("s", "another post entirely", T0 + HOUR, { engagement: 950 })];
     const out = sig.engagement_rate_deviation(input("s", own, peers()));
@@ -82,7 +82,7 @@ describe("phase-1 signals — computed + insufficient cases", () => {
     const out = sig.geo_language_mismatch(input("s", own, peers()));
     expect(out).not.toBeNull();
     expect(out!.subscore).toBeGreaterThan(0.5);
-    expect(out!.subscore).toBeLessThanOrEqual(0.7); // capped — weak signal alone
+    expect(out!.subscore).toBeLessThanOrEqual(0.7); // capped - weak signal alone
     const balanced = [
       ...["en", "ru", "he", "es", "fr"].map((l, i) => mk(`p${i}`, `text ${i}`, T0 + i * MIN, { lang: l })),
       ...["en", "ru", "he", "es", "fr"].map((l, i) => mk(`q${i}`, `more ${i}`, T0 + i * MIN, { lang: l })),
@@ -169,7 +169,7 @@ describe("scoring core", () => {
     expect(confidence).toBe(0.6);
   });
 
-  it("confidence below MIN_CONFIDENCE → insufficient_data, NEVER a risk band — even at max subscores", () => {
+  it("confidence below MIN_CONFIDENCE → insufficient_data, NEVER a risk band - even at max subscores", () => {
     const { band } = aggregate([mkSig("a", 30, 1)]); // conf 0.3 < 0.4, raw score 30
     expect(band).toBe("insufficient_data");
   });
@@ -187,7 +187,7 @@ describe("scoring core", () => {
   });
 });
 
-describe("assessAccount — orchestration", () => {
+describe("assessAccount - orchestration", () => {
   it("empty input → every signal missing, insufficient_data, no fabricated score", () => {
     const a = assessAccount(empty());
     expect(a.band).toBe("insufficient_data");
@@ -229,7 +229,7 @@ describe("assessAccount — orchestration", () => {
   });
 });
 
-describe("CIB hook — strictly additive", () => {
+describe("CIB hook - strictly additive", () => {
   it("attaches per-account assessments for amplifying accounts without altering existing outputs", () => {
     const pod = "boycott example now";
     const mentions = [

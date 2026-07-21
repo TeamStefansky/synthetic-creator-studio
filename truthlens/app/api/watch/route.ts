@@ -1,4 +1,4 @@
-// Watchlist CRUD — server-side. Entities monitored 24/7 for Brand Watch.
+// Watchlist CRUD - server-side. Entities monitored 24/7 for Brand Watch.
 // Requires the KV store; without it, returns connected:false so the UI shows a
 // visible "monitoring not connected" state instead of faking persistence.
 

@@ -1,5 +1,5 @@
 // Orchestrator: run every signal whose input data exists, aggregate, band.
-// Deterministic, no LLM, no network — a pure function of the collected set.
+// Deterministic, no LLM, no network - a pure function of the collected set.
 
 import { SIGNAL_SPECS, MODEL_VERSION } from "./config";
 import { PHASE1_SIGNALS, PHASE2_SIGNALS, ALTERNATIVES } from "./signals";
@@ -10,7 +10,7 @@ export type { AuthenticityAssessment, AuthenticityInput, AccountProfile, SignalR
 export { MODEL_VERSION } from "./config";
 
 const NOTE =
-  "Probabilistic assessment of an ACCOUNT's behavior — never a claim about a person, and never a verdict. " +
+  "Probabilistic assessment of an ACCOUNT's behavior - never a claim about a person, and never a verdict. " +
   "Signals whose data was not collected are skipped and lower confidence. Review the evidence before acting.";
 
 export function assessAccount(input: AuthenticityInput): AuthenticityAssessment {

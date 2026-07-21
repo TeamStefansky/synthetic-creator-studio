@@ -5,7 +5,7 @@ import { isAdversaryCountry } from "@/lib/adversary";
 import MiniMap, { MapMarker } from "./MiniMap";
 
 function CountryValue({ code, masked }: { code?: string; masked?: boolean }) {
-  if (masked) return <span className="text-sm text-yellow-300/90">CDN edge — masked</span>;
+  if (masked) return <span className="text-sm text-yellow-300/90">CDN edge - masked</span>;
   if (!code) return <span className="text-sm text-gray-500">Unknown</span>;
   const adversary = isAdversaryCountry(code);
   return (

@@ -1,9 +1,9 @@
 "use client";
 
-// Brand Watch — in-app, runs entirely on this deployment (no external backend).
+// Brand Watch - in-app, runs entirely on this deployment (no external backend).
 // Enter a brand / client / product / keyword → live indicators of whether it is
 // the target of a coordinated disinformation attack. Indicators with evidence
-// and an alternative explanation — never a verdict.
+// and an alternative explanation - never a verdict.
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -111,7 +111,7 @@ export default function BrandWatchPage() {
           </div>
           <p className="mt-1.5 max-w-2xl text-sm text-gray-400">
             Enter a brand, client, product, or keyword to see live indicators of a coordinated
-            disinformation attack across public sources. Indicators with evidence — not a verdict.
+            disinformation attack across public sources. Indicators with evidence - not a verdict.
           </p>
         </div>
         {activeEntity && (
@@ -144,14 +144,14 @@ export default function BrandWatchPage() {
         </div>
         <p className="mt-2 text-xs text-gray-500">
           Free public sources (GDELT, Bluesky, Hacker News, Reddit) run with no key; news APIs (Guardian,
-          NYT, GNews, NewsAPI) and RSS activate when configured — unconfigured ones show as “not connected.”
+          NYT, GNews, NewsAPI) and RSS activate when configured - unconfigured ones show as “not connected.”
         </p>
       </div>
 
-      {/* First-run guidance — shown until the user runs their first scan */}
+      {/* First-run guidance - shown until the user runs their first scan */}
       {!result && !loading && !error && (
         <ToolIntro
-          what={<>Type any <span className="text-gray-200">brand, company, product, public page, or topic</span> and press <span className="text-gray-200">Scan</span>. TruthLens pulls what’s being said about it across public sources right now and shows whether the pattern looks like an <span className="text-gray-200">organic conversation</span> or a <span className="text-gray-200">coordinated push</span> — with the evidence behind every signal. A decision-support tool, not a verdict.</>}
+          what={<>Type any <span className="text-gray-200">brand, company, product, public page, or topic</span> and press <span className="text-gray-200">Scan</span>. TruthLens pulls what’s being said about it across public sources right now and shows whether the pattern looks like an <span className="text-gray-200">organic conversation</span> or a <span className="text-gray-200">coordinated push</span> - with the evidence behind every signal. A decision-support tool, not a verdict.</>}
           examples={["Pfizer", "Tesla", "NATO", "OpenAI"].map((ex) => ({ label: ex, onClick: () => { setQuery(ex); scan(ex); } }))}
           legend={[
             { label: "Calm", tone: "legit", icon: <ShieldCheck className="h-4 w-4 text-risk-legit" />, text: "normal, organic chatter. No coordination signals." },
@@ -163,7 +163,7 @@ export default function BrandWatchPage() {
         />
       )}
 
-      {/* Watchlist — continuous monitoring */}
+      {/* Watchlist - continuous monitoring */}
       {watch.connected ? (
         (watch.watches.length > 0 || (activeEntity && !watch.watches.some((w) => w.name === activeEntity))) && (
           <div className="card">
@@ -192,7 +192,7 @@ export default function BrandWatchPage() {
                   </span>
                 );
               })}
-              {!watch.watches.length && <p className="text-xs text-gray-500">No entities watched yet — scan one, then add it.</p>}
+              {!watch.watches.length && <p className="text-xs text-gray-500">No entities watched yet - scan one, then add it.</p>}
             </div>
             {watch.alerts.length > 0 && (
               <div className="mt-3 border-t border-white/[0.05] pt-3">
@@ -232,7 +232,7 @@ export default function BrandWatchPage() {
               </div>
               <div className="text-right">
                 <div className={`text-4xl font-black ${ui.tone}`}>
-                  {result.score === null ? "—" : result.score}
+                  {result.score === null ? " - " : result.score}
                   {result.score !== null && <span className="text-lg text-gray-600">/100</span>}
                 </div>
                 <div className="text-xs text-gray-500">
@@ -251,7 +251,7 @@ export default function BrandWatchPage() {
           {result.earliest && (
             <div className="card">
               <div className="mb-1 flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-white">Earliest observed <span className="font-normal text-gray-500">— in collected data, not the true origin</span></h3>
+                <h3 className="text-sm font-semibold text-white">Earliest observed <span className="font-normal text-gray-500"> - in collected data, not the true origin</span></h3>
                 <a href={`/check?type=narrative&input=${encodeURIComponent(result.entity)}`}
                   className="text-xs text-brand-soft hover:underline">Trace to earliest observable →</a>
               </div>
@@ -263,7 +263,7 @@ export default function BrandWatchPage() {
             </div>
           )}
 
-          {/* Sources — connected vs not connected (never faked) */}
+          {/* Sources - connected vs not connected (never faked) */}
           <div className="card">
             <h3 className="mb-3 flex items-center gap-2 font-semibold text-white">
               <Radar className="h-4 w-4 text-brand-soft" /> Sources
@@ -285,7 +285,7 @@ export default function BrandWatchPage() {
             </div>
           </div>
 
-          {/* Indicators — each with level + signals + alternative */}
+          {/* Indicators - each with level + signals + alternative */}
           <div className="card">
             <h3 className="mb-4 font-semibold text-white">Indicators</h3>
             <div className="space-y-4">
@@ -344,7 +344,7 @@ export default function BrandWatchPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-xs text-gray-600">AI-assisted interpretation — indicators, not verdicts. Verify against the evidence below.</p>
+                  <p className="mt-3 text-xs text-gray-600">AI-assisted interpretation - indicators, not verdicts. Verify against the evidence below.</p>
                 </>
               ) : (
                 <p className="text-sm text-gray-500">
@@ -371,7 +371,7 @@ export default function BrandWatchPage() {
             )}
             <div className="card">
               <h3 className="mb-3 font-semibold text-white">
-                Evidence <span className="text-xs font-normal text-gray-500">— earliest observed in collected data, not proof of origin</span>
+                Evidence <span className="text-xs font-normal text-gray-500"> - earliest observed in collected data, not proof of origin</span>
               </h3>
               <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                 {result.evidence.map((e, i) => (
@@ -383,7 +383,7 @@ export default function BrandWatchPage() {
                       {(() => {
                         const arc = e.url ? (result.archives || []).find((a) => a.url === e.url) : undefined;
                         return arc ? (
-                          <a href={arc.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:underline" title={arc.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested — snapshot may still be processing"}>
+                          <a href={arc.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:underline" title={arc.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested - snapshot may still be processing"}>
                             {arc.status === "archived" ? "archived ↗" : "archive requested ↗"}
                           </a>
                         ) : null;
@@ -395,7 +395,7 @@ export default function BrandWatchPage() {
                 {!result.evidence.length && <p className="text-sm text-gray-500">No evidence captured.</p>}
                 {!!(result.archives && result.archives.length) && (
                   <p className="pt-1 text-[11px] text-gray-600">
-                    {result.archives.length} evidence URL(s) preserved via the Wayback Machine (deep scan) — so the record survives edits or deletion.
+                    {result.archives.length} evidence URL(s) preserved via the Wayback Machine (deep scan) - so the record survives edits or deletion.
                   </p>
                 )}
               </div>
@@ -403,8 +403,8 @@ export default function BrandWatchPage() {
           </div>
 
           <p className="text-xs text-gray-600">
-            Decision-support tool — not a verdict. Indicators of a coordinated inauthentic campaign, with
-            evidence and alternative explanations — never an accusation against any person. Rubric {result.rubricVersion}.
+            Decision-support tool - not a verdict. Indicators of a coordinated inauthentic campaign, with
+            evidence and alternative explanations - never an accusation against any person. Rubric {result.rubricVersion}.
             {result.cached && " · cached (≤90s)"}
           </p>
         </>

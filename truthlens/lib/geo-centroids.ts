@@ -1,5 +1,5 @@
 // Approximate country centroids (ISO alpha-2 -> [lat, lon]) for plotting markers
-// on the equirectangular mini-map. Approximate by design — for visualization only.
+// on the equirectangular mini-map. Approximate by design - for visualization only.
 
 export const CENTROIDS: Record<string, [number, number]> = {
   AD: [42.5, 1.6], AE: [23.4, 53.8], AF: [33.9, 67.7], AG: [17.1, -61.8], AL: [41.2, 20.2],

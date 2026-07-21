@@ -1,4 +1,4 @@
-// Official-API provider — built on the lib/social/* adapters (Bluesky public
+// Official-API provider - built on the lib/social/* adapters (Bluesky public
 // AppView keyless; X key-gated behind X_BEARER_TOKEN). Adds a public follower
 // SAMPLE for Bluesky via app.bsky.graph.getFollowers (keyless, official).
 // The sample is used only in aggregate (counted, never listed in output) and is
@@ -10,7 +10,7 @@ import { fetchProfile } from "@/lib/social/profile";
 import type { AccountProfile, FollowerSampleItem } from "@/lib/authenticity/types";
 import type { PlatformAccountProvider } from "../types";
 
-const UA = "TruthLens/0.1 (account authenticity — public profile lookup)";
+const UA = "TruthLens/0.1 (account authenticity - public profile lookup)";
 const SAMPLE_TTL = 24 * 60 * 60 * 1000;
 const SAMPLE_LIMIT = 50;
 
@@ -26,7 +26,7 @@ async function blueskyFollowerSample(actor: string): Promise<FollowerSampleItem[
     username: f.handle,
     hasAvatar: !!f.avatar,
     hasBio: !!f.description,
-    // ProfileView does not expose post/follower counts — those stay undefined.
+    // ProfileView does not expose post/follower counts - those stay undefined.
   }));
   await cacheSet(ck, sample);
   return sample;

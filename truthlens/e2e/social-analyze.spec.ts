@@ -21,7 +21,7 @@ const FIXTURE = {
     }],
     missing_signals: ["suspicious_follower_pct"],
     assessed_at: "2024-06-01T00:00:00Z", model_version: "authenticity-v1",
-    note: "Probabilistic assessment of an ACCOUNT's behavior — never a claim about a person.",
+    note: "Probabilistic assessment of an ACCOUNT's behavior - never a claim about a person.",
   },
   seeds: [{ text: "the secret ballot machines were rigged overnight", posts: 3, query: "machines rigged secret ballot" }],
   expansion: {
@@ -52,8 +52,8 @@ const FIXTURE = {
     core: [{ id: "seedacct.bsky.social", label: "seedacct.bsky.social", influence: 1, bridges: 0, signals: ["influence 1"], alternative: "A popular hub is naturally central." }],
     bridges: [],
   },
-  band: "Strong coordination — actor UNDETERMINED",
-  attribution: "Actor is UNDETERMINED. Coordination is a behavioural pattern, not proof of state sponsorship or of who is behind it. These are hypotheses for a human to evaluate — not a verdict.",
+  band: "Strong coordination - actor UNDETERMINED",
+  attribution: "Actor is UNDETERMINED. Coordination is a behavioural pattern, not proof of state sponsorship or of who is behind it. These are hypotheses for a human to evaluate - not a verdict.",
   collectionGaps: [],
   generatedAt: "2024-06-01T00:00:00Z",
 };
@@ -66,20 +66,20 @@ test("profile link auto-detects Social Analyze and renders band + seed + authent
   await page.goto("/check");
   await page.locator("textarea").fill("https://bsky.app/profile/seedacct.bsky.social");
 
-  // Auto-detection picks the new category — no manual override needed.
+  // Auto-detection picks the new category - no manual override needed.
   await expect(page.getByText(/Detected:/)).toContainText(/Social Analyze/);
 
   await page.getByRole("button", { name: /Run check/i }).click();
 
   // Band headline with the FROZEN ceiling string.
-  await expect(page.getByText(/Strong coordination — actor UNDETERMINED/).first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/Strong coordination - actor UNDETERMINED/).first()).toBeVisible({ timeout: 20_000 });
 
-  // Stage 1 — profile summary + authenticity panel.
+  // Stage 1 - profile summary + authenticity panel.
   await expect(page.getByText("seedacct.bsky.social", { exact: true })).toBeVisible();
   await expect(page.getByText("Account authenticity")).toBeVisible();
   await expect(page.getByText(/suspicion 58\.3\/100/)).toBeVisible();
 
-  // Stage 2 — the seed narrative.
+  // Stage 2 - the seed narrative.
   await expect(page.getByText(/Seed narrative/)).toBeVisible();
   await expect(page.getByText(/ballot machines were rigged/).first()).toBeVisible();
 

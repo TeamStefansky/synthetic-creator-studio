@@ -99,7 +99,7 @@ export default function LogsPage() {
       {!result && !loading && (
         <ToolIntro
           heading="What is this, and how do I use it?"
-          what={<>A <span className="text-gray-200">server log</span> is the list of visits your website’s server records — one line per request, with the visitor’s IP address, time, and what they fetched. If you run a site, you can download it from your hosting panel (cPanel “Raw Access Logs”), Cloudflare, Nginx/Apache <span className="font-mono text-[11px]">access.log</span>, or Vercel/Netlify logs. Paste it here and TruthLens flags bots, datacenter traffic, and synchronized bursts that look automated.</>}
+          what={<>A <span className="text-gray-200">server log</span> is the list of visits your website’s server records - one line per request, with the visitor’s IP address, time, and what they fetched. If you run a site, you can download it from your hosting panel (cPanel “Raw Access Logs”), Cloudflare, Nginx/Apache <span className="font-mono text-[11px]">access.log</span>, or Vercel/Netlify logs. Paste it here and TruthLens flags bots, datacenter traffic, and synchronized bursts that look automated.</>}
           steps={[
             <>Export your access log (or drag the file in above).</>,
             <>Paste it and press <span className="text-gray-200">Analyze log</span>.</>,
@@ -109,7 +109,7 @@ export default function LogsPage() {
           examples={[{ label: "Load a sample log", onClick: () => { setText(SAMPLE_LOG); analyze(SAMPLE_LOG); } }]}
           legend={[
             { label: "High coordination", tone: "high", text: "many requests look automated / synchronized." },
-            { label: "Medium", tone: "unknown", text: "some automated patterns — worth a look." },
+            { label: "Medium", tone: "unknown", text: "some automated patterns - worth a look." },
             { label: "Low", tone: "legit", text: "traffic looks organic." },
             { label: "Unknown", tone: "neutral", text: "not enough lines to judge." },
           ]}
@@ -156,7 +156,7 @@ function Results({ result, coord }: { result: LogAnalysisResult; coord: Coordina
         <div className="card">
           <h2 className="mb-2 text-lg font-semibold">Coordination likelihood: <span className={coord.level === "High" ? "text-risk-high" : coord.level === "Medium" ? "text-risk-unknown" : "text-risk-legit"}>{coord.level}</span></h2>
           <ul className="space-y-1 text-sm text-gray-400">
-            {coord.signals.map((s, i) => <li key={i}><span className="text-gray-200">{s.label}</span> — {s.detail}</li>)}
+            {coord.signals.map((s, i) => <li key={i}><span className="text-gray-200">{s.label}</span> - {s.detail}</li>)}
             {coord.signals.length === 0 && <li>No coordination signals.</li>}
           </ul>
         </div>
@@ -219,14 +219,14 @@ function IpRow({ ip }: { ip: IpAggregate }) {
           </button>
         </td>
         <td className="pr-3">{ip.requests}</td>
-        <td className="pr-3">{ip.enrichment.country || "—"}</td>
-        <td className="pr-3 max-w-[160px] truncate">{ip.enrichment.asnOrg || "—"}</td>
+        <td className="pr-3">{ip.enrichment.country || " - "}</td>
+        <td className="pr-3 max-w-[160px] truncate">{ip.enrichment.asnOrg || " - "}</td>
         <td className="pr-3">{ip.enrichment.hostingType}</td>
         <td className="space-x-1">
           {ip.flags.map((f) => (
             <span key={f} className="inline-block rounded bg-risk-high/15 px-1.5 py-0.5 text-[10px] text-risk-high">{f}</span>
           ))}
-          {ip.flags.length === 0 && <span className="text-gray-600">—</span>}
+          {ip.flags.length === 0 && <span className="text-gray-600"> - </span>}
         </td>
       </tr>
       {open && (
@@ -240,7 +240,7 @@ function IpRow({ ip }: { ip: IpAggregate }) {
             <div className="label-muted mb-1">Content path</div>
             <ol className="max-h-40 space-y-0.5 overflow-auto font-mono text-[11px] text-gray-300 scroll-thin">
               {ip.contentPath.slice(0, 50).map((p, i) => (
-                <li key={i}><span className="text-gray-600">{p.timestamp?.slice(11, 19) || "—"}</span> {p.status} {p.path}</li>
+                <li key={i}><span className="text-gray-600">{p.timestamp?.slice(11, 19) || " - "}</span> {p.status} {p.path}</li>
               ))}
             </ol>
           </td>

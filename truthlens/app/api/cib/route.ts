@@ -1,4 +1,4 @@
-// CIB analysis endpoint — collects public mentions of an entity and grades a
+// CIB analysis endpoint - collects public mentions of an entity and grades a
 // Coordination Likelihood with raw evidence. Server-side. Never attributes to a
 // state/actor. Short KV cache to respect source rate limits.
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   // graduate above "Not collected" when the data exists. Best-effort, cached.
   await enrichCreationDates(mentions);
 
-  // Platform-account profiles for the top amplifying accounts — only when the
+  // Platform-account profiles for the top amplifying accounts - only when the
   // env-gated provider is configured; absent → Phase-1 authenticity only.
   let profiles: Record<string, AccountProfile> | undefined;
   const provider = resolvePlatformProvider();
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       .slice(0, 8);
     const fetched = await Promise.all(top.map(async ([id, v]) => {
       try { return [id, await provider.fetchAccount(v.platform, v.handle)] as const; }
-      catch { return [id, null] as const; } // failure-isolated — never aborts the report
+      catch { return [id, null] as const; } // failure-isolated - never aborts the report
     }));
     const ok = fetched.filter((f): f is [string, AccountProfile] => !!f[1]);
     if (ok.length) profiles = Object.fromEntries(ok);

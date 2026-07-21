@@ -116,9 +116,9 @@ export default function EmailPage() {
                 {result.auth.verdict}
               </div>
               <div className="mt-2 flex gap-3 text-xs text-gray-400">
-                <span>SPF: {result.auth.spf || "—"}</span>
-                <span>DKIM: {result.auth.dkim || "—"}</span>
-                <span>DMARC: {result.auth.dmarc || "—"}</span>
+                <span>SPF: {result.auth.spf || " - "}</span>
+                <span>DKIM: {result.auth.dkim || " - "}</span>
+                <span>DMARC: {result.auth.dmarc || " - "}</span>
               </div>
             </div>
           </div>

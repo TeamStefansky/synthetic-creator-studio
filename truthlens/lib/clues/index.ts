@@ -1,6 +1,6 @@
-// Clue index — links repeated entities across a user's checks. Stored per browser
+// Clue index - links repeated entities across a user's checks. Stored per browser
 // (localStorage), alongside the check history. Surfaces a plain "also appeared in
-// N checks you did before" line — NO graph to operate, no entity browser.
+// N checks you did before" line - NO graph to operate, no entity browser.
 
 import { listLocal } from "@/lib/check/history";
 import { Entity, EntityKind, entityKey, entityLabel } from "./extract";

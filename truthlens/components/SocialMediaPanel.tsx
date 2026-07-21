@@ -138,7 +138,7 @@ function Spreader({ s }: { s: SocialAccount }) {
       <td className="py-1.5 pr-3">
         <a href={`https://x.com/${s.handle}`} target="_blank" rel="noreferrer" className="text-indigo-300 hover:underline">@{s.handle}</a>
       </td>
-      <td className="pr-3 text-gray-300">{s.followers ?? "—"}</td>
+      <td className="pr-3 text-gray-300">{s.followers ?? " - "}</td>
       <td className="pr-3 text-gray-300">{s.engagement ?? 0}</td>
       <td>
         <span className={`rounded px-1.5 py-0.5 text-xs ${s.botScore >= 50 ? "bg-risk-high/15 text-risk-high" : s.botScore >= 30 ? "bg-risk-unknown/15 text-risk-unknown" : "bg-risk-legit/15 text-risk-legit"}`} title={s.reasons.join("; ")}>

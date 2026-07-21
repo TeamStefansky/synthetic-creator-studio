@@ -1,6 +1,6 @@
 "use client";
 
-// /history — every check you run, saved automatically and re-openable. Local to
+// /history - every check you run, saved automatically and re-openable. Local to
 // this browser; when a KV store is configured a shared team feed is also shown.
 
 import { useEffect, useState } from "react";
@@ -54,7 +54,7 @@ export default function HistoryPage() {
     <div className="animate-fade-up space-y-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-white">History</h1>
-        <p className="mt-1.5 text-sm text-gray-400">Every check you run is saved here automatically — re-openable, no filing.</p>
+        <p className="mt-1.5 text-sm text-gray-400">Every check you run is saved here automatically - re-openable, no filing.</p>
       </div>
 
       {local.length === 0 ? (
