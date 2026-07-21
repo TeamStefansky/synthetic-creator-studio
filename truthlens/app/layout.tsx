@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Nav from "@/components/Nav";
-import Disclaimer from "@/components/Disclaimer";
 
 export const metadata: Metadata = {
   title: "TruthLens - fake-news risk & infrastructure exposure",
@@ -26,10 +25,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="lg:flex lg:items-start">
           <Nav />
           <div className="min-w-0 flex-1">
+            {/* Each page renders its own single Disclaimer (footer or inline
+                variant); no global footer copy here, so it never doubles up. */}
             <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-            <div className="site-footer mx-auto max-w-6xl px-4">
-              <Disclaimer />
-            </div>
           </div>
         </div>
       </body>
