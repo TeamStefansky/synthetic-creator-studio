@@ -211,14 +211,46 @@ export interface RiskResult {
 export interface GraphNode {
   id: string;
   label: string;
-  kind: "target" | "domain" | "ip" | "ga" | "adsense";
+  kind: "target" | "domain" | "ip" | "ga" | "adsense" | "account";
   flaggedFake?: boolean;
+  // --- Influence-network-map extensions (additive; unused by the operator graph) ---
+  platform?: string;
+  /** 0–1 for node sizing. Computed from COLLECTED signals only — never fabricated
+   * from a "Not collected" reach field. */
+  influence?: number;
+  /** Cluster id from community detection (see lib/social-analyze/network-map.ts). */
+  cluster?: number;
+  firstSeen?: string; // ISO
+  /** Earliest node(s) in the collected timeline. ALWAYS labeled "earliest observed
+   * in collected data — not the true origin" (rule 2). */
+  earliestObservable?: boolean;
+  /** From Stage-1 authenticity — an INDICATOR, never a verdict. */
+  flaggedInauthentic?: boolean;
+  /** This node appeared in the user's earlier checks (clue layer). */
+  seenInChecks?: number;
+}
+
+/** An edge's provenance. `observed` ONLY for a real interaction (repost/reply/
+ * quote) or a hard shared-infrastructure fact from an authorized source. ALL
+ * co-behavior (identical content, shared avatar, synchronized timing) is
+ * `inferred` and rendered distinctly. Never style inferred as observed. */
+export interface EdgeEvidence {
+  mode: "observed" | "inferred";
+  kind:
+    | "repost" | "reply" | "quote" | "shared-infra"
+    | "identical-content" | "identical-bio" | "shared-avatar"
+    | "synchronized-timing" | "co-citation";
+  signals: string[];
+  alternative: string;
+  confidence: "Low" | "Medium" | "High";
 }
 
 export interface GraphEdge {
   source: string;
   target: string;
   reason: string; // "shared IP", "shared GA id", etc.
+  /** Present on influence-network-map edges; absent on the operator graph. */
+  evidence?: EdgeEvidence;
 }
 
 export interface OperatorNetwork {
