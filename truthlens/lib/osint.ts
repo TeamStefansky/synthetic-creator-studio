@@ -5,6 +5,7 @@
 // not assertions of fact.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "./llm";
 import { cacheGet, cacheSet } from "./cache";
 import type { OsintDossier, Confidence } from "./types";
 
@@ -66,7 +67,7 @@ export async function researchDomain(
   try {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: LLM_MODEL,
       max_tokens: 3000,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 6 } as any],
       system:

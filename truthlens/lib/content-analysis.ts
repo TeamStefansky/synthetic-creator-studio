@@ -2,6 +2,7 @@
 // Degrades gracefully to "unavailable" when no key is configured.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "./llm";
 import type { ContentAnalysis } from "./types";
 
 const UNAVAILABLE: ContentAnalysis = {
@@ -57,7 +58,7 @@ export async function analyzeContent(text: string): Promise<ContentAnalysis> {
   try {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: LLM_MODEL,
       max_tokens: 1024,
       system:
         "You are a media-literacy analyst. Analyze the supplied article text for credibility signals. Return ONLY valid JSON, no prose, no markdown fences.",

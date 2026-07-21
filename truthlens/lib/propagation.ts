@@ -6,6 +6,7 @@
 // Degrades gracefully (Wayback-only / "limited") when unavailable.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "./llm";
 import { getJson } from "./http";
 import type { PropagationResult, PropagationHit } from "./types";
 
@@ -35,7 +36,7 @@ async function searchOpenWeb(quote: string): Promise<PropagationHit[]> {
   try {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: LLM_MODEL,
       max_tokens: 1500,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 } as any],
       messages: [

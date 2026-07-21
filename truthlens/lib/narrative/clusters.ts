@@ -4,6 +4,7 @@
 // Output is interpretive: each cluster carries an explicit alternative reading.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "@/lib/llm";
 import type { Mention, NarrativeCluster, NarrativeExtraction } from "./types";
 
 const UNAVAILABLE = (reason: string): NarrativeExtraction => ({
@@ -47,7 +48,7 @@ ${sample}
   async function once(): Promise<NarrativeExtraction | null> {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6", max_tokens: 1200, system,
+      model: LLM_MODEL, max_tokens: 1200, system,
       messages: [{ role: "user", content: user }],
     });
     const block = msg.content.find((b) => b.type === "text");

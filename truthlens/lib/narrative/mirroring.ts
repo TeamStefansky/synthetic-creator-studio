@@ -6,6 +6,7 @@
 // of state involvement, and never attributes to a named private individual.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "@/lib/llm";
 import type { Mention, MirroringResult } from "./types";
 
 const UNAVAILABLE = (reason: string, languages: string[] = []): MirroringResult => ({
@@ -63,7 +64,7 @@ ${sample}
   async function once(): Promise<MirroringResult | null> {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6", max_tokens: 500, system,
+      model: LLM_MODEL, max_tokens: 500, system,
       messages: [{ role: "user", content: user }],
     });
     const block = msg.content.find((b) => b.type === "text");

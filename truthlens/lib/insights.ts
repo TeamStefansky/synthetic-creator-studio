@@ -3,6 +3,7 @@
 // signals it used. Server-side; gated behind ANTHROPIC_API_KEY.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "./llm";
 import type { Report } from "./types";
 
 export interface InsightAnswer {
@@ -45,7 +46,7 @@ export async function answerReportQuestion(report: Report, question: string): Pr
   try {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: LLM_MODEL,
       max_tokens: 900,
       system:
         "You are TruthLens Insights, an analyst assistant. Answer the user's question using ONLY the provided report data. Be concise, specific, and cite the signals you relied on. If the data doesn't answer it, say so plainly and note what would be needed. Never invent facts not in the data. Frame conclusions as indicators, not verdicts.",

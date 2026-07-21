@@ -4,6 +4,7 @@
 // Gated behind ANTHROPIC_API_KEY. Indicators with sources — not a final ruling.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { LLM_MODEL } from "./llm";
 import type { PostCheckResult, PostVerdict, Confidence } from "./types";
 
 const VERDICTS: PostVerdict[] = ["Likely False", "Misleading", "Unverified", "Likely True", "Opinion or Satire"];
@@ -62,7 +63,7 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
   try {
     const client = new Anthropic({ apiKey: key });
     const msg = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: LLM_MODEL,
       max_tokens: 2500,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 } as any],
       system:
