@@ -140,3 +140,89 @@ describe("buildNetworkMap — influence, determinism, insufficiency, ethics", ()
     }
   });
 });
+
+describe("buildNetworkMap — clusters, core/bridge, overlays (P2)", () => {
+  const TX = "cluster X shared campaign line about the diverted relief funds scandal";
+  const TY = "cluster Y separate shared campaign line about the rigged ballot machines";
+
+  // Two tight identical-content clusters, joined by ONE injection account that
+  // posts distinct content but synchronizes timing with a member of each cluster
+  // twice — the classic cross-community injection pattern.
+  function twoClustersOneBridge(): Mention[] {
+    const H = 60 * MIN;
+    return [
+      // Cluster X (identical content; spaced so they don't co-time with each other)
+      mk("x1", TX, T0), mk("x2", TX, T0 + 2 * H), mk("x3", TX, T0 + 4 * H),
+      mk("x1", TX, T0 + 1000 * MIN),
+      // Cluster Y (much later, so x and y never co-time)
+      mk("y1", TY, T0 + 5000 * MIN), mk("y2", TY, T0 + 5120 * MIN), mk("y3", TY, T0 + 5240 * MIN),
+      mk("y1", TY, T0 + 6000 * MIN),
+      // Bridge: distinct content each time, timed onto x1 (×2) and y1 (×2)
+      mk("inject", "an independent distinct observation number one here", T0 + 3 * MIN),
+      mk("inject", "an independent distinct observation number two here", T0 + 1001 * MIN),
+      mk("inject", "an independent distinct observation number three here", T0 + 5003 * MIN),
+      mk("inject", "an independent distinct observation number four here", T0 + 6001 * MIN),
+    ];
+  }
+
+  it("detects 2 clusters joined by exactly 1 bridge account", () => {
+    const g = buildNetworkMap({ mentions: twoClustersOneBridge() });
+    expect(g.clusters.length).toBe(2);
+    expect(g.clusters.every((c) => c.size === 3)).toBe(true);
+    expect(g.bridges.length).toBe(1);
+    expect(g.bridges[0].id).toBe("inject");
+    expect(g.bridges[0].bridges).toBe(2);
+    expect(g.bridges[0].alternative.length).toBeGreaterThan(0);
+    // The bridge sits in its own (singleton) cluster, distinct from X and Y.
+    const cl = (id: string) => g.nodes.find((n) => n.id === id)!.cluster;
+    expect(cl("x1")).toBe(cl("x2"));
+    expect(cl("y1")).toBe(cl("y2"));
+    expect(cl("x1")).not.toBe(cl("y1"));
+    expect(cl("inject")).not.toBe(cl("x1"));
+    expect(cl("inject")).not.toBe(cl("y1"));
+  });
+
+  it("is deterministic: identical clusters, bridges, and node clusters across runs", () => {
+    const m = twoClustersOneBridge();
+    expect(JSON.stringify(buildNetworkMap({ mentions: m }))).toBe(JSON.stringify(buildNetworkMap({ mentions: m })));
+  });
+
+  it("core amplifiers are ranked by influence and carry an alternative", () => {
+    const g = buildNetworkMap({ mentions: twoClustersOneBridge() });
+    expect(g.core.length).toBeGreaterThan(0);
+    for (let i = 1; i < g.core.length; i++) expect(g.core[i - 1].influence).toBeGreaterThanOrEqual(g.core[i].influence);
+    expect(g.core[0].alternative).toMatch(/not.*coordinated|naturally/i);
+  });
+
+  it("earliest-observable overlay marks the earliest account — never as the true origin", () => {
+    const g = buildNetworkMap({ mentions: twoClustersOneBridge() });
+    const earliest = g.nodes.filter((n) => n.earliestObservable);
+    expect(earliest.map((n) => n.id)).toEqual(["x1"]); // T0 is the earliest post
+    // The flag is the only origin claim — there is no "origin" field on the node.
+    expect(JSON.stringify(g).toLowerCase()).not.toContain('"origin"');
+  });
+
+  it("authenticity bands flag a node as an INDICATOR; clue counts add a badge", () => {
+    const g = buildNetworkMap({
+      mentions: twoClustersOneBridge(),
+      authenticityBands: { inject: "high", x1: "authentic" },
+      clueCounts: { x1: 2 },
+    });
+    expect(g.nodes.find((n) => n.id === "inject")!.flaggedInauthentic).toBe(true);
+    expect(g.nodes.find((n) => n.id === "x1")!.flaggedInauthentic).toBeUndefined();
+    expect(g.nodes.find((n) => n.id === "x1")!.seenInChecks).toBe(2);
+  });
+
+  it("multi-language clusters are flagged as such", () => {
+    const bilingual = [
+      mk("a1", "нация под атакой пропаганды сегодня везде", T0, { lang: "ru" }),
+      mk("a2", "нация под атакой пропаганды сегодня везде", T0 + MIN, { lang: "ru" }),
+      mk("a3", "нация под атакой пропаганды сегодня везде", T0 + 2 * MIN, { lang: "en" }),
+    ];
+    const g = buildNetworkMap({ mentions: bilingual });
+    const c = g.clusters[0];
+    expect(c).toBeDefined();
+    expect(c.multiLanguage).toBe(true);
+    expect(c.languages).toEqual(["en", "ru"]);
+  });
+});
