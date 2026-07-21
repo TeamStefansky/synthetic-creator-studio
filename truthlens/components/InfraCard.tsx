@@ -24,19 +24,19 @@ export default function InfraCard({
   return (
     <div className="card">
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-indigo-400">{icon}</span>
+        <span className="text-brand-soft">{icon}</span>
         <h3 className="font-semibold">{title}</h3>
       </div>
       {unavailable ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-ink-secondary">
           <AlertTriangle className="h-4 w-4" /> Unavailable
         </div>
       ) : (
         <dl className="space-y-1.5 text-sm">
           {rows.map((r) => (
             <div key={r.label} className="flex justify-between gap-3">
-              <dt className="text-gray-400">{r.label}</dt>
-              <dd className="max-w-[60%] break-words text-right text-gray-100">
+              <dt className="text-ink-secondary">{r.label}</dt>
+              <dd className="max-w-[60%] break-words text-right text-ink">
                 {r.value ?? " - "}
               </dd>
             </div>

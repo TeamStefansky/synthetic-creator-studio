@@ -29,7 +29,7 @@ const TEXT: Record<string, string> = {
   legit: "text-risk-legit",
   unknown: "text-risk-unknown",
   high: "text-risk-high",
-  neutral: "text-gray-200",
+  neutral: "text-ink",
 };
 
 export default function ToolIntro({
@@ -55,12 +55,12 @@ export default function ToolIntro({
     <div className="card space-y-5">
       <div>
         <h2 className="text-sm font-semibold text-white">{heading}</h2>
-        <div className="mt-1 max-w-2xl text-sm text-gray-400">{what}</div>
+        <div className="mt-1 max-w-2xl text-sm text-ink-secondary">{what}</div>
         {steps && steps.length > 0 && (
           <ol className="mt-3 space-y-1.5">
             {steps.map((s, i) => (
-              <li key={i} className="flex gap-2 text-sm text-gray-400">
-                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/[0.06] text-[11px] font-semibold text-gray-300">
+              <li key={i} className="flex gap-2 text-sm text-ink-secondary">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white/[0.06] text-[11px] font-semibold text-ink">
                   {i + 1}
                 </span>
                 <span>{s}</span>
@@ -72,13 +72,13 @@ export default function ToolIntro({
 
       {examples && examples.length > 0 && (
         <div>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{examplesLabel}</div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-secondary">{examplesLabel}</div>
           <div className="flex flex-wrap gap-2">
             {examples.map((ex) => (
               <button
                 key={ex.label}
                 onClick={ex.onClick}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-gray-200 transition hover:border-brand hover:bg-white/[0.06]"
+                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-ink transition hover:border-brand hover:bg-white/[0.06]"
               >
                 {ex.label}
               </button>
@@ -89,7 +89,7 @@ export default function ToolIntro({
 
       {legend && legend.length > 0 && (
         <div>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">{legendLabel}</div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-secondary">{legendLabel}</div>
           <div className="grid gap-2 sm:grid-cols-2">
             {legend.map((l) => (
               <div key={l.label} className="flex items-start gap-2 rounded-lg border border-white/[0.06] px-3 py-2 text-xs">
@@ -98,7 +98,7 @@ export default function ToolIntro({
                 ) : (
                   <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${DOT[l.tone || "neutral"]}`} />
                 )}
-                <span className="text-gray-400">
+                <span className="text-ink-secondary">
                   <span className={`font-semibold ${TEXT[l.tone || "neutral"]}`}>{l.label}</span> - {l.text}
                 </span>
               </div>
@@ -107,7 +107,7 @@ export default function ToolIntro({
         </div>
       )}
 
-      {note && <p className="text-xs text-gray-600">{note}</p>}
+      {note && <p className="text-xs text-ink-muted">{note}</p>}
     </div>
   );
 }

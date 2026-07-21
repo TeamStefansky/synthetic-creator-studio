@@ -71,7 +71,7 @@ function ReportInner() {
       <div className="card mx-auto max-w-md text-center">
         <AlertTriangle className="mx-auto mb-2 h-6 w-6 text-risk-high" />
         <p className="text-risk-high">{error}</p>
-        <p className="mt-2 text-sm text-gray-400">Try a different URL.</p>
+        <p className="mt-2 text-sm text-ink-secondary">Try a different URL.</p>
       </div>
     );
   if (!report) return null;
@@ -93,13 +93,13 @@ function ReportInner() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="label-muted">Report for</div>
-            <h1 className="text-xl font-bold break-all">{report.domain}</h1>
-            <a href={report.finalUrl || report.url} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 break-all">
+            <h1 className="font-display text-xl font-bold break-all">{report.domain}</h1>
+            <a href={report.finalUrl || report.url} target="_blank" rel="noreferrer" className="text-xs text-brand-soft break-all">
               {report.finalUrl || report.url}
             </a>
             <div className="mt-1.5">
               <a href={`/check?type=narrative&input=${encodeURIComponent(report.domain)}`}
-                className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:underline">
+                className="inline-flex items-center gap-1 text-xs text-brand-soft hover:underline">
                 <Search className="h-3.5 w-3.5" /> Check narratives from this site
               </a>
             </div>
@@ -208,7 +208,7 @@ function ReportInner() {
       {/* Network graph */}
       <section className="card">
         <div className="mb-3 flex items-center gap-2">
-          <NetIcon className="h-5 w-5 text-indigo-400" />
+          <NetIcon className="h-5 w-5 text-brand-soft" />
           <h2 className="text-lg font-semibold">Operator Network</h2>
         </div>
         <NetworkGraph network={report.network} />
@@ -237,18 +237,18 @@ function ReportInner() {
         {report.propagation && (
           <div className="card">
             <div className="mb-3 flex items-center gap-2">
-              <Share2 className="h-5 w-5 text-indigo-400" />
+              <Share2 className="h-5 w-5 text-brand-soft" />
               <h2 className="text-lg font-semibold">Content Propagation</h2>
             </div>
             {report.propagation.hits.length === 0 ? (
-              <p className="text-sm text-gray-500">{report.propagation.note}</p>
+              <p className="text-sm text-ink-secondary">{report.propagation.note}</p>
             ) : (
               <>
                 {report.propagation.earliestPublisher && (
                   <p className="mb-2 text-sm">
                     Likely origin:{" "}
-                    <span className="font-medium text-indigo-300">{report.propagation.earliestPublisher}</span>{" "}
-                    {report.propagation.earliestDate && <span className="text-gray-500">({report.propagation.earliestDate})</span>}
+                    <span className="font-medium text-brand-soft">{report.propagation.earliestPublisher}</span>{" "}
+                    {report.propagation.earliestDate && <span className="text-ink-secondary">({report.propagation.earliestDate})</span>}
                   </p>
                 )}
                 {report.propagation.coordinatedAmplification && (
@@ -257,8 +257,8 @@ function ReportInner() {
                 <ul className="max-h-48 space-y-1 overflow-auto text-sm scroll-thin">
                   {report.propagation.hits.map((h, idx) => (
                     <li key={idx} className="flex justify-between gap-2">
-                      <span className="truncate text-gray-300">{h.domain}</span>
-                      <span className="shrink-0 text-gray-500">{h.publishedAt || " - "}</span>
+                      <span className="truncate text-ink">{h.domain}</span>
+                      <span className="shrink-0 text-ink-secondary">{h.publishedAt || " - "}</span>
                     </li>
                   ))}
                 </ul>
@@ -269,7 +269,7 @@ function ReportInner() {
         {report.coordination && (
           <div className="card">
             <div className="mb-3 flex items-center gap-2">
-              <Radar className="h-5 w-5 text-indigo-400" />
+              <Radar className="h-5 w-5 text-brand-soft" />
               <h2 className="text-lg font-semibold">Coordination Likelihood</h2>
             </div>
             <div className={`mb-3 inline-block rounded-lg px-3 py-1 text-sm font-semibold ${
@@ -280,17 +280,17 @@ function ReportInner() {
               {report.coordination.level}
             </div>
             {report.coordination.signals.length === 0 ? (
-              <p className="text-sm text-gray-500">No coordination signals detected.</p>
+              <p className="text-sm text-ink-secondary">No coordination signals detected.</p>
             ) : (
               <ul className="space-y-1.5 text-sm">
                 {report.coordination.signals.map((s, idx) => (
-                  <li key={idx} className="text-gray-300">
-                    <span className="font-medium">{s.label}</span> - <span className="text-gray-400">{s.detail}</span>
+                  <li key={idx} className="text-ink">
+                    <span className="font-medium">{s.label}</span> - <span className="text-ink-secondary">{s.detail}</span>
                   </li>
                 ))}
               </ul>
             )}
-            <p className="mt-3 text-xs text-gray-500">{report.coordination.note}</p>
+            <p className="mt-3 text-xs text-ink-secondary">{report.coordination.note}</p>
           </div>
         )}
       </div>
@@ -304,7 +304,7 @@ function ReportInner() {
       {/* Detailed, auditable rating breakdown + export */}
       <RatingReportCard report={report} dossier={dossier} />
 
-      <p className="text-center text-xs text-gray-500">
+      <p className="text-center text-xs text-ink-secondary">
         Analyzed {fmtDate(report.fetchedAt)} · cached for 24h
       </p>
     </div>

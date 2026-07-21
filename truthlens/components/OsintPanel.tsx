@@ -47,7 +47,7 @@ export default function OsintPanel({
     <div className="card">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Telescope className="h-5 w-5 text-indigo-400" />
+          <Telescope className="h-5 w-5 text-brand-soft" />
           <h2 className="text-lg font-semibold">Deep OSINT Research</h2>
         </div>
         {!loading && (
@@ -58,7 +58,7 @@ export default function OsintPanel({
       </div>
 
       {!dossier && !loading && !error && (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-ink-secondary">
           Investigate who is behind this site across the open web - owners,
           affiliations, social presence, funding, reputation, controversies, and
           related sites - with sources. Runs on demand (uses Claude web search).
@@ -66,8 +66,8 @@ export default function OsintPanel({
       )}
 
       {loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+        <div className="flex items-center gap-2 text-sm text-ink">
+          <Loader2 className="h-4 w-4 animate-spin text-brand-soft" />
           Researching the open web… this can take 20–60 seconds.
         </div>
       )}
@@ -84,19 +84,19 @@ export default function OsintPanel({
 
       {dossier && dossier.available && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-ink-secondary">
             <span className="rounded bg-white/10 px-2 py-0.5">Confidence: {dossier.confidence}</span>
           </div>
-          {dossier.summary && <p className="text-sm text-gray-200">{dossier.summary}</p>}
+          {dossier.summary && <p className="text-sm text-ink">{dossier.summary}</p>}
 
           {dossier.entities.length > 0 && (
             <Section icon={<Users className="h-4 w-4" />} title="People & organizations">
               <ul className="space-y-1.5 text-sm">
                 {dossier.entities.map((e, i) => (
                   <li key={i}>
-                    <span className="font-medium text-gray-100">{e.name}</span>
-                    <span className="text-gray-500"> · {e.role}</span>
-                    {e.evidence && <div className="text-gray-400">{e.evidence}</div>}
+                    <span className="font-medium text-ink">{e.name}</span>
+                    <span className="text-ink-secondary"> · {e.role}</span>
+                    {e.evidence && <div className="text-ink-secondary">{e.evidence}</div>}
                   </li>
                 ))}
               </ul>
@@ -105,7 +105,7 @@ export default function OsintPanel({
 
           {dossier.affiliations.length > 0 && (
             <Section icon={<Link2 className="h-4 w-4" />} title="Affiliations">
-              <ul className="list-inside list-disc text-sm text-gray-300">
+              <ul className="list-inside list-disc text-sm text-ink">
                 {dossier.affiliations.map((a, i) => <li key={i}>{a}</li>)}
               </ul>
             </Section>
@@ -116,10 +116,10 @@ export default function OsintPanel({
               <ul className="space-y-1 text-sm">
                 {dossier.socialProfiles.map((s, i) => (
                   <li key={i} className="flex items-center gap-2">
-                    <span className="text-gray-400">{s.platform}:</span>
-                    <span className="text-gray-200">{s.handle}</span>
+                    <span className="text-ink-secondary">{s.platform}:</span>
+                    <span className="text-ink">{s.handle}</span>
                     {s.url && (
-                      <a href={s.url} target="_blank" rel="noreferrer" className="text-indigo-400">
+                      <a href={s.url} target="_blank" rel="noreferrer" className="text-brand-soft">
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     )}
@@ -131,13 +131,13 @@ export default function OsintPanel({
 
           {dossier.funding && (
             <Section icon={<Banknote className="h-4 w-4" />} title="Funding / monetization">
-              <p className="text-sm text-gray-300">{dossier.funding}</p>
+              <p className="text-sm text-ink">{dossier.funding}</p>
             </Section>
           )}
 
           {dossier.reputation && (
             <Section title="Reputation">
-              <p className="text-sm text-gray-300">{dossier.reputation}</p>
+              <p className="text-sm text-ink">{dossier.reputation}</p>
             </Section>
           )}
 
@@ -151,7 +151,7 @@ export default function OsintPanel({
 
           {dossier.relatedSites.length > 0 && (
             <Section title="Related sites">
-              <p className="text-sm text-gray-300">{dossier.relatedSites.join(", ")}</p>
+              <p className="text-sm text-ink">{dossier.relatedSites.join(", ")}</p>
             </Section>
           )}
 
@@ -160,7 +160,7 @@ export default function OsintPanel({
               <ul className="space-y-1 text-sm">
                 {dossier.citations.map((c, i) => (
                   <li key={i}>
-                    <a href={c.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-indigo-400 hover:underline">
+                    <a href={c.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-brand-soft hover:underline">
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">{c.title || c.url}</span>
                     </a>
@@ -170,7 +170,7 @@ export default function OsintPanel({
             </Section>
           )}
 
-          <p className="text-xs text-gray-500">{dossier.note}</p>
+          <p className="text-xs text-ink-secondary">{dossier.note}</p>
         </div>
       )}
     </div>
@@ -180,7 +180,7 @@ export default function OsintPanel({
 function Section({ icon, title, children }: { icon?: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-white/10 bg-bg-elev p-3">
-      <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-200">
+      <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
         {icon}
         {title}
       </div>

@@ -7,7 +7,7 @@ const TONE: Record<ConfidenceLevel, string> = {
   High: "text-risk-high bg-risk-high/10 border-risk-high/30",
   Medium: "text-risk-unknown bg-risk-unknown/10 border-risk-unknown/30",
   Low: "text-risk-legit bg-risk-legit/10 border-risk-legit/30",
-  Unknown: "text-gray-400 bg-white/[0.05] border-white/10",
+  Unknown: "text-ink-secondary bg-white/[0.05] border-white/10",
 };
 
 export default function ConfidenceBadge({

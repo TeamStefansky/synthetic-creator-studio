@@ -79,7 +79,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
 
   if (network.nodes.length <= 1) {
     return (
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-ink-secondary">
         No connected sibling domains or shared identifiers found - the operator
         network is just this domain.
       </p>
@@ -116,7 +116,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
           ctx.fillText(label.length > 28 ? label.slice(0, 27) + "…" : label, node.x, node.y + 9);
         }}
       />
-      <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-gray-400">
+      <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-ink-secondary">
         <Legend color={KIND_COLOR.target} label="Target" />
         <Legend color={KIND_COLOR.domain} label="Sibling domain" />
         <Legend color={KIND_COLOR.ip} label="IP" />
@@ -142,7 +142,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
                 onClick={() => router.push(reportHref(d.label))}
                 title="Analyze in TruthLens"
                 className={`inline-flex items-center gap-1 px-2 py-1 transition hover:bg-white/[0.06] ${
-                  d.flaggedFake ? "text-risk-high" : "text-gray-200"
+                  d.flaggedFake ? "text-risk-high" : "text-ink"
                 }`}
               >
                 <Search className="h-3 w-3 opacity-70" />
@@ -153,7 +153,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Open the site in a new tab"
-                className="border-l border-white/10 px-1.5 py-1 text-gray-400 transition hover:bg-white/[0.06] hover:text-gray-200"
+                className="border-l border-white/10 px-1.5 py-1 text-ink-secondary transition hover:bg-white/[0.06] hover:text-ink"
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
@@ -223,7 +223,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
 
   if (network.insufficient) {
     return (
-      <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">
+      <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-ink-secondary">
         Insufficient data to map a network - {network.note || "too few connected nodes/edges in the collected set."}
       </div>
     );
@@ -262,16 +262,16 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
           }}
         />
         {hoverEdge?.evidence && (
-          <div className="pointer-events-none absolute left-2 top-2 max-w-[85%] rounded-lg border border-white/15 bg-black/85 p-2 text-xs text-gray-200">
-            <span className={`font-semibold ${hoverEdge.evidence.mode === "observed" ? "text-brand-soft" : "text-gray-300"}`}>
+          <div className="pointer-events-none absolute left-2 top-2 max-w-[85%] rounded-lg border border-white/15 bg-black/85 p-2 text-xs text-ink">
+            <span className={`font-semibold ${hoverEdge.evidence.mode === "observed" ? "text-brand-soft" : "text-ink"}`}>
               {hoverEdge.evidence.mode === "observed" ? "Observed" : "Inferred"} · {hoverEdge.evidence.kind}
             </span>
-            <span className="text-gray-500"> ({hoverEdge.evidence.confidence})</span>
-            <div className="mt-0.5 text-gray-400">{hoverEdge.evidence.signals?.join("; ")}</div>
-            <div className="text-gray-500">Could also be: {hoverEdge.evidence.alternative}</div>
+            <span className="text-ink-secondary"> ({hoverEdge.evidence.confidence})</span>
+            <div className="mt-0.5 text-ink-secondary">{hoverEdge.evidence.signals?.join("; ")}</div>
+            <div className="text-ink-secondary">Could also be: {hoverEdge.evidence.alternative}</div>
           </div>
         )}
-        <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-gray-400">
+        <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-ink-secondary">
           <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 border-t-2 border-brand-soft" /> Observed (real interaction / citation)</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-4 border-t-2 border-dashed border-white/40" /> Inferred (co-behavior)</span>
           <Legend color={CLUSTER_PALETTE[4]} label="Earliest observed (not the origin)" />
@@ -280,7 +280,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
       </div>
 
       {network.observedEdgeKinds.length === 0 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-ink-secondary">
           No OBSERVED interaction edges - the connected sources don’t expose a repost/reply/quote graph (that needs a paid platform API). All lines shown are inferred co-behavior.
         </p>
       )}
@@ -293,17 +293,17 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
             {network.clusters.map((c) => (
               <div key={c.id} className="rounded-lg border border-white/[0.06] p-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-gray-200">
+                  <span className="flex items-center gap-1.5 text-ink">
                     <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: clusterColor(c.id) }} />
                     Cluster {c.id + 1} · {c.size} accounts
                   </span>
                   <ConfidenceBadge level={CONF[c.confidence] || "Unknown"} />
                 </div>
-                <div className="mt-1 text-gray-500">
+                <div className="mt-1 text-ink-secondary">
                   {c.dominantEdgeKinds.length ? `co-behavior: ${c.dominantEdgeKinds.join(", ")}` : "no dominant co-behavior"}
                   {c.languages.length ? ` · ${c.multiLanguage ? "multi-language: " : "language: "}${c.languages.join(", ")}` : ""}
                 </div>
-                <div className="text-gray-600">A tightly co-behaving group - not an organization or actor.</div>
+                <div className="text-ink-muted">A tightly co-behaving group - not an organization or actor.</div>
               </div>
             ))}
           </div>
@@ -318,7 +318,7 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
         </div>
       )}
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-ink-secondary">
         Structure of a coordinated cluster - accounts and domains, never a person or actor. A visual line is a claim: it carries its evidence and an innocent alternative. Solid = observed fact; dashed = inferred co-behavior.
       </p>
     </div>
@@ -326,16 +326,16 @@ export function InfluenceNetworkGraph({ network }: { network: InfluenceNetwork }
 }
 
 function RankedList({ title, nodes }: { title: string; nodes: InfluenceNetwork["core"] }) {
-  if (!nodes.length) return <div className="text-xs text-gray-500">{title}: none.</div>;
+  if (!nodes.length) return <div className="text-xs text-ink-secondary">{title}: none.</div>;
   return (
     <div>
       <div className="label-muted mb-1.5">{title}</div>
       <ul className="space-y-1.5">
         {nodes.map((n) => (
           <li key={n.id} className="rounded-lg border border-white/[0.06] p-2 text-xs">
-            <div className="text-gray-200">{n.label} <span className="text-gray-500">· influence {n.influence}{n.bridges ? ` · bridges ${n.bridges}` : ""}</span></div>
-            {n.signals.map((s, i) => <div key={i} className="text-gray-500">{s}</div>)}
-            <div className="text-gray-600">Could also be: {n.alternative}</div>
+            <div className="text-ink">{n.label} <span className="text-ink-secondary">· influence {n.influence}{n.bridges ? ` · bridges ${n.bridges}` : ""}</span></div>
+            {n.signals.map((s, i) => <div key={i} className="text-ink-secondary">{s}</div>)}
+            <div className="text-ink-muted">Could also be: {n.alternative}</div>
           </li>
         ))}
       </ul>

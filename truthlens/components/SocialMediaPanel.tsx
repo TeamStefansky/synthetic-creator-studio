@@ -33,7 +33,7 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
     <div className="card">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Radio className="h-5 w-5 text-indigo-400" />
+          <Radio className="h-5 w-5 text-brand-soft" />
           <h2 className="text-lg font-semibold">Social &amp; Media Intelligence</h2>
         </div>
         {!loading && (
@@ -44,7 +44,7 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
       </div>
 
       {!ran && !loading && (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-ink-secondary">
           Find who is amplifying this site on X, estimate the share of
           inauthentic/bot accounts and the top spreaders, and check the page&rsquo;s
           images for AI-generation / deepfakes. Runs on demand (needs the relevant API keys).
@@ -52,8 +52,8 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
       )}
 
       {loading && (
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-400" /> Scanning X and images…
+        <div className="flex items-center gap-2 text-sm text-ink">
+          <Loader2 className="h-4 w-4 animate-spin text-brand-soft" /> Scanning X and images…
         </div>
       )}
 
@@ -61,7 +61,7 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
         <div className="space-y-5">
           {/* Social */}
           <div>
-            <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-200">
+            <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
               <Bot className="h-4 w-4" /> X amplification
             </div>
             {!social?.available ? (
@@ -76,7 +76,7 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
                 {social.topSpreaders.length > 0 && (
                   <div className="overflow-x-auto scroll-thin">
                     <table className="w-full text-left text-sm">
-                      <thead className="text-xs text-gray-400">
+                      <thead className="text-xs text-ink-secondary">
                         <tr className="border-b border-white/10">
                           <th className="py-1.5 pr-3">Account</th><th className="pr-3">Followers</th><th className="pr-3">Engagement</th><th>Bot score</th>
                         </tr>
@@ -87,14 +87,14 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
                     </table>
                   </div>
                 )}
-                <p className="mt-2 text-xs text-gray-500">{social.note}</p>
+                <p className="mt-2 text-xs text-ink-secondary">{social.note}</p>
               </>
             )}
           </div>
 
           {/* Media */}
           <div>
-            <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-200">
+            <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
               <ImageIcon className="h-4 w-4" /> Image AI / deepfake detection
             </div>
             {!media?.available ? (
@@ -109,14 +109,14 @@ export default function SocialMediaPanel({ report }: { report: Report }) {
                       {img.aiGeneratedScore >= 40 ? <AlertTriangle className="h-3.5 w-3.5" /> : <BadgeCheck className="h-3.5 w-3.5" />}
                       {img.label}
                     </div>
-                    <div className="text-xs text-gray-500">AI {img.aiGeneratedScore}%{img.deepfakeScore != null ? ` · deepfake ${img.deepfakeScore}%` : ""} · {img.provider}</div>
+                    <div className="text-xs text-ink-secondary">AI {img.aiGeneratedScore}%{img.deepfakeScore != null ? ` · deepfake ${img.deepfakeScore}%` : ""} · {img.provider}</div>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <p className="text-xs text-gray-500">Probabilistic indicators, not proof.</p>
+          <p className="text-xs text-ink-secondary">Probabilistic indicators, not proof.</p>
         </div>
       )}
     </div>
@@ -136,10 +136,10 @@ function Spreader({ s }: { s: SocialAccount }) {
   return (
     <tr className="border-b border-white/5">
       <td className="py-1.5 pr-3">
-        <a href={`https://x.com/${s.handle}`} target="_blank" rel="noreferrer" className="text-indigo-300 hover:underline">@{s.handle}</a>
+        <a href={`https://x.com/${s.handle}`} target="_blank" rel="noreferrer" className="text-brand-soft hover:underline">@{s.handle}</a>
       </td>
-      <td className="pr-3 text-gray-300">{s.followers ?? " - "}</td>
-      <td className="pr-3 text-gray-300">{s.engagement ?? 0}</td>
+      <td className="pr-3 text-ink">{s.followers ?? " - "}</td>
+      <td className="pr-3 text-ink">{s.engagement ?? 0}</td>
       <td>
         <span className={`rounded px-1.5 py-0.5 text-xs ${s.botScore >= 50 ? "bg-risk-high/15 text-risk-high" : s.botScore >= 30 ? "bg-risk-unknown/15 text-risk-unknown" : "bg-risk-legit/15 text-risk-legit"}`} title={s.reasons.join("; ")}>
           {s.botScore}

@@ -28,7 +28,7 @@ const BAND_UI: Record<string, { label: string; chip: string }> = {
   low: { label: "Low concern", chip: "bg-risk-unknown/15 text-risk-unknown" },
   elevated: { label: "Elevated - review", chip: "bg-risk-unknown/15 text-risk-unknown" },
   high: { label: "High likelihood inauthentic", chip: "bg-risk-high/15 text-risk-high" },
-  insufficient_data: { label: "Insufficient data", chip: "bg-white/[0.06] text-gray-400" },
+  insufficient_data: { label: "Insufficient data", chip: "bg-white/[0.06] text-ink-secondary" },
 };
 
 const label = (key: string) => key.replace(/_/g, " ");
@@ -51,9 +51,9 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-200">
+      <div className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
         <UserCheck className="h-4 w-4" /> Account authenticity
-        <span className="text-xs font-normal text-gray-500"> - suspicion score per amplifying account, with evidence</span>
+        <span className="text-xs font-normal text-ink-secondary"> - suspicion score per amplifying account, with evidence</span>
       </div>
       <div className="space-y-3">
         {accounts.map(({ account, assessment: a }) => {
@@ -62,29 +62,29 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
           return (
             <div key={account} className="rounded-lg border border-white/[0.06] p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-gray-200">{account}</span>
+                <span className="text-sm text-ink">{account}</span>
                 <div className="flex items-center gap-2 text-xs">
                   <span className={`rounded px-1.5 py-0.5 font-medium ${ui.chip}`}>{ui.label}</span>
                   {a.band !== "insufficient_data" && (
-                    <span className="text-gray-400">suspicion {a.suspicion_score}/100</span>
+                    <span className="text-ink-secondary">suspicion {a.suspicion_score}/100</span>
                   )}
-                  <span className="text-gray-500">confidence {Math.round(a.confidence * 100)}%</span>
+                  <span className="text-ink-secondary">confidence {Math.round(a.confidence * 100)}%</span>
                 </div>
               </div>
               {top.length > 0 && a.band !== "insufficient_data" && (
                 <ul className="mt-2 space-y-1.5">
                   {top.map((s) => (
                     <li key={s.key} className="text-xs">
-                      <span className="text-gray-300">{label(s.key)}</span>
-                      <span className="text-gray-500"> · +{s.contribution} of {s.weight}</span>
-                      {s.evidence && <div className="text-gray-500">{fmtEvidence(s.evidence)}</div>}
-                      <div className="text-gray-600">Could also be: {s.alternative}</div>
+                      <span className="text-ink">{label(s.key)}</span>
+                      <span className="text-ink-secondary"> · +{s.contribution} of {s.weight}</span>
+                      {s.evidence && <div className="text-ink-secondary">{fmtEvidence(s.evidence)}</div>}
+                      <div className="text-ink-muted">Could also be: {s.alternative}</div>
                     </li>
                   ))}
                 </ul>
               )}
               {a.missing_signals.length > 0 && (
-                <p className="mt-2 text-[11px] text-gray-600">
+                <p className="mt-2 text-[11px] text-ink-muted">
                   {a.missing_signals.length} signal(s) not collected (lowering confidence) - never guessed.
                 </p>
               )}
@@ -92,7 +92,7 @@ export default function AuthenticityPanel({ entity, accounts }: { entity: string
           );
         })}
       </div>
-      <p className="mt-2 text-xs text-gray-500">
+      <p className="mt-2 text-xs text-ink-secondary">
         Probabilistic indicators about ACCOUNTS - never a claim about a person, and never a verdict. Review the evidence.
       </p>
     </div>

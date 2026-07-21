@@ -32,7 +32,7 @@ export default function RatingReportCard({
     <div className="card">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <FileBarChart className="h-5 w-5 text-indigo-400" />
+          <FileBarChart className="h-5 w-5 text-brand-soft" />
           <h2 className="text-lg font-semibold">Detailed Rating Report</h2>
         </div>
         <div className="flex gap-2 no-print">
@@ -51,17 +51,17 @@ export default function RatingReportCard({
         <Stat label="Risk-decreasing" value={String(rating.decreasingTotal)} accent="text-risk-legit" />
       </div>
 
-      <p className="mb-2 text-sm text-gray-300">{rating.bandExplanation}</p>
-      <p className="mb-4 text-sm text-gray-400">{rating.confidenceExplanation}</p>
+      <p className="mb-2 text-sm text-ink">{rating.bandExplanation}</p>
+      <p className="mb-4 text-sm text-ink-secondary">{rating.confidenceExplanation}</p>
 
       <div className="space-y-3">
         {rating.groups.map((g) => (
           <div key={g.category} className="rounded-lg border border-white/10 bg-bg-elev p-3">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-100">{g.category}</h3>
+              <h3 className="text-sm font-semibold text-ink">{g.category}</h3>
               <span
                 className={`text-sm font-semibold ${
-                  g.subtotal > 0 ? "text-risk-high" : g.subtotal < 0 ? "text-risk-legit" : "text-gray-400"
+                  g.subtotal > 0 ? "text-risk-high" : g.subtotal < 0 ? "text-risk-legit" : "text-ink-secondary"
                 }`}
               >
                 net {impactStr(g.subtotal)}
@@ -72,13 +72,13 @@ export default function RatingReportCard({
                 <li key={i} className="flex gap-2">
                   <span
                     className={`w-9 shrink-0 font-mono ${
-                      it.impact > 0 ? "text-risk-high" : it.impact < 0 ? "text-risk-legit" : "text-gray-500"
+                      it.impact > 0 ? "text-risk-high" : it.impact < 0 ? "text-risk-legit" : "text-ink-secondary"
                     }`}
                   >
                     {impactStr(it.impact)}
                   </span>
-                  <span className="text-gray-300">
-                    <span className="text-gray-100">{it.label}</span> - {it.detail}
+                  <span className="text-ink">
+                    <span className="text-ink">{it.label}</span> - {it.detail}
                   </span>
                 </li>
               ))}

@@ -54,10 +54,10 @@ export default function EmailPage() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2">
-          <Mail className="h-6 w-6 text-indigo-400" />
-          <h1 className="text-2xl font-bold">Email Header Tracer</h1>
+          <Mail className="h-6 w-6 text-brand-soft" />
+          <h1 className="font-display text-2xl font-bold">Email Header <span className="gradient-text">Tracer</span></h1>
         </div>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="mt-1 text-sm text-ink-secondary">
           Paste the raw source of an email you received. We reconstruct the hop
           path (origin first), geolocate each hop, infer the true origin, and
           evaluate SPF/DKIM/DMARC for a spoofing verdict.
@@ -69,7 +69,7 @@ export default function EmailPage() {
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           placeholder="Paste raw email source / full headers here (must include the Received: lines)…"
-          className="h-44 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-xs outline-none focus:border-indigo-400 scroll-thin"
+          className="h-44 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-xs outline-none focus:border-brand scroll-thin"
         />
         <div className="mt-3 flex items-center gap-3">
           <button className="btn" onClick={() => trace()} disabled={loading || !raw.trim()}>
@@ -82,7 +82,7 @@ export default function EmailPage() {
       {!result && !loading && (
         <ToolIntro
           heading="What is this, and how do I get the headers?"
-          what={<>Every email carries hidden <span className="text-gray-200">headers</span> that record the servers it passed through. Pasting them lets us reconstruct the route, estimate where it really came from, and check whether the sender was faked (spoofed). To get them: in <span className="text-gray-200">Gmail</span> open the email → ⋮ → <span className="text-gray-200">Show original</span>; in <span className="text-gray-200">Outlook</span> → File → Properties → <span className="text-gray-200">Internet headers</span>; in <span className="text-gray-200">Apple Mail</span> → View → Message → <span className="text-gray-200">Raw Source</span>. Copy all of it and paste here.</>}
+          what={<>Every email carries hidden <span className="text-ink">headers</span> that record the servers it passed through. Pasting them lets us reconstruct the route, estimate where it really came from, and check whether the sender was faked (spoofed). To get them: in <span className="text-ink">Gmail</span> open the email → ⋮ → <span className="text-ink">Show original</span>; in <span className="text-ink">Outlook</span> → File → Properties → <span className="text-ink">Internet headers</span>; in <span className="text-ink">Apple Mail</span> → View → Message → <span className="text-ink">Raw Source</span>. Copy all of it and paste here.</>}
           examplesLabel="No email handy?"
           examples={[{ label: "Load a sample (spoofed) email", onClick: () => { setRaw(SAMPLE_EMAIL); trace(SAMPLE_EMAIL); } }]}
           legend={[
@@ -101,9 +101,9 @@ export default function EmailPage() {
             <div className="card">
               <div className="label-muted">Inferred true origin</div>
               <div className="mt-1 flex items-center gap-2 text-lg font-bold">
-                <MapPin className="h-5 w-5 text-indigo-400" />
+                <MapPin className="h-5 w-5 text-brand-soft" />
                 {result.originIp || "Unknown"}
-                {result.originCountry && <span className="text-gray-400">· {result.originCountry}</span>}
+                {result.originCountry && <span className="text-ink-secondary">· {result.originCountry}</span>}
               </div>
               {result.originIsAdversary && (
                 <p className="mt-1 text-sm text-risk-high">⚠ Origin country is in your adversary list.</p>
@@ -115,7 +115,7 @@ export default function EmailPage() {
                 {result.auth.spoofingLikely ? <ShieldAlert className="h-5 w-5 text-risk-high" /> : <ShieldCheck className="h-5 w-5 text-risk-legit" />}
                 {result.auth.verdict}
               </div>
-              <div className="mt-2 flex gap-3 text-xs text-gray-400">
+              <div className="mt-2 flex gap-3 text-xs text-ink-secondary">
                 <span>SPF: {result.auth.spf || " - "}</span>
                 <span>DKIM: {result.auth.dkim || " - "}</span>
                 <span>DMARC: {result.auth.dmarc || " - "}</span>
@@ -131,25 +131,25 @@ export default function EmailPage() {
                   <div className="card-elev">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="font-mono text-xs">
-                        <span className="text-gray-500">#{hop.index} </span>
-                        {hop.from && <span>from <span className="text-gray-200">{hop.from}</span> </span>}
-                        {hop.by && <span className="text-gray-500">by {hop.by}</span>}
+                        <span className="text-ink-secondary">#{hop.index} </span>
+                        {hop.from && <span>from <span className="text-ink">{hop.from}</span> </span>}
+                        {hop.by && <span className="text-ink-secondary">by {hop.by}</span>}
                       </div>
                       {hop.ip && (
                         <div className="text-xs">
-                          <span className="font-mono text-indigo-300">{hop.ip}</span>
-                          {hop.enrichment?.country && <span className="text-gray-400"> · {hop.enrichment.country}</span>}
+                          <span className="font-mono text-brand-soft">{hop.ip}</span>
+                          {hop.enrichment?.country && <span className="text-ink-secondary"> · {hop.enrichment.country}</span>}
                           {hop.enrichment?.isAdversary && <span className="text-risk-high"> ⚠</span>}
                         </div>
                       )}
                     </div>
                   </div>
                   {i < result.hops.length - 1 && (
-                    <div className="flex justify-center py-0.5 text-gray-600"><ArrowDown className="h-3 w-3" /></div>
+                    <div className="flex justify-center py-0.5 text-ink-muted"><ArrowDown className="h-3 w-3" /></div>
                   )}
                 </li>
               ))}
-              {result.hops.length === 0 && <p className="text-sm text-gray-500">No Received: hops parsed.</p>}
+              {result.hops.length === 0 && <p className="text-sm text-ink-secondary">No Received: hops parsed.</p>}
             </ol>
           </div>
         </div>

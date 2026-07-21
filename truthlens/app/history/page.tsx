@@ -31,10 +31,10 @@ export default function HistoryPage() {
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <ConfidenceBadge level={(c.level as ConfidenceLevel) || "Unknown"} />
-          <span className="truncate font-medium text-gray-200">{c.headline}</span>
+          <span className="truncate font-medium text-ink">{c.headline}</span>
         </div>
-        <div className="mt-1 truncate text-xs text-gray-500">
-          {TYPE_LABEL[c.type] || c.type} · {fmtDate(c.createdAt)} · <span className="text-gray-600">{c.input.slice(0, 80)}</span>
+        <div className="mt-1 truncate text-xs text-ink-secondary">
+          {TYPE_LABEL[c.type] || c.type} · {fmtDate(c.createdAt)} · <span className="text-ink-muted">{c.input.slice(0, 80)}</span>
         </div>
       </div>
       <div className="flex items-center gap-3">
@@ -42,7 +42,7 @@ export default function HistoryPage() {
           <RotateCcw className="h-3.5 w-3.5" /> Reopen
         </Link>
         {isLocal && (
-          <button onClick={() => del(c.id)} className="text-gray-600 transition hover:text-risk-high" title="Delete">
+          <button onClick={() => del(c.id)} className="text-ink-muted transition hover:text-risk-high" title="Delete">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         )}
@@ -53,12 +53,12 @@ export default function HistoryPage() {
   return (
     <div className="animate-fade-up space-y-4">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-white">History</h1>
-        <p className="mt-1.5 text-sm text-gray-400">Every check you run is saved here automatically - re-openable, no filing.</p>
+        <h1 className="font-display text-xl font-bold tracking-tight text-white">History</h1>
+        <p className="mt-1.5 text-sm text-ink-secondary">Every check you run is saved here automatically - re-openable, no filing.</p>
       </div>
 
       {local.length === 0 ? (
-        <div className="card text-sm text-gray-400">
+        <div className="card text-sm text-ink-secondary">
           No checks yet. Run one from <Link href="/check" className="text-brand-soft hover:underline">Check</Link>.
         </div>
       ) : (
@@ -67,7 +67,7 @@ export default function HistoryPage() {
 
       {shared && shared.length > 0 && (
         <>
-          <h2 className="pt-2 text-sm font-semibold text-gray-400">Shared team feed</h2>
+          <h2 className="pt-2 text-sm font-semibold text-ink-secondary">Shared team feed</h2>
           {shared.filter((s) => !local.some((l) => l.id === s.id)).map((c) => <Row key={c.id} c={c} />)}
         </>
       )}

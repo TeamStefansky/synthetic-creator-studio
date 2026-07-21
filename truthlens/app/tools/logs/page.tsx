@@ -57,10 +57,10 @@ export default function LogsPage() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2">
-          <ScrollText className="h-6 w-6 text-indigo-400" />
-          <h1 className="text-2xl font-bold">Log Analyzer</h1>
+          <ScrollText className="h-6 w-6 text-brand-soft" />
+          <h1 className="font-display text-2xl font-bold">Log <span className="gradient-text">Analyzer</span></h1>
         </div>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="mt-1 text-sm text-ink-secondary">
           Reconstruct where traffic came from, flag bots, datacenter ASNs and
           adversary origins, and trace each visitor&rsquo;s content path. Supports
           Apache/Nginx &ldquo;combined&rdquo; logs and generic CSV.
@@ -74,7 +74,7 @@ export default function LogsPage() {
 
       <div className="card">
         <label
-          className="mb-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-6 text-sm text-gray-400 hover:border-indigo-400/50"
+          className="mb-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-6 text-sm text-ink-secondary hover:border-brand/50"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files?.[0]); }}
         >
@@ -86,7 +86,7 @@ export default function LogsPage() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder='Paste log lines here, e.g.&#10;1.2.3.4 - - [10/Oct/2023:13:55:36 +0000] "GET /article HTTP/1.1" 200 1234 "https://ref" "Mozilla/5.0..."'
-          className="h-40 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-xs outline-none focus:border-indigo-400 scroll-thin"
+          className="h-40 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-xs outline-none focus:border-brand scroll-thin"
         />
         <div className="mt-3 flex items-center gap-3">
           <button className="btn" onClick={() => analyze()} disabled={loading || !text.trim()}>
@@ -99,10 +99,10 @@ export default function LogsPage() {
       {!result && !loading && (
         <ToolIntro
           heading="What is this, and how do I use it?"
-          what={<>A <span className="text-gray-200">server log</span> is the list of visits your website’s server records - one line per request, with the visitor’s IP address, time, and what they fetched. If you run a site, you can download it from your hosting panel (cPanel “Raw Access Logs”), Cloudflare, Nginx/Apache <span className="font-mono text-[11px]">access.log</span>, or Vercel/Netlify logs. Paste it here and TruthLens flags bots, datacenter traffic, and synchronized bursts that look automated.</>}
+          what={<>A <span className="text-ink">server log</span> is the list of visits your website’s server records - one line per request, with the visitor’s IP address, time, and what they fetched. If you run a site, you can download it from your hosting panel (cPanel “Raw Access Logs”), Cloudflare, Nginx/Apache <span className="font-mono text-[11px]">access.log</span>, or Vercel/Netlify logs. Paste it here and TruthLens flags bots, datacenter traffic, and synchronized bursts that look automated.</>}
           steps={[
             <>Export your access log (or drag the file in above).</>,
-            <>Paste it and press <span className="text-gray-200">Analyze log</span>.</>,
+            <>Paste it and press <span className="text-ink">Analyze log</span>.</>,
             <>Read the coordination likelihood and the flagged IPs.</>,
           ]}
           examplesLabel="No log handy?"
@@ -147,7 +147,7 @@ function Results({ result, coord }: { result: LogAnalysisResult; coord: Coordina
       </div>
 
       {result.skippedLines > 0 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-ink-secondary">
           Parsed {result.parsedLines} lines; skipped {result.skippedLines} malformed line(s). {result.note}
         </p>
       )}
@@ -155,8 +155,8 @@ function Results({ result, coord }: { result: LogAnalysisResult; coord: Coordina
       {coord && (
         <div className="card">
           <h2 className="mb-2 text-lg font-semibold">Coordination likelihood: <span className={coord.level === "High" ? "text-risk-high" : coord.level === "Medium" ? "text-risk-unknown" : "text-risk-legit"}>{coord.level}</span></h2>
-          <ul className="space-y-1 text-sm text-gray-400">
-            {coord.signals.map((s, i) => <li key={i}><span className="text-gray-200">{s.label}</span> - {s.detail}</li>)}
+          <ul className="space-y-1 text-sm text-ink-secondary">
+            {coord.signals.map((s, i) => <li key={i}><span className="text-ink">{s.label}</span> - {s.detail}</li>)}
             {coord.signals.length === 0 && <li>No coordination signals.</li>}
           </ul>
         </div>
@@ -168,22 +168,22 @@ function Results({ result, coord }: { result: LogAnalysisResult; coord: Coordina
           <div className="space-y-2">
             {result.countryBreakdown.slice(0, 12).map((c) => (
               <div key={c.country}>
-                <div className="mb-0.5 flex justify-between text-xs"><span>{c.country}</span><span className="text-gray-500">{c.requests}</span></div>
-                <div className="h-2 rounded-full bg-white/10"><div className="h-full rounded-full bg-indigo-400" style={{ width: `${(c.requests / maxCountry) * 100}%` }} /></div>
+                <div className="mb-0.5 flex justify-between text-xs"><span>{c.country}</span><span className="text-ink-secondary">{c.requests}</span></div>
+                <div className="h-2 rounded-full bg-white/10"><div className="h-full rounded-full bg-brand" style={{ width: `${(c.requests / maxCountry) * 100}%` }} /></div>
               </div>
             ))}
-            {result.countryBreakdown.length === 0 && <p className="text-sm text-gray-500">No geolocated origins.</p>}
+            {result.countryBreakdown.length === 0 && <p className="text-sm text-ink-secondary">No geolocated origins.</p>}
           </div>
         </div>
         <div className="card">
           <h2 className="mb-3 text-lg font-semibold">Request timeline (hourly)</h2>
           <div className="flex h-40 items-end gap-0.5 overflow-x-auto scroll-thin">
             {result.timeline.map((t) => (
-              <div key={t.bucket} title={`${t.bucket}: ${t.requests}`} className={`w-2 shrink-0 rounded-t ${t.burst ? "bg-risk-high" : "bg-indigo-400/70"}`} style={{ height: `${(t.requests / maxBucket) * 100}%` }} />
+              <div key={t.bucket} title={`${t.bucket}: ${t.requests}`} className={`w-2 shrink-0 rounded-t ${t.burst ? "bg-risk-high" : "bg-brand/70"}`} style={{ height: `${(t.requests / maxBucket) * 100}%` }} />
             ))}
-            {result.timeline.length === 0 && <p className="text-sm text-gray-500">No timestamps to chart.</p>}
+            {result.timeline.length === 0 && <p className="text-sm text-ink-secondary">No timestamps to chart.</p>}
           </div>
-          <p className="mt-2 text-xs text-gray-500">Red bars = synchronized bursts.</p>
+          <p className="mt-2 text-xs text-ink-secondary">Red bars = synchronized bursts.</p>
         </div>
       </div>
 
@@ -191,7 +191,7 @@ function Results({ result, coord }: { result: LogAnalysisResult; coord: Coordina
         <h2 className="mb-3 text-lg font-semibold">Top IPs</h2>
         <div className="overflow-x-auto scroll-thin">
           <table className="w-full text-left text-sm">
-            <thead className="text-xs text-gray-400">
+            <thead className="text-xs text-ink-secondary">
               <tr className="border-b border-white/10">
                 <th className="py-2 pr-3">IP</th><th className="pr-3">Reqs</th><th className="pr-3">Country</th>
                 <th className="pr-3">ASN org</th><th className="pr-3">Type</th><th>Flags</th>
@@ -226,21 +226,21 @@ function IpRow({ ip }: { ip: IpAggregate }) {
           {ip.flags.map((f) => (
             <span key={f} className="inline-block rounded bg-risk-high/15 px-1.5 py-0.5 text-[10px] text-risk-high">{f}</span>
           ))}
-          {ip.flags.length === 0 && <span className="text-gray-600"> - </span>}
+          {ip.flags.length === 0 && <span className="text-ink-muted"> - </span>}
         </td>
       </tr>
       {open && (
         <tr className="bg-black/20">
           <td colSpan={6} className="px-4 py-3">
             {ip.reasons.length > 0 && (
-              <ul className="mb-2 list-inside list-disc text-xs text-gray-400">
+              <ul className="mb-2 list-inside list-disc text-xs text-ink-secondary">
                 {ip.reasons.map((r, i) => <li key={i}>{r}</li>)}
               </ul>
             )}
             <div className="label-muted mb-1">Content path</div>
-            <ol className="max-h-40 space-y-0.5 overflow-auto font-mono text-[11px] text-gray-300 scroll-thin">
+            <ol className="max-h-40 space-y-0.5 overflow-auto font-mono text-[11px] text-ink scroll-thin">
               {ip.contentPath.slice(0, 50).map((p, i) => (
-                <li key={i}><span className="text-gray-600">{p.timestamp?.slice(11, 19) || " - "}</span> {p.status} {p.path}</li>
+                <li key={i}><span className="text-ink-muted">{p.timestamp?.slice(11, 19) || " - "}</span> {p.status} {p.path}</li>
               ))}
             </ol>
           </td>

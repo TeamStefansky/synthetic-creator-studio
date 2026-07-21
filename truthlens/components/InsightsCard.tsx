@@ -40,7 +40,7 @@ export default function InsightsCard({ report }: { report: Report }) {
   return (
     <div className="card">
       <div className="mb-3 flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-indigo-400" />
+        <MessageSquare className="h-5 w-5 text-brand-soft" />
         <h2 className="text-lg font-semibold">Insights - ask this report</h2>
       </div>
 
@@ -55,7 +55,7 @@ export default function InsightsCard({ report }: { report: Report }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Ask anything about this site…"
-          className="w-full rounded-xl border border-white/15 bg-bg-elev px-4 py-2.5 text-sm outline-none transition focus:border-indigo-400"
+          className="w-full rounded-xl border border-white/15 bg-bg-elev px-4 py-2.5 text-sm outline-none transition focus:border-brand"
         />
         <button type="submit" className="btn shrink-0 px-4 py-2.5" disabled={loading || !q.trim()}>
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -67,7 +67,7 @@ export default function InsightsCard({ report }: { report: Report }) {
           <button
             key={s}
             onClick={() => { setQ(s); ask(s); }}
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-gray-300 transition hover:border-white/25 hover:bg-white/[0.06]"
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-ink transition hover:border-white/25 hover:bg-white/[0.06]"
           >
             {s}
           </button>
@@ -77,15 +77,15 @@ export default function InsightsCard({ report }: { report: Report }) {
       {(loading || answer) && (
         <div className="mt-4 rounded-xl border border-white/10 bg-bg-elev p-4">
           {loading ? (
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Sparkles className="h-4 w-4 animate-pulse text-indigo-400" /> Thinking…
+            <div className="flex items-center gap-2 text-sm text-ink-secondary">
+              <Sparkles className="h-4 w-4 animate-pulse text-brand-soft" /> Thinking…
             </div>
           ) : (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-200">{answer}</p>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{answer}</p>
           )}
         </div>
       )}
-      <p className="mt-2 text-xs text-gray-500">Answers are grounded only in this report&rsquo;s data - indicators, not verdicts.</p>
+      <p className="mt-2 text-xs text-ink-secondary">Answers are grounded only in this report&rsquo;s data - indicators, not verdicts.</p>
     </div>
   );
 }

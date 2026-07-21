@@ -10,7 +10,7 @@ function Chips({ items, tone }: { items: string[]; tone: "neutral" | "warn" }) {
           className={`rounded-lg border px-2 py-1 text-xs ${
             tone === "warn"
               ? "border-risk-high/30 bg-risk-high/5 text-risk-high/90"
-              : "border-white/10 bg-white/[0.03] text-gray-200"
+              : "border-white/10 bg-white/[0.03] text-ink"
           }`}
         >
           {t}
@@ -36,7 +36,7 @@ export default function NarrativeCard({ report }: { report: Report }) {
     <div className="card">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-indigo-400" />
+          <Brain className="h-5 w-5 text-brand-soft" />
           <h2 className="text-lg font-semibold">Narrative Intelligence</h2>
         </div>
         <div className="flex items-center gap-1.5 text-sm">
@@ -46,7 +46,7 @@ export default function NarrativeCard({ report }: { report: Report }) {
       </div>
 
       {!c.available ? (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-ink-secondary">
           <AlertTriangle className="h-4 w-4" /> {c.summary}
         </div>
       ) : (
@@ -54,11 +54,11 @@ export default function NarrativeCard({ report }: { report: Report }) {
           {c.intent && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="label-muted">Intent</span>
-              <span className="rounded-lg bg-indigo-500/15 px-2 py-0.5 font-medium text-indigo-200">{c.intent}</span>
+              <span className="rounded-lg bg-brand/15 px-2 py-0.5 font-medium text-brand-soft">{c.intent}</span>
               {c.targetAudience && (
                 <>
                   <span className="label-muted ml-2 flex items-center gap-1"><Users className="h-3.5 w-3.5" />Audience</span>
-                  <span className="text-gray-300">{c.targetAudience}</span>
+                  <span className="text-ink">{c.targetAudience}</span>
                 </>
               )}
             </div>
@@ -67,9 +67,9 @@ export default function NarrativeCard({ report }: { report: Report }) {
           {c.narratives.length > 0 && (
             <div>
               <div className="label-muted mb-1.5 flex items-center gap-1"><Megaphone className="h-3.5 w-3.5" />Main narratives</div>
-              <ul className="space-y-1 text-sm text-gray-200">
+              <ul className="space-y-1 text-sm text-ink">
                 {c.narratives.map((n, i) => (
-                  <li key={i} className="flex gap-2"><span className="text-indigo-400">•</span>{n}</li>
+                  <li key={i} className="flex gap-2"><span className="text-brand-soft">•</span>{n}</li>
                 ))}
               </ul>
             </div>
@@ -89,7 +89,7 @@ export default function NarrativeCard({ report }: { report: Report }) {
             </div>
           )}
 
-          <p className="text-xs text-gray-500">{auth.detail}</p>
+          <p className="text-xs text-ink-secondary">{auth.detail}</p>
         </div>
       )}
     </div>

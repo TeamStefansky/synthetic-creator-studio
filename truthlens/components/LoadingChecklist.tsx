@@ -36,11 +36,11 @@ export default function LoadingChecklist() {
               {complete ? (
                 <Check className="h-4 w-4 text-risk-legit" />
               ) : active ? (
-                <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                <Loader2 className="h-4 w-4 animate-spin text-brand-soft" />
               ) : (
                 <span className="h-4 w-4 rounded-full border border-white/20" />
               )}
-              <span className={complete ? "text-gray-300" : active ? "text-white" : "text-gray-500"}>
+              <span className={complete ? "text-ink" : active ? "text-white" : "text-ink-secondary"}>
                 {label}
               </span>
             </li>

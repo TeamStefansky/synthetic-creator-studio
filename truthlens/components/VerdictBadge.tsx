@@ -16,7 +16,7 @@ export default function VerdictBadge({
       <Icon className={`h-8 w-8 ${c.text}`} />
       <div>
         <div className={`text-xl font-bold ${c.text}`}>{bandLabel(band)}</div>
-        <div className="text-xs text-gray-400">Confidence: {confidence}</div>
+        <div className="text-xs text-ink-secondary">Confidence: {confidence}</div>
       </div>
     </div>
   );

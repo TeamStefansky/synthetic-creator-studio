@@ -11,10 +11,10 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
   return (
     <div className="card">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-indigo-400">{icon}</span>
+        <span className="text-brand-soft">{icon}</span>
         <h3 className="font-semibold">{title}</h3>
       </div>
-      <div className="text-sm leading-relaxed text-gray-400">{children}</div>
+      <div className="text-sm leading-relaxed text-ink-secondary">{children}</div>
     </div>
   );
 }
@@ -24,12 +24,12 @@ export default function AboutPage() {
     <div className="mx-auto max-w-4xl space-y-8">
       <header className="animate-fade-up py-6 text-center">
         <div className="mb-3 flex justify-center">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-glow">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-brand shadow-glow">
             <Info className="h-6 w-6 text-white" />
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">How TruthLens works</h1>
-        <p className="mx-auto mt-3 max-w-2xl text-gray-400">
+        <h1 className="font-display text-3xl font-bold tracking-tight">How TruthLens works</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-ink-secondary">
           TruthLens exposes the infrastructure behind a website and computes a
           transparent credibility-risk rating from observable signals. It is a
           decision-support tool - it surfaces evidence and indicators, never a verdict.
@@ -54,11 +54,11 @@ export default function AboutPage() {
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Scoring methodology</h2>
-        <div className="card space-y-3 text-sm text-gray-400">
-          <p>Every site starts from a neutral baseline of <strong className="text-gray-200">40</strong>. Signals push the score up (more risk) or down (more legitimate); it&rsquo;s clamped to 0–100. Bands: <span className="text-risk-legit">0–35 Likely Legitimate</span> · <span className="text-risk-unknown">36–65 Unknown</span> · <span className="text-risk-high">66–100 High Risk</span>.</p>
-          <p><strong className="text-gray-200">Risk-increasing:</strong> very new domain, hidden WHOIS, datacenter/offshore hosting, lookalike/typosquatting of a known outlet, no about/contact/author pages, no valid HTTPS, shared infrastructure with a known-fake domain, and content signals (sensationalism, emotional manipulation, weak sourcing, AI-generation likelihood).</p>
-          <p><strong className="text-gray-200">Risk-decreasing:</strong> match to the researched credible-outlets allowlist, positive fact-check ratings, established domain age &amp; long web presence, high domain authority, complete transparency pages, and full mail authentication.</p>
-          <p><strong className="text-gray-200">Safety cap:</strong> a recognized leading outlet (or a long-lived, high-authority site) is never rated High Risk. &ldquo;Unknown&rdquo; is a valid, common, honest result.</p>
+        <div className="card space-y-3 text-sm text-ink-secondary">
+          <p>Every site starts from a neutral baseline of <strong className="text-ink">40</strong>. Signals push the score up (more risk) or down (more legitimate); it&rsquo;s clamped to 0–100. Bands: <span className="text-risk-legit">0–35 Likely Legitimate</span> · <span className="text-risk-unknown">36–65 Unknown</span> · <span className="text-risk-high">66–100 High Risk</span>.</p>
+          <p><strong className="text-ink">Risk-increasing:</strong> very new domain, hidden WHOIS, datacenter/offshore hosting, lookalike/typosquatting of a known outlet, no about/contact/author pages, no valid HTTPS, shared infrastructure with a known-fake domain, and content signals (sensationalism, emotional manipulation, weak sourcing, AI-generation likelihood).</p>
+          <p><strong className="text-ink">Risk-decreasing:</strong> match to the researched credible-outlets allowlist, positive fact-check ratings, established domain age &amp; long web presence, high domain authority, complete transparency pages, and full mail authentication.</p>
+          <p><strong className="text-ink">Safety cap:</strong> a recognized leading outlet (or a long-lived, high-authority site) is never rated High Risk. &ldquo;Unknown&rdquo; is a valid, common, honest result.</p>
         </div>
       </section>
 
@@ -119,7 +119,7 @@ export default function AboutPage() {
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Honest limitations</h2>
-        <div className="card space-y-2 text-sm text-gray-400">
+        <div className="card space-y-2 text-sm text-ink-secondary">
           <p>• We cannot automatically determine truth - we surface verifiable facts and compute a risk score from observable signals.</p>
           <p>• Geolocation is approximate; CDNs/VPNs/Tor mask true origin, and the tool says so rather than guessing.</p>
           <p>• Attribution and origin discovery are probabilistic - indicators with evidence, not proof.</p>

@@ -38,12 +38,12 @@ const STATUS_UI: Record<string, { label: string; tone: string; bar: string; bord
   UNDER_ATTACK: { label: "Under attack", tone: "text-risk-high", bar: "bg-risk-high", border: "border-risk-high/40", icon: ShieldAlert },
   ELEVATED: { label: "Elevated", tone: "text-risk-unknown", bar: "bg-risk-unknown", border: "border-risk-unknown/40", icon: ShieldQuestion },
   CALM: { label: "Calm", tone: "text-risk-legit", bar: "bg-risk-legit", border: "border-risk-legit/40", icon: ShieldCheck },
-  UNKNOWN: { label: "Unknown", tone: "text-gray-400", bar: "bg-gray-500", border: "border-white/10", icon: HelpCircle },
+  UNKNOWN: { label: "Unknown", tone: "text-ink-secondary", bar: "bg-gray-500", border: "border-white/10", icon: HelpCircle },
 };
 
 const LEVEL_TONE: Record<string, string> = {
   High: "text-risk-high bg-risk-high/10", Medium: "text-risk-unknown bg-risk-unknown/10",
-  Low: "text-risk-legit bg-risk-legit/10", Unknown: "text-gray-400 bg-white/[0.05]",
+  Low: "text-risk-legit bg-risk-legit/10", Unknown: "text-ink-secondary bg-white/[0.05]",
 };
 
 export default function BrandWatchPage() {
@@ -104,19 +104,19 @@ export default function BrandWatchPage() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-glow">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand shadow-glow">
               <Radar className="h-5 w-5 text-white" />
             </span>
-            <h1 className="text-xl font-bold tracking-tight text-white">Brand Watch</h1>
+            <h1 className="font-display text-xl font-bold tracking-tight text-white">Brand <span className="gradient-text">Watch</span></h1>
           </div>
-          <p className="mt-1.5 max-w-2xl text-sm text-gray-400">
+          <p className="mt-1.5 max-w-2xl text-sm text-ink-secondary">
             Enter a brand, client, product, or keyword to see live indicators of a coordinated
             disinformation attack across public sources. Indicators with evidence - not a verdict.
           </p>
         </div>
         {activeEntity && (
           <button onClick={() => setAuto((v) => !v)}
-            className="flex items-center gap-1.5 text-xs text-gray-500 transition hover:text-gray-300"
+            className="flex items-center gap-1.5 text-xs text-ink-secondary transition hover:text-ink"
             title="Toggle auto-refresh (90s)">
             <span className={`h-1.5 w-1.5 rounded-full ${auto ? "animate-pulse bg-risk-legit" : "bg-gray-600"}`} />
             {auto ? "Live · auto-refresh on" : "Auto-refresh off"}
@@ -131,18 +131,18 @@ export default function BrandWatchPage() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") scan(query.trim()); }}
             placeholder="Enter a brand, client, product, or keyword…"
-            className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-gray-200 outline-none placeholder:text-gray-600 focus:border-brand"
+            className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-brand"
           />
           <button
             onClick={() => scan(query.trim())}
             disabled={loading || query.trim().length < 2}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldAlert className="h-4 w-4" />}
             Scan
           </button>
         </div>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-ink-secondary">
           Free public sources (GDELT, Bluesky, Hacker News, Reddit) run with no key; news APIs (Guardian,
           NYT, GNews, NewsAPI) and RSS activate when configured - unconfigured ones show as “not connected.”
         </p>
@@ -151,13 +151,13 @@ export default function BrandWatchPage() {
       {/* First-run guidance - shown until the user runs their first scan */}
       {!result && !loading && !error && (
         <ToolIntro
-          what={<>Type any <span className="text-gray-200">brand, company, product, public page, or topic</span> and press <span className="text-gray-200">Scan</span>. TruthLens pulls what’s being said about it across public sources right now and shows whether the pattern looks like an <span className="text-gray-200">organic conversation</span> or a <span className="text-gray-200">coordinated push</span> - with the evidence behind every signal. A decision-support tool, not a verdict.</>}
+          what={<>Type any <span className="text-ink">brand, company, product, public page, or topic</span> and press <span className="text-ink">Scan</span>. TruthLens pulls what’s being said about it across public sources right now and shows whether the pattern looks like an <span className="text-ink">organic conversation</span> or a <span className="text-ink">coordinated push</span> - with the evidence behind every signal. A decision-support tool, not a verdict.</>}
           examples={["Pfizer", "Tesla", "NATO", "OpenAI"].map((ex) => ({ label: ex, onClick: () => { setQuery(ex); scan(ex); } }))}
           legend={[
             { label: "Calm", tone: "legit", icon: <ShieldCheck className="h-4 w-4 text-risk-legit" />, text: "normal, organic chatter. No coordination signals." },
             { label: "Elevated", tone: "unknown", icon: <ShieldQuestion className="h-4 w-4 text-risk-unknown" />, text: "some signals worth a human look." },
             { label: "Under attack", tone: "high", icon: <ShieldAlert className="h-4 w-4 text-risk-high" />, text: "strong coordination pattern. Verify the evidence." },
-            { label: "Unknown", tone: "neutral", icon: <HelpCircle className="h-4 w-4 text-gray-400" />, text: "not enough data to judge. Honestly says so." },
+            { label: "Unknown", tone: "neutral", icon: <HelpCircle className="h-4 w-4 text-ink-secondary" />, text: "not enough data to judge. Honestly says so." },
           ]}
           note="Every signal shows its evidence and an innocent alternative explanation. TruthLens never names a private individual and never claims who is behind a pattern."
         />
@@ -170,7 +170,7 @@ export default function BrandWatchPage() {
             <div className="mb-2 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
                 <Radar className="h-4 w-4 text-brand-soft" /> Watchlist
-                <span className="text-xs font-normal text-gray-500">· monitored on a schedule</span>
+                <span className="text-xs font-normal text-ink-secondary">· monitored on a schedule</span>
               </h3>
               {activeEntity && !watch.watches.some((w) => w.name === activeEntity) && (
                 <button onClick={() => addWatch(activeEntity)}
@@ -185,21 +185,21 @@ export default function BrandWatchPage() {
                 return (
                   <span key={w.id} className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] py-1 pl-2.5 pr-1.5 text-sm">
                     <span className={`h-2 w-2 rounded-full ${w.lastStatus ? wu.bar : "bg-gray-600"}`} title={w.lastStatus ? wu.label : "not checked yet"} />
-                    <button onClick={() => { setQuery(w.name); scan(w.name); }} className="text-gray-200 hover:text-white">{w.name}</button>
+                    <button onClick={() => { setQuery(w.name); scan(w.name); }} className="text-ink hover:text-white">{w.name}</button>
                     {typeof w.lastScore === "number" && <span className={`text-xs ${wu.tone}`}>{w.lastScore}</span>}
                     <button onClick={() => removeWatch(w.id)} title="Stop watching"
-                      className="text-gray-600 opacity-0 transition group-hover:opacity-100 hover:text-risk-high">✕</button>
+                      className="text-ink-muted opacity-0 transition group-hover:opacity-100 hover:text-risk-high">✕</button>
                   </span>
                 );
               })}
-              {!watch.watches.length && <p className="text-xs text-gray-500">No entities watched yet - scan one, then add it.</p>}
+              {!watch.watches.length && <p className="text-xs text-ink-secondary">No entities watched yet - scan one, then add it.</p>}
             </div>
             {watch.alerts.length > 0 && (
               <div className="mt-3 border-t border-white/[0.05] pt-3">
-                <div className="mb-1 text-xs font-semibold text-gray-400">Recent escalation alerts</div>
+                <div className="mb-1 text-xs font-semibold text-ink-secondary">Recent escalation alerts</div>
                 <div className="space-y-1">
                   {watch.alerts.slice(0, 4).map((a) => (
-                    <div key={a.id} className="text-xs text-gray-400">🔔 {a.title}</div>
+                    <div key={a.id} className="text-xs text-ink-secondary">🔔 {a.title}</div>
                   ))}
                 </div>
               </div>
@@ -207,8 +207,8 @@ export default function BrandWatchPage() {
           </div>
         )
       ) : activeEntity ? (
-        <div className="card border-white/10 text-xs text-gray-500">
-          Continuous monitoring is <span className="text-gray-400">not connected</span>. {watch.reason}
+        <div className="card border-white/10 text-xs text-ink-secondary">
+          Continuous monitoring is <span className="text-ink-secondary">not connected</span>. {watch.reason}
         </div>
       ) : null}
 
@@ -233,9 +233,9 @@ export default function BrandWatchPage() {
               <div className="text-right">
                 <div className={`text-4xl font-black ${ui.tone}`}>
                   {result.score === null ? " - " : result.score}
-                  {result.score !== null && <span className="text-lg text-gray-600">/100</span>}
+                  {result.score !== null && <span className="text-lg text-ink-muted">/100</span>}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-ink-secondary">
                   {result.totalMentions} mentions · {result.totalAccounts} accounts
                 </div>
                 <a href={`/api/brandwatch/report?entity=${encodeURIComponent(result.entity)}`} target="_blank" rel="noopener noreferrer"
@@ -244,19 +244,19 @@ export default function BrandWatchPage() {
                 </a>
               </div>
             </div>
-            {result.note && <p className="mt-3 text-sm text-gray-400">{result.note}</p>}
+            {result.note && <p className="mt-3 text-sm text-ink-secondary">{result.note}</p>}
           </div>
 
           {/* Earliest observable + Trace */}
           {result.earliest && (
             <div className="card">
               <div className="mb-1 flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-white">Earliest observed <span className="font-normal text-gray-500"> - in collected data, not the true origin</span></h3>
+                <h3 className="text-sm font-semibold text-white">Earliest observed <span className="font-normal text-ink-secondary"> - in collected data, not the true origin</span></h3>
                 <a href={`/check?type=narrative&input=${encodeURIComponent(result.entity)}`}
                   className="text-xs text-brand-soft hover:underline">Trace to earliest observable →</a>
               </div>
-              <p className="text-sm text-gray-300">{result.earliest.text}</p>
-              <div className="mt-1 text-xs text-gray-500">
+              <p className="text-sm text-ink">{result.earliest.text}</p>
+              <div className="mt-1 text-xs text-ink-secondary">
                 {result.earliest.source}{result.earliest.account ? ` · ${result.earliest.account}` : ""}{result.earliest.timestamp ? ` · ${result.earliest.timestamp}` : ""}
                 {result.earliest.url && <> · <a href={result.earliest.url} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">source</a></>}
               </div>
@@ -273,13 +273,13 @@ export default function BrandWatchPage() {
                 <span key={s.source}
                   title={s.connected ? (s.error ? `error: ${s.error}` : `${s.count} mentions`) : (s.reason || "not connected")}
                   className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
-                    !s.connected ? "border-white/10 bg-white/[0.03] text-gray-500"
+                    !s.connected ? "border-white/10 bg-white/[0.03] text-ink-secondary"
                       : s.error ? "border-risk-unknown/30 bg-risk-unknown/[0.06] text-risk-unknown"
                       : "border-risk-legit/30 bg-risk-legit/[0.06] text-risk-legit"}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${!s.connected ? "bg-gray-600" : s.error ? "bg-risk-unknown" : "bg-risk-legit"}`} />
                   {s.source}
-                  {!s.connected ? <span className="text-gray-600">· not connected</span>
-                    : <span className="text-gray-500">{s.count}</span>}
+                  {!s.connected ? <span className="text-ink-muted">· not connected</span>
+                    : <span className="text-ink-secondary">{s.count}</span>}
                 </span>
               ))}
             </div>
@@ -292,7 +292,7 @@ export default function BrandWatchPage() {
               {result.indicators.map((i) => (
                 <div key={i.key} className="border-b border-white/[0.05] pb-4 last:border-0 last:pb-0">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-medium text-gray-200">{i.label}</span>
+                    <span className="font-medium text-ink">{i.label}</span>
                     <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${LEVEL_TONE[i.level]}`}>
                       {i.level}{i.level !== "Unknown" && ` · ${i.score}`}
                     </span>
@@ -304,10 +304,10 @@ export default function BrandWatchPage() {
                     </div>
                   )}
                   <ul className="mt-2 space-y-0.5">
-                    {i.signals.map((sig, k) => <li key={k} className="text-xs text-gray-400">• {sig}</li>)}
+                    {i.signals.map((sig, k) => <li key={k} className="text-xs text-ink-secondary">• {sig}</li>)}
                   </ul>
-                  <p className="mt-1.5 text-xs text-gray-500">
-                    <span className="text-gray-600">Could also be explained by:</span> {i.alternative}
+                  <p className="mt-1.5 text-xs text-ink-secondary">
+                    <span className="text-ink-muted">Could also be explained by:</span> {i.alternative}
                   </p>
                 </div>
               ))}
@@ -319,16 +319,16 @@ export default function BrandWatchPage() {
             <div className="card">
               <h3 className="mb-3 flex items-center gap-2 font-semibold text-white">
                 <Sparkles className="h-4 w-4 text-brand-soft" /> Narrative analysis
-                <span className="text-xs font-normal text-gray-500">· AI-assisted</span>
+                <span className="text-xs font-normal text-ink-secondary">· AI-assisted</span>
               </h3>
               {result.narratives.available ? (
                 <>
-                  {result.narratives.assessment && <p className="text-sm text-gray-300">{result.narratives.assessment}</p>}
+                  {result.narratives.assessment && <p className="text-sm text-ink">{result.narratives.assessment}</p>}
                   {result.narratives.coreClaims.length > 0 && (
                     <div className="mt-3">
-                      <div className="text-xs font-semibold text-gray-400">Core claims circulating</div>
+                      <div className="text-xs font-semibold text-ink-secondary">Core claims circulating</div>
                       <ul className="mt-1 space-y-0.5">
-                        {result.narratives.coreClaims.map((c, i) => <li key={i} className="text-sm text-gray-300">• {c}</li>)}
+                        {result.narratives.coreClaims.map((c, i) => <li key={i} className="text-sm text-ink">• {c}</li>)}
                       </ul>
                     </div>
                   )}
@@ -336,19 +336,19 @@ export default function BrandWatchPage() {
                     {result.narratives.clusters.map((c, i) => (
                       <div key={i} className="rounded-lg border border-white/[0.06] p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-gray-200">{c.label}</span>
+                          <span className="font-medium text-ink">{c.label}</span>
                           <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${HOST_TONE[c.hostility] || HOST_TONE.low}`}>{c.hostility}</span>
                         </div>
-                        <p className="mt-1 text-xs text-gray-400">{c.summary}</p>
-                        <p className="mt-1.5 text-xs text-gray-500"><span className="text-gray-600">Could also be:</span> {c.alternative}</p>
+                        <p className="mt-1 text-xs text-ink-secondary">{c.summary}</p>
+                        <p className="mt-1.5 text-xs text-ink-secondary"><span className="text-ink-muted">Could also be:</span> {c.alternative}</p>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-xs text-gray-600">AI-assisted interpretation - indicators, not verdicts. Verify against the evidence below.</p>
+                  <p className="mt-3 text-xs text-ink-muted">AI-assisted interpretation - indicators, not verdicts. Verify against the evidence below.</p>
                 </>
               ) : (
-                <p className="text-sm text-gray-500">
-                  <span className="text-gray-400">Not connected.</span> {result.narratives.reason}
+                <p className="text-sm text-ink-secondary">
+                  <span className="text-ink-secondary">Not connected.</span> {result.narratives.reason}
                 </p>
               )}
             </div>
@@ -371,19 +371,19 @@ export default function BrandWatchPage() {
             )}
             <div className="card">
               <h3 className="mb-3 font-semibold text-white">
-                Evidence <span className="text-xs font-normal text-gray-500"> - earliest observed in collected data, not proof of origin</span>
+                Evidence <span className="text-xs font-normal text-ink-secondary"> - earliest observed in collected data, not proof of origin</span>
               </h3>
               <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                 {result.evidence.map((e, i) => (
                   <div key={i} className="rounded-lg border border-white/[0.06] px-3 py-2 text-sm">
-                    <p className="text-gray-300">{e.text}</p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                    <p className="text-ink">{e.text}</p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-ink-secondary">
                       <span className="rounded bg-white/[0.06] px-1.5">{e.source}</span>
                       {e.account && <span>{e.account}</span>}
                       {(() => {
                         const arc = e.url ? (result.archives || []).find((a) => a.url === e.url) : undefined;
                         return arc ? (
-                          <a href={arc.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:underline" title={arc.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested - snapshot may still be processing"}>
+                          <a href={arc.archiveUrl} target="_blank" rel="noopener noreferrer" className="text-ink-secondary hover:underline" title={arc.status === "archived" ? "Preserved snapshot (Wayback Machine)" : "Save requested - snapshot may still be processing"}>
                             {arc.status === "archived" ? "archived ↗" : "archive requested ↗"}
                           </a>
                         ) : null;
@@ -392,9 +392,9 @@ export default function BrandWatchPage() {
                     </div>
                   </div>
                 ))}
-                {!result.evidence.length && <p className="text-sm text-gray-500">No evidence captured.</p>}
+                {!result.evidence.length && <p className="text-sm text-ink-secondary">No evidence captured.</p>}
                 {!!(result.archives && result.archives.length) && (
-                  <p className="pt-1 text-[11px] text-gray-600">
+                  <p className="pt-1 text-[11px] text-ink-muted">
                     {result.archives.length} evidence URL(s) preserved via the Wayback Machine (deep scan) - so the record survives edits or deletion.
                   </p>
                 )}
@@ -402,7 +402,7 @@ export default function BrandWatchPage() {
             </div>
           </div>
 
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-ink-muted">
             Decision-support tool - not a verdict. Indicators of a coordinated inauthentic campaign, with
             evidence and alternative explanations - never an accusation against any person. Rubric {result.rubricVersion}.
             {result.cached && " · cached (≤90s)"}

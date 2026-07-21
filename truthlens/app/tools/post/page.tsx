@@ -16,8 +16,8 @@ function verdictStyle(v: PostVerdict) {
     case "Likely False": return { cls: "text-risk-high border-risk-high/40 bg-risk-high/10", icon: <XCircle className="h-6 w-6" /> };
     case "Misleading": return { cls: "text-risk-unknown border-risk-unknown/40 bg-risk-unknown/10", icon: <AlertTriangle className="h-6 w-6" /> };
     case "Likely True": return { cls: "text-risk-legit border-risk-legit/40 bg-risk-legit/10", icon: <CheckCircle2 className="h-6 w-6" /> };
-    case "Opinion or Satire": return { cls: "text-indigo-300 border-indigo-400/40 bg-indigo-500/10", icon: <HelpCircle className="h-6 w-6" /> };
-    default: return { cls: "text-gray-300 border-white/20 bg-white/5", icon: <ShieldQuestion className="h-6 w-6" /> };
+    case "Opinion or Satire": return { cls: "text-brand-soft border-brand/40 bg-brand/10", icon: <HelpCircle className="h-6 w-6" /> };
+    default: return { cls: "text-ink border-white/20 bg-white/5", icon: <ShieldQuestion className="h-6 w-6" /> };
   }
 }
 function claimIcon(v: string) {
@@ -25,7 +25,7 @@ function claimIcon(v: string) {
   if (s.includes("support")) return <CheckCircle2 className="h-4 w-4 text-risk-legit" />;
   if (s.includes("contradict")) return <XCircle className="h-4 w-4 text-risk-high" />;
   if (s.includes("mislead")) return <AlertTriangle className="h-4 w-4 text-risk-unknown" />;
-  return <HelpCircle className="h-4 w-4 text-gray-400" />;
+  return <HelpCircle className="h-4 w-4 text-ink-secondary" />;
 }
 
 function PostCheckInner() {
@@ -133,14 +133,14 @@ function PostCheckInner() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <div className="flex items-center gap-2">
-          <ShieldQuestion className="h-6 w-6 text-indigo-400" />
-          <h1 className="text-2xl font-bold">Post Check - is it fake?</h1>
+          <ShieldQuestion className="h-6 w-6 text-brand-soft" />
+          <h1 className="font-display text-2xl font-bold">Post <span className="gradient-text">Check</span> - is it fake?</h1>
         </div>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="mt-1 text-sm text-ink-secondary">
           Paste a post, message, or claim - <strong>or upload a screenshot</strong> - and we extract the
           claims, verify them against the open web, and return a verdict with sources.
         </p>
-        <Link href="/checks" className="mt-2 inline-flex items-center gap-1.5 text-sm text-indigo-400 hover:underline">
+        <Link href="/checks" className="mt-2 inline-flex items-center gap-1.5 text-sm text-brand-soft hover:underline">
           <LayoutGrid className="h-4 w-4" /> Recent shared checks
         </Link>
       </div>
@@ -151,7 +151,7 @@ function PostCheckInner() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Paste the post / claim / forwarded message here - or a URL to an article…"
-            className="h-32 w-full rounded-xl border border-white/15 bg-bg-elev p-3 text-sm outline-none focus:border-indigo-400 scroll-thin"
+            className="h-32 w-full rounded-xl border border-white/15 bg-bg-elev p-3 text-sm outline-none focus:border-brand scroll-thin"
           />
 
           {/* Screenshot upload */}
@@ -163,7 +163,7 @@ function PostCheckInner() {
             </div>
           ) : (
             <label
-              className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-4 text-sm text-gray-400 hover:border-indigo-400/50"
+              className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-4 text-sm text-ink-secondary hover:border-brand/50"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files?.[0]); }}
             >
@@ -200,7 +200,7 @@ function PostCheckInner() {
       )}
 
       {loading && shared && (
-        <div className="card flex items-center gap-2 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin text-indigo-400" /> Loading shared result…</div>
+        <div className="card flex items-center gap-2 text-sm text-ink-secondary"><Loader2 className="h-4 w-4 animate-spin text-brand-soft" /> Loading shared result…</div>
       )}
 
       {res && (
@@ -214,7 +214,7 @@ function PostCheckInner() {
                   {verdictStyle(res.verdict).icon}
                   <div>
                     <div className="text-xl font-bold">{res.verdict}</div>
-                    <div className="text-xs text-gray-400">Confidence: {res.confidence}</div>
+                    <div className="text-xs text-ink-secondary">Confidence: {res.confidence}</div>
                   </div>
                 </div>
                 {!shared && (
@@ -230,7 +230,7 @@ function PostCheckInner() {
               </div>
               {shareMsg && <p className="flex items-center gap-1.5 text-xs text-risk-legit"><Check className="h-3.5 w-3.5" />{shareMsg}</p>}
 
-              <div className="card"><p className="text-sm text-gray-200">{res.summary}</p></div>
+              <div className="card"><p className="text-sm text-ink">{res.summary}</p></div>
 
               {res.claims.length > 0 && (
                 <div className="card">
@@ -241,9 +241,9 @@ function PostCheckInner() {
                         <div className="flex items-start gap-2">
                           {claimIcon(c.verdict)}
                           <div>
-                            <div className="text-sm font-medium text-gray-100">{c.claim}</div>
-                            <div className="text-xs uppercase tracking-wide text-gray-500">{c.verdict}</div>
-                            {c.assessment && <div className="mt-1 text-sm text-gray-400">{c.assessment}</div>}
+                            <div className="text-sm font-medium text-ink">{c.claim}</div>
+                            <div className="text-xs uppercase tracking-wide text-ink-secondary">{c.verdict}</div>
+                            {c.assessment && <div className="mt-1 text-sm text-ink-secondary">{c.assessment}</div>}
                           </div>
                         </div>
                       </li>
@@ -265,7 +265,7 @@ function PostCheckInner() {
                 )}
                 <div className="card">
                   <h3 className="mb-2 font-semibold">AI-generated likelihood</h3>
-                  <div className="mb-1 flex justify-between text-xs"><span className="text-gray-400">Score</span><span>{res.aiGeneratedLikelihood}/100</span></div>
+                  <div className="mb-1 flex justify-between text-xs"><span className="text-ink-secondary">Score</span><span>{res.aiGeneratedLikelihood}/100</span></div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/10">
                     <div className={`h-full ${res.aiGeneratedLikelihood > 60 ? "bg-risk-high" : res.aiGeneratedLikelihood > 40 ? "bg-risk-unknown" : "bg-risk-legit"}`} style={{ width: `${res.aiGeneratedLikelihood}%` }} />
                   </div>
@@ -283,7 +283,7 @@ function PostCheckInner() {
                   <ul className="space-y-1 text-sm">
                     {res.sources.map((s, i) => (
                       <li key={i}>
-                        <a href={s.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-indigo-400 hover:underline">
+                        <a href={s.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-brand-soft hover:underline">
                           <ExternalLink className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{s.title || s.url}</span>
                         </a>
                       </li>
@@ -291,7 +291,7 @@ function PostCheckInner() {
                   </ul>
                 </div>
               )}
-              <p className="text-xs text-gray-500">{res.note}</p>
+              <p className="text-xs text-ink-secondary">{res.note}</p>
             </>
           )}
         </div>
@@ -304,7 +304,7 @@ function PostCheckInner() {
 
 export default function PostCheckPage() {
   return (
-    <Suspense fallback={<div className="py-10 text-center text-gray-400">Loading…</div>}>
+    <Suspense fallback={<div className="py-10 text-center text-ink-secondary">Loading…</div>}>
       <PostCheckInner />
     </Suspense>
   );

@@ -38,7 +38,7 @@ export default function UrlInput() {
             setError("");
           }}
           placeholder="https://example-news-site.com/article"
-          className="w-full rounded-xl border border-white/15 bg-bg-card px-4 py-3 text-base outline-none transition focus:border-indigo-400"
+          className="w-full rounded-xl border border-white/15 bg-bg-card px-4 py-3 text-base outline-none transition focus:border-brand"
           autoFocus
           inputMode="url"
         />

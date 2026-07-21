@@ -25,7 +25,7 @@ export default function MiniMap({ markers }: { markers: MapMarker[] }) {
   const parallels: number[] = [-60, -30, 0, 30, 60];
 
   if (byCode.size === 0) {
-    return <p className="text-sm text-gray-500">No geolocatable endpoints to map.</p>;
+    return <p className="text-sm text-ink-secondary">No geolocatable endpoints to map.</p>;
   }
 
   return (

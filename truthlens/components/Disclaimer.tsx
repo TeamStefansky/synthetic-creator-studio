@@ -15,7 +15,7 @@ export default function Disclaimer({ variant = "footer" }: { variant?: "footer" 
     );
   }
   return (
-    <footer className="mt-12 border-t border-white/10 py-6 text-center text-xs text-gray-500">
+    <footer className="mt-12 border-t border-white/10 py-6 text-center text-xs text-ink-secondary">
       Decision-support tool - not a verdict. Indicators only. Attribution is
       probabilistic; geolocation is approximate and CDNs/VPNs/Tor mask true
       origin. Analyze only logs and emails you are authorized to inspect.

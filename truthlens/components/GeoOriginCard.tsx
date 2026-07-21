@@ -6,12 +6,12 @@ import MiniMap, { MapMarker } from "./MiniMap";
 
 function CountryValue({ code, masked }: { code?: string; masked?: boolean }) {
   if (masked) return <span className="text-sm text-yellow-300/90">CDN edge - masked</span>;
-  if (!code) return <span className="text-sm text-gray-500">Unknown</span>;
+  if (!code) return <span className="text-sm text-ink-secondary">Unknown</span>;
   const adversary = isAdversaryCountry(code);
   return (
-    <span className="text-sm font-medium text-gray-100">
+    <span className="text-sm font-medium text-ink">
       <span className="mr-1 text-base">{flagEmoji(code)}</span>
-      {countryName(code) || code} <span className="text-gray-500">({code.toUpperCase()})</span>
+      {countryName(code) || code} <span className="text-ink-secondary">({code.toUpperCase()})</span>
       {adversary && <span className="ml-1 text-risk-high" title="In your adversary list">⚠</span>}
     </span>
   );
@@ -24,13 +24,13 @@ function Row({
 }) {
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-bg-elev p-3">
-      <div className="flex items-center gap-2 text-sm text-gray-300">
-        <span className="text-indigo-400">{icon}</span>
+      <div className="flex items-center gap-2 text-sm text-ink">
+        <span className="text-brand-soft">{icon}</span>
         {label}
       </div>
       <div className="text-right">
         <CountryValue code={code} masked={masked} />
-        {extra && <div className="text-xs text-gray-500">{extra}</div>}
+        {extra && <div className="text-xs text-ink-secondary">{extra}</div>}
       </div>
     </div>
   );
@@ -78,7 +78,7 @@ export default function GeoOriginCard({ report }: { report: Report }) {
   return (
     <div className="card">
       <div className="mb-3 flex items-center gap-2">
-        <Globe className="h-5 w-5 text-indigo-400" />
+        <Globe className="h-5 w-5 text-brand-soft" />
         <h2 className="text-lg font-semibold">Geographic Origin</h2>
       </div>
 
@@ -113,7 +113,7 @@ export default function GeoOriginCard({ report }: { report: Report }) {
           server location reflects the CDN edge, not the operator&rsquo;s true country.
         </p>
       )}
-      <p className="mt-2 text-xs text-gray-500">
+      <p className="mt-2 text-xs text-ink-secondary">
         Geolocation is approximate; VPNs/Tor and CDNs can mask the true origin.
       </p>
     </div>

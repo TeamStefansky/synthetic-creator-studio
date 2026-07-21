@@ -3,7 +3,7 @@ import type { EvidenceItem } from "@/lib/types";
 
 export default function EvidenceList({ evidence }: { evidence: EvidenceItem[] }) {
   if (!evidence.length) {
-    return <p className="text-sm text-gray-500">No signals produced.</p>;
+    return <p className="text-sm text-ink-secondary">No signals produced.</p>;
   }
   return (
     <ul className="space-y-2">
@@ -15,7 +15,7 @@ export default function EvidenceList({ evidence }: { evidence: EvidenceItem[] })
             <span
               className={`flex h-7 w-12 shrink-0 items-center justify-center gap-0.5 rounded-md text-sm font-semibold ${
                 neutral
-                  ? "bg-white/5 text-gray-400"
+                  ? "bg-white/5 text-ink-secondary"
                   : positive
                     ? "bg-risk-high/15 text-risk-high"
                     : "bg-risk-legit/15 text-risk-legit"
@@ -25,8 +25,8 @@ export default function EvidenceList({ evidence }: { evidence: EvidenceItem[] })
               {!neutral && Math.abs(e.impact)}
             </span>
             <div>
-              <div className="font-medium text-gray-100">{e.label}</div>
-              <div className="text-sm text-gray-400">{e.detail}</div>
+              <div className="font-medium text-ink">{e.label}</div>
+              <div className="text-sm text-ink-secondary">{e.detail}</div>
             </div>
           </li>
         );

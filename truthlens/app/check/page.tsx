@@ -150,8 +150,8 @@ function CheckInner() {
   return (
     <div className="animate-fade-up space-y-6">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-white">Check</h1>
-        <p className="mt-1.5 max-w-2xl text-sm text-gray-400">
+        <h1 className="font-display text-xl font-bold tracking-tight text-white">Check</h1>
+        <p className="mt-1.5 max-w-2xl text-sm text-ink-secondary">
           Paste a URL, a post link, a claim, email headers, or a log. We detect the type and run the
           right check. Indicators with evidence - not a verdict.
         </p>
@@ -163,31 +163,31 @@ function CheckInner() {
           onChange={(e) => { setInput(e.target.value); setOverride(null); }}
           placeholder="Paste a URL, a claim/post, email headers, or log lines…"
           rows={input.includes("\n") ? 6 : 2}
-          className="w-full resize-y rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-gray-200 outline-none placeholder:text-gray-600 focus:border-brand"
+          className="w-full resize-y rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-brand"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-500">Type:</span>
+          <span className="text-xs text-ink-secondary">Type:</span>
           {CHECK_TYPES.map((t) => (
             <button key={t.type} onClick={() => setOverride(t.type)}
-              className={`rounded-lg px-2.5 py-1 text-xs transition ${type === t.type ? "bg-white/[0.08] text-white ring-hairline" : "text-gray-400 hover:bg-white/[0.04]"}`}>
+              className={`rounded-lg px-2.5 py-1 text-xs transition ${type === t.type ? "bg-white/[0.08] text-white ring-hairline" : "text-ink-secondary hover:bg-white/[0.04]"}`}>
               {t.label}
             </button>
           ))}
           <button onClick={() => run()} disabled={running || input.trim().length < 2}
-            className="ml-auto flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50">
+            className="ml-auto flex items-center gap-2 rounded-xl bg-gradient-brand px-5 py-2 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:opacity-50">
             {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Run check
           </button>
         </div>
         {input.trim() && (
-          <p className="mt-2 text-xs text-gray-500">
-            Detected: <span className="text-gray-300">{detection.label}</span> ({detection.confidence.toLowerCase()} confidence) - {detection.reason} You can override above.
+          <p className="mt-2 text-xs text-ink-secondary">
+            Detected: <span className="text-ink">{detection.label}</span> ({detection.confidence.toLowerCase()} confidence) - {detection.reason} You can override above.
           </p>
         )}
       </div>
 
       {!record && !error && !running && (
         <ToolIntro
-          what={<>Not sure which tool you need? Just paste something here. TruthLens figures out what it is - a <span className="text-gray-200">website</span>, a <span className="text-gray-200">claim or post</span>, a <span className="text-gray-200">brand/topic to watch</span>, <span className="text-gray-200">email headers</span>, or a <span className="text-gray-200">server log</span> - and runs the right check. You can always override the guess with the <span className="text-gray-200">Type</span> buttons.</>}
+          what={<>Not sure which tool you need? Just paste something here. TruthLens figures out what it is - a <span className="text-ink">website</span>, a <span className="text-ink">claim or post</span>, a <span className="text-ink">brand/topic to watch</span>, <span className="text-ink">email headers</span>, or a <span className="text-ink">server log</span> - and runs the right check. You can always override the guess with the <span className="text-ink">Type</span> buttons.</>}
           examples={[
             { label: "Check a website", onClick: () => { setInput("https://www.reuters.com"); setOverride("site"); run("https://www.reuters.com", "site"); } },
             { label: "Fact-check a claim", onClick: () => { const v = "The Great Wall of China is visible from space with the naked eye"; setInput(v); setOverride("post"); run(v, "post"); } },
@@ -230,7 +230,7 @@ function CheckInner() {
               <div className="text-xs font-semibold text-brand-soft">Connections to your earlier checks</div>
               <ul className="mt-1.5 space-y-1">
                 {connections.map((c, i) => (
-                  <li key={i} className="text-sm text-gray-300">
+                  <li key={i} className="text-sm text-ink">
                     This <span className="font-medium">{c.label}</span> also appeared in {c.checks.length} earlier check{c.checks.length > 1 ? "s" : ""}:{" "}
                     {c.checks.slice(0, 4).map((ch, j) => (
                       <span key={ch.id}>
@@ -241,7 +241,7 @@ function CheckInner() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-1.5 text-xs text-gray-500">Observed overlap in collected data - a lead, not proof of a shared operator.</p>
+              <p className="mt-1.5 text-xs text-ink-secondary">Observed overlap in collected data - a lead, not proof of a shared operator.</p>
             </div>
           )}
           {record.type === "cib" && Array.isArray(record.result.authenticity) && record.result.authenticity.length > 0 && (
@@ -266,11 +266,11 @@ function CheckInner() {
               {record.result.profile && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-gray-200">
+                    <span className="text-ink">
                       {record.result.profile.handle}
-                      <span className="ml-1.5 text-xs text-gray-500">({record.result.profile.platform})</span>
+                      <span className="ml-1.5 text-xs text-ink-secondary">({record.result.profile.platform})</span>
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-ink-secondary">
                       {record.result.profile.connected
                         ? <>followers {record.result.profile.followers ?? " - "} · following {record.result.profile.follows ?? " - "} · posts {record.result.profile.posts ?? " - "}{record.result.profile.createdAt ? ` · since ${String(record.result.profile.createdAt).slice(0, 10)}` : ""}</>
                         : "profile not collected"}
@@ -285,11 +285,11 @@ function CheckInner() {
               {/* Stage 2 - the narrative the account pushes */}
               {Array.isArray(record.result.seeds) && record.result.seeds.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400">Seed narrative(s) - what this account is pushing</div>
+                  <div className="text-xs font-semibold text-ink-secondary">Seed narrative(s) - what this account is pushing</div>
                   <ul className="mt-1 space-y-1">
                     {record.result.seeds.map((s: any, i: number) => (
-                      <li key={i} className="rounded-lg border border-white/[0.06] p-2 text-xs text-gray-300">
-                        “{s.text}” <span className="text-gray-500">· {s.posts} of the account’s posts</span>
+                      <li key={i} className="rounded-lg border border-white/[0.06] p-2 text-xs text-ink">
+                        “{s.text}” <span className="text-ink-secondary">· {s.posts} of the account’s posts</span>
                       </li>
                     ))}
                   </ul>
@@ -302,12 +302,12 @@ function CheckInner() {
               {/* Influence-network map */}
               {record.result.networkMap && !record.result.networkMap.insufficient && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400">Influence-network map - who amplifies the narrative</div>
+                  <div className="text-xs font-semibold text-ink-secondary">Influence-network map - who amplifies the narrative</div>
                   <div className="mt-1.5"><InfluenceNetworkGraph network={record.result.networkMap} /></div>
                 </div>
               )}
               {Array.isArray(record.result.expansion?.sources) && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-ink-secondary">
                   Sources: {record.result.expansion.sources.map((s: any, i: number) => (
                     <span key={i}>{i > 0 && " · "}{s.source} {s.connected ? `(${s.count})` : "(not connected)"}</span>
                   ))}
@@ -328,19 +328,19 @@ function CheckInner() {
               {Array.isArray(record.result.indicators) && record.result.indicators.map((ind: any) => (
                 <div key={ind.key}>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-200">{ind.label}</span>
+                    <span className="text-ink">{ind.label}</span>
                     <ConfidenceBadge level={ind.level} label={ind.level !== "Unknown" ? String(ind.score) : undefined} />
                   </div>
-                  {ind.signals?.length > 0 && <ul className="mt-1">{ind.signals.map((s: string, i: number) => <li key={i} className="text-xs text-gray-400">• {s}</li>)}</ul>}
-                  <p className="mt-0.5 text-xs text-gray-500"><span className="text-gray-600">Could also be:</span> {ind.alternative}</p>
+                  {ind.signals?.length > 0 && <ul className="mt-1">{ind.signals.map((s: string, i: number) => <li key={i} className="text-xs text-ink-secondary">• {s}</li>)}</ul>}
+                  <p className="mt-0.5 text-xs text-ink-secondary"><span className="text-ink-muted">Could also be:</span> {ind.alternative}</p>
                 </div>
               ))}
               {/* Earliest observable node */}
               {record.result.earliest && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-                  <div className="text-xs font-semibold text-gray-400">Earliest observed in collected data <span className="font-normal"> - not the true origin</span></div>
-                  <p className="mt-1 text-gray-300">{record.result.earliest.text}</p>
-                  <div className="mt-1 text-xs text-gray-500">
+                  <div className="text-xs font-semibold text-ink-secondary">Earliest observed in collected data <span className="font-normal"> - not the true origin</span></div>
+                  <p className="mt-1 text-ink">{record.result.earliest.text}</p>
+                  <div className="mt-1 text-xs text-ink-secondary">
                     {record.result.earliest.source}{record.result.earliest.account ? ` · ${record.result.earliest.account}` : ""}{record.result.earliest.timestamp ? ` · ${record.result.earliest.timestamp}` : ""}
                     {record.result.earliest.url && <> · <a href={record.result.earliest.url} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">source</a></>}
                   </div>
@@ -349,13 +349,13 @@ function CheckInner() {
               {/* Narrative clusters (AI) */}
               {record.result.narratives?.available && record.result.narratives.clusters?.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-400">Narrative clusters</div>
+                  <div className="text-xs font-semibold text-ink-secondary">Narrative clusters</div>
                   <div className="mt-1 grid gap-2 sm:grid-cols-2">
                     {record.result.narratives.clusters.map((c: any, i: number) => (
                       <div key={i} className="rounded-lg border border-white/[0.06] p-2 text-xs">
-                        <div className="font-medium text-gray-200">{c.label} <span className="text-gray-500">· {c.hostility}</span></div>
-                        <div className="text-gray-400">{c.summary}</div>
-                        <div className="mt-0.5 text-gray-600">Could also be: {c.alternative}</div>
+                        <div className="font-medium text-ink">{c.label} <span className="text-ink-secondary">· {c.hostility}</span></div>
+                        <div className="text-ink-secondary">{c.summary}</div>
+                        <div className="mt-0.5 text-ink-muted">Could also be: {c.alternative}</div>
                       </div>
                     ))}
                   </div>
@@ -363,8 +363,8 @@ function CheckInner() {
               )}
               {/* Source appendix */}
               {Array.isArray(record.result.sources) && (
-                <div className="text-xs text-gray-500">
-                  <span className="font-semibold text-gray-400">Sources:</span>{" "}
+                <div className="text-xs text-ink-secondary">
+                  <span className="font-semibold text-ink-secondary">Sources:</span>{" "}
                   {record.result.sources.map((s: any, i: number) => (
                     <span key={i}>{i > 0 && " · "}{s.source} {s.connected ? `(${s.count})` : "(not connected)"}</span>
                   ))}
@@ -377,11 +377,11 @@ function CheckInner() {
               {Array.isArray(record.result.signals) && record.result.signals.map((s: any, i: number) => (
                 <div key={i}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-gray-200">{s.name}</span>
+                    <span className="text-sm text-ink">{s.name}</span>
                     <ConfidenceBadge level={(s.confidence === "Not collected" ? "Unknown" : s.confidence) as ConfidenceLevel}
                       label={s.confidence === "Not collected" ? "not collected" : undefined} />
                   </div>
-                  <ul className="mt-1">{s.evidence.map((e: string, j: number) => <li key={j} className="text-xs text-gray-400">• {e}</li>)}</ul>
+                  <ul className="mt-1">{s.evidence.map((e: string, j: number) => <li key={j} className="text-xs text-ink-secondary">• {e}</li>)}</ul>
                 </div>
               ))}
               <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-200/90">
@@ -396,15 +396,15 @@ function CheckInner() {
           {record.type !== "narrative" && record.type !== "cib" && evidence.length > 0 && (
             <ul className="space-y-1 border-t border-white/[0.06] pt-3">
               {evidence.slice(0, 8).map((e, i) => (
-                <li key={i} className="text-sm text-gray-400">• {typeof e === "string" ? e : (e.label || e.text || e.signal || JSON.stringify(e).slice(0, 160))}</li>
+                <li key={i} className="text-sm text-ink-secondary">• {typeof e === "string" ? e : (e.label || e.text || e.signal || JSON.stringify(e).slice(0, 160))}</li>
               ))}
             </ul>
           )}
-          <details className="text-xs text-gray-500">
+          <details className="text-xs text-ink-secondary">
             <summary className="cursor-pointer">Raw result</summary>
             <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-black/30 p-3 text-[11px] leading-relaxed">{JSON.stringify(record.result, null, 2)}</pre>
           </details>
-          <p className="text-xs text-gray-600">Saved to <Link href="/history" className="text-brand-soft hover:underline">History</Link> automatically. Indicators, not a verdict.</p>
+          <p className="text-xs text-ink-muted">Saved to <Link href="/history" className="text-brand-soft hover:underline">History</Link> automatically. Indicators, not a verdict.</p>
         </div>
       )}
 
@@ -414,5 +414,5 @@ function CheckInner() {
 }
 
 export default function CheckPage() {
-  return <Suspense fallback={<div className="py-16 text-center text-gray-500">Loading…</div>}><CheckInner /></Suspense>;
+  return <Suspense fallback={<div className="py-16 text-center text-ink-secondary">Loading…</div>}><CheckInner /></Suspense>;
 }
