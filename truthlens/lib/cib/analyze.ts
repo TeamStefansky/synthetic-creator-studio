@@ -13,6 +13,8 @@ import { clusterNearDuplicates } from "@/lib/similarity";
 import {
   mentionDomains, campaignMatch, stateMediaMatch, foreignAgentMatch, ioReferenceCounts,
 } from "@/lib/io-reference";
+import { assessAccount } from "@/lib/authenticity";
+import type { AuthenticityAssessment } from "@/lib/authenticity";
 import {
   detectBursts, hourBandConcentration, creationClustering,
   BURST_WINDOW_MIN, HOUR_BAND_HOURS, HOUR_BAND_MIN_SHARE, HOUR_BAND_MIN_DAYS, CREATION_MIN_ACCOUNTS,
@@ -42,6 +44,9 @@ export interface CibReport {
   nextSteps: string[];
   generatedAt: string;
   archives?: ArchiveLink[]; // preserved copies of the top evidence URLs
+  /** Per-amplifying-account authenticity assessments (additive; probabilistic —
+   * score + confidence + evidence, never a binary fake/real label). */
+  authenticity?: { account: string; assessment: AuthenticityAssessment }[];
 }
 
 const ATTRIBUTION =
@@ -193,9 +198,26 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
     "Amplification/repost network not collected (no platform API configured).",
   ];
 
+  // --- Account authenticity (ADDITIVE): per-amplifying-account assessment over
+  //     the mention stream, reusing the near-dup groups computed above. ---
+  const byAccount = new Map<string, Mention[]>();
+  for (const m of mentions) {
+    const id = m.accountId || m.account;
+    if (id) byAccount.set(id, [...(byAccount.get(id) || []), m]);
+  }
+  const authenticity = [...byAccount.entries()]
+    .filter(([, ms]) => ms.length >= 2)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 8)
+    .map(([account, own]) => ({
+      account,
+      assessment: assessAccount({ account, own, all: mentions, clusters: groups }),
+    }));
+
   return {
     entity, likelihood, totalItems: total, accounts, signals, clusters,
     collectionGaps, attribution: ATTRIBUTION, nextSteps: NEXT_STEPS, generatedAt,
+    ...(authenticity.length ? { authenticity } : {}),
   };
 }
 
