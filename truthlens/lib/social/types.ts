@@ -3,7 +3,7 @@
 // an ACCOUNT, never a person: no real-name resolution, no cross-platform identity
 // linking, no location tracking. Fields the source didn't expose stay undefined - // "Not collected", never guessed (CLAUDE.md rules 1, 4, 5, 7).
 
-export type SocialPlatform = "bluesky" | "x";
+export type SocialPlatform = "bluesky" | "x" | "instagram";
 
 export interface ProfileSnapshot {
   platform: SocialPlatform;

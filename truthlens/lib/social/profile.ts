@@ -6,6 +6,7 @@
 import { getJson } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { avatarContentHash } from "./avatar";
+import { fetchIgDiscovery } from "./instagram";
 import type { ProfileSnapshot, SocialPlatform } from "./types";
 
 const UA = "TruthLens/0.1 (account authenticity - public profile lookup)";
@@ -31,6 +32,16 @@ export function parseProfileInput(input: string): { platform: SocialPlatform; ha
     if (/^(i|home|search|explore|notifications|messages|settings|intent|hashtag|share|status)$/i.test(h)) return null;
     return { platform: "x", handle: h };
   }
+
+  // Instagram PROFILE page only - instagram.com/<handle>. Post/reel/story links
+  // (instagram.com/p/…, /reel/…, /stories/…) are NOT profiles → fall through.
+  const ig = s.match(/instagram\.com\/([A-Za-z0-9._]{1,30})\/?(?:[?#]|$)/i);
+  if (ig) {
+    const h = ig[1].toLowerCase();
+    if (/^(p|reel|reels|tv|stories|explore|accounts|direct|about|developer|legal|privacy|terms|web|session|s)$/i.test(h)) return null;
+    return { platform: "instagram", handle: h };
+  }
+
   if (/^https?:\/\//i.test(s)) return null; // some other URL - not a profile reference
 
   const bare = s.replace(/^@/, "");
@@ -91,6 +102,25 @@ async function fetchXProfile(handle: string): Promise<ProfileSnapshot> {
   };
 }
 
+async function fetchInstagramProfile(handle: string): Promise<ProfileSnapshot> {
+  const d = await fetchIgDiscovery(handle);
+  if (!d.connected) return notConnected("instagram", handle, d.reason || "Instagram profile unavailable.");
+  return {
+    platform: "instagram",
+    handle: d.username || handle,
+    accountId: d.id,
+    displayName: d.name,
+    bio: d.biography,
+    avatarUrl: d.profilePictureUrl,
+    // createdAt: the Instagram Graph API does not expose account creation date → Not collected.
+    followers: d.followersCount,
+    follows: d.followsCount,
+    posts: d.mediaCount,
+    collectedAt: d.collectedAt,
+    connected: true,
+  };
+}
+
 /** Fetch a ProfileSnapshot (cached per day). Adds the avatar content-hash when an
  * avatar URL was collected - hash failure just leaves the field Not collected. */
 export async function fetchProfile(platform: SocialPlatform, handle: string): Promise<ProfileSnapshot> {
@@ -98,7 +128,10 @@ export async function fetchProfile(platform: SocialPlatform, handle: string): Pr
   const cached = await cacheGet<ProfileSnapshot>(ck, SNAPSHOT_TTL);
   if (cached) return cached;
 
-  const snap = platform === "bluesky" ? await fetchBlueskyProfile(handle) : await fetchXProfile(handle);
+  const snap =
+    platform === "bluesky" ? await fetchBlueskyProfile(handle)
+    : platform === "instagram" ? await fetchInstagramProfile(handle)
+    : await fetchXProfile(handle);
   if (snap.connected && snap.avatarUrl) {
     snap.avatarHash = (await avatarContentHash(snap.avatarUrl)) || undefined;
   }

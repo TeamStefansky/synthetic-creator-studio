@@ -65,8 +65,9 @@ export function detectCheckType(input: string): Detection {
   if (oneToken) {
     const prof = parseProfileInput(text);
     if (prof && (urlMatch || text.startsWith("@"))) {
+      const platName = prof.platform === "x" ? "X" : prof.platform === "instagram" ? "Instagram" : "Bluesky";
       return det("social",
-        `A ${prof.platform === "x" ? "X" : "Bluesky"} profile - analyzing the account and the narrative it amplifies.`,
+        `A ${platName} profile - analyzing the account and the narrative it amplifies.`,
         urlMatch ? "High" : "Medium");
     }
   }

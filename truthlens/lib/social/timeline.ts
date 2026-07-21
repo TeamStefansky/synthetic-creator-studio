@@ -5,6 +5,7 @@
 
 import { getJson } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
+import { fetchIgDiscovery } from "./instagram";
 import type { Mention } from "@/lib/narrative/types";
 import type { SocialPlatform } from "./types";
 
@@ -76,12 +77,32 @@ async function xAuthorPosts(handle: string): Promise<AuthorPosts> {
   return { connected: true, posts };
 }
 
+async function instagramAuthorPosts(handle: string): Promise<AuthorPosts> {
+  const d = await fetchIgDiscovery(handle);
+  if (!d.connected) return { connected: false, reason: d.reason || "Instagram media unavailable.", posts: [] };
+  const posts: Mention[] = (d.media || []).map((m): Mention => ({
+    source: "instagram",
+    id: m.id,
+    text: m.caption || "",
+    url: m.permalink,
+    account: d.username || handle,
+    accountId: d.id,
+    // lang: not exposed by Business Discovery → left undefined.
+    timestamp: m.timestamp,
+    engagement: (m.likeCount || 0) + (m.commentsCount || 0),
+  }));
+  return { connected: true, posts };
+}
+
 /** Fetch an account's own recent posts (cached per day). */
 export async function fetchAuthorPosts(platform: SocialPlatform, handle: string): Promise<AuthorPosts> {
   const ck = `social:timeline:${platform}:${handle.toLowerCase()}`;
   const cached = await cacheGet<AuthorPosts>(ck, TIMELINE_TTL);
   if (cached) return cached;
-  const out = platform === "bluesky" ? await blueskyAuthorPosts(handle) : await xAuthorPosts(handle);
+  const out =
+    platform === "bluesky" ? await blueskyAuthorPosts(handle)
+    : platform === "instagram" ? await instagramAuthorPosts(handle)
+    : await xAuthorPosts(handle);
   if (out.connected) await cacheSet(ck, out); // never cache a "not connected" state
   return out;
 }

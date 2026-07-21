@@ -7,6 +7,7 @@
 import { getJson } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { fetchProfile } from "@/lib/social/profile";
+import { fetchIgDiscovery } from "@/lib/social/instagram";
 import type { AccountProfile, FollowerSampleItem } from "@/lib/authenticity/types";
 import type { PlatformAccountProvider } from "../types";
 
@@ -35,9 +36,9 @@ async function blueskyFollowerSample(actor: string): Promise<FollowerSampleItem[
 export function officialProvider(): PlatformAccountProvider {
   return {
     name: "official",
-    supports: (platform) => platform === "bluesky" || platform === "x",
+    supports: (platform) => platform === "bluesky" || platform === "x" || platform === "instagram",
     async fetchAccount(platform, handle) {
-      if (platform !== "bluesky" && platform !== "x") return null;
+      if (platform !== "bluesky" && platform !== "x" && platform !== "instagram") return null;
       const snap = await fetchProfile(platform, handle);
       if (!snap.connected) return null; // renders as Phase-1-only, never faked
       const profile: AccountProfile = {
@@ -53,6 +54,16 @@ export function officialProvider(): PlatformAccountProvider {
       };
       if (platform === "bluesky") {
         profile.followersSample = await blueskyFollowerSample(snap.accountId || handle).catch(() => undefined);
+      }
+      if (platform === "instagram") {
+        // Business Discovery exposes recent-media like/comment counts (used by the
+        // engagement signals) but NOT a follower list → followersSample stays
+        // undefined ("Not collected"), never fabricated. Shared per-day cache with
+        // fetchProfile, so this is not a second network call.
+        const d = await fetchIgDiscovery(handle).catch(() => null);
+        if (d?.connected && d.media?.length) {
+          profile.recentPosts = d.media.map((m) => ({ likes: m.likeCount, comments: m.commentsCount }));
+        }
       }
       return profile;
     },
