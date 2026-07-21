@@ -13,6 +13,7 @@ import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import AuthenticityPanel from "@/components/AuthenticityPanel";
+import { InfluenceNetworkGraph } from "@/components/NetworkGraph";
 import { detectCheckType, CHECK_TYPES, CheckType } from "@/lib/check/detect";
 import { CheckRecord, genId, getLocal, saveLocal, syncShared } from "@/lib/check/history";
 import { extractEntities } from "@/lib/clues/extract";
@@ -285,6 +286,13 @@ function CheckInner() {
               {/* Stage 3 — amplification across sources */}
               {record.result.expansion?.authenticity?.length > 0 && (
                 <AuthenticityPanel entity={record.input} accounts={record.result.expansion.authenticity} />
+              )}
+              {/* Influence-network map */}
+              {record.result.networkMap && !record.result.networkMap.insufficient && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-400">Influence-network map — who amplifies the narrative</div>
+                  <div className="mt-1.5"><InfluenceNetworkGraph network={record.result.networkMap} /></div>
+                </div>
               )}
               {Array.isArray(record.result.expansion?.sources) && (
                 <p className="text-xs text-gray-500">

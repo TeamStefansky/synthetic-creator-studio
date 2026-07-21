@@ -17,6 +17,8 @@ import { analyzeCib, ATTRIBUTION } from "@/lib/cib/analyze";
 import { assessAccount } from "@/lib/authenticity";
 import { resolvePlatformProvider } from "@/lib/platform/provider";
 import { extractSeeds } from "./seed";
+import { buildNetworkMap } from "./network-map";
+import type { InfluenceNetwork } from "./network-map";
 import type { CibReport } from "@/lib/cib/analyze";
 import type { AuthenticityAssessment, AccountProfile } from "@/lib/authenticity";
 import type { ProfileSnapshot } from "@/lib/social/types";
@@ -38,6 +40,9 @@ export interface SocialAnalyzeReport {
   /** Stage-3 amplification analysis over own posts + expanded mentions. */
   expansion?: CibReport & { sources: SourceStatus[] };
   band: InfluenceBand;
+  /** Influence-network map over own posts + expanded mentions (accounts/domains
+   * only). Present whenever expansion ran. */
+  networkMap?: InfluenceNetwork;
   attribution: string; // verbatim UNDETERMINED framing (shared with CIB)
   collectionGaps: string[];
   generatedAt: string;
@@ -91,6 +96,7 @@ export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyz
 
   // --- Stage 3: expand each seed across the connected sources, then CIB ---
   let expansion: SocialAnalyzeReport["expansion"];
+  let networkMap: InfluenceNetwork | undefined;
   let merged: Mention[] = [...own];
   let anySourceConnected = false;
   if (seeds.length) {
@@ -133,6 +139,12 @@ export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyz
 
     expansion = { ...analyzeCib(parsed.handle, merged, profiles), sources: statuses };
     if (!anySourceConnected) gaps.push("No expansion source connected — amplification not assessed.");
+
+    // Influence-network map over the merged set. Authenticity bands (from the
+    // CIB per-account assessments) flag nodes as indicators, never verdicts.
+    const bands: Record<string, string> = {};
+    for (const a of expansion.authenticity || []) bands[a.account] = a.assessment.band;
+    networkMap = buildNetworkMap({ mentions: merged, profiles, authenticityBands: bands });
   }
 
   // --- Stage 1 (final): seed-account authenticity with full peer context ---
@@ -162,6 +174,7 @@ export async function runSocialAnalyze(profileRef: string): Promise<SocialAnalyz
     seeds,
     expansion,
     band,
+    networkMap,
     attribution: ATTRIBUTION,
     collectionGaps: gaps,
     generatedAt,

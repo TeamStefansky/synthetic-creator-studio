@@ -32,6 +32,26 @@ const FIXTURE = {
     sources: [{ source: "bluesky", connected: true, count: 4 }, { source: "gdelt", connected: true, count: 0 }],
     authenticity: [],
   },
+  networkMap: {
+    version: "network-map-v1",
+    insufficient: false,
+    observedEdgeKinds: ["co-citation"],
+    nodes: [
+      { id: "seedacct.bsky.social", label: "seedacct.bsky.social", kind: "account", platform: "bluesky", influence: 1, cluster: 0, earliestObservable: true },
+      { id: "amp1", label: "amp1", kind: "account", platform: "bluesky", influence: 0.6, cluster: 0, flaggedInauthentic: true },
+      { id: "amp2", label: "amp2", kind: "account", platform: "bluesky", influence: 0.5, cluster: 0 },
+      { id: "domain:propsite.example", label: "propsite.example", kind: "domain" },
+    ],
+    edges: [
+      { source: "seedacct.bsky.social", target: "amp1", reason: "identical content",
+        evidence: { mode: "inferred", kind: "identical-content", signals: ["3 near-identical posts"], alternative: "Wire copy / syndication.", confidence: "High" } },
+      { source: "amp1", target: "domain:propsite.example", reason: "cites propsite.example",
+        evidence: { mode: "observed", kind: "co-citation", signals: ["links propsite.example"], alternative: "Ordinary sourcing.", confidence: "High" } },
+    ],
+    clusters: [{ id: 0, size: 3, dominantEdgeKinds: ["identical-content"], languages: ["en"], multiLanguage: false, confidence: "High" }],
+    core: [{ id: "seedacct.bsky.social", label: "seedacct.bsky.social", influence: 1, bridges: 0, signals: ["influence 1"], alternative: "A popular hub is naturally central." }],
+    bridges: [],
+  },
   band: "Strong coordination — actor UNDETERMINED",
   attribution: "Actor is UNDETERMINED. Coordination is a behavioural pattern, not proof of state sponsorship or of who is behind it. These are hypotheses for a human to evaluate — not a verdict.",
   collectionGaps: [],
@@ -66,4 +86,11 @@ test("profile link auto-detects Social Analyze and renders band + seed + authent
   // Sources line honest about connected vs not; attribution box present.
   await expect(page.getByText(/bluesky \(4\)/)).toBeVisible();
   await expect(page.getByText(/Attribution & limitations/)).toBeVisible();
+
+  // Influence-network map: heading, the observed/inferred legend, and a cluster.
+  await expect(page.getByText(/Influence-network map/)).toBeVisible();
+  await expect(page.getByText(/Observed \(real interaction/)).toBeVisible();
+  await expect(page.getByText(/Inferred \(co-behavior\)/)).toBeVisible();
+  await expect(page.getByText(/Coordination clusters/)).toBeVisible();
+  await expect(page.getByText(/Cluster 1 · 3 accounts/)).toBeVisible();
 });
