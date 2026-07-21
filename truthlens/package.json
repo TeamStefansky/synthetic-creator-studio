@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "check:tokens": "grep -rnE \"#[0-9a-fA-F]{3,8}\\b\" app components --include=*.tsx --include=*.ts | grep -vE \"lib/design-tokens|globals.css\" || echo NONE"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

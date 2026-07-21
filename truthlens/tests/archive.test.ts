@@ -73,7 +73,8 @@ describe("archiveEvidence", () => {
       if (url.includes("/save/")) { saveCalls++; return jsonRes({}); }
       return jsonRes({ archived_snapshots: {} });
     });
-    const u = `https://ex.com/cache-${Math.round(performance.now())}-${saveCalls}`;
+    // Genuinely unique per run so the persistent on-disk cache never pre-seeds it.
+    const u = `https://ex.com/cache-${Math.random().toString(36).slice(2)}-${Date.now()}`;
     await saveToArchive(u);
     await saveToArchive(u);
     expect(saveCalls).toBe(1); // second call served from cache

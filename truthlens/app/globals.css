@@ -2,67 +2,140 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Aurora Dark - the token contract (mirrors design/design-system-portable.md).
+   Single CSS-var source of truth; Tailwind mirrors the same hexes. */
 :root {
   color-scheme: dark;
+
+  --color-bg: #050506;
+  --color-surface: #131314;
+  --color-surface-2: #1e1e20;
+  --color-surface-sunken: #0c0c0d;
+
+  --color-text: #ebebeb;
+  --color-text-secondary: #9a9a9f;
+  --color-text-muted: #5e5e64;
+
+  --color-border: #232324;
+  --color-border-strong: #37373a;
+
+  --color-primary: #7f49e1;
+  --color-primary-hover: #6e3bd0;
+  --color-primary-active: #5d32a7;
+  --color-on-primary: #ffffff;
+  --color-primary-glow: rgba(127, 73, 225, 0.4);
+  --gradient-brand: linear-gradient(120deg, #e1804a 0%, #a25da7 50%, #7f49e1 100%);
+  --gradient-soft: linear-gradient(120deg, rgba(127, 73, 225, 0.16), rgba(225, 128, 74, 0.16));
+  --grad-start: #e1804a;
+  --grad-mid: #a25da7;
+  --grad-end: #7f49e1;
+  --grad-deep: #3b1e73;
+
+  --color-warm: #e1804a;
+  --color-badge: #f5d742;
+
+  --font-display: "Space Grotesk", "Clash Display", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, monospace;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+  --radius-full: 999px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
 }
 
 html,
 body {
-  background-color: #070a12;
-  color: #e5e7eb;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Ambient page background: deep gradient + soft brand glows. */
+/* Aurora canvas is flat near-black: one very subtle purple glow, nothing loud. */
 body {
   background-image:
-    radial-gradient(60rem 40rem at 50% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
-    radial-gradient(50rem 30rem at 100% 0%, rgba(56, 189, 248, 0.08), transparent 55%),
-    radial-gradient(40rem 30rem at 0% 20%, rgba(168, 85, 247, 0.08), transparent 55%);
+    radial-gradient(56rem 38rem at 50% -12%, rgba(127, 73, 225, 0.10), transparent 62%);
   background-attachment: fixed;
 }
 
 @layer components {
-  /* Reusable card surface - subtle glass + gradient hairline border. */
+  /* Card: surface bg, hairline, heavily rounded. Depth by surface steps + a
+     hairline - no glass blur, no heavy shadow. Hover -> surface-2. */
   .card {
-    @apply relative rounded-2xl border border-white/[0.08] p-5 shadow-soft;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)) ,
-      rgba(15, 20, 34, 0.8);
-    backdrop-filter: blur(8px);
+    @apply relative rounded-2xl border p-5;
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+  .card:hover {
+    border-color: var(--color-border-strong);
   }
 
   .card-elev {
-    @apply rounded-xl border border-white/[0.07] bg-bg-elev/80 p-4;
+    @apply rounded-xl border p-4;
+    background: var(--color-surface-2);
+    border-color: var(--color-border);
   }
 
   .label-muted {
-    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-gray-400;
+    @apply text-[11px] font-medium uppercase tracking-[0.12em];
+    font-family: var(--font-mono);
+    color: var(--color-text-secondary);
   }
 
+  /* Primary button: the signature gradient + a soft primary glow. One per view. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
-    background-image: linear-gradient(180deg, #6d70f2, #4f46e5);
-    box-shadow: 0 6px 20px -8px rgba(99, 102, 241, 0.7);
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    color: var(--color-on-primary);
+    background-image: var(--gradient-brand);
+    box-shadow: 0 6px 22px -8px var(--color-primary-glow);
   }
   .btn:hover {
-    box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.85);
+    box-shadow: 0 10px 30px -8px var(--color-primary-glow);
     transform: translateY(-1px);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 font-medium text-gray-200 transition hover:border-white/25 hover:bg-white/[0.06];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 font-medium transition;
+    color: var(--color-text);
+    border-color: var(--color-border);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-2);
   }
 }
 
 @layer utilities {
+  /* Two-tone heading mechanism: one word carries the signature gradient. */
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(180deg, #ffffff, #b9c0ff 90%);
+    background-image: var(--gradient-brand);
   }
   .ring-hairline {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    box-shadow: 0 0 0 1px var(--color-border) inset;
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+/* Accessibility: bold, but never motion-sick. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
