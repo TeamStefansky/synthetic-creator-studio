@@ -244,8 +244,9 @@ body {
 }
 
 /* Embed mode: strip site chrome so a result renders cleanly inside an iframe. */
-body.embed-mode > header,
-body.embed-mode > div:last-of-type {
+body.embed-mode aside,
+body.embed-mode header,
+body.embed-mode .site-footer {
   display: none !important;
 }
 body.embed-mode {

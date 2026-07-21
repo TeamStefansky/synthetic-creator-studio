@@ -23,10 +23,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-bg-base font-sans text-ink antialiased">
-        <Nav />
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-        <div className="mx-auto max-w-6xl px-4">
-          <Disclaimer />
+        <div className="lg:flex lg:items-start">
+          <Nav />
+          <div className="min-w-0 flex-1">
+            <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+            <div className="site-footer mx-auto max-w-6xl px-4">
+              <Disclaimer />
+            </div>
+          </div>
         </div>
       </body>
     </html>
