@@ -1,7 +1,9 @@
 // Auto-detect what kind of check an input is, so /check can route it to the
 // right existing tool. Pure functions — unit-tested. The user can always override.
 
-export type CheckType = "site" | "post" | "logs" | "email" | "narrative" | "cib";
+import { parseProfileInput } from "@/lib/social/profile";
+
+export type CheckType = "site" | "post" | "logs" | "email" | "narrative" | "cib" | "social";
 
 export interface Detection {
   type: CheckType;
@@ -13,6 +15,7 @@ export interface Detection {
 const LABELS: Record<CheckType, string> = {
   site: "Site Report", post: "Post Check", logs: "Log Analyzer",
   email: "Email Tracer", narrative: "Narrative Check", cib: "CIB Analysis",
+  social: "Social Analyze",
 };
 
 const SOCIAL_HOSTS = [
@@ -55,6 +58,18 @@ export function detectCheckType(input: string): Detection {
   // A single URL / bare domain → site, unless it's a social post link.
   const oneToken = !/\s/.test(text) && lines.length === 1;
   const urlMatch = text.match(/^https?:\/\/([^/\s]+)/i);
+
+  // A social PROFILE link (bsky.app/profile/…, x.com/<handle>) or an @handle →
+  // Social Analyze (profile-seeded influence-op pipeline). Post/status links
+  // fall through to Post Check; bare domains fall through to Site Report.
+  if (oneToken) {
+    const prof = parseProfileInput(text);
+    if (prof && (urlMatch || text.startsWith("@"))) {
+      return det("social",
+        `A ${prof.platform === "x" ? "X" : "Bluesky"} profile — analyzing the account and the narrative it amplifies.`,
+        urlMatch ? "High" : "Medium");
+    }
+  }
   const bareDomain = /^(?:www\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9-]+)+(?:\/\S*)?$/i.test(text);
   if (oneToken && (urlMatch || bareDomain)) {
     const host = (urlMatch?.[1] || text).replace(/^www\./, "").split("/")[0].toLowerCase();

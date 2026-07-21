@@ -22,10 +22,11 @@ import { bandLabel } from "@/lib/ui";
 const ENDPOINT: Record<CheckType, string> = {
   site: "/api/analyze", post: "/api/post-check", logs: "/api/logs",
   email: "/api/email-trace", narrative: "/api/brandwatch", cib: "/api/cib",
+  social: "/api/social-analyze",
 };
 const TOOL_ROUTE: Record<CheckType, string> = {
   site: "/", post: "/tools/post", logs: "/tools/logs", email: "/tools/email",
-  narrative: "/platform", cib: "/platform",
+  narrative: "/platform", cib: "/platform", social: "/check",
 };
 
 function bodyFor(type: CheckType, input: string): any {
@@ -41,6 +42,13 @@ function summarize(type: CheckType, r: any): { headline: string; level: Confiden
       const L = r.likelihood;
       const lvl: ConfidenceLevel = L === "Strong" ? "High" : L === "Moderate" ? "Medium" : "Low";
       return { headline: `Coordination Likelihood: ${L} · actor UNDETERMINED`, level: lvl };
+    }
+    if (type === "social") {
+      const band = String(r.band || "Unknown");
+      const lvl: ConfidenceLevel = band.startsWith("Strong") ? "High"
+        : band === "Moderate" ? "Medium" : band === "Low" ? "Low" : "Unknown";
+      const amp = r.expansion ? ` · ${r.expansion.accounts} account(s) · ${r.expansion.totalItems} mentions` : "";
+      return { headline: `Influence-op signs: ${band}${amp}`, level: lvl };
     }
     if (type === "narrative") {
       const lvl: ConfidenceLevel = r.status === "UNDER_ATTACK" ? "High" : r.status === "ELEVATED" ? "Medium"
@@ -112,6 +120,8 @@ function CheckInner() {
         ? await fetch(`/api/brandwatch?entity=${encodeURIComponent(value)}&deep=1`, { cache: "no-store" })
         : t === "cib"
         ? await fetch(`/api/cib?entity=${encodeURIComponent(value)}`, { cache: "no-store" })
+        : t === "social"
+        ? await fetch(`/api/social-analyze?profile=${encodeURIComponent(value)}`, { cache: "no-store" })
         : await fetch(ENDPOINT[t], {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify(bodyFor(t, value)),
@@ -235,6 +245,61 @@ function CheckInner() {
           {record.type === "cib" && Array.isArray(record.result.authenticity) && record.result.authenticity.length > 0 && (
             <div className="border-t border-white/[0.06] pt-3">
               <AuthenticityPanel entity={record.input} accounts={record.result.authenticity} />
+            </div>
+          )}
+          {record.type === "social" && (
+            <div className="space-y-3 border-t border-white/[0.06] pt-3">
+              {/* Stage 1 — the seed account */}
+              {record.result.profile && (
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-gray-200">
+                      {record.result.profile.handle}
+                      <span className="ml-1.5 text-xs text-gray-500">({record.result.profile.platform})</span>
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {record.result.profile.connected
+                        ? <>followers {record.result.profile.followers ?? "—"} · following {record.result.profile.follows ?? "—"} · posts {record.result.profile.posts ?? "—"}{record.result.profile.createdAt ? ` · since ${String(record.result.profile.createdAt).slice(0, 10)}` : ""}</>
+                        : "profile not collected"}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {record.result.authenticity && (
+                <AuthenticityPanel entity={record.input}
+                  accounts={[{ account: record.result.authenticity.account, assessment: record.result.authenticity }]} />
+              )}
+              {/* Stage 2 — the narrative the account pushes */}
+              {Array.isArray(record.result.seeds) && record.result.seeds.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-400">Seed narrative(s) — what this account is pushing</div>
+                  <ul className="mt-1 space-y-1">
+                    {record.result.seeds.map((s: any, i: number) => (
+                      <li key={i} className="rounded-lg border border-white/[0.06] p-2 text-xs text-gray-300">
+                        “{s.text}” <span className="text-gray-500">· {s.posts} of the account’s posts</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {/* Stage 3 — amplification across sources */}
+              {record.result.expansion?.authenticity?.length > 0 && (
+                <AuthenticityPanel entity={record.input} accounts={record.result.expansion.authenticity} />
+              )}
+              {Array.isArray(record.result.expansion?.sources) && (
+                <p className="text-xs text-gray-500">
+                  Sources: {record.result.expansion.sources.map((s: any, i: number) => (
+                    <span key={i}>{i > 0 && " · "}{s.source} {s.connected ? `(${s.count})` : "(not connected)"}</span>
+                  ))}
+                </p>
+              )}
+              {record.result.collectionGaps?.length > 0 && (
+                <p className="text-xs text-yellow-100/70">Collection gaps: {record.result.collectionGaps.join(" ")}</p>
+              )}
+              <div className="rounded-lg border border-yellow-500/25 bg-yellow-500/[0.05] p-3 text-xs text-yellow-100/80">
+                <div className="font-semibold">Attribution &amp; limitations</div>
+                <p className="mt-1">{record.result.attribution}</p>
+              </div>
             </div>
           )}
           {record.type === "narrative" && (
