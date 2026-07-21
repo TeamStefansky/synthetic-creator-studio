@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { collectMentions, enrichCreationDates } from "@/lib/narrative/sources";
 import { analyzeCib } from "@/lib/cib/analyze";
 import { archiveEvidence } from "@/lib/archive";
+import { resolvePlatformProvider } from "@/lib/platform/provider";
+import type { AccountProfile } from "@/lib/authenticity";
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { CibReport } from "@/lib/cib/analyze";
 
@@ -31,7 +33,33 @@ export async function GET(req: NextRequest) {
   // Enrich account-creation dates (Bluesky) so the creation-clustering signal can
   // graduate above "Not collected" when the data exists. Best-effort, cached.
   await enrichCreationDates(mentions);
-  const report = analyzeCib(entity, mentions);
+
+  // Platform-account profiles for the top amplifying accounts — only when the
+  // env-gated provider is configured; absent → Phase-1 authenticity only.
+  let profiles: Record<string, AccountProfile> | undefined;
+  const provider = resolvePlatformProvider();
+  if (provider) {
+    const byAccount = new Map<string, { platform: string; handle: string; count: number }>();
+    for (const m of mentions) {
+      const id = m.accountId || m.account;
+      if (!id || !provider.supports(m.source)) continue;
+      const cur = byAccount.get(id);
+      if (cur) cur.count++;
+      else byAccount.set(id, { platform: m.source, handle: m.account || id, count: 1 });
+    }
+    const top = [...byAccount.entries()]
+      .filter(([, v]) => v.count >= 2)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 8);
+    const fetched = await Promise.all(top.map(async ([id, v]) => {
+      try { return [id, await provider.fetchAccount(v.platform, v.handle)] as const; }
+      catch { return [id, null] as const; } // failure-isolated — never aborts the report
+    }));
+    const ok = fetched.filter((f): f is [string, AccountProfile] => !!f[1]);
+    if (ok.length) profiles = Object.fromEntries(ok);
+  }
+
+  const report = analyzeCib(entity, mentions, profiles);
   // Preserve the top evidence URLs (by engagement) before posts change/vanish.
   const topUrls = [...mentions]
     .sort((a, b) => (b.engagement || 0) - (a.engagement || 0))

@@ -8,6 +8,8 @@ import type { Mention } from "@/lib/narrative/types";
 import type { AuthenticityInput } from "./types";
 import {
   SYNC_WINDOW_MS, COPOST_WINDOW_MS, QUIET_HOURS_NORMAL, MIN_POSTS_ALWAYS_ON,
+  FOLLOW_RATIO_MAX, GROWTH_PER_DAY_MAX, LIKE_COMMENT_NORM, MIN_FOLLOWER_SAMPLE,
+  AVATAR_MISSING_SUBSCORE,
 } from "./config";
 
 export type SignalOutput = { subscore: number; evidence: Record<string, unknown> } | null;
@@ -92,9 +94,20 @@ export const engagement_uniformity: SignalFn = (inp) => {
   return { subscore: clamp01(1 - v), evidence: { cv: r2(v), posts: own.length } };
 };
 
-/** Needs a like/comment split; the normalized mention stream only carries a
- * single total-engagement number → honestly uncomputable in Phase 1. */
-export const like_comment_ratio: SignalFn = () => null;
+/** Phase 1: the normalized mention stream only carries a single total-engagement
+ * number → uncomputable. Phase 2: computes from the provider's like/comment
+ * split on recent posts. Deviation from the norm is log-scaled in BOTH
+ * directions (all-likes-no-talk AND comment-pod inflation are tells). */
+export const like_comment_ratio: SignalFn = (inp) => {
+  const posts = (inp.profile?.recentPosts || []).filter((p) => fin(p.likes) && fin(p.comments));
+  if (posts.length < 3) return null;
+  const likes = posts.reduce((n, p) => n + p.likes!, 0);
+  const comments = posts.reduce((n, p) => n + p.comments!, 0);
+  if (likes + comments < 20) return null; // too little engagement to read a ratio
+  const ratio = likes / Math.max(comments, 1);
+  const subscore = clamp01(Math.abs(Math.log10(ratio / LIKE_COMMENT_NORM)));
+  return { subscore, evidence: { likes, comments, ratio: r2(ratio), norm: LIKE_COMMENT_NORM, posts: posts.length } };
+};
 
 export const engagement_velocity: SignalFn = (inp) => {
   // Deterministic reference moment: the newest timestamp in the collected set.
@@ -255,6 +268,125 @@ export const coordinated_posting: SignalFn = (inp) => {
     subscore: clamp01((top - 1) / 4),
     evidence: { topCoPostCount: top, partneredAccounts: partnered, windowMin: COPOST_WINDOW_MS / 60_000 },
   };
+};
+
+// ---------- Layer A — account (Phase 2, provider-derived) ----------
+
+export const follower_following_ratio: SignalFn = (inp) => {
+  const p = inp.profile;
+  if (!p || !fin(p.followers) || !fin(p.follows)) return null;
+  const ratio = p.follows / Math.max(p.followers, 1);
+  return {
+    subscore: clamp01((ratio - 1) / (FOLLOW_RATIO_MAX - 1)),
+    evidence: { followers: p.followers, follows: p.follows, ratio: r2(ratio) },
+  };
+};
+
+export const growth_velocity: SignalFn = (inp) => {
+  const p = inp.profile;
+  if (!p || !fin(p.followers) || !p.createdAt) return null;
+  const created = Date.parse(p.createdAt);
+  if (!Number.isFinite(created)) return null;
+  // Deterministic reference: newest collected timestamp (fallback: now).
+  const allTs = inp.all.map(ts).filter((t): t is number => t !== null);
+  const ref = allTs.length ? Math.max(...allTs) : Date.now();
+  const ageDays = Math.max((ref - created) / 86_400_000, 1);
+  const perDay = p.followers / ageDays;
+  return {
+    subscore: clamp01(perDay / GROWTH_PER_DAY_MAX),
+    evidence: { followers: p.followers, ageDays: Math.round(ageDays), followersPerDay: r2(perDay) },
+  };
+};
+
+/** Default/missing avatar is a MILD flag; an AI-generated score (0–100) from the
+ * image-detect layer, when connected, drives the subscore. A normal avatar with
+ * no detector available → null (we can't judge it, so we don't). */
+export const profile_image_flags: SignalFn = (inp) => {
+  const p = inp.profile;
+  if (!p) return null;
+  if (fin(p.avatarAiScore)) {
+    return { subscore: clamp01(p.avatarAiScore / 100), evidence: { avatarAiScore: p.avatarAiScore } };
+  }
+  if (!p.avatarUrl) {
+    return { subscore: AVATAR_MISSING_SUBSCORE, evidence: { missingOrDefaultAvatar: true } };
+  }
+  return null;
+};
+
+function usernameSuspicion(name: string): { score: number; trailingDigits: number; digitRatio: number } {
+  const trailing = (name.match(/\d+$/) || [""])[0].length;
+  const digits = (name.match(/\d/g) || []).length;
+  const letters = (name.match(/[a-z]/gi) || []).length;
+  const digitRatio = name.length ? digits / name.length : 0;
+  const vowels = (name.match(/[aeiou]/gi) || []).length;
+  let score = 0;
+  if (trailing >= 4) score += 0.6;              // user837462
+  if (digitRatio >= 0.4) score += 0.4;          // x8f2k9qz
+  if (letters >= 8 && vowels === 0) score += 0.4; // unpronounceable string
+  return { score: clamp01(score), trailingDigits: trailing, digitRatio: r2(digitRatio) };
+}
+
+export const username_pattern: SignalFn = (inp) => {
+  const name = (inp.profile?.username || "").trim();
+  if (!name) return null;
+  const u = usernameSuspicion(name);
+  return { subscore: u.score, evidence: { trailingDigits: u.trailingDigits, digitRatio: u.digitRatio } };
+};
+
+export const post_to_follower_ratio: SignalFn = (inp) => {
+  const p = inp.profile;
+  if (!p || !fin(p.posts) || !fin(p.followers)) return null;
+  if (p.followers < 1000) return null; // small accounts: the ratio carries no signal
+  const ratio = p.posts / Math.max(p.followers, 1);
+  // Large audience with almost no content — the bought-followers shape.
+  const subscore = ratio >= 0.001 ? 0 : clamp01((0.001 - ratio) / 0.001);
+  return { subscore, evidence: { posts: p.posts, followers: p.followers } };
+};
+
+// ---------- Layer C — audience (Phase 2, follower-sample-derived) ----------
+
+const lowQuality = (f: { hasAvatar?: boolean; hasBio?: boolean; posts?: number; followers?: number }) =>
+  f.hasAvatar === false && (f.hasBio === false || f.posts === 0 || f.followers === 0);
+
+export const suspicious_follower_pct: SignalFn = (inp) => {
+  const sample = inp.profile?.followersSample || [];
+  if (sample.length < MIN_FOLLOWER_SAMPLE) return null;
+  const low = sample.filter(lowQuality).length;
+  const pct = low / sample.length;
+  return {
+    subscore: clamp01(pct * 1.4),
+    evidence: { sampleSize: sample.length, lowQualityShare: r2(pct) },
+  };
+};
+
+export const follower_botness_recursive: SignalFn = (inp) => {
+  const sample = inp.profile?.followersSample || [];
+  if (sample.length < MIN_FOLLOWER_SAMPLE) return null;
+  const scores = sample.map((f) => {
+    const flags: number[] = [];
+    if (f.hasAvatar !== undefined) flags.push(f.hasAvatar ? 0 : 1);
+    if (f.hasBio !== undefined) flags.push(f.hasBio ? 0 : 1);
+    if (f.username) flags.push(usernameSuspicion(f.username).score);
+    if (f.followers !== undefined) flags.push(f.followers === 0 ? 1 : 0);
+    if (f.posts !== undefined) flags.push(f.posts === 0 ? 1 : 0);
+    return flags.length ? mean(flags) : 0;
+  });
+  const avg = mean(scores);
+  return {
+    subscore: clamp01(avg * 1.3),
+    evidence: { sampleSize: sample.length, meanBotness: r2(avg) },
+  };
+};
+
+/** Phase-2 signal registry (provider-derived; keys must match SIGNAL_SPECS). */
+export const PHASE2_SIGNALS: Record<string, SignalFn> = {
+  follower_following_ratio,
+  growth_velocity,
+  profile_image_flags,
+  username_pattern,
+  post_to_follower_ratio,
+  suspicious_follower_pct,
+  follower_botness_recursive,
 };
 
 /** Phase-1 signal registry (keys must match SIGNAL_SPECS). */

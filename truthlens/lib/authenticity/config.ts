@@ -55,3 +55,10 @@ export const SYNC_WINDOW_MS = 10 * 60_000;      // temporal_clustering: ±10 min
 export const COPOST_WINDOW_MS = 5 * 60_000;     // coordinated_posting: ±5 min pair window
 export const QUIET_HOURS_NORMAL = 6;            // always_on: a human day has ≥~6 quiet hours
 export const MIN_POSTS_ALWAYS_ON = 8;           // and needs enough posts across ≥2 days to judge
+
+// Phase-2 tunables (provider-derived signals)
+export const FOLLOW_RATIO_MAX = 20;             // following ≥20× followers → 1.0
+export const GROWTH_PER_DAY_MAX = 1000;         // ≥1000 followers/day sustained → 1.0
+export const LIKE_COMMENT_NORM = 15;            // typical likes-per-comment; deviation is log-scaled
+export const MIN_FOLLOWER_SAMPLE = 20;          // audience signals need ≥20 sampled followers
+export const AVATAR_MISSING_SUBSCORE = 0.5;     // default/missing avatar: mild flag, never decisive

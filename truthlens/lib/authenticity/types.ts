@@ -12,6 +12,16 @@ export type SignalLayer = "account" | "engagement" | "audience" | "comment_net" 
  * a data-poor account must never show a red band. */
 export type AuthenticityBand = "authentic" | "low" | "elevated" | "high" | "insufficient_data";
 
+/** Minimal per-follower metadata from a PUBLIC sample (aggregated, anonymous in
+ * use: only counted, never listed in output — GDPR-lean per module spec §9). */
+export interface FollowerSampleItem {
+  username?: string;
+  hasAvatar?: boolean;
+  hasBio?: boolean;
+  posts?: number;
+  followers?: number;
+}
+
 /** Provider-filled account profile (Phase 2). All fields optional — anything the
  * platform API didn't expose stays undefined ("Not collected"). */
 export interface AccountProfile {
@@ -24,6 +34,14 @@ export interface AccountProfile {
   avatarUrl?: string;
   avatarHash?: string;
   bio?: string;
+  /** 0–100 AI-generated likelihood for the avatar (filled only when the
+   * image-detect layer is connected — otherwise Not collected). */
+  avatarAiScore?: number;
+  /** Public follower sample (500–2000 not needed; ≥20 suffices statistically
+   * for the phase-2 audience signals). */
+  followersSample?: FollowerSampleItem[];
+  /** Recent posts with a like/comment split, when the platform exposes it. */
+  recentPosts?: { likes?: number; comments?: number }[];
 }
 
 export interface SignalResult {

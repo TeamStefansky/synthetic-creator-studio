@@ -14,7 +14,7 @@ import {
   mentionDomains, campaignMatch, stateMediaMatch, foreignAgentMatch, ioReferenceCounts,
 } from "@/lib/io-reference";
 import { assessAccount } from "@/lib/authenticity";
-import type { AuthenticityAssessment } from "@/lib/authenticity";
+import type { AuthenticityAssessment, AccountProfile } from "@/lib/authenticity";
 import {
   detectBursts, hourBandConcentration, creationClustering,
   BURST_WINDOW_MIN, HOUR_BAND_HOURS, HOUR_BAND_MIN_SHARE, HOUR_BAND_MIN_DAYS, CREATION_MIN_ACCOUNTS,
@@ -60,7 +60,14 @@ const NEXT_STEPS = [
   "Treat account-profile and linguistic cues as weak — never as proof of a specific origin.",
 ];
 
-export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
+export function analyzeCib(
+  entity: string,
+  mentions: Mention[],
+  /** Optional platform-account profiles (keyed by accountId/handle) collected by
+   * the env-gated provider — upgrades the authenticity layer from Phase-1-only.
+   * Absent → identical behavior to before (additive). */
+  profiles?: Record<string, AccountProfile>,
+): CibReport {
   const generatedAt = new Date().toISOString();
   const total = mentions.length;
   const accounts = new Set(mentions.map((m) => m.accountId || m.account).filter(Boolean)).size;
@@ -193,8 +200,11 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
         : hasCopypasta || bursts >= 1 || corroborating >= 1 ? "Weak"
           : "None";
 
+  const profileCount = profiles ? Object.keys(profiles).length : 0;
   const collectionGaps = [
-    "Account-profile signals not collected (no platform API configured).",
+    profileCount > 0
+      ? `Account-profile data collected for ${profileCount} amplifying account(s) via the platform provider; remaining accounts not collected.`
+      : "Account-profile signals not collected (no platform API configured).",
     "Amplification/repost network not collected (no platform API configured).",
   ];
 
@@ -211,7 +221,10 @@ export function analyzeCib(entity: string, mentions: Mention[]): CibReport {
     .slice(0, 8)
     .map(([account, own]) => ({
       account,
-      assessment: assessAccount({ account, own, all: mentions, clusters: groups }),
+      assessment: assessAccount({
+        account, own, all: mentions, clusters: groups,
+        profile: profiles?.[account] ?? null,
+      }),
     }));
 
   return {

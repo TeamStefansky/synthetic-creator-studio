@@ -2,7 +2,7 @@
 // Deterministic, no LLM, no network — a pure function of the collected set.
 
 import { SIGNAL_SPECS, MODEL_VERSION } from "./config";
-import { PHASE1_SIGNALS, ALTERNATIVES } from "./signals";
+import { PHASE1_SIGNALS, PHASE2_SIGNALS, ALTERNATIVES } from "./signals";
 import { aggregate } from "./score";
 import type { AuthenticityAssessment, AuthenticityInput, SignalResult } from "./types";
 
@@ -18,7 +18,7 @@ export function assessAccount(input: AuthenticityInput): AuthenticityAssessment 
   const missing: string[] = [];
 
   for (const spec of SIGNAL_SPECS) {
-    const fn = PHASE1_SIGNALS[spec.key]; // Phase-2 (provider) signals land next phase
+    const fn = PHASE1_SIGNALS[spec.key] || PHASE2_SIGNALS[spec.key];
     const out = fn ? fn(input) : null;
     if (!out) {
       missing.push(spec.key);
