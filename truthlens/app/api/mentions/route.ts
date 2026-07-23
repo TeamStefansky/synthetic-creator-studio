@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { collectMentions } from "@/lib/narrative/sources";
-import { aggregateMentions } from "@/lib/mentions-map";
+import { aggregateMentions, enrichMentionsForMap } from "@/lib/mentions-map";
 import { cacheGet, cacheSet } from "@/lib/cache";
 
 export const runtime = "nodejs";
@@ -26,7 +26,17 @@ export async function GET(req: NextRequest) {
   try {
     const results = await collectMentions(entity);
     const agg = aggregateMentions(results);
-    const out = { entity, ...agg, generatedAt: new Date().toISOString(), cached: false };
+    // Enrich each mention with a sourceType + a plottable lat/lon (country
+    // centroid or the outlet's home country) so map-based clients get ready-to-
+    // plot data without duplicating the geo tables. MapMention extends Mention,
+    // so existing list/table consumers are unaffected.
+    const out = {
+      entity,
+      ...agg,
+      mentions: enrichMentionsForMap(agg.mentions),
+      generatedAt: new Date().toISOString(),
+      cached: false,
+    };
     await cacheSet(ck, out);
     return NextResponse.json(out);
   } catch (e: any) {

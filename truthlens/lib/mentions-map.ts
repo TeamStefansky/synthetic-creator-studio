@@ -70,6 +70,49 @@ function flagFor(country: string): string {
   return isCode(country) ? flagEmoji(country) : "";
 }
 
+export type MentionSourceType = "news" | "social" | "forum" | "video";
+
+const SOURCE_TYPE: Record<string, MentionSourceType> = {
+  gdelt: "news", guardian: "news", nyt: "news", gnews: "news", newsapi: "news", rss: "news",
+  x: "social", bluesky: "social",
+  reddit: "forum", hackernews: "forum",
+  youtube: "video",
+};
+
+export function sourceType(source: string): MentionSourceType {
+  return SOURCE_TYPE[source] || "news";
+}
+
+export interface MapMention extends Mention {
+  sourceType: MentionSourceType;
+  lat?: number;
+  lon?: number;
+}
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+/** Add sourceType + a plottable lat/lon (country centroid, or the outlet's home
+ * country, with deterministic jitter so co-located mentions spread). Server-side
+ * so any client gets ready-to-plot data without duplicating the geo tables. */
+export function enrichMentionsForMap(mentions: Mention[]): MapMention[] {
+  return mentions.map((m) => {
+    const country = (m.country || "").trim() || SOURCE_HOME[m.source] || "";
+    const geo = centroidForCountry(country);
+    let lat: number | undefined;
+    let lon: number | undefined;
+    if (geo) {
+      const h = hashStr(m.id || m.url || m.text || m.source);
+      lat = geo.lat + (((h % 100) / 100) - 0.5) * 6;
+      lon = geo.lon + ((((h >> 8) % 100) / 100) - 0.5) * 6;
+    }
+    return { ...m, sourceType: sourceType(m.source), lat, lon };
+  });
+}
+
 /** Aggregate per-source mention results into a "where it appears" view. */
 export function aggregateMentions(results: SourceResult[], limit = 200): MentionsAggregate {
   const sources = results.map((r) => r.status);

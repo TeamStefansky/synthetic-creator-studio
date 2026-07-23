@@ -9,13 +9,14 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
-  CheckCircle, History, Menu, X, Server, Globe,
+  CheckCircle, History, Menu, X, Server, Globe, Radio,
 } from "lucide-react";
 
 const links = [
   { href: "/check", label: "Check", icon: CheckCircle, match: (p: string) => p.startsWith("/check") },
   { href: "/platform", label: "Brand Watch", icon: Radar, match: (p: string) => p.startsWith("/platform") },
   { href: "/tools/mentions", label: "Brand Mentions", icon: Globe, match: (p: string) => p.startsWith("/tools/mentions") },
+  { href: "/tools/signal", label: "SIGNAL Grid", icon: Radio, match: (p: string) => p.startsWith("/tools/signal") },
   { href: "/history", label: "History", icon: History, match: (p: string) => p.startsWith("/history") },
   { href: "/", label: "Site Report", icon: FileSearch, match: (p: string) => p === "/" || p.startsWith("/report") },
   { href: "/tools/post", label: "Post Check", icon: ShieldQuestion, match: (p: string) => p.startsWith("/tools/post") },
