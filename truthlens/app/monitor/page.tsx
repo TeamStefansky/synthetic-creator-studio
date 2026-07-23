@@ -7,6 +7,7 @@ import { Activity, RefreshCw, Plus, Download, X, ExternalLink, Loader2, Search }
 import { bandLabel, bandColor, fmtDate } from "@/lib/ui";
 import type { RiskBand } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
+import BrandWatchlist from "@/components/BrandWatchlist";
 
 interface HistPoint { ts: string; band?: string; score?: number; }
 interface Watch { domain: string; band?: RiskBand; score?: number; ts?: string; loading?: boolean; error?: string; history: HistPoint[]; }
@@ -186,6 +187,9 @@ export default function MonitorPage() {
           })}
         </div>
       )}
+
+      <div className="my-8 border-t border-white/10" />
+      <BrandWatchlist />
 
       <Disclaimer variant="inline" />
     </div>

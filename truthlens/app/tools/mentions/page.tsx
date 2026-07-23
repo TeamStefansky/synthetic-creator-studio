@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Globe, ArrowRight, ExternalLink, MapPin } from "lucide-react";
 import type { MentionsAggregate } from "@/lib/mentions-map";
@@ -27,6 +27,13 @@ export default function BrandMentionsPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Prefill + auto-run from ?entity= (used by the Monitor "open full" link).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("entity");
+    if (q && q.trim().length >= 2) { setEntity(q); scan(q); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const scan = async (value?: string) => {
     const e = value ?? entity;
@@ -112,12 +119,10 @@ export default function BrandMentionsPage() {
           </div>
 
           {/* Interactive world map (deck.gl) - bubbles per source country. */}
-          {result.byCountry.some((c) => typeof c.lat === "number") && (
-            <div className="card">
-              <div className="label-muted mb-2 flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> World map (drag to pan, scroll to zoom)</div>
-              <MentionsMap data={result.byCountry} />
-            </div>
-          )}
+          <div className="card">
+            <div className="label-muted mb-2 flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> World map (drag to pan, scroll to zoom)</div>
+            <MentionsMap data={result.byCountry} />
+          </div>
 
           {/* Geographic breakdown - the "where in the world" view. */}
           <div className="card">
