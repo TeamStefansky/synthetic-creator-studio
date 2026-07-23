@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 
+// Neutral phase labels - progress without revealing the underlying sources/methods.
 const STEPS = [
-  "DNS records",
-  "WHOIS / RDAP",
-  "Hosting & IP / ASN",
-  "SSL certificates (SAN)",
-  "Archive history",
-  "Page fetch & fingerprint",
-  "Content analysis",
-  "Scoring & network graph",
+  "Collecting site signals",
+  "Checking ownership records",
+  "Mapping hosting footprint",
+  "Validating security setup",
+  "Reviewing site history",
+  "Inspecting the page",
+  "Analyzing content",
+  "Scoring & relationships",
 ];
 
 /** Cosmetic progressive checklist shown while /api/analyze runs. */
