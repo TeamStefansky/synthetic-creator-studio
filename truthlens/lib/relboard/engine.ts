@@ -18,17 +18,19 @@ import Anthropic from "@anthropic-ai/sdk";
 import { LLM_MODEL } from "@/lib/llm";
 import { validateRelGraph, type RelGraph } from "./schema";
 
-const CALL_TIMEOUT_MS = 62_000; // per LLM call; generous headroom under the route's 90s
-const MAX_TOKENS = 2200;        // smaller output = faster generation (latency lever)
+const CALL_TIMEOUT_MS = 55_000; // client aborts the request at this point
+const RACE_TIMEOUT_MS = 60_000; // backstop so the route always returns JSON <90s
+const MAX_TOKENS = 1600;        // smaller output = faster generation (latency lever)
 
 const SYSTEM_PROMPT = `You are the research engine for an ORGANIZATION-CHART / link-analysis tool used for legitimate business research (due diligence, competitive intelligence). Given a COMPANY NAME, output an organization-level graph from well-established PUBLIC knowledge.
 
 OUTPUT: return ONE JSON object only - no markdown, no code fences, no prose before or after.
 
-WHAT TO PRODUCE (keep it COMPACT for speed: 6-10 nodes total)
+WHAT TO PRODUCE (keep it COMPACT for speed: 5-8 nodes total)
 - One central "organization" node for the target company (its id is centralNodeId).
 - A few related "organization" nodes that are clearly public: parent, major subsidiaries, key partners, notable investors/funders (pick the most significant).
 - 2-4 "role" nodes for DISCLOSED senior leadership positions (e.g. CEO, CFO, Board Chair). A role node carries: the role title (name + bilingual label), the org it is held at (orgName), the disclosed office-holder's NAME (officeholder), a confidence, and its source(s).
+- MULTIPLE ROLES: the same office-holder MAY appear on more than one role node ONLY when each position is at an organization ALREADY in this graph (e.g. a group executive who also chairs a subsidiary that is a node here). Do NOT add an organization just to attach another role to a person, and NEVER include the person's career history, past/outside employers, biography, or any personal background - only their CURRENT disclosed role(s) inside this corporate structure.
 - Edges: from each role node to its org with type "officer_role"; between orgs use parent/subsidiary/partner/funder/related_org. Give each edge a bilingual label.
 - Keep EVERY bilingual string short (labels <=4 words; confidenceReason <=12 words) so the response is small and fast.
 
@@ -82,7 +84,9 @@ export async function buildRelBoard(company: string): Promise<RelBoardResult> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return { available: false, reason: "Relationship engine not connected (no ANTHROPIC_API_KEY)." };
 
-  const client = new Anthropic({ apiKey: key });
+  // Fail fast: no silent SDK retries (rate-limit/5xx backoff would eat the whole
+  // window and surface only as a vague timeout), and a hard per-request abort.
+  const client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: CALL_TIMEOUT_MS });
   const baseMessages: any[] = [
     { role: "user", content: `Company: "${company}". Output the organization-level org-chart graph JSON only.` },
   ];
@@ -90,7 +94,7 @@ export async function buildRelBoard(company: string): Promise<RelBoardResult> {
   async function once(messages: any[]): Promise<any | null> {
     const msg = await withTimeout(
       client.messages.create({ model: LLM_MODEL, max_tokens: MAX_TOKENS, system: SYSTEM_PROMPT, messages }),
-      CALL_TIMEOUT_MS,
+      RACE_TIMEOUT_MS,
     );
     return extractJson(textOf(msg));
   }
@@ -113,9 +117,11 @@ export async function buildRelBoard(company: string): Promise<RelBoardResult> {
     return { available: true, graph: result.graph };
   } catch (e: any) {
     const m = String(e?.message || "error");
-    if (/timeout/i.test(m)) return { available: false, reason: "The research call timed out - try again." };
+    if (/429|rate.?limit|overloaded|529/i.test(m)) return { available: false, reason: "Anthropic is rate-limited/overloaded right now - try again shortly." };
+    if (/timeout|aborted|timed out/i.test(m)) return { available: false, reason: "The research call timed out - try again." };
     if (/credit balance|billing|insufficient/i.test(m)) return { available: false, reason: "Paused - Anthropic account out of credits." };
     if (/401|invalid x-api-key|authentication/i.test(m)) return { available: false, reason: "ANTHROPIC_API_KEY appears invalid." };
+    if (/model|not_found|404/i.test(m)) return { available: false, reason: `Model issue: ${m.slice(0, 120)} (check ANTHROPIC_MODEL).` };
     return { available: false, reason: `Engine failed: ${m.slice(0, 140)}` };
   }
 }
