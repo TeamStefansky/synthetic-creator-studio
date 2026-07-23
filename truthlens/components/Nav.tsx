@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
-  CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug,
+  CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake,
 } from "lucide-react";
 
 const links = [
@@ -24,6 +24,7 @@ const links = [
   { href: "/tools/logs", label: "Log Analyzer", icon: ScrollText, match: (p: string) => p.startsWith("/tools/logs") },
   { href: "/tools/email", label: "Email Tracer", icon: Mail, match: (p: string) => p.startsWith("/tools/email") },
   { href: "/tools/origin", label: "Origin Exposure", icon: Server, match: (p: string) => p.startsWith("/tools/origin") },
+  { href: "/tools/ngo", label: "Nonprofit Registry", icon: HeartHandshake, match: (p: string) => p.startsWith("/tools/ngo") },
   { href: "/monitor", label: "Monitor", icon: Activity, match: (p: string) => p.startsWith("/monitor") },
   { href: "/status", label: "Connections", icon: Plug, match: (p: string) => p.startsWith("/status") },
   { href: "/about", label: "About", icon: Info, match: (p: string) => p.startsWith("/about") },

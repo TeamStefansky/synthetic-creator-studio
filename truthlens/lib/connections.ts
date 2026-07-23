@@ -13,6 +13,7 @@ export type ConnCategory =
   | "Persistence"
   | "Social (authenticity)"
   | "OSINT enrichment"
+  | "Nonprofit registries"
   | "Alerts";
 
 export interface Integration {
@@ -75,6 +76,10 @@ export const INTEGRATIONS: Integration[] = [
   { key: "factcheck", label: "Google Fact Check", category: "OSINT enrichment", envVars: ["GOOGLE_FACTCHECK_KEY"], getUrl: "developers.google.com/fact-check", href: "https://developers.google.com/fact-check/tools/api" },
   { key: "securitytrails", label: "SecurityTrails (historical DNS)", category: "OSINT enrichment", envVars: ["SECURITYTRAILS_API_KEY"], getUrl: "securitytrails.com", href: "https://securitytrails.com/corp/api" },
 
+  // --- Nonprofit registries ---
+  { key: "propublica", label: "ProPublica Nonprofit Explorer (US IRS 990)", category: "Nonprofit registries", envVars: [], href: "https://projects.propublica.org/nonprofits/api" },
+  { key: "charity-commission", label: "UK Charity Commission", category: "Nonprofit registries", envVars: ["CHARITY_COMMISSION_KEY"], getUrl: "charitycommission.gov.uk API portal", href: "https://register-of-charities.charitycommission.gov.uk/register/api" },
+
   // --- Alerts ---
   { key: "telegram", label: "Telegram alerts", category: "Alerts", envVars: ["TELEGRAM_BOT_TOKEN", "TELEGRAM_ALERT_CHAT_ID"], getUrl: "@BotFather", href: "https://core.telegram.org/bots#botfather" },
   { key: "webhook", label: "Slack/webhook alerts", category: "Alerts", envVars: ["ALERT_WEBHOOK_URL"], getUrl: "Slack incoming webhook", href: "https://api.slack.com/messaging/webhooks" },
@@ -116,7 +121,7 @@ export interface ConnSummary {
 
 const CATEGORY_ORDER: ConnCategory[] = [
   "Brand mentions", "Analysis & signals", "Geopolitics & forecast",
-  "Persistence", "Social (authenticity)", "OSINT enrichment", "Alerts",
+  "Nonprofit registries", "Persistence", "Social (authenticity)", "OSINT enrichment", "Alerts",
 ];
 
 export function connectionSummary(): ConnSummary {
