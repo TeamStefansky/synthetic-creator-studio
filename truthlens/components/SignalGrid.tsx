@@ -72,6 +72,10 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null);
   const [narrSel, setNarrSel] = useState(-1);
   const [view, setView] = useState<View>("map");
+  // Composable MAP-view layers (real data only) - lets the analyst declutter
+  // the geographic view: mention markers, country highlights, narrative routes
+  // drawn between real signal positions, and the real trend HUD.
+  const [layers, setLayers] = useState({ mentions: true, highlights: true, routes: false, trend: false });
   const [step, setStep] = useState(0);
   const [pane, setPane] = useState<"left" | "right">("left");
   const [dims, setDims] = useState({ vw: 0, vh: 0 });
@@ -419,7 +423,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
         const [x0, y0] = project(c.bb[3], c.bb[0]);
         const [x1, y1] = project(c.bb[1], c.bb[2]);
         if (x1 < -8 || x0 > vw + 8 || y1 < -8 || y0 > vh + 8) continue;
-        const h = highlights.get(c.n);
+        const h = layers.highlights ? highlights.get(c.n) : undefined;
         ctx.beginPath();
         for (const ring of c.p) {
           for (let i = 0; i < ring.length; i++) {
@@ -437,7 +441,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     };
     raf = requestAnimationFrame(paint);
     return () => { if (raf) cancelAnimationFrame(raf); };
-  }, [dims, tf, project, highlights]);
+  }, [dims, tf, project, highlights, layers.highlights]);
 
   // ---- pan / zoom interactions ----------------------------------------------
   useEffect(() => {
@@ -457,7 +461,8 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     const onDown = (e: PointerEvent) => {
       if (view === "net") return;
       const t = e.target as HTMLElement;
-      if (t.closest(".sg-detail") || t.closest(".sg-viewtog") || t.closest(".sg-zoomctl")) return;
+      if (t.closest(".sg-detail") || t.closest(".sg-viewtog") || t.closest(".sg-zoomctl") ||
+          t.closest(".sg-layerctl") || t.closest(".sg-trendhud")) return;
       pts.set(e.pointerId, [e.clientX, e.clientY]);
       dragging.current = false;
       lastMid = null;
@@ -637,7 +642,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
             {view !== "net" && <div className="sg-sweep" />}
 
             {/* markers */}
-            {view !== "net" && dims.vw > 0 && (
+            {view !== "net" && (view !== "map" || layers.mentions) && dims.vw > 0 && (
               <svg className="sg-overlay" viewBox={`0 0 ${dims.vw} ${dims.vh}`}>
                 {visible.map((m) => {
                   const idx = data!.mentions.indexOf(m);
@@ -664,7 +669,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
             )}
 
             {/* ROUTES web - hubs + animated arcs to each signal */}
-            {view === "web" && dims.vw > 0 && (
+            {(view === "web" || (view === "map" && layers.routes)) && dims.vw > 0 && (
               <svg className="sg-overlay sg-web" viewBox={`0 0 ${dims.vw} ${dims.vh}`}>
                 {web.map((h) => (
                   <g key={h.ni} opacity={narrSel < 0 || narrSel === h.ni ? 1 : 0.12}>
@@ -764,6 +769,49 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               ))}
             </div>
           )}
+          {/* LAYERS - compose the geographic view from the real data we have */}
+          {data && view === "map" && (
+            <div className="sg-layerctl">
+              <span className="sg-layerlbl">LAYERS</span>
+              {([
+                ["mentions", "MENTIONS"],
+                ["highlights", "COUNTRIES"],
+                ["routes", "ROUTES"],
+                ["trend", "TREND"],
+              ] as [keyof typeof layers, string][]).map(([k, lbl]) => (
+                <button key={k} className={layers[k] ? "sg-on" : ""}
+                  onClick={() => setLayers((s) => ({ ...s, [k]: !s[k] }))}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* TREND layer - a HUD of the REAL public trend series (attention +
+              news tone). Global vectors, not geolocated - honest if empty. */}
+          {data && view === "map" && layers.trend && (
+            <div className="sg-trendhud">
+              <div className="sg-trendhud-h">TREND VECTORS</div>
+              {!context ? (
+                <div className="sg-trendhud-empty">Not connected — no trend series for this scan.</div>
+              ) : (
+                context.signals.map((s: ContextSignal) => (
+                  <div key={s.key} className="sg-trendhud-row">
+                    <span className={`sg-tarrow ${s.direction === "up" ? "sg-up" : s.direction === "down" ? "sg-down" : "sg-flat"}`}>
+                      {s.direction === "up" ? "▲" : s.direction === "down" ? "▼" : "▪"}
+                    </span>
+                    <span className="sg-trendhud-lbl" dir="auto">{s.label}</span>
+                    {s.collected && s.changePct !== null ? (
+                      <span className="sg-trendhud-pct">{s.changePct > 0 ? "+" : ""}{Math.round(s.changePct)}%</span>
+                    ) : (
+                      <span className="sg-trendhud-pct sg-flat">n/a</span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
           {view !== "net" && (
             <div className="sg-zoomctl">
               <button aria-label="Zoom in" onClick={() => zoomAt(dims.vw / 2, dims.vh / 2, 1.5)}>+</button>
@@ -1274,6 +1322,22 @@ const CSS = `
 .sg-viewtog button{background:none;border:0;color:var(--sg-dim);font-size:10px;letter-spacing:.18em;
   padding:6px 12px;font-family:var(--sg-mono);cursor:pointer}
 .sg-viewtog button.sg-on{color:var(--color-on-primary);background-image:var(--gradient-brand);font-weight:700}
+.sg-layerctl{position:absolute;top:10px;left:12px;z-index:20;display:flex;align-items:center;gap:4px;
+  border:1px solid var(--sg-line);border-radius:var(--radius-sm);background:rgba(5,5,6,.75);
+  backdrop-filter:blur(2px);padding:4px 6px}
+.sg-layerlbl{font-size:9px;letter-spacing:.2em;color:var(--sg-dim);font-family:var(--sg-mono);padding:0 4px}
+.sg-layerctl button{background:none;border:1px solid transparent;color:var(--sg-dim);font-size:9.5px;
+  letter-spacing:.12em;padding:4px 8px;font-family:var(--sg-mono);cursor:pointer;border-radius:var(--radius-sm)}
+.sg-layerctl button.sg-on{color:var(--color-on-primary);background-image:var(--gradient-brand);font-weight:700}
+.sg-layerctl button:not(.sg-on):hover{color:var(--sg-text);border-color:var(--sg-line)}
+.sg-trendhud{position:absolute;left:12px;top:48px;z-index:19;min-width:190px;max-width:250px;
+  border:1px solid var(--sg-line);border-radius:var(--radius-md);background:rgba(5,5,6,.82);
+  backdrop-filter:blur(3px);padding:9px 11px}
+.sg-trendhud-h{font-size:9px;letter-spacing:.28em;color:var(--sg-accent);margin-bottom:7px}
+.sg-trendhud-empty{font-size:10.5px;color:var(--sg-dim)}
+.sg-trendhud-row{display:flex;align-items:center;gap:7px;padding:2.5px 0;font-size:11px;color:var(--sg-text)}
+.sg-trendhud-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sg-trendhud-pct{font-family:var(--sg-mono);font-size:10px;color:var(--sg-dim)}
 .sg-zoomctl{position:absolute;right:12px;bottom:14px;z-index:20;display:flex;flex-direction:column;
   border:1px solid var(--sg-line);border-radius:var(--radius-sm);overflow:hidden;background:rgba(5,5,6,.75);backdrop-filter:blur(2px)}
 .sg-zoomctl button{background:none;border:0;border-bottom:1px solid var(--sg-line);color:var(--sg-dim);
