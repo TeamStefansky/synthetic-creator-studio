@@ -4,7 +4,8 @@
 // Public data only; a mention is an account/outlet + a public URL, never a claim
 // about a private individual (CLAUDE.md rules 1, 5, 7).
 
-import { countryLabel, flagEmoji } from "./countries";
+import { countryLabel, countryName, flagEmoji } from "./countries";
+import { CENTROIDS } from "./geo-centroids";
 import type { Mention, SourceStatus } from "./narrative/types";
 import type { SourceResult } from "./narrative/sources";
 
@@ -13,6 +14,34 @@ export interface CountryCount {
   label: string;
   flag: string;
   count: number;
+  /** Resolved ISO code + centroid for map plotting (absent = unmapped). */
+  code?: string;
+  lat?: number;
+  lon?: number;
+}
+
+// GDELT reports source country as a NAME; build a name -> ISO code map from the
+// centroid table so names resolve to coordinates. Memoized.
+let NAME_TO_CODE: Map<string, string> | null = null;
+function nameToCode(): Map<string, string> {
+  if (NAME_TO_CODE) return NAME_TO_CODE;
+  const m = new Map<string, string>();
+  for (const code of Object.keys(CENTROIDS)) {
+    const n = countryName(code);
+    if (n) m.set(n.toLowerCase(), code);
+  }
+  NAME_TO_CODE = m;
+  return m;
+}
+
+/** Resolve a country string (ISO code OR English name) to a centroid. */
+export function centroidForCountry(country?: string): { code: string; lat: number; lon: number } | null {
+  const c = (country || "").trim();
+  if (!c) return null;
+  const code = /^[A-Za-z]{2}$/.test(c) ? c.toUpperCase() : nameToCode().get(c.toLowerCase());
+  if (!code || !CENTROIDS[code]) return null;
+  const [lat, lon] = CENTROIDS[code];
+  return { code, lat, lon };
 }
 
 export interface MentionsAggregate {
@@ -58,9 +87,14 @@ export function aggregateMentions(results: SourceResult[], limit = 200): Mention
   for (const m of deduped) {
     const country = (m.country || "").trim();
     if (!country) { countryUnknown++; continue; }
-    const cur = cc.get(country) || { key: country, label: labelFor(country), flag: flagFor(country), count: 0 };
+    let cur = cc.get(country);
+    if (!cur) {
+      const geo = centroidForCountry(country);
+      cur = { key: country, label: labelFor(country), flag: flagFor(country), count: 0,
+        code: geo?.code, lat: geo?.lat, lon: geo?.lon };
+      cc.set(country, cur);
+    }
     cur.count++;
-    cc.set(country, cur);
   }
   const byCountry = [...cc.values()].sort((a, b) => b.count - a.count);
 

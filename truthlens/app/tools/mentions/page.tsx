@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Globe, ArrowRight, ExternalLink, MapPin } from "lucide-react";
 import type { MentionsAggregate } from "@/lib/mentions-map";
 import type { Mention } from "@/lib/narrative/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+
+// deck.gl is heavy + browser-only → load it client-side, only when a result exists.
+const MentionsMap = dynamic(() => import("@/components/MentionsMap"), {
+  ssr: false,
+  loading: () => <div className="grid h-[420px] place-items-center rounded-xl border border-white/10 text-sm text-ink-secondary">Loading map…</div>,
+});
 
 interface Result extends MentionsAggregate { entity: string; generatedAt: string }
 
@@ -103,6 +110,14 @@ export default function BrandMentionsPage() {
               ))}
             </div>
           </div>
+
+          {/* Interactive world map (deck.gl) - bubbles per source country. */}
+          {result.byCountry.some((c) => typeof c.lat === "number") && (
+            <div className="card">
+              <div className="label-muted mb-2 flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> World map (drag to pan, scroll to zoom)</div>
+              <MentionsMap data={result.byCountry} />
+            </div>
+          )}
 
           {/* Geographic breakdown - the "where in the world" view. */}
           <div className="card">

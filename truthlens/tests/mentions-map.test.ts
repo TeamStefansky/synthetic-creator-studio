@@ -4,7 +4,7 @@
 // through verbatim (so a "not connected" source is shown, never faked).
 
 import { describe, it, expect } from "vitest";
-import { aggregateMentions } from "../lib/mentions-map";
+import { aggregateMentions, centroidForCountry } from "../lib/mentions-map";
 import type { SourceResult } from "../lib/narrative/sources";
 
 const results: SourceResult[] = [
@@ -49,6 +49,18 @@ describe("aggregateMentions", () => {
     expect(agg.byCountry[0].key).toBe("US"); // sorted by count desc
     expect(us?.label).toBeTruthy();
     expect(agg.countryUnknown).toBe(1); // r2 has no country
+    // Coordinates attached for map plotting.
+    expect(us?.code).toBe("US");
+    expect(typeof us?.lat).toBe("number");
+    expect(typeof us?.lon).toBe("number");
+  });
+
+  it("centroidForCountry resolves both ISO codes and English names", () => {
+    expect(centroidForCountry("IL")?.code).toBe("IL");
+    expect(centroidForCountry("Israel")?.code).toBe("IL");
+    expect(centroidForCountry("United States")?.code).toBe("US");
+    expect(centroidForCountry("Nowhereland")).toBeNull();
+    expect(centroidForCountry("")).toBeNull();
   });
 
   it("passes source statuses through, including an honest not-connected one", () => {
