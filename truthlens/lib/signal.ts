@@ -15,14 +15,18 @@
 import type { CountryCount, MapMention, MentionSourceType } from "./mentions-map";
 import type { SourceStatus } from "./narrative/types";
 import type { SentimentLabel, SentimentSummary } from "./signal-sentiment";
+import type { NarrativesResult, NarrativeThread } from "./signal-narratives";
 
 export const SOURCE_TYPES: MentionSourceType[] = ["news", "social", "forum", "video"];
 
+// Category encoding anchored on the Aurora Dark token set (tailwind.config):
+// news = warm (grad-start), social = grad-mid, forum = brand-soft, video = badge.
+// One source of truth - map markers, chips, bars and popovers all read this.
 export const TYPE_COLORS: Record<MentionSourceType, string> = {
-  news: "#FFB454",
-  social: "#F472B6",
-  forum: "#A78BFA",
-  video: "#7DD3FC",
+  news: "#E1804A",
+  social: "#A25DA7",
+  forum: "#A98BF0",
+  video: "#F5D742",
 };
 
 export interface SignalMention extends MapMention {
@@ -63,6 +67,9 @@ export interface MentionsApiResponse {
   /** Present when the scan ran with ?sentiment=1 (available:false = honest
    * "not connected", rendered as such - never faked). */
   sentiment?: SentimentSummary;
+  /** Present when the scan ran with ?narratives=1 - REAL clusters of collected
+   * mentions by index (available:false = honest "not connected"). */
+  narratives?: NarrativesResult;
   generatedAt?: string;
 }
 
@@ -78,6 +85,7 @@ export interface SignalData {
   timeline: TimelineEvent[];
   summary: string;
   sentiment?: SentimentSummary;
+  narratives?: NarrativesResult;
   generatedAt?: string;
 }
 
@@ -170,6 +178,24 @@ function buildSummary(
   return s;
 }
 
+// Narrative-thread colors, drawn from the Aurora gradient family so ROUTES /
+// NETWORK / map highlights read as one system with the rest of the app.
+export const NARR_COLORS = ["#A98BF0", "#E1804A", "#A25DA7", "#F5D742", "#7F49E1", "#22C55E", "#E8A0C0"];
+
+/** Resolve the console's narrative threads for view rendering: the real
+ * server-clustered threads, plus an honest UNCLUSTERED bucket for any collected
+ * mention the clusterer did not place (rule 4 - never force-fit, never hide).
+ * Returns [] when narratives were not requested or not connected. */
+export function resolveThreads(data: SignalData): NarrativeThread[] {
+  const res = data.narratives;
+  if (!res || !res.available || !res.threads.length) return [];
+  const threads = res.threads.map((t) => ({ ...t, mentions: [...t.mentions] }));
+  const covered = new Set(threads.flatMap((t) => t.mentions));
+  const orphans = data.mentions.map((_, i) => i).filter((i) => !covered.has(i));
+  if (orphans.length) threads.push({ name: "UNCLUSTERED", note: "not placed in a thread", mentions: orphans });
+  return threads;
+}
+
 /** Build the full console model from the /api/mentions response. Pure + honest:
  * every field traces to a real collected mention; unconnected sources are passed
  * through verbatim so the UI can show them; nothing is invented. */
@@ -194,6 +220,7 @@ export function buildSignal(api: MentionsApiResponse): SignalData {
     timeline,
     summary,
     sentiment: api.sentiment,
+    narratives: api.narratives,
     generatedAt: api.generatedAt,
   };
 }

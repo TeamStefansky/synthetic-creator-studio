@@ -221,8 +221,67 @@ const newsapi: NarrativeSource = {
   },
 };
 
+// ---- Catalog additions (operator API catalog): video + news breadth ----------
+
+const youtube: NarrativeSource = {
+  name: "youtube",
+  available: () => !!process.env.YOUTUBE_API_KEY,
+  reason: "Set YOUTUBE_API_KEY (free quota at console.cloud.google.com - YouTube Data API v3).",
+  async search(q) {
+    const key = process.env.YOUTUBE_API_KEY!;
+    const params = new URLSearchParams({
+      part: "snippet", q, type: "video", order: "date", maxResults: "25", key,
+    });
+    const data = await getJson<any>(`https://www.googleapis.com/youtube/v3/search?${params}`, { timeoutMs: 15000 });
+    return (data?.items || []).map((it: any): Mention => ({
+      source: "youtube", id: it.id?.videoId || it.etag,
+      text: `${it.snippet?.title || ""}. ${it.snippet?.description || ""}`.trim().replace(/\.$/, ""),
+      url: it.id?.videoId ? `https://www.youtube.com/watch?v=${it.id.videoId}` : undefined,
+      account: it.snippet?.channelTitle, accountId: it.snippet?.channelId,
+      timestamp: it.snippet?.publishedAt,
+    }));
+  },
+};
+
+const newsdata: NarrativeSource = {
+  name: "newsdata",
+  available: () => !!process.env.NEWSDATA_API_KEY,
+  reason: "Set NEWSDATA_API_KEY (free tier at newsdata.io).",
+  async search(q) {
+    const key = process.env.NEWSDATA_API_KEY!;
+    const url = `https://newsdata.io/api/1/latest?apikey=${key}&q=${encodeURIComponent(q)}`;
+    const data = await getJson<any>(url, { timeoutMs: 15000 });
+    return (data?.results || []).map((a: any): Mention => ({
+      source: "newsdata", id: a.article_id || a.link,
+      text: `${a.title || ""}. ${a.description || ""}`.trim().replace(/\.$/, ""),
+      url: a.link, account: a.source_name || a.source_id, accountId: a.source_id,
+      country: Array.isArray(a.country) && a.country[0] ? String(a.country[0]) : undefined,
+      lang: a.language, timestamp: toIso(a.pubDate),
+    }));
+  },
+};
+
+const mediastack: NarrativeSource = {
+  name: "mediastack",
+  available: () => !!process.env.MEDIASTACK_API_KEY,
+  reason: "Set MEDIASTACK_API_KEY (free tier at mediastack.com).",
+  async search(q) {
+    const key = process.env.MEDIASTACK_API_KEY!;
+    const url = `http://api.mediastack.com/v1/news?access_key=${key}&keywords=${encodeURIComponent(q)}&sort=published_desc&limit=50`;
+    const data = await getJson<any>(url, { timeoutMs: 15000 });
+    return (data?.data || []).map((a: any): Mention => ({
+      source: "mediastack", id: a.url || a.title,
+      text: `${a.title || ""}. ${a.description || ""}`.trim().replace(/\.$/, ""),
+      url: a.url, account: a.source, accountId: a.source,
+      country: a.country ? String(a.country).toUpperCase() : undefined,
+      lang: a.language, timestamp: toIso(a.published_at),
+    }));
+  },
+};
+
 export const SOURCES: NarrativeSource[] = [
   x, gdelt, bluesky, hackernews, reddit, rss, guardian, nyt, gnews, newsapi,
+  youtube, newsdata, mediastack,
 ];
 
 /** Run every source in parallel, isolating failures. */

@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { collectMentions } from "@/lib/narrative/sources";
 import { aggregateMentions, enrichMentionsForMap, type MapMention } from "@/lib/mentions-map";
 import { classifySentiment, type SentimentResult, type SentimentSummary } from "@/lib/signal-sentiment";
+import { clusterNarratives, type NarrativesResult } from "@/lib/signal-narratives";
 import { cacheGet, cacheSet } from "@/lib/cache";
 
 export const runtime = "nodejs";
@@ -50,6 +51,7 @@ function applySentiment(mentions: MapMention[], result: SentimentResult): Sentim
 export async function GET(req: NextRequest) {
   const entity = (req.nextUrl.searchParams.get("entity") || "").trim();
   const wantSentiment = req.nextUrl.searchParams.get("sentiment") === "1";
+  const wantNarratives = req.nextUrl.searchParams.get("narratives") === "1";
   if (entity.length < 2) {
     return NextResponse.json({ error: "entity must be at least 2 characters" }, { status: 400 });
   }
@@ -77,24 +79,43 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (!wantSentiment) return NextResponse.json({ ...out, cached: fromCache });
+  if (!wantSentiment && !wantNarratives) return NextResponse.json({ ...out, cached: fromCache });
 
-  // Sentiment is cached separately, keyed by the exact mention set, so a
-  // repeat view of the same scan reuses the same labels (reproducibility).
   const mentions: MapMention[] = out.mentions || [];
-  const sk = `sentiment:${entity.toLowerCase()}:${idsHash(mentions)}`;
-  let sentiment = await cacheGet<SentimentResult>(sk, SENTIMENT_CACHE_MS);
-  if (!sentiment) {
-    sentiment = await classifySentiment(entity, mentions);
-    // Cache only real outcomes (labels or a stable "not connected"); transient
-    // failures (rate limit etc.) are not cached so a retry can succeed.
-    if (sentiment.available || /not connected|No mention text/i.test(sentiment.reason || "")) {
-      await cacheSet(sk, sentiment);
-    }
-  }
+  const mhash = idsHash(mentions);
 
-  // Work on a copy so the sentiment-free cached aggregate stays pristine.
+  // AI layers are cached separately, keyed by the exact mention set, so a
+  // repeat view of the same scan reuses the same result (reproducibility).
+  // Both run in parallel; transient failures (rate limit etc.) are not cached
+  // so a retry can succeed.
+  const cacheable = (reason?: string) => /not connected|No mention text|Not enough/i.test(reason || "");
+  const [sentiment, narratives] = await Promise.all([
+    (async (): Promise<SentimentResult | null> => {
+      if (!wantSentiment) return null;
+      const sk = `sentiment:${entity.toLowerCase()}:${mhash}`;
+      let s = await cacheGet<SentimentResult>(sk, SENTIMENT_CACHE_MS);
+      if (!s) {
+        s = await classifySentiment(entity, mentions);
+        if (s.available || cacheable(s.reason)) await cacheSet(sk, s);
+      }
+      return s;
+    })(),
+    (async (): Promise<NarrativesResult | null> => {
+      if (!wantNarratives) return null;
+      const nk = `narratives:${entity.toLowerCase()}:${mhash}`;
+      let n = await cacheGet<NarrativesResult>(nk, SENTIMENT_CACHE_MS);
+      if (!n) {
+        n = await clusterNarratives(entity, mentions);
+        if (n.available || cacheable(n.reason)) await cacheSet(nk, n);
+      }
+      return n;
+    })(),
+  ]);
+
+  // Work on a copy so the enrichment-free cached aggregate stays pristine.
   const withLabels = mentions.map((m) => ({ ...m }));
-  const summary = applySentiment(withLabels, sentiment);
-  return NextResponse.json({ ...out, mentions: withLabels, sentiment: summary, cached: fromCache });
+  const payload: any = { ...out, mentions: withLabels, cached: fromCache };
+  if (sentiment) payload.sentiment = applySentiment(withLabels, sentiment);
+  if (narratives) payload.narratives = narratives;
+  return NextResponse.json(payload);
 }

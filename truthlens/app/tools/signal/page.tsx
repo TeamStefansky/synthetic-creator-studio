@@ -1,3 +1,4 @@
+import { Radio } from "lucide-react";
 import SignalGrid from "@/components/SignalGrid";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -15,7 +16,19 @@ export const metadata = {
 export default function SignalPage({ searchParams }: { searchParams: { entity?: string } }) {
   const initial = (searchParams?.entity || "").trim();
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center gap-2">
+          <Radio className="h-6 w-6 text-brand-soft" />
+          <h1 className="font-display text-2xl font-bold">
+            SIGNAL <span className="gradient-text">Grid</span>
+          </h1>
+        </div>
+        <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
+          A full-console view of Brand Mentions - the same real, server-collected public mentions,
+          rendered as a live world grid with a signal feed and honest analysis panels.
+        </p>
+      </div>
       <SignalGrid initialEntity={initial} />
       <p className="text-xs text-ink-secondary">
         SIGNAL plots real public mentions collected server-side (news, Bluesky, Reddit, Hacker News,

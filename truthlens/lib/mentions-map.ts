@@ -74,6 +74,7 @@ export type MentionSourceType = "news" | "social" | "forum" | "video";
 
 const SOURCE_TYPE: Record<string, MentionSourceType> = {
   gdelt: "news", guardian: "news", nyt: "news", gnews: "news", newsapi: "news", rss: "news",
+  newsdata: "news", mediastack: "news",
   x: "social", bluesky: "social",
   reddit: "forum", hackernews: "forum",
   youtube: "video",

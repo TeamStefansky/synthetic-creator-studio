@@ -122,8 +122,8 @@ export function project(lat: number, lon: number, vw: number, vh: number): [numb
  * (already transformed for DPR by the caller). `dotColor` is the land dot fill. */
 export function drawLand(ctx: CanvasRenderingContext2D, vw: number, vh: number, dotColor: string): void {
   ctx.clearRect(0, 0, vw, vh);
-  // graticule
-  ctx.strokeStyle = "rgba(27,39,64,.5)";
+  // graticule - Aurora grid-faint hairline (near-invisible, like bg-grid-faint)
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
   ctx.lineWidth = 1;
   for (let lon = -150; lon <= 150; lon += 30) {
     const [x] = project(0, lon, vw, vh);
