@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Globe2, ExternalLink, AlertTriangle, TrendingUp, LineChart } from "lucide-react";
+import { Globe2, ExternalLink, AlertTriangle, TrendingUp, LineChart, BarChart3 } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import type { GeopoliticsAggregate } from "@/lib/geopolitics-agg";
 import type { GeoRecord } from "@/lib/geopolitics";
@@ -102,6 +102,67 @@ export default function GeopoliticsPage() {
               ))}
             </div>
           </div>
+
+          {/* leading trends - dependency-free bar charts from the real aggregate */}
+          {(() => {
+            const kindMax = Math.max(1, ...result.byKind.map((k) => k.count));
+            const regionMax = Math.max(1, ...result.byRegion.map((r) => r.count));
+            const topForecasts = forecasts.filter((f) => typeof f.score === "number").slice(0, 6);
+            return (
+              <div className="card">
+                <div className="label-muted mb-3 flex items-center gap-1"><BarChart3 className="h-3.5 w-3.5" /> Leading trends</div>
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div>
+                    <div className="mb-2 text-xs font-semibold text-ink-secondary">Situation mix (by type)</div>
+                    <div className="space-y-1.5">
+                      {result.byKind.map((k) => (
+                        <div key={k.kind} className="flex items-center gap-2 text-xs">
+                          <div className="w-20 shrink-0 truncate capitalize text-ink-secondary">{KIND_LABEL[k.kind]}</div>
+                          <div className="h-2.5 flex-1 rounded-full bg-white/5">
+                            <div className="h-2.5 rounded-full" style={{ width: `${Math.max(4, (k.count / kindMax) * 100)}%`, background: KIND_COLOR[k.kind] }} />
+                          </div>
+                          <div className="w-6 shrink-0 text-right font-mono text-ink">{k.count}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-2 text-xs font-semibold text-ink-secondary">Activity by region</div>
+                    <div className="space-y-1.5">
+                      {result.byRegion.map((r) => (
+                        <div key={r.key} className="flex items-center gap-2 text-xs">
+                          <div className="w-24 shrink-0 truncate text-ink-secondary">{r.label}</div>
+                          <div className="h-2.5 flex-1 rounded-full bg-white/5">
+                            <div className="h-2.5 rounded-full bg-gradient-brand" style={{ width: `${Math.max(4, (r.count / regionMax) * 100)}%` }} />
+                          </div>
+                          <div className="w-6 shrink-0 text-right font-mono text-ink">{r.count}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-2 text-xs font-semibold text-ink-secondary">Top market-implied odds</div>
+                    {topForecasts.length === 0 ? (
+                      <p className="text-xs text-ink-secondary">No forecast markets in this region.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {topForecasts.map((f: GeoRecord) => (
+                          <div key={f.uid} className="flex items-center gap-2 text-xs">
+                            <div className="min-w-0 flex-1 truncate text-ink" title={f.title}>{f.title}</div>
+                            <div className="h-2.5 w-16 shrink-0 rounded-full bg-white/5">
+                              <div className="h-2.5 rounded-full" style={{ width: `${Math.round((f.score as number) * 100)}%`, background: "#A98BF0" }} />
+                            </div>
+                            <div className="w-8 shrink-0 text-right font-mono text-brand-soft">{Math.round((f.score as number) * 100)}%</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-3 text-[11px] text-ink-secondary">Counts and market-implied probabilities from the current collection - a snapshot, not a forecast of certainty.</p>
+              </div>
+            );
+          })()}
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* events */}

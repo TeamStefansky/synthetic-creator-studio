@@ -32,14 +32,6 @@ export default function SignalPage({ searchParams }: { searchParams: { entity?: 
         </p>
       </div>
       <SignalGrid initialEntity={initial} />
-      <p className="text-xs text-ink-secondary">
-        SIGNAL plots real public mentions collected server-side (news, Bluesky, Reddit, Hacker News,
-        RSS and the news APIs you have connected). Markers sit at the source country&rsquo;s centroid -
-        the outlet&rsquo;s location, never a person&rsquo;s. Sentiment is classified server-side per collected
-        mention (with a confidence); the gauge is computed from those labels, never invented, and shows
-        how many mentions were actually labeled. Sources or layers without a key show as &ldquo;off&rdquo; /
-        &ldquo;not connected&rdquo;.
-      </p>
       <Disclaimer variant="inline" />
     </div>
   );
