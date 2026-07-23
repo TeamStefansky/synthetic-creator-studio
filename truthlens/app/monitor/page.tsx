@@ -8,6 +8,7 @@ import { bandLabel, bandColor, fmtDate } from "@/lib/ui";
 import type { RiskBand } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 import BrandWatchlist from "@/components/BrandWatchlist";
+import ContinuousWatch from "@/components/ContinuousWatch";
 
 interface HistPoint { ts: string; band?: string; score?: number; }
 interface Watch { domain: string; band?: RiskBand; score?: number; ts?: string; loading?: boolean; error?: string; history: HistPoint[]; }
@@ -122,6 +123,20 @@ export default function MonitorPage() {
             <RefreshCw className={`h-4 w-4 ${checkingAll ? "animate-spin" : ""}`} /> {checkingAll ? "Checking…" : "Check all"}
           </button>
         </div>
+      </div>
+
+      {/* PRIMARY: real server-side 24/7 brand monitoring with alerts. */}
+      <ContinuousWatch />
+
+      <div className="my-8 border-t border-white/10" />
+
+      {/* SECONDARY: manual spot-check trackers (browser-local, on-demand). */}
+      <div>
+        <h2 className="font-display text-xl font-bold">Manual <span className="gradient-text">spot-checks</span></h2>
+        <p className="mt-1 text-xs text-ink-secondary no-print">
+          On-demand checks saved in this browser - no schedule, no alerts. Use these for a quick look; use
+          Continuous Brand Watch above for hands-off monitoring.
+        </p>
       </div>
 
       <p className="max-w-2xl text-sm text-ink-secondary no-print">
