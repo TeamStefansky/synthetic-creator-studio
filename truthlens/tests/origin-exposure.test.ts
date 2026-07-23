@@ -34,6 +34,13 @@ const RDAP = JSON.stringify({
   name: "DIGITALOCEAN-1",
   entities: [{ handle: "DO", vcardArray: ["vcard", [["fn", {}, "text", "DigitalOcean, LLC"]]] }],
 });
+// Free passive-DNS (AlienVault OTX) payload with a historical non-CDN origin.
+const OTX = JSON.stringify({
+  passive_dns: [
+    { address: "198.51.100.9", hostname: "old.example", first: "2020-01-01", last: "2021-06-01", record_type: "A" },
+    { address: "104.16.9.9", hostname: "www.example", first: "2022-01-01", last: "2023-01-01", record_type: "A" }, // CDN → filtered
+  ],
+});
 function stubFetch() {
   globalThis.fetch = vi.fn(async (input: any) => {
     const url = String(input);
@@ -41,6 +48,7 @@ function stubFetch() {
       url.includes("ips-v4") ? CF_V4 :
       url.includes("ips-v6") ? CF_V6 :
       url.includes("rdap.org") ? RDAP :
+      url.includes("otx.alienvault.com") ? OTX :
       "[]";
     return { ok: true, status: 200, text: async () => text, json: async () => JSON.parse(text || "[]") } as any;
   }) as any;
@@ -100,8 +108,11 @@ describe("auditOriginExposure", () => {
     // Defensive: we NEVER confirm the origin - only surface candidates.
     expect(r.originFound).toBe(false);
     expect(r.confidenceScore).toBeGreaterThan(0);
-    // Historical DNS is env-gated → not connected without the key.
-    expect(r.historical.available).toBe(false);
+    // Historical DNS works from FREE OSINT (AlienVault OTX) - no paid key needed.
+    expect(r.historical.available).toBe(true);
+    expect(r.historical.candidates.some((h) => h.ip === "198.51.100.9")).toBe(true);
+    expect(r.historical.candidates.some((h) => h.ip === "104.16.9.9")).toBe(false); // CDN IP filtered
+    expect(r.candidates.some((c) => c.ip === "198.51.100.9" && c.sources.includes("historical DNS"))).toBe(true);
     // Rule 3: a leak is a lead, not proof - alternative explanation required.
     expect(r.alternative.toLowerCase()).toContain("not proof");
     expect(r.recommendations.length).toBeGreaterThan(0);

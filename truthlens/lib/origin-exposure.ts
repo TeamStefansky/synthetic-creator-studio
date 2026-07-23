@@ -296,31 +296,84 @@ async function providerForIp(ip: string): Promise<{ provider?: string; org?: str
   return out;
 }
 
-/** Historical A records via SecurityTrails (env-gated; passive OSINT). */
-async function securityTrailsHistory(domain: string, cfRanges: Cidr[]): Promise<HistoricalDns> {
-  const key = process.env.SECURITYTRAILS_API_KEY?.trim();
-  if (!key) {
-    return { available: false, candidates: [], note: "Set SECURITYTRAILS_API_KEY to include historical DNS origin candidates." };
+type HistRow = { ip: string; firstSeen?: string; lastSeen?: string };
+
+function mergeHist(into: Map<string, HistRow>, rows: HistRow[]) {
+  for (const r of rows) {
+    if (!r.ip) continue;
+    const cur = into.get(r.ip) || { ip: r.ip, firstSeen: r.firstSeen, lastSeen: r.lastSeen };
+    if (r.firstSeen && (!cur.firstSeen || r.firstSeen < cur.firstSeen)) cur.firstSeen = r.firstSeen;
+    if (r.lastSeen && (!cur.lastSeen || r.lastSeen > cur.lastSeen)) cur.lastSeen = r.lastSeen;
+    into.set(r.ip, cur);
   }
+}
+
+function looksLikeIp(s: string): boolean {
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(s) || s.includes(":");
+}
+
+/** Free, official passive DNS via AlienVault OTX (keyless; optional OTX_API_KEY).
+ * Returns null if the source could not be queried at all. */
+async function otxPassiveDns(domain: string, cfRanges: Cidr[]): Promise<HistRow[] | null> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const key = process.env.OTX_API_KEY?.trim();
+  if (key) headers["X-OTX-API-KEY"] = key;
+  const data = await getJson<any>(
+    `https://otx.alienvault.com/api/v1/indicators/domain/${encodeURIComponent(domain)}/passive_dns`,
+    { timeoutMs: 15000, headers },
+  );
+  if (!data || !Array.isArray(data.passive_dns)) return null;
+  const rows: HistRow[] = [];
+  for (const r of data.passive_dns) {
+    const ip = String(r?.address || "");
+    if (!looksLikeIp(ip) || isInRanges(ip, cfRanges)) continue; // origins only, skip CDN
+    rows.push({ ip, firstSeen: r?.first, lastSeen: r?.last });
+  }
+  return rows;
+}
+
+/** SecurityTrails historical A records (env-gated). null if not configured/failed. */
+async function securityTrailsRows(domain: string, cfRanges: Cidr[]): Promise<HistRow[] | null> {
+  const key = process.env.SECURITYTRAILS_API_KEY?.trim();
+  if (!key) return null;
   const data = await getJson<any>(`https://api.securitytrails.com/v1/history/${encodeURIComponent(domain)}/dns/a`, {
     timeoutMs: 15000, headers: { apikey: key, Accept: "application/json" },
   });
-  const records = Array.isArray(data?.records) ? data.records : null;
-  if (!records) return { available: false, candidates: [], note: "SecurityTrails history unavailable (check the key/plan)." };
-  const seen = new Map<string, { ip: string; firstSeen?: string; lastSeen?: string }>();
-  for (const rec of records) {
+  if (!data || !Array.isArray(data.records)) return null;
+  const rows: HistRow[] = [];
+  for (const rec of data.records) {
     for (const v of Array.isArray(rec?.values) ? rec.values : []) {
       const ip = String(v?.ip || "");
-      if (!ip || isInRanges(ip, cfRanges)) continue; // skip CDN IPs - only real origins
-      const cur = seen.get(ip) || { ip, firstSeen: rec.first_seen, lastSeen: rec.last_seen };
-      if (rec.last_seen) cur.lastSeen = rec.last_seen;
-      seen.set(ip, cur);
+      if (!looksLikeIp(ip) || isInRanges(ip, cfRanges)) continue;
+      rows.push({ ip, firstSeen: rec.first_seen, lastSeen: rec.last_seen });
     }
+  }
+  return rows;
+}
+
+/** Historical DNS origin candidates from FREE passive-DNS OSINT (AlienVault OTX,
+ * keyless) plus optional SecurityTrails enrichment. */
+async function historicalDns(domain: string, cfRanges: Cidr[]): Promise<HistoricalDns> {
+  const merged = new Map<string, HistRow>();
+  const sources: string[] = [];
+
+  const otx = await otxPassiveDns(domain, cfRanges).catch(() => null);
+  if (otx !== null) { sources.push("AlienVault OTX"); mergeHist(merged, otx); }
+
+  const st = await securityTrailsRows(domain, cfRanges).catch(() => null);
+  if (st !== null) { sources.push("SecurityTrails"); mergeHist(merged, st); }
+
+  if (sources.length === 0) {
+    return {
+      available: false,
+      candidates: [],
+      note: "Historical passive-DNS source unreachable. Optionally set OTX_API_KEY / SECURITYTRAILS_API_KEY.",
+    };
   }
   return {
     available: true,
-    candidates: [...seen.values()].slice(0, 50),
-    note: "Historically-observed A records outside the CDN ranges. If any is still live, rotate it - past exposure persists in public history.",
+    candidates: [...merged.values()].slice(0, 50),
+    note: `Historically-observed A records outside the CDN ranges, from ${sources.join(" + ")}. If any is still live, rotate it - past exposure persists in public history.`,
   };
 }
 
@@ -419,8 +472,8 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     if (p) { rec.provider = p.provider; rec.org = p.org; }
   }
 
-  // Historical DNS origin candidates (env-gated; passive).
-  const historical = await securityTrailsHistory(domain, cfRanges).catch(
+  // Historical DNS origin candidates (free passive-DNS OSINT + optional keys).
+  const historical = await historicalDns(domain, cfRanges).catch(
     () => ({ available: false, candidates: [], note: "Historical DNS lookup failed." }),
   );
 
