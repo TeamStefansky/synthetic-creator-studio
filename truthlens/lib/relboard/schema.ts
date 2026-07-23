@@ -17,11 +17,24 @@ export interface RelSource {
 
 export type RelNodeType = "organization" | "role";
 export type RelEdgeType =
-  | "parent" | "subsidiary" | "partner" | "funder" | "related_org" | "shared_infra" | "officer_role";
+  | "parent" | "subsidiary" | "partner" | "funder" | "investor" | "acquired"
+  | "competitor" | "supplier" | "related_org" | "shared_infra" | "officer_role";
 
 export const REL_EDGE_TYPES: RelEdgeType[] = [
-  "parent", "subsidiary", "partner", "funder", "related_org", "shared_infra", "officer_role",
+  "parent", "subsidiary", "partner", "funder", "investor", "acquired",
+  "competitor", "supplier", "related_org", "shared_infra", "officer_role",
 ];
+
+// Public corporate facts about an ORGANIZATION node (from filings/company site).
+// Organization-level only; nothing personal.
+export interface OrgInfo {
+  sector?: string;
+  hq?: string;        // HQ city / country
+  founded?: string;   // year
+  employees?: string; // approximate, as reported
+  website?: string;
+  ticker?: string;    // stock symbol / exchange
+}
 
 export interface RelNode {
   id: string;
@@ -37,6 +50,8 @@ export interface RelNode {
    * contact, family, or any other personal data, and there are no
    * person-to-person edges. */
   officeholder?: string;
+  /** For an organization node ONLY: public corporate metadata. */
+  orgInfo?: OrgInfo;
   confidence: number; // 0-1
   confidenceReason: Bilingual;
   sources: RelSource[]; // min 1 - provenance mandatory
@@ -116,6 +131,21 @@ function cleanNode(n: any): RelNode | null {
   // Disclosed office-holder name (role nodes only) - the single cited personal
   // fact; everything else personal stays out (fields not copied = stripped).
   if (type === "role" && n.officeholder) node.officeholder = String(n.officeholder).slice(0, 120);
+  // Public corporate metadata (organization nodes only). Only known fields are
+  // copied, so nothing unexpected/personal survives.
+  if (type === "organization" && n.orgInfo && typeof n.orgInfo === "object") {
+    const oi = n.orgInfo;
+    const cap = (v: any, m: number) => (v == null ? undefined : String(v).slice(0, m) || undefined);
+    const info: OrgInfo = {
+      sector: cap(oi.sector, 80),
+      hq: cap(oi.hq, 80),
+      founded: cap(oi.founded, 20),
+      employees: cap(oi.employees, 40),
+      website: cap(oi.website, 200),
+      ticker: cap(oi.ticker, 40),
+    };
+    if (Object.values(info).some((v) => v)) node.orgInfo = info;
+  }
   return node;
 }
 

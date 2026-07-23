@@ -74,6 +74,29 @@ describe("validateRelGraph", () => {
     expect(JSON.stringify(r.graph)).not.toContain("Should Not Appear");
   });
 
+  it("keeps public orgInfo on org nodes but only known fields", () => {
+    const raw = {
+      ...rawValid,
+      nodes: [{
+        ...rawValid.nodes[0],
+        orgInfo: { sector: "Apparel", hq: "Beaverton, US", founded: "1964", employees: "79k", ticker: "NKE", website: "nike.com", ceoHomeAddress: "secret", founderReligion: "x" },
+      }],
+    };
+    const r = validateRelGraph(raw, "Acme");
+    const org = r.graph!.nodes.find((n) => n.id === "org-acme")!;
+    expect(org.orgInfo?.sector).toBe("Apparel");
+    expect(org.orgInfo?.ticker).toBe("NKE");
+    const json = JSON.stringify(r.graph);
+    expect(json).not.toContain("secret");   // unknown field dropped
+    expect(json).not.toContain("Religion");
+  });
+
+  it("does not attach orgInfo to a role node", () => {
+    const raw = { ...rawValid, nodes: [{ ...rawValid.nodes[2], orgInfo: { sector: "should-not-appear" } }] };
+    const r = validateRelGraph(raw, "Acme");
+    expect(JSON.stringify(r.graph)).not.toContain("should-not-appear");
+  });
+
   it("de-duplicates nodes sharing an id", () => {
     const raw = { ...rawValid, nodes: [...rawValid.nodes, rawValid.nodes[0]] };
     const r = validateRelGraph(raw, "Acme");

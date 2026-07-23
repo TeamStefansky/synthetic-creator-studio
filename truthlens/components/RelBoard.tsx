@@ -171,6 +171,16 @@ export default function RelBoard() {
                     {selected.type === "role" ? selected.label[lang] : selected.label[lang]}
                     {selected.type === "role" && selected.orgName ? ` · ${selected.orgName}` : ""}
                   </div>
+                  {selected.type === "organization" && selected.orgInfo && (
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg border border-line p-2 text-xs">
+                      {selected.orgInfo.sector && <div><span className="text-ink-muted">{lang === "he" ? "סקטור" : "Sector"}:</span> {selected.orgInfo.sector}</div>}
+                      {selected.orgInfo.hq && <div><span className="text-ink-muted">{lang === "he" ? "מטה" : "HQ"}:</span> {selected.orgInfo.hq}</div>}
+                      {selected.orgInfo.founded && <div><span className="text-ink-muted">{lang === "he" ? "נוסדה" : "Founded"}:</span> {selected.orgInfo.founded}</div>}
+                      {selected.orgInfo.employees && <div><span className="text-ink-muted">{lang === "he" ? "עובדים" : "Employees"}:</span> {selected.orgInfo.employees}</div>}
+                      {selected.orgInfo.ticker && <div><span className="text-ink-muted">{lang === "he" ? "טיקר" : "Ticker"}:</span> {selected.orgInfo.ticker}</div>}
+                      {selected.orgInfo.website && <div className="col-span-2 truncate"><a href={selected.orgInfo.website.startsWith("http") ? selected.orgInfo.website : `https://${selected.orgInfo.website}`} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">{selected.orgInfo.website}</a></div>}
+                    </div>
+                  )}
                   <ConfidenceBadge level={level(selected.confidence)} label={lang === "he" ? "ודאות" : "confidence"} />
                   <p className="text-xs text-ink-secondary">{selected.confidenceReason[lang]}</p>
                   <div className="label-muted pt-1">{lang === "he" ? "מקורות" : "Sources"}</div>
