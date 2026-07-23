@@ -40,10 +40,11 @@ type View = "map" | "web" | "net";
 const LAT_TOP = 75;
 const LAT_BOT = -56;
 
+// Neutral recon labels - progress without revealing the underlying sources.
 const RECON_STEPS = [
-  "Tasking web recon on target brand…",
-  "Sweeping GDELT news wires + press APIs…",
-  "Listening on Bluesky, Reddit, Hacker News…",
+  "Tasking recon on target brand…",
+  "Sweeping public news & press…",
+  "Listening across social & community sources…",
   "Geolocating mention clusters…",
   "Classifying sentiment on collected mentions…",
   "Clustering narrative threads…",
