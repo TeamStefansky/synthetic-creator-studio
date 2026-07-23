@@ -18,17 +18,19 @@ import Anthropic from "@anthropic-ai/sdk";
 import { LLM_MODEL } from "@/lib/llm";
 import { validateRelGraph, type RelGraph } from "./schema";
 
-const CALL_TIMEOUT_MS = 38_000; // per LLM call; two calls stay under the route's 90s
+const CALL_TIMEOUT_MS = 62_000; // per LLM call; generous headroom under the route's 90s
+const MAX_TOKENS = 2200;        // smaller output = faster generation (latency lever)
 
 const SYSTEM_PROMPT = `You are the research engine for an ORGANIZATION-CHART / link-analysis tool used for legitimate business research (due diligence, competitive intelligence). Given a COMPANY NAME, output an organization-level graph from well-established PUBLIC knowledge.
 
 OUTPUT: return ONE JSON object only - no markdown, no code fences, no prose before or after.
 
-WHAT TO PRODUCE
+WHAT TO PRODUCE (keep it COMPACT for speed: 6-10 nodes total)
 - One central "organization" node for the target company (its id is centralNodeId).
-- Related "organization" nodes that are clearly public: parent, major subsidiaries, key partners, notable investors/funders.
-- "role" nodes for DISCLOSED senior leadership positions (e.g. CEO, CFO, Board Chair). A role node carries: the role title (name + bilingual label), the org it is held at (orgName), the disclosed office-holder's NAME (officeholder), a confidence, and its source(s).
+- A few related "organization" nodes that are clearly public: parent, major subsidiaries, key partners, notable investors/funders (pick the most significant).
+- 2-4 "role" nodes for DISCLOSED senior leadership positions (e.g. CEO, CFO, Board Chair). A role node carries: the role title (name + bilingual label), the org it is held at (orgName), the disclosed office-holder's NAME (officeholder), a confidence, and its source(s).
 - Edges: from each role node to its org with type "officer_role"; between orgs use parent/subsidiary/partner/funder/related_org. Give each edge a bilingual label.
+- Keep EVERY bilingual string short (labels <=4 words; confidenceReason <=12 words) so the response is small and fast.
 
 HARD PRIVACY RULES (most important)
 - This is an ORG CHART, not a personal dossier. For a person you output ONLY their NAME in a disclosed corporate role (officeholder + role title + org + source). NEVER output a biography, photo, age, personal history, personal statements, home address, contact details, family, health, religion, or any other personal data - even if you know it. Do not connect people to each other; the ONLY person edge is a role-to-org "officer_role".
@@ -87,7 +89,7 @@ export async function buildRelBoard(company: string): Promise<RelBoardResult> {
 
   async function once(messages: any[]): Promise<any | null> {
     const msg = await withTimeout(
-      client.messages.create({ model: LLM_MODEL, max_tokens: 4000, system: SYSTEM_PROMPT, messages }),
+      client.messages.create({ model: LLM_MODEL, max_tokens: MAX_TOKENS, system: SYSTEM_PROMPT, messages }),
       CALL_TIMEOUT_MS,
     );
     return extractJson(textOf(msg));
