@@ -114,7 +114,7 @@ export default function BrandMentionsPage() {
 
           {/* World map (dependency-free SVG) - bubbles per source country. */}
           <div className="card">
-            <div className="label-muted mb-2 flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> World map (hover a bubble for the country and count)</div>
+            <div className="label-muted mb-2 flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> World map (drag to pan, scroll to zoom, hover a bubble)</div>
             <MentionsMap data={result.byCountry} />
           </div>
 
