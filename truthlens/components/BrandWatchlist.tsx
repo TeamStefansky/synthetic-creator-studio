@@ -75,8 +75,10 @@ export default function BrandWatchlist() {
     setItems((prev) => prev.map((w) => (w.term === term ? { ...w, loading: true, error: undefined } : w)));
     try {
       const r = await fetch(`/api/mentions?entity=${encodeURIComponent(term)}`);
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Scan failed");
+      const txt = await r.text();
+      let data: any = {};
+      try { data = txt ? JSON.parse(txt) : {}; } catch { data = { error: txt.slice(0, 160) || "Non-JSON response" }; }
+      if (!r.ok) throw new Error(data.error || `Scan failed (${r.status})`);
       const ts = new Date().toISOString();
       const hist = loadHist(term);
       hist.push({ ts, count: data.total || 0 });

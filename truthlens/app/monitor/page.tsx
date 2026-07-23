@@ -72,8 +72,10 @@ export default function MonitorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: `https://${domain}` }),
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Analysis failed");
+      const txt = await r.text();
+      let data: any = {};
+      try { data = txt ? JSON.parse(txt) : {}; } catch { data = { error: txt.slice(0, 160) || "Non-JSON response" }; }
+      if (!r.ok) throw new Error(data.error || `Analysis failed (${r.status})`);
       const ts = new Date().toISOString();
       const hist = loadHist(domain);
       hist.push({ ts, band: data.risk?.band, score: data.risk?.score });

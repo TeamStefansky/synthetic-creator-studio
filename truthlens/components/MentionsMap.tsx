@@ -1,17 +1,20 @@
 "use client";
 
-// Interactive world map of brand mentions (deck.gl). Plots one bubble per source
-// country at its centroid, sized by mention count, over a keyless CARTO dark
-// basemap (no Mapbox token). Client-only (loaded via next/dynamic ssr:false).
-// Country granularity by design - source countries, never a person's location.
+// World map of brand mentions - dependency-free inline SVG (equirectangular).
+// One bubble per source country at its real lat/lon, sized by mention count,
+// with a flag + count and a graticule for geographic reference. No WebGL, no
+// external tiles - always renders. Country granularity by design: source
+// countries, never a person's location.
 
 import { useMemo } from "react";
-import { DeckGL, TileLayer, BitmapLayer, ScatterplotLayer } from "deck.gl";
 import type { CountryCount } from "@/lib/mentions-map";
 
-const INITIAL_VIEW_STATE = {
-  longitude: 10, latitude: 25, zoom: 1.1, minZoom: 0.5, maxZoom: 8, pitch: 0, bearing: 0,
-};
+const W = 960, H = 480; // 2:1 equirectangular
+
+// lon [-180,180] -> x [0,W]; lat [90,-90] -> y [0,H].
+function project(lon: number, lat: number): [number, number] {
+  return [((lon + 180) / 360) * W, ((90 - lat) / 180) * H];
+}
 
 export default function MentionsMap({ data }: { data: CountryCount[] }) {
   const points = useMemo(
@@ -20,49 +23,50 @@ export default function MentionsMap({ data }: { data: CountryCount[] }) {
   );
   const max = useMemo(() => Math.max(1, ...points.map((p) => p.count)), [points]);
 
-  const layers = [
-    new TileLayer<any>({
-      id: "carto-dark",
-      data: "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-      minZoom: 0,
-      maxZoom: 19,
-      tileSize: 256,
-      renderSubLayers: (props: any) => {
-        const bb = props.tile.boundingBox; // [[west, south], [east, north]]
-        return new BitmapLayer(props, {
-          data: undefined,
-          image: props.data,
-          bounds: [bb[0][0], bb[0][1], bb[1][0], bb[1][1]],
-        });
-      },
-    }),
-    new ScatterplotLayer<CountryCount>({
-      id: "mention-bubbles",
-      data: points,
-      getPosition: (d: CountryCount) => [d.lon as number, d.lat as number],
-      getRadius: (d: CountryCount) => 5 + (d.count / max) * 34,
-      radiusUnits: "pixels",
-      radiusMinPixels: 4,
-      getFillColor: [225, 128, 74, 160], // warm orange (Aurora), translucent
-      getLineColor: [127, 73, 225, 235], // primary purple
-      lineWidthMinPixels: 1,
-      stroked: true,
-      filled: true,
-      pickable: true,
-    }),
-  ];
+  // Graticule lines every 30 degrees.
+  const lons: number[] = [];
+  for (let l = -150; l <= 150; l += 30) lons.push(l);
+  const lats: number[] = [];
+  for (let l = -60; l <= 60; l += 30) lats.push(l);
 
   return (
-    <div className="relative h-[420px] w-full overflow-hidden rounded-xl border border-white/10" style={{ background: "#0b0b12" }}>
-      <DeckGL
-        style={{ position: "absolute", top: "0", left: "0", width: "100%", height: "100%" }}
-        initialViewState={INITIAL_VIEW_STATE}
-        controller={true}
-        layers={layers}
-        getTooltip={({ object }: any) =>
-          object ? { text: `${object.flag ? object.flag + " " : ""}${object.label}: ${object.count}` } : null
-        }
-      />
+    <div className="relative w-full overflow-hidden rounded-xl border border-white/10" style={{ background: "#0a0a12" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="World map of brand mentions">
+        {/* ocean */}
+        <rect x={0} y={0} width={W} height={H} fill="#0a0a12" />
+
+        {/* graticule */}
+        <g stroke="rgba(255,255,255,0.06)" strokeWidth={1}>
+          {lons.map((lon) => {
+            const [x] = project(lon, 0);
+            return <line key={`lon${lon}`} x1={x} y1={0} x2={x} y2={H} />;
+          })}
+          {lats.map((lat) => {
+            const [, y] = project(0, lat);
+            return <line key={`lat${lat}`} x1={0} y1={y} x2={W} y2={y} />;
+          })}
+          {/* equator slightly brighter */}
+          <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="rgba(255,255,255,0.12)" />
+        </g>
+
+        {/* bubbles, largest first so smaller ones stay clickable/visible */}
+        <g>
+          {[...points]
+            .sort((a, b) => b.count - a.count)
+            .map((p) => {
+              const [x, y] = project(p.lon as number, p.lat as number);
+              const r = 6 + (p.count / max) * 30;
+              return (
+                <g key={p.key}>
+                  <title>{`${p.flag ? p.flag + " " : ""}${p.label}: ${p.count}`}</title>
+                  <circle cx={x} cy={y} r={r} fill="rgba(225,128,74,0.35)" stroke="#7F49E1" strokeWidth={1.5} />
+                  <text x={x} y={y + 4} textAnchor="middle" fontSize={13} fill="#EBEBEB">{p.count}</text>
+                </g>
+              );
+            })}
+        </g>
+      </svg>
+
       {points.length === 0 && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center p-4 text-center text-sm text-ink-secondary">
           No source reported a country for these mentions yet. The map plots source
