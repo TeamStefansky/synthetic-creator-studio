@@ -29,10 +29,19 @@ const realFetch = globalThis.fetch;
 // CF ranges served to loadCloudflareRanges(); crt.sh returns [] (no CT names).
 const CF_V4 = "104.16.0.0/13\n172.64.0.0/13\n173.245.48.0/20\n";
 const CF_V6 = "2606:4700::/32\n";
+// Minimal RDAP payload → owner "DigitalOcean, LLC" so provider = DigitalOcean.
+const RDAP = JSON.stringify({
+  name: "DIGITALOCEAN-1",
+  entities: [{ handle: "DO", vcardArray: ["vcard", [["fn", {}, "text", "DigitalOcean, LLC"]]] }],
+});
 function stubFetch() {
   globalThis.fetch = vi.fn(async (input: any) => {
     const url = String(input);
-    const text = url.includes("ips-v4") ? CF_V4 : url.includes("ips-v6") ? CF_V6 : "[]";
+    const text =
+      url.includes("ips-v4") ? CF_V4 :
+      url.includes("ips-v6") ? CF_V6 :
+      url.includes("rdap.org") ? RDAP :
+      "[]";
     return { ok: true, status: 200, text: async () => text, json: async () => JSON.parse(text || "[]") } as any;
   }) as any;
 }
@@ -85,6 +94,14 @@ describe("auditOriginExposure", () => {
     expect(r.band).toBe("possible_exposure");
     expect(r.uniqueExposedIps).toContain("203.0.113.77");
     expect(r.exposed.some((e) => e.name === `dev.${domain}`)).toBe(true);
+    // Provider enrichment via public RDAP.
+    expect(r.provider).toBe("DigitalOcean");
+    expect(r.candidates.some((c) => c.ip === "203.0.113.77" && c.provider === "DigitalOcean")).toBe(true);
+    // Defensive: we NEVER confirm the origin - only surface candidates.
+    expect(r.originFound).toBe(false);
+    expect(r.confidenceScore).toBeGreaterThan(0);
+    // Historical DNS is env-gated → not connected without the key.
+    expect(r.historical.available).toBe(false);
     // Rule 3: a leak is a lead, not proof - alternative explanation required.
     expect(r.alternative.toLowerCase()).toContain("not proof");
     expect(r.recommendations.length).toBeGreaterThan(0);

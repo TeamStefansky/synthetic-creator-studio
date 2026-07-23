@@ -49,6 +49,25 @@ export interface OriginExposureRecord {
   name: string;
   ip: string;
   version: "v4" | "v6";
+  /** Hosting provider inferred from public RDAP (undefined = not looked up). */
+  provider?: string;
+  org?: string;
+}
+
+/** A de-duplicated candidate IP the OWNER should verify (we never confirm it). */
+export interface OriginCandidate {
+  ip: string;
+  version: "v4" | "v6";
+  provider?: string;
+  org?: string;
+  /** where it surfaced: current DNS, a CT-log hostname, or historical DNS. */
+  sources: string[];
+}
+
+export interface HistoricalDns {
+  available: boolean;
+  candidates: { ip: string; firstSeen?: string; lastSeen?: string }[];
+  note: string;
 }
 
 export type OriginExposureBand =
@@ -68,8 +87,18 @@ export interface OriginExposureReport {
   exposed: OriginExposureRecord[];
   proxiedCount: number;
   uniqueExposedIps: string[];
+  /** De-duplicated candidate origins for the owner to verify (enriched). */
+  candidates: OriginCandidate[];
+  /** Dominant hosting provider among candidates, if any. */
+  provider: string | null;
+  /** Always false: this tool never actively confirms an origin (defensive). */
+  originFound: false;
+  /** Historical DNS origin candidates (env-gated SecurityTrails). */
+  historical: HistoricalDns;
   band: OriginExposureBand;
   confidence: "Low" | "Medium" | "High";
+  /** 0-100 confidence in the EXPOSURE ASSESSMENT (not that a bypass works). */
+  confidenceScore: number;
   evidence: string[];
   /** Rule 3: an innocent explanation for the same observation. */
   alternative: string;
@@ -220,8 +249,88 @@ const RECOMMENDATIONS = [
   "Use a CDN Origin CA certificate for the origin so its hostnames are not published to public CT logs.",
 ];
 
+// Map a network-owner string to a well-known provider label.
+const PROVIDER_MAP: [RegExp, string][] = [
+  [/amazon|aws|amzn/i, "AWS"],
+  [/microsoft|azure/i, "Azure"],
+  [/google|goog\b|gcp/i, "Google Cloud"],
+  [/hetzner/i, "Hetzner"],
+  [/\bovh\b/i, "OVH"],
+  [/digitalocean/i, "DigitalOcean"],
+  [/cloudflare/i, "Cloudflare"],
+  [/akamai/i, "Akamai"],
+  [/fastly/i, "Fastly"],
+  [/linode/i, "Linode"],
+  [/vultr|choopa/i, "Vultr"],
+  [/leaseweb/i, "LeaseWeb"],
+  [/oracle/i, "Oracle Cloud"],
+  [/gcore|g-core/i, "Gcore"],
+];
+
+function classifyProvider(owner: string): string | undefined {
+  for (const [re, label] of PROVIDER_MAP) if (re.test(owner)) return label;
+  return undefined;
+}
+
+/** Public RDAP lookup for an IP's network owner (keyless, cached 7 days). */
+async function providerForIp(ip: string): Promise<{ provider?: string; org?: string } | null> {
+  const ck = `rdap:${ip}`;
+  const hit = await cacheGet<{ provider?: string; org?: string }>(ck, 7 * TTL);
+  if (hit) return hit;
+  const data = await getJson<any>(`https://rdap.org/ip/${encodeURIComponent(ip)}`, {
+    timeoutMs: 10000, headers: { Accept: "application/rdap+json" },
+  });
+  if (!data) return null;
+  const names: string[] = [];
+  if (data.name) names.push(String(data.name));
+  for (const e of Array.isArray(data.entities) ? data.entities : []) {
+    const card = e?.vcardArray?.[1];
+    if (Array.isArray(card)) {
+      for (const row of card) if (Array.isArray(row) && row[0] === "fn" && row[3]) names.push(String(row[3]));
+    }
+    if (e?.handle) names.push(String(e.handle));
+  }
+  const org = names.find(Boolean);
+  const out = { org, provider: classifyProvider(names.join(" ")) };
+  await cacheSet(ck, out);
+  return out;
+}
+
+/** Historical A records via SecurityTrails (env-gated; passive OSINT). */
+async function securityTrailsHistory(domain: string, cfRanges: Cidr[]): Promise<HistoricalDns> {
+  const key = process.env.SECURITYTRAILS_API_KEY?.trim();
+  if (!key) {
+    return { available: false, candidates: [], note: "Set SECURITYTRAILS_API_KEY to include historical DNS origin candidates." };
+  }
+  const data = await getJson<any>(`https://api.securitytrails.com/v1/history/${encodeURIComponent(domain)}/dns/a`, {
+    timeoutMs: 15000, headers: { apikey: key, Accept: "application/json" },
+  });
+  const records = Array.isArray(data?.records) ? data.records : null;
+  if (!records) return { available: false, candidates: [], note: "SecurityTrails history unavailable (check the key/plan)." };
+  const seen = new Map<string, { ip: string; firstSeen?: string; lastSeen?: string }>();
+  for (const rec of records) {
+    for (const v of Array.isArray(rec?.values) ? rec.values : []) {
+      const ip = String(v?.ip || "");
+      if (!ip || isInRanges(ip, cfRanges)) continue; // skip CDN IPs - only real origins
+      const cur = seen.get(ip) || { ip, firstSeen: rec.first_seen, lastSeen: rec.last_seen };
+      if (rec.last_seen) cur.lastSeen = rec.last_seen;
+      seen.set(ip, cur);
+    }
+  }
+  return {
+    available: true,
+    candidates: [...seen.values()].slice(0, 50),
+    note: "Historically-observed A records outside the CDN ranges. If any is still live, rotate it - past exposure persists in public history.",
+  };
+}
+
+export interface AuditOptions {
+  /** Extra subdomain labels to probe (custom wordlist). */
+  customSubs?: string[];
+}
+
 /** Run a passive origin-exposure audit. Cached per day for reproducibility. */
-export async function auditOriginExposure(domainInput: string): Promise<OriginExposureReport> {
+export async function auditOriginExposure(domainInput: string, opts: AuditOptions = {}): Promise<OriginExposureReport> {
   const now = () => new Date().toISOString();
   const domain = (domainInput || "")
     .trim().toLowerCase()
@@ -241,10 +350,14 @@ export async function auditOriginExposure(domainInput: string): Promise<OriginEx
 
   // Candidate names: apex + www + common subs + CT-log names, capped.
   const ct = await crtshNames(domain).catch(() => []);
-  const candidates = new Set<string>([domain, `www.${domain}`]);
-  for (const s of DEFAULT_SUBS) candidates.add(`${s}.${domain}`);
-  for (const nm of ct) candidates.add(nm);
-  const names = [...candidates].slice(0, MAX_NAMES);
+  const candidateNames = new Set<string>([domain, `www.${domain}`]);
+  for (const s of DEFAULT_SUBS) candidateNames.add(`${s}.${domain}`);
+  for (const s of opts.customSubs || []) {
+    const label = String(s).trim().toLowerCase().replace(/[^a-z0-9.-]/g, "");
+    if (label) candidateNames.add(`${label}.${domain}`);
+  }
+  for (const nm of ct) candidateNames.add(nm);
+  const names = [...candidateNames].slice(0, MAX_NAMES);
 
   const resolved = await mapLimit(names, CONCURRENCY, async (name) => ({
     name,
@@ -295,6 +408,50 @@ export async function auditOriginExposure(domainInput: string): Promise<OriginEx
     evidence.push(`${proxiedCount} record(s) across the checked names all resolve inside Cloudflare ranges.`);
   }
 
+  // Enrich unique exposed IPs with public RDAP provider/ASN owner (bounded).
+  const providerByIp = new Map<string, { provider?: string; org?: string }>();
+  await mapLimit(uniqueExposedIps.slice(0, 25), 5, async (ip) => {
+    const p = await providerForIp(ip).catch(() => null);
+    if (p) providerByIp.set(ip, p);
+  });
+  for (const rec of exposed) {
+    const p = providerByIp.get(rec.ip);
+    if (p) { rec.provider = p.provider; rec.org = p.org; }
+  }
+
+  // Historical DNS origin candidates (env-gated; passive).
+  const historical = await securityTrailsHistory(domain, cfRanges).catch(
+    () => ({ available: false, candidates: [], note: "Historical DNS lookup failed." }),
+  );
+
+  // De-duplicated candidate origins (current + CT + historical), enriched.
+  const candMap = new Map<string, OriginCandidate>();
+  for (const rec of exposed) {
+    const src = rec.name === domain || rec.name === `www.${domain}` ? "current DNS" : `subdomain ${rec.name}`;
+    const c = candMap.get(rec.ip) || { ip: rec.ip, version: rec.version, provider: rec.provider, org: rec.org, sources: [] };
+    if (!c.sources.includes(src)) c.sources.push(src);
+    candMap.set(rec.ip, c);
+  }
+  for (const h of historical.candidates) {
+    const p = providerByIp.get(h.ip) || (await providerForIp(h.ip).catch(() => null)) || {};
+    const c = candMap.get(h.ip) || { ip: h.ip, version: h.ip.includes(":") ? "v6" : "v4", provider: p.provider, org: p.org, sources: [] };
+    if (!c.sources.includes("historical DNS")) c.sources.push("historical DNS");
+    candMap.set(h.ip, c);
+  }
+  const candidates = [...candMap.values()].slice(0, 100);
+
+  // Dominant provider label among candidates.
+  const provCounts = new Map<string, number>();
+  for (const c of candidates) if (c.provider) provCounts.set(c.provider, (provCounts.get(c.provider) || 0) + 1);
+  const provider = [...provCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+  // Confidence in the EXPOSURE ASSESSMENT (not that a bypass works).
+  const confidenceScore =
+    band === "no_exposure_observed" ? 90 :
+    band === "not_cdn_fronted" ? 75 :
+    band === "possible_exposure" ? Math.min(70, 30 + candidates.length * 12) :
+    20;
+
   const report: OriginExposureReport = {
     available: true,
     domain,
@@ -304,13 +461,18 @@ export async function auditOriginExposure(domainInput: string): Promise<OriginEx
     exposed: exposed.slice(0, 100),
     proxiedCount,
     uniqueExposedIps,
+    candidates,
+    provider,
+    originFound: false,
+    historical,
     band,
     confidence,
+    confidenceScore,
     evidence,
     alternative:
       "A non-Cloudflare IP is not proof of the live origin: it is often a third-party mail, analytics, or SaaS host, a parked or legacy record, or a subdomain intentionally served outside the CDN. Confirm ownership before acting.",
     recommendations: band === "possible_exposure" ? RECOMMENDATIONS : RECOMMENDATIONS.slice(0, 3),
-    note: "Passive audit of PUBLIC records (Certificate Transparency + DNS) for a domain you are authorized to inspect. Indicators for hardening, not a verdict; this tool never probes or connects to the origin.",
+    note: "Passive audit of PUBLIC records (Certificate Transparency + DNS + RDAP) for a domain you are authorized to inspect. Indicators for hardening, not a verdict; this tool never probes or connects to the origin, so candidates are for the owner to verify, not confirmed origins.",
     collectedAt: now(),
   };
 
@@ -334,8 +496,13 @@ function baseReport(
     exposed: [],
     proxiedCount: 0,
     uniqueExposedIps: [],
+    candidates: [],
+    provider: null,
+    originFound: false,
+    historical: { available: false, candidates: [], note: "" },
     band,
     confidence: "Low",
+    confidenceScore: 0,
     evidence: [],
     alternative: "",
     recommendations: [],

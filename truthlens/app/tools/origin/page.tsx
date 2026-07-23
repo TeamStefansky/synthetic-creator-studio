@@ -102,7 +102,8 @@ export default function OriginExposurePage() {
                 <div>
                   <div className={`text-lg font-bold ${band.cls}`}>{band.label}</div>
                   <div className="text-xs text-ink-secondary">
-                    {result.domain} · CDN: {result.cdn} · {result.namesChecked} names checked · confidence {result.confidence}
+                    {result.domain} · CDN: {result.cdn} · {result.namesChecked} names checked · confidence {result.confidence} ({result.confidenceScore}/100)
+                    {result.provider ? <> · provider {result.provider}</> : null}
                   </div>
                 </div>
               </div>
@@ -126,6 +127,7 @@ export default function OriginExposurePage() {
                     <tr>
                       <th className="py-1 pr-4 font-medium">Name</th>
                       <th className="py-1 pr-4 font-medium">IP</th>
+                      <th className="py-1 pr-4 font-medium">Provider</th>
                       <th className="py-1 font-medium">Version</th>
                     </tr>
                   </thead>
@@ -134,6 +136,7 @@ export default function OriginExposurePage() {
                       <tr key={i} className="border-t border-white/5">
                         <td className="py-1 pr-4 text-ink">{r.name}</td>
                         <td className="py-1 pr-4 text-risk-high">{r.ip}</td>
+                        <td className="py-1 pr-4 text-ink-secondary">{r.provider || r.org || "-"}</td>
                         <td className="py-1 text-ink-secondary">{r.version}</td>
                       </tr>
                     ))}
@@ -145,6 +148,32 @@ export default function OriginExposurePage() {
               </p>
             </div>
           )}
+
+          <div className="card">
+            <div className="label-muted mb-2">Historical DNS (previously-exposed origins)</div>
+            {result.historical.available ? (
+              result.historical.candidates.length > 0 ? (
+                <div className="overflow-x-auto scroll-thin">
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-ink-secondary"><tr><th className="py-1 pr-4 font-medium">IP</th><th className="py-1 pr-4 font-medium">First seen</th><th className="py-1 font-medium">Last seen</th></tr></thead>
+                    <tbody className="font-mono text-xs">
+                      {result.historical.candidates.map((h, i) => (
+                        <tr key={i} className="border-t border-white/5">
+                          <td className="py-1 pr-4 text-risk-unknown">{h.ip}</td>
+                          <td className="py-1 pr-4 text-ink-secondary">{h.firstSeen || "-"}</td>
+                          <td className="py-1 text-ink-secondary">{h.lastSeen || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-risk-legit">No historical non-CDN IPs found.</p>
+              )
+            ) : (
+              <p className="text-sm text-ink-secondary">{result.historical.note}</p>
+            )}
+          </div>
 
           {result.recommendations.length > 0 && (
             <div className="card">

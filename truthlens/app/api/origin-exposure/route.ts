@@ -11,9 +11,12 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   let domain: string;
+  let customSubs: string[] | undefined;
   try {
     const body = await req.json();
     domain = body.domain || body.url || "";
+    if (Array.isArray(body.customSubs)) customSubs = body.customSubs.map(String).slice(0, 200);
+    else if (typeof body.wordlist === "string") customSubs = body.wordlist.split(/[\s,]+/).filter(Boolean).slice(0, 200);
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -23,7 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const report = await auditOriginExposure(domain);
+    const report = await auditOriginExposure(domain, { customSubs });
     return NextResponse.json(report);
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Audit failed" }, { status: 500 });
