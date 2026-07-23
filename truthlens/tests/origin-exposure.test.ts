@@ -41,9 +41,13 @@ const OTX = JSON.stringify({
     { address: "104.16.9.9", hostname: "www.example", first: "2022-01-01", last: "2023-01-01", record_type: "A" }, // CDN → filtered
   ],
 });
+// HackerTarget host search CSV, controllable per test (default: a non-CDN host
+// + a CDN host that must be filtered out).
+const HT = vi.hoisted(() => ({ text: "extra.example,192.0.2.44\nwww.example,104.16.9.9\n" }));
 function stubFetch() {
   globalThis.fetch = vi.fn(async (input: any) => {
     const url = String(input);
+    if (url.includes("hackertarget.com")) return { ok: true, status: 200, text: async () => HT.text, json: async () => ({}) } as any;
     const text =
       url.includes("ips-v4") ? CF_V4 :
       url.includes("ips-v6") ? CF_V6 :
@@ -55,7 +59,10 @@ function stubFetch() {
 }
 
 const RUN = Math.random().toString(36).slice(2, 8);
-beforeEach(() => { RESOLVE.v4 = () => []; RESOLVE.v6 = () => []; });
+beforeEach(() => {
+  RESOLVE.v4 = () => []; RESOLVE.v6 = () => [];
+  HT.text = "extra.example,192.0.2.44\nwww.example,104.16.9.9\n";
+});
 afterEach(() => { globalThis.fetch = realFetch; vi.restoreAllMocks(); });
 
 describe("IP-range math", () => {
@@ -113,6 +120,10 @@ describe("auditOriginExposure", () => {
     expect(r.historical.candidates.some((h) => h.ip === "198.51.100.9")).toBe(true);
     expect(r.historical.candidates.some((h) => h.ip === "104.16.9.9")).toBe(false); // CDN IP filtered
     expect(r.candidates.some((c) => c.ip === "198.51.100.9" && c.sources.includes("historical DNS"))).toBe(true);
+    // HackerTarget host search contributes another vantage (free OSINT).
+    expect(r.exposed.some((e) => e.ip === "192.0.2.44" && e.source === "HackerTarget host search")).toBe(true);
+    expect(r.exposed.some((e) => e.ip === "104.16.9.9")).toBe(false); // CDN IP filtered
+    expect(r.candidates.some((c) => c.ip === "192.0.2.44" && c.sources.includes("HackerTarget host search"))).toBe(true);
     // Rule 3: a leak is a lead, not proof - alternative explanation required.
     expect(r.alternative.toLowerCase()).toContain("not proof");
     expect(r.recommendations.length).toBeGreaterThan(0);
@@ -123,6 +134,7 @@ describe("auditOriginExposure", () => {
   it("apex Cloudflare-fronted, nothing outside CF → no_exposure_observed", async () => {
     const domain = `clean-${RUN}.com`;
     stubFetch();
+    HT.text = ""; // HackerTarget returns nothing for this domain
     RESOLVE.v4 = (name) =>
       name === domain || name === `www.${domain}` ? ["172.64.5.5"] : [];
     const r = await auditOriginExposure(domain);

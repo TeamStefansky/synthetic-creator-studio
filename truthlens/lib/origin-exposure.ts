@@ -49,6 +49,8 @@ export interface OriginExposureRecord {
   name: string;
   ip: string;
   version: "v4" | "v6";
+  /** Where this record was observed: "current DNS" | "HackerTarget host search". */
+  source?: string;
   /** Hosting provider inferred from public RDAP (undefined = not looked up). */
   provider?: string;
   org?: string;
@@ -312,6 +314,26 @@ function looksLikeIp(s: string): boolean {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(s) || s.includes(":");
 }
 
+/** HackerTarget host search (free, official; optional HACKERTARGET_API_KEY raises
+ * limits). Returns non-CDN (hostname, ip) pairs, or null if unqueryable. */
+async function hackerTargetHosts(domain: string, cfRanges: Cidr[]): Promise<{ name: string; ip: string }[] | null> {
+  const key = process.env.HACKERTARGET_API_KEY?.trim();
+  const url = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(domain)}${key ? `&apikey=${encodeURIComponent(key)}` : ""}`;
+  const txt = await getText(url, { timeoutMs: 12000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
+  if (!txt) return null;
+  // Free-tier error/limit bodies are plain text without a comma-separated row.
+  if (!txt.includes(",") || /api count exceeded|error|no records|invalid/i.test(txt.split("\n")[0])) return null;
+  const rows: { name: string; ip: string }[] = [];
+  for (const line of txt.split(/\r?\n/)) {
+    const [nameRaw, ipRaw] = line.split(",");
+    const name = (nameRaw || "").trim().toLowerCase();
+    const ip = (ipRaw || "").trim();
+    if (!name || !looksLikeIp(ip) || isInRanges(ip, cfRanges)) continue;
+    rows.push({ name, ip });
+  }
+  return rows;
+}
+
 /** Free, official passive DNS via AlienVault OTX (keyless; optional OTX_API_KEY).
  * Returns null if the source could not be queried at all. */
 async function otxPassiveDns(domain: string, cfRanges: Cidr[]): Promise<HistRow[] | null> {
@@ -430,13 +452,25 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
         proxiedCount++;
         if (name === domain || name === `www.${domain}`) apexOrWwwInCdn = true;
       } else {
-        exposed.push({ name, ip, version });
+        exposed.push({ name, ip, version, source: "current DNS" });
       }
     }
   }
 
-  const uniqueExposedIps = [...new Set(exposed.map((e) => e.ip))];
   const cdnFronted = apexOrWwwInCdn;
+
+  // Additional current mappings from HackerTarget host search (free OSINT, another
+  // vantage). Merge non-CDN, non-duplicate records into the exposed set.
+  const htRows = await hackerTargetHosts(domain, cfRanges).catch(() => null);
+  if (htRows) {
+    const seenPair = new Set(exposed.map((e) => `${e.name}|${e.ip}`));
+    for (const { name, ip } of htRows) {
+      if (seenPair.has(`${name}|${ip}`)) continue;
+      exposed.push({ name, ip, version: ip.includes(":") ? "v6" : "v4", source: "HackerTarget host search" });
+    }
+  }
+
+  const uniqueExposedIps = [...new Set(exposed.map((e) => e.ip))];
 
   let band: OriginExposureBand;
   let confidence: OriginExposureReport["confidence"];
@@ -480,7 +514,7 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   // De-duplicated candidate origins (current + CT + historical), enriched.
   const candMap = new Map<string, OriginCandidate>();
   for (const rec of exposed) {
-    const src = rec.name === domain || rec.name === `www.${domain}` ? "current DNS" : `subdomain ${rec.name}`;
+    const src = rec.source || (rec.name === domain || rec.name === `www.${domain}` ? "current DNS" : `subdomain ${rec.name}`);
     const c = candMap.get(rec.ip) || { ip: rec.ip, version: rec.version, provider: rec.provider, org: rec.org, sources: [] };
     if (!c.sources.includes(src)) c.sources.push(src);
     candMap.set(rec.ip, c);
