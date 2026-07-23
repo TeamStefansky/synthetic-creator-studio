@@ -31,6 +31,12 @@ export interface RelNode {
   label: Bilingual;
   /** For a role node: the org the role is held at. Undefined for org nodes. */
   orgName?: string;
+  /** For a role node ONLY: the disclosed office-holder's name (a single public
+   * corporate-disclosure fact, cited via sources). This is the ONLY personal
+   * datum in the graph - there is deliberately no field for bio, photo, age,
+   * contact, family, or any other personal data, and there are no
+   * person-to-person edges. */
+  officeholder?: string;
   confidence: number; // 0-1
   confidenceReason: Bilingual;
   sources: RelSource[]; // min 1 - provenance mandatory
@@ -107,6 +113,9 @@ function cleanNode(n: any): RelNode | null {
     sources: sources.slice(0, 8),
   };
   if (type === "role" && n.orgName) node.orgName = String(n.orgName).slice(0, 200);
+  // Disclosed office-holder name (role nodes only) - the single cited personal
+  // fact; everything else personal stays out (fields not copied = stripped).
+  if (type === "role" && n.officeholder) node.officeholder = String(n.officeholder).slice(0, 120);
   return node;
 }
 

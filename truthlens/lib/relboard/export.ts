@@ -16,7 +16,7 @@ function roleOrg(n: RelNode): string {
 
 /** nodes.csv - one row per node (i2 / Maltego). */
 export function toNodesCsv(g: RelGraph): string {
-  const header = "id,label,label_he,type,role,org,confidence,confidence_reason,primary_source_url";
+  const header = "id,label,label_he,type,role,org,officeholder,confidence,confidence_reason,primary_source_url";
   const rows = g.nodes.map((n) =>
     [
       n.id,
@@ -25,6 +25,7 @@ export function toNodesCsv(g: RelGraph): string {
       n.type,
       n.type === "role" ? n.label.en : "",
       roleOrg(n),
+      n.officeholder || "",
       n.confidence.toFixed(2),
       n.confidenceReason.en,
       n.sources[0]?.url || "",
@@ -52,7 +53,7 @@ function xml(v: string | number | undefined | null): string {
 export function toGraphml(g: RelGraph): string {
   const nodeKeys = [
     ["label", "string"], ["label_he", "string"], ["type", "string"], ["role", "string"],
-    ["org", "string"], ["confidence", "double"], ["primary_source_url", "string"],
+    ["org", "string"], ["officeholder", "string"], ["confidence", "double"], ["primary_source_url", "string"],
   ];
   const edgeKeys = [["elabel", "string"], ["etype", "string"], ["econfidence", "double"]];
   const keyDecls = [
@@ -65,6 +66,7 @@ export function toGraphml(g: RelGraph): string {
       <data key="type">${xml(n.type)}</data>
       <data key="role">${xml(n.type === "role" ? n.label.en : "")}</data>
       <data key="org">${xml(roleOrg(n))}</data>
+      <data key="officeholder">${xml(n.officeholder || "")}</data>
       <data key="confidence">${n.confidence.toFixed(2)}</data>
       <data key="primary_source_url">${xml(n.sources[0]?.url || "")}</data>
     </node>`).join("\n");

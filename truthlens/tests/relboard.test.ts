@@ -46,23 +46,32 @@ describe("validateRelGraph", () => {
     expect(r.graph!.edges.map((e) => e.id)).not.toContain("bad");
   });
 
-  it("structurally strips any personal/dossier field a model emits", () => {
+  it("keeps a disclosed officeholder name but strips every other personal field", () => {
     const raw = {
       ...rawValid,
       nodes: [{
         ...rawValid.nodes[2],
+        officeholder: "Jane Doe", // the ONE allowed personal datum (cited public role)
         bio: bil("a person biography"), photoUrl: "https://x/p.jpg", address: "1 Main St",
         phone: "+1", email: "a@b.co", family: "spouse", notableActivity: [bil("did a thing")],
+        age: 51, birthDate: "1974-01-01",
       }],
     };
     const r = validateRelGraph(raw, "Acme");
     expect(r.ok).toBe(true);
+    const role = r.graph!.nodes.find((n) => n.id === "role-ceo")!;
+    expect(role.type).toBe("role");
+    expect(role.officeholder).toBe("Jane Doe"); // disclosed role fact kept
     const json = JSON.stringify(r.graph);
-    for (const forbidden of ["biography", "p.jpg", "Main St", "@b.co", "spouse", "did a thing"]) {
+    for (const forbidden of ["biography", "p.jpg", "Main St", "@b.co", "spouse", "did a thing", "1974"]) {
       expect(json).not.toContain(forbidden);
     }
-    // Node itself survives as a role label with its citation.
-    expect(r.graph!.nodes.find((n) => n.id === "role-ceo")?.type).toBe("role");
+  });
+
+  it("does not attach an officeholder to an organization node", () => {
+    const raw = { ...rawValid, nodes: [{ ...rawValid.nodes[0], officeholder: "Should Not Appear" }] };
+    const r = validateRelGraph(raw, "Acme");
+    expect(JSON.stringify(r.graph)).not.toContain("Should Not Appear");
   });
 
   it("de-duplicates nodes sharing an id", () => {

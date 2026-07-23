@@ -50,8 +50,12 @@ export default function RelBoard() {
     setLoading(true); setError(""); setGraph(null); setSelected(null);
     try {
       const r = await fetch(`/api/relboard?company=${encodeURIComponent(q)}`);
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Build failed");
+      // Read text first, then parse - so a non-JSON error body never crashes
+      // the client with "Unexpected token"; show the real message instead.
+      const txt = await r.text();
+      let data: any = {};
+      try { data = txt ? JSON.parse(txt) : {}; } catch { throw new Error(txt.slice(0, 200) || `Request failed (${r.status})`); }
+      if (!r.ok) throw new Error(data.error || data.reason || `Build failed (${r.status})`);
       if (!data.available) throw new Error(data.reason || "Engine not available");
       setGraph(data);
     } catch (e: any) {
@@ -131,14 +135,19 @@ export default function RelBoard() {
                   ctx.fill();
                   if (node.confidence < 0.5) { ctx.globalAlpha = 1; ctx.strokeStyle = "#F5A623"; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }
                   ctx.globalAlpha = 1;
-                  const label = node.label[lang] || node.name;
+                  // Role nodes show the disclosed office-holder as the primary
+                  // line, with the role title as subtitle; org nodes show name.
+                  const primary = node.type === "role" && node.officeholder ? node.officeholder : node.name;
+                  const subtitle = node.type === "role" ? node.label[lang] || node.name : node.label[lang] || "";
                   const fs = 12 / scale;
                   ctx.font = `${fs}px Inter, sans-serif`;
                   ctx.fillStyle = "#EBEBEB";
                   ctx.textAlign = "center";
-                  ctx.fillText(node.name.slice(0, 28), n.x, n.y + r + fs + 1);
-                  ctx.fillStyle = "#9A9A9F";
-                  ctx.fillText(label.slice(0, 30), n.x, n.y + r + fs * 2 + 2);
+                  ctx.fillText(primary.slice(0, 28), n.x, n.y + r + fs + 1);
+                  if (subtitle) {
+                    ctx.fillStyle = "#9A9A9F";
+                    ctx.fillText(subtitle.slice(0, 30), n.x, n.y + r + fs * 2 + 2);
+                  }
                 }}
               />
             </div>
@@ -148,12 +157,14 @@ export default function RelBoard() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     {selected.type === "organization" ? <Building2 className="h-4 w-4 text-brand-soft" /> : <UserSquare2 className="h-4 w-4 text-warm" />}
-                    <div className="font-semibold">{selected.name}</div>
+                    <div className="font-semibold">
+                      {selected.type === "role" && selected.officeholder ? selected.officeholder : selected.name}
+                    </div>
                   </div>
-                  <div className="text-sm text-ink-secondary">{selected.label[lang]}</div>
-                  {selected.type === "role" && selected.orgName && (
-                    <div className="text-xs text-ink-secondary">{lang === "he" ? "בארגון" : "at"} {selected.orgName}</div>
-                  )}
+                  <div className="text-sm text-ink-secondary">
+                    {selected.type === "role" ? selected.label[lang] : selected.label[lang]}
+                    {selected.type === "role" && selected.orgName ? ` · ${selected.orgName}` : ""}
+                  </div>
                   <ConfidenceBadge level={level(selected.confidence)} label={lang === "he" ? "ודאות" : "confidence"} />
                   <p className="text-xs text-ink-secondary">{selected.confidenceReason[lang]}</p>
                   <div className="label-muted pt-1">{lang === "he" ? "מקורות" : "Sources"}</div>

@@ -16,17 +16,24 @@ async function handle(company: string) {
   if (q.length < 2) {
     return NextResponse.json({ error: "company must be at least 2 characters" }, { status: 400 });
   }
-  const ck = `relboard:${q.toLowerCase()}`;
-  const cached = await cacheGet<any>(ck, CACHE_MS);
-  if (cached) return NextResponse.json({ ...cached, cached: true });
+  // Everything wrapped so the route ALWAYS returns JSON - a thrown error must
+  // never surface as a platform HTML/text error page (which the client then
+  // fails to JSON.parse).
+  try {
+    const ck = `relboard:${q.toLowerCase()}`;
+    const cached = await cacheGet<any>(ck, CACHE_MS);
+    if (cached) return NextResponse.json({ ...cached, cached: true });
 
-  const res = await buildRelBoard(q);
-  if (!res.available) {
-    return NextResponse.json({ available: false, reason: res.reason }, { status: 200 });
+    const res = await buildRelBoard(q);
+    if (!res.available) {
+      return NextResponse.json({ available: false, reason: res.reason }, { status: 200 });
+    }
+    const out = { available: true, ...res.graph, cached: false };
+    await cacheSet(ck, out);
+    return NextResponse.json(out);
+  } catch (e: any) {
+    return NextResponse.json({ available: false, reason: e?.message || "Relationship engine failed" }, { status: 200 });
   }
-  const out = { available: true, ...res.graph, cached: false };
-  await cacheSet(ck, out);
-  return NextResponse.json(out);
 }
 
 export async function POST(req: NextRequest) {
