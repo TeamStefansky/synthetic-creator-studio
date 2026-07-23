@@ -6,6 +6,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { addWatch, listWatches, recentAlerts, removeWatch, watchAvailable } from "@/lib/narrative/watch";
 
 export const runtime = "nodejs";
+// Live data: the watchlist + alerts (and the KV-connected check) must be read
+// at request time on every call. Without this, Next.js statically evaluates the
+// parameterless GET at build time and serves a frozen "not connected" snapshot
+// forever - so attaching KV later never takes effect until the next deploy.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   if (!watchAvailable()) {

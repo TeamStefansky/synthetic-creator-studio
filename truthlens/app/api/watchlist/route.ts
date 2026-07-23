@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { kvGetJson, storeAvailable } from "@/lib/store";
 
 export const runtime = "nodejs";
+// Reflects the current deployment's env + live KV, so never statically cached.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface Snapshot {
   band?: string;
