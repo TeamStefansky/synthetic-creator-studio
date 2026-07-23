@@ -120,3 +120,28 @@ describe("graph export", () => {
     expect(xml).toContain("A &amp; B &lt;Corp&gt;");
   });
 });
+
+import { extractJson, autoClose } from "../lib/relboard/json";
+
+describe("extractJson (truncation repair)", () => {
+  it("parses clean JSON", () => {
+    expect(extractJson('{"a":1}')).toEqual({ a: 1 });
+  });
+  it("strips markdown fences and surrounding prose", () => {
+    expect(extractJson('Here you go:\n```json\n{"a":1}\n```\ndone')).toEqual({ a: 1 });
+  });
+  it("salvages JSON truncated by the token limit", () => {
+    // a graph cut off mid-array/mid-object (no closing brackets)
+    const truncated = '{"company":"Nike","nodes":[{"id":"org-nike","name":"Nike","label":{"he":"נייקי","en":"Nike"';
+    const out = extractJson(truncated);
+    expect(out).toBeTruthy();
+    expect(out.company).toBe("Nike");
+    expect(Array.isArray(out.nodes)).toBe(true);
+  });
+  it("closes an open string + brackets via autoClose", () => {
+    expect(() => JSON.parse(autoClose('{"a":"unterminated'))).not.toThrow();
+  });
+  it("returns null when there is no JSON at all", () => {
+    expect(extractJson("no json here")).toBeNull();
+  });
+});

@@ -17,10 +17,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { LLM_MODEL } from "@/lib/llm";
 import { validateRelGraph, type RelGraph } from "./schema";
+import { extractJson } from "./json";
 
 const CALL_TIMEOUT_MS = 55_000; // client aborts the request at this point
 const RACE_TIMEOUT_MS = 60_000; // backstop so the route always returns JSON <90s
-const MAX_TOKENS = 1600;        // smaller output = faster generation (latency lever)
+const MAX_TOKENS = 3600;        // enough headroom that the bilingual JSON is not truncated
 
 const SYSTEM_PROMPT = `You are the research engine for an ORGANIZATION-CHART / link-analysis tool used for legitimate business research (due diligence, competitive intelligence). Given a COMPANY NAME, output an organization-level graph from well-established PUBLIC knowledge.
 
@@ -58,15 +59,6 @@ export interface RelBoardResult {
   available: boolean;
   reason?: string;
   graph?: RelGraph;
-}
-
-function extractJson(text: string): any | null {
-  const cleaned = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
-  try { return JSON.parse(cleaned); } catch { /* fall through */ }
-  const a = cleaned.indexOf("{");
-  const b = cleaned.lastIndexOf("}");
-  if (a >= 0 && b > a) { try { return JSON.parse(cleaned.slice(a, b + 1)); } catch { return null; } }
-  return null;
 }
 
 function textOf(msg: any): string {
