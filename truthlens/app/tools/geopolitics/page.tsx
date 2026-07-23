@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Globe2, ExternalLink, AlertTriangle, TrendingUp } from "lucide-react";
+import { Globe2, ExternalLink, AlertTriangle, TrendingUp, LineChart } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import type { GeopoliticsAggregate } from "@/lib/geopolitics-agg";
 import type { GeoRecord } from "@/lib/geopolitics";
@@ -13,10 +13,10 @@ import type { GeoRecord } from "@/lib/geopolitics";
 interface Result extends GeopoliticsAggregate { generatedAt: string }
 
 const KIND_LABEL: Record<string, string> = {
-  conflict: "Conflict", humanitarian: "Humanitarian", disaster: "Disaster", forecast: "Forecast",
+  conflict: "Conflict", humanitarian: "Humanitarian", disaster: "Disaster", forecast: "Forecast", macro: "Macro",
 };
 const KIND_COLOR: Record<string, string> = {
-  conflict: "#F0454F", humanitarian: "#E1804A", disaster: "#F5D742", forecast: "#A98BF0",
+  conflict: "#F0454F", humanitarian: "#E1804A", disaster: "#F5D742", forecast: "#A98BF0", macro: "#22C55E",
 };
 
 function fmt(ts?: string) {
@@ -55,6 +55,10 @@ export default function GeopoliticsPage() {
     () => (result?.forecasts || []).filter((e) => region === "all" || e.region === region),
     [result, region],
   );
+  const macro = useMemo(
+    () => (result?.macro || []).filter((e) => region === "all" || e.region === region),
+    [result, region],
+  );
 
   return (
     <div className="space-y-6">
@@ -64,9 +68,9 @@ export default function GeopoliticsPage() {
           <h1 className="font-display text-2xl font-bold">Geopolitics <span className="gradient-text">Situational Picture</span></h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          Real conflict, humanitarian, disaster and forecast signals from public sources - UCDP,
-          ReliefWeb, USGS, NASA EONET, Polymarket, Metaculus (and ACLED with a key). Server-side,
-          official endpoints only. Context for analysts, never a verdict.
+          Real conflict, humanitarian, disaster, forecast and macro signals from public sources -
+          UCDP, ReliefWeb, USGS, NASA EONET, Polymarket, Metaculus, World Bank, IMF (and ACLED with a
+          key). Server-side, official endpoints only. Context for analysts, never a verdict.
         </p>
       </div>
 
@@ -160,6 +164,26 @@ export default function GeopoliticsPage() {
                 </ul>
               )}
             </div>
+          </div>
+
+          {/* macro context */}
+          <div className="card">
+            <div className="label-muted mb-2 flex items-center gap-1"><LineChart className="h-3.5 w-3.5" /> Macro context (World Bank governance · IMF growth)</div>
+            {macro.length === 0 ? (
+              <p className="text-sm text-ink-secondary">No macro indicators in this region.</p>
+            ) : (
+              <div className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                {macro.map((e: GeoRecord) => (
+                  <div key={e.uid} className="flex items-center gap-2 text-sm">
+                    <span className="font-mono text-xs uppercase text-ink-secondary">{e.source}</span>
+                    <span className="min-w-0 flex-1 truncate text-ink">{e.title}</span>
+                    {e.url && (
+                      <a href={e.url} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline"><ExternalLink className="h-3 w-3" /></a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

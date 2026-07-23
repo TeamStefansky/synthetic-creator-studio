@@ -41,27 +41,33 @@ describe("aggregateGeopolitics", () => {
         rec({ uid: "p2", source: "polymarket", kind: "forecast", title: "Election upset?", region: "europe_us", score: 0.72 }),
       ],
     },
+    {
+      status: { source: "worldbank", connected: true, count: 1 },
+      records: [rec({ uid: "wb1", source: "worldbank", kind: "macro", title: "Political stability: Israel", country: "Israel", region: "israel_me", score: -0.9, scoreKind: "stability-index" })],
+    },
     { status: { source: "ucdp", connected: true, count: 1 }, records: [rec({ uid: "u1" })] }, // dup uid
     { status: { source: "acled", connected: false, reason: "Set ACLED_KEY + ACLED_EMAIL", count: 0 }, records: [] },
   ];
 
   it("de-duplicates by uid across sources", () => {
     const agg = aggregateGeopolitics(results);
-    expect(agg.total).toBe(4); // u1, u2, p1, p2 (dup u1 dropped)
+    expect(agg.total).toBe(5); // u1, u2, p1, p2, wb1 (dup u1 dropped)
   });
 
-  it("splits events vs forecasts and sorts forecasts by probability desc", () => {
+  it("splits events / forecasts / macro and sorts forecasts by probability desc", () => {
     const agg = aggregateGeopolitics(results);
     expect(agg.events.map((e) => e.uid).sort()).toEqual(["u1", "u2"]);
     expect(agg.forecasts.map((f) => f.uid)).toEqual(["p2", "p1"]); // 0.72 before 0.35
+    expect(agg.macro.map((m) => m.uid)).toEqual(["wb1"]); // macro kept separate from events
   });
 
   it("breaks down by region and kind", () => {
     const agg = aggregateGeopolitics(results);
-    expect(agg.byRegion.find((r) => r.key === "israel_me")?.count).toBe(2);
+    expect(agg.byRegion.find((r) => r.key === "israel_me")?.count).toBe(3); // u1 + p1 + wb1
     expect(agg.byRegion.find((r) => r.key === "europe_us")?.count).toBe(2);
     expect(agg.byKind.find((k) => k.kind === "conflict")?.count).toBe(2);
     expect(agg.byKind.find((k) => k.kind === "forecast")?.count).toBe(2);
+    expect(agg.byKind.find((k) => k.kind === "macro")?.count).toBe(1);
   });
 
   it("passes an honest not-connected source through", () => {

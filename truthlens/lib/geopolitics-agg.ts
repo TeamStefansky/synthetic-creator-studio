@@ -25,9 +25,11 @@ export interface GeopoliticsAggregate {
   events: GeoRecord[];
   /** Forecast markets/questions, by probability desc then recency. */
   forecasts: GeoRecord[];
+  /** Macro-context indicators (World Bank / IMF), by country. */
+  macro: GeoRecord[];
 }
 
-const KIND_ORDER: GeoKind[] = ["conflict", "humanitarian", "disaster", "forecast"];
+const KIND_ORDER: GeoKind[] = ["conflict", "humanitarian", "disaster", "forecast", "macro"];
 
 function ts(r: GeoRecord): number {
   const t = r.ts ? Date.parse(r.ts) : NaN;
@@ -47,10 +49,15 @@ export function aggregateGeopolitics(results: GeoResult[], limit = 120): Geopoli
     all.push(rec);
   }
 
-  const events = all.filter((r) => r.kind !== "forecast").sort((a, b) => ts(b) - ts(a));
+  const events = all
+    .filter((r) => r.kind === "conflict" || r.kind === "humanitarian" || r.kind === "disaster")
+    .sort((a, b) => ts(b) - ts(a));
   const forecasts = all
     .filter((r) => r.kind === "forecast")
     .sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || ts(b) - ts(a));
+  const macro = all
+    .filter((r) => r.kind === "macro")
+    .sort((a, b) => (a.country || "").localeCompare(b.country || "") || a.source.localeCompare(b.source));
 
   // By region (fixed order from REGIONS so the UI is stable).
   const regionCounts = new Map<string, number>();
@@ -73,5 +80,6 @@ export function aggregateGeopolitics(results: GeoResult[], limit = 120): Geopoli
     byKind,
     events: events.slice(0, limit),
     forecasts: forecasts.slice(0, 40),
+    macro: macro.slice(0, 40),
   };
 }

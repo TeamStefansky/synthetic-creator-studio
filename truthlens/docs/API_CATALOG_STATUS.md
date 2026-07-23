@@ -38,6 +38,8 @@ missing key renders "source not connected", never faked).
 | Polymarket (Gamma) | keyless | Real-money probabilities on geopolitical markets |
 | Metaculus | keyless | Community forecast probabilities |
 | ACLED | `ACLED_KEY` + `ACLED_EMAIL` | Political-violence events (free myACLED registration) |
+| World Bank | keyless | Worldwide Governance Indicators - political stability, per country |
+| IMF DataMapper | keyless | Real GDP growth per country (macro context) |
 
 ## Cataloged - not yet integrated (lawful, future work)
 

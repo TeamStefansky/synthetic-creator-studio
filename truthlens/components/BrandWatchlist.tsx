@@ -8,8 +8,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Globe, RefreshCw, Plus, X, ExternalLink, Loader2, TrendingUp } from "lucide-react";
+import { Globe, RefreshCw, Plus, X, ExternalLink, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import { fmtDate } from "@/lib/ui";
+import { detectAnomaly, MIN_BASELINE, type AnomalyResult } from "@/lib/signal-anomaly";
 
 interface Point { ts: string; count: number }
 interface Term {
@@ -34,11 +35,12 @@ function loadHist(t: string): Point[] {
 }
 function saveHist(t: string, h: Point[]) { localStorage.setItem(histKey(t), JSON.stringify(h.slice(-60))); }
 
-// Rising when the latest count is a clear jump over the previous check.
-function isRising(h: Point[]): boolean {
-  if (h.length < 2) return false;
-  const last = h[h.length - 1].count, prev = h[h.length - 2].count;
-  return prev >= 1 && last >= Math.ceil(prev * 1.5);
+// Anomaly on the mention-volume series - the same rolling z-score used across
+// SIGNAL (lib/signal-anomaly), so "spike"/"drop" here mean the same thing and
+// carry the numbers behind them. Needs a baseline (MIN_BASELINE+1 points);
+// below that it honestly reports "insufficient" rather than guessing.
+function anomalyOf(h: Point[]): AnomalyResult {
+  return detectAnomaly(h.map((p) => ({ date: p.ts, value: p.count })));
 }
 
 function CountSparkline({ points }: { points: Point[] }) {
@@ -165,19 +167,36 @@ export default function BrandWatchlist() {
                 <p className="text-sm text-risk-high">{w.error}</p>
               ) : w.total !== undefined ? (
                 <>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-2xl font-bold">{w.total}</span>
-                    <span className="text-sm text-ink-secondary">mentions</span>
-                    {isRising(w.history) && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-risk-high/40 bg-risk-high/10 px-2 py-0.5 text-xs text-risk-high">
-                        <TrendingUp className="h-3 w-3" /> rising
-                      </span>
-                    )}
-                  </div>
-                  <CountSparkline points={w.history} />
-                  <div className="mt-1 text-xs text-ink-secondary">
-                    {w.topCountry ? <>top: {w.topCountry} · </> : null}checked {fmtDate(w.ts)} · {w.history.length} point(s)
-                  </div>
+                  {(() => {
+                    const a = anomalyOf(w.history);
+                    return (
+                      <>
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="text-2xl font-bold">{w.total}</span>
+                          <span className="text-sm text-ink-secondary">mentions</span>
+                          {a.status === "spike" && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-risk-high/40 bg-risk-high/10 px-2 py-0.5 text-xs text-risk-high" title={a.note}>
+                              <TrendingUp className="h-3 w-3" /> spike{isFinite(a.z as number) ? ` ${(a.z as number).toFixed(1)}σ` : ""}
+                            </span>
+                          )}
+                          {a.status === "drop" && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-xs text-brand-soft" title={a.note}>
+                              <TrendingDown className="h-3 w-3" /> drop{isFinite(a.z as number) ? ` ${Math.abs(a.z as number).toFixed(1)}σ` : ""}
+                            </span>
+                          )}
+                        </div>
+                        <CountSparkline points={w.history} />
+                        <div className="mt-1 text-xs text-ink-secondary">
+                          {w.topCountry ? <>top: {w.topCountry} · </> : null}checked {fmtDate(w.ts)} ·{" "}
+                          {a.status === "insufficient"
+                            ? `baseline ${w.history.length}/${MIN_BASELINE + 1}`
+                            : a.status === "normal"
+                              ? "within normal range"
+                              : `${a.status} vs baseline`}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
               ) : (
                 <p className="text-sm text-ink-secondary">Not checked yet.</p>

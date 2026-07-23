@@ -12,7 +12,7 @@
 import { getJson } from "@/lib/http";
 import type { SourceStatus } from "./narrative/types";
 
-export type GeoKind = "conflict" | "humanitarian" | "disaster" | "forecast";
+export type GeoKind = "conflict" | "humanitarian" | "disaster" | "forecast" | "macro";
 
 export interface GeoRecord {
   uid: string;
@@ -239,7 +239,72 @@ const acled: GeoSource = {
   },
 };
 
-export const GEO_SOURCES: GeoSource[] = [ucdp, acled, reliefweb, usgs, eonet, polymarket, metaculus];
+// ---- macro context (keyless): World Bank + IMF, for the regions' key countries
+
+// ISO3 -> display name for the curated country set spanning the regions.
+const MACRO_COUNTRIES: Record<string, string> = {
+  USA: "United States", GBR: "United Kingdom", DEU: "Germany", FRA: "France",
+  UKR: "Ukraine", RUS: "Russia", ISR: "Israel", IRN: "Iran", SAU: "Saudi Arabia",
+  TUR: "Turkey", CHN: "China", IND: "India",
+};
+
+const worldbank: GeoSource = {
+  name: "worldbank",
+  available: () => true,
+  async fetch() {
+    // Worldwide Governance Indicators - Political Stability (PV.EST), most recent
+    // value per country, in ONE request (semicolon-separated countries).
+    const codes = Object.keys(MACRO_COUNTRIES).join(";");
+    const url = `https://api.worldbank.org/v2/country/${codes}/indicator/PV.EST?format=json&mrv=1&per_page=200`;
+    const data = await getJson<any>(url, { timeoutMs: 15000, headers: { "User-Agent": UA } });
+    const rows = Array.isArray(data) ? data[1] : null;
+    return (rows || []).filter((r: any) => r?.value != null).map((r: any): GeoRecord => {
+      const country = r.country?.value || MACRO_COUNTRIES[r.countryiso3code] || r.countryiso3code;
+      const v = Number(r.value);
+      return {
+        uid: `worldbank:PV.EST:${r.countryiso3code}:${r.date}`,
+        source: "worldbank", kind: "macro", ts: r.date,
+        title: `Political stability: ${country} (${v.toFixed(2)}, ${r.date})`,
+        url: "https://info.worldbank.org/governance/wgi/",
+        country, region: matchRegion(country), score: v, scoreKind: "stability-index",
+      };
+    });
+  },
+};
+
+const imf: GeoSource = {
+  name: "imf",
+  available: () => true,
+  async fetch() {
+    // IMF DataMapper - real GDP growth (NGDP_RPCH) for the curated countries in
+    // ONE request; take each country's most recent year.
+    const codes = Object.keys(MACRO_COUNTRIES).join("/");
+    const url = `https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/${codes}`;
+    const data = await getJson<any>(url, { timeoutMs: 15000, headers: { "User-Agent": UA } });
+    const series = data?.values?.NGDP_RPCH || {};
+    const out: GeoRecord[] = [];
+    for (const iso3 of Object.keys(series)) {
+      const years = series[iso3] || {};
+      const latestYear = Object.keys(years).sort().pop();
+      if (!latestYear) continue;
+      const v = Number(years[latestYear]);
+      if (!isFinite(v)) continue;
+      const country = MACRO_COUNTRIES[iso3] || iso3;
+      out.push({
+        uid: `imf:NGDP_RPCH:${iso3}:${latestYear}`,
+        source: "imf", kind: "macro", ts: latestYear,
+        title: `Real GDP growth: ${country} (${v > 0 ? "+" : ""}${v.toFixed(1)}%, ${latestYear})`,
+        url: "https://www.imf.org/external/datamapper/NGDP_RPCH",
+        country, region: matchRegion(country), score: v, scoreKind: "gdp-growth-pct",
+      });
+    }
+    return out;
+  },
+};
+
+export const GEO_SOURCES: GeoSource[] = [
+  ucdp, acled, reliefweb, usgs, eonet, polymarket, metaculus, worldbank, imf,
+];
 
 /** Run every geopolitics source in parallel, isolating failures. */
 export async function collectGeopolitics(limitPer = 60): Promise<GeoResult[]> {
