@@ -27,15 +27,26 @@ missing key renders "source not connected", never faked).
 | Anthropic Claude | `ANTHROPIC_API_KEY` | server-side sentiment + narrative clustering |
 | RSS (incl. Israeli/Arabic outlets) | `RSS_FEEDS` | already integrated; self-controlled feed list |
 
+## Geopolitics situational layer - CONNECTED (`/tools/geopolitics`, `lib/geopolitics.ts`)
+
+| API | Env var | Notes |
+|---|---|---|
+| UCDP GED | keyless | Academically-validated conflict events |
+| ReliefWeb (UN OCHA) | keyless | Humanitarian crisis reports by country |
+| USGS Earthquakes | keyless | Significant earthquakes, last 30 days |
+| NASA EONET | keyless | Open natural-event tracking (fires, storms, volcanoes) |
+| Polymarket (Gamma) | keyless | Real-money probabilities on geopolitical markets |
+| Metaculus | keyless | Community forecast probabilities |
+| ACLED | `ACLED_KEY` + `ACLED_EMAIL` | Political-violence events (free myACLED registration) |
+
 ## Cataloged - not yet integrated (lawful, future work)
 
 | API | Why deferred |
 |---|---|
-| ACLED / UCDP / ReliefWeb / HDX | Geopolitical-events layer is a separate feature (map overlay of conflict/crisis events); adapters are straightforward when prioritized |
-| USGS Earthquakes / NASA EONET | Same geopolitical-events layer |
+| HDX (Humanitarian Data Exchange) | Bulk dataset catalog (CKAN); belongs in a data-import flow, not a live feed |
 | World Bank / IMF | Macro-context per country; belongs in a country-profile panel |
 | OpenSanctions | Fits the platform's registry/reference layer (`lib/io-reference`), commercial license needed for production use |
-| Polymarket / Metaculus / Kalshi | Forecast panel; keyless/free, deferred for scope |
+| Kalshi | Regulated forecast market; Polymarket + Metaculus already cover the forecast panel |
 | Google Places / Trustpilot | Review monitoring; needs operator's own business profile |
 | TikTok Research API | Application/approval process required (academic) |
 | Telegram | Public-channel monitoring requires self-hosted MTProto development; Bot API cannot search public channels |
