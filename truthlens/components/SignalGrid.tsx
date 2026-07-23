@@ -365,20 +365,36 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     return hubs;
   }, [data, threads, positions, dims]);
 
-  // ---- canvas: borders + graticule + highlights -----------------------------
+  // ---- canvas: keep dims in sync with the stage (stable observer) -----------
+  // Measurement is isolated from painting so it registers ONCE - a pan/zoom
+  // (which only changes tf) never tears down and re-registers the observer.
   useEffect(() => {
     const stage = stageRef.current;
-    const canvas = canvasRef.current;
-    if (!stage || !canvas) return;
-    const render = () => {
+    if (!stage) return;
+    const measure = () => {
       const rect = stage.getBoundingClientRect();
-      if (rect.width !== dims.vw || rect.height !== dims.vh) {
-        setDims({ vw: rect.width, vh: rect.height });
-        return; // re-render happens with fresh dims
-      }
-      const vw = rect.width, vh = rect.height;
+      setDims((d) => (rect.width !== d.vw || rect.height !== d.vh ? { vw: rect.width, vh: rect.height } : d));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(stage);
+    return () => ro.disconnect();
+  }, []);
+
+  // ---- canvas: borders + graticule + highlights (rAF-throttled paint) --------
+  // The heavy work (re-tracing ~170 country polygons) is scheduled on an
+  // animation frame, so the many setTf updates a single drag emits coalesce
+  // into one repaint per frame instead of one per pointermove event.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || dims.vw === 0) return;
+    let raf = 0;
+    const paint = () => {
+      raf = 0;
+      const vw = dims.vw, vh = dims.vh;
       const dpr = window.devicePixelRatio || 1;
-      if (canvas.width !== vw * dpr) { canvas.width = vw * dpr; canvas.height = vh * dpr; }
+      const pw = Math.round(vw * dpr), ph = Math.round(vh * dpr);
+      if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -419,10 +435,8 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
         ctx.stroke();
       }
     };
-    render();
-    const ro = new ResizeObserver(render);
-    ro.observe(stage);
-    return () => ro.disconnect();
+    raf = requestAnimationFrame(paint);
+    return () => { if (raf) cancelAnimationFrame(raf); };
   }, [dims, tf, project, highlights]);
 
   // ---- pan / zoom interactions ----------------------------------------------
