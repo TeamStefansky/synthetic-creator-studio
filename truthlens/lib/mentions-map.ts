@@ -55,6 +55,11 @@ export interface MentionsAggregate {
   mentions: Mention[];
 }
 
+// Outlets with a fixed home country - used to place a mention on the map when the
+// source did not report a country itself (GDELT is the only one that does). Honest:
+// these are the outlet's home country, not any person's location.
+const SOURCE_HOME: Record<string, string> = { guardian: "GB", nyt: "US" };
+
 function isCode(s: string): boolean {
   return /^[A-Za-z]{2}$/.test(s);
 }
@@ -85,7 +90,7 @@ export function aggregateMentions(results: SourceResult[], limit = 200): Mention
   const cc = new Map<string, CountryCount>();
   let countryUnknown = 0;
   for (const m of deduped) {
-    const country = (m.country || "").trim();
+    const country = (m.country || "").trim() || SOURCE_HOME[m.source] || "";
     if (!country) { countryUnknown++; continue; }
     let cur = cc.get(country);
     if (!cur) {

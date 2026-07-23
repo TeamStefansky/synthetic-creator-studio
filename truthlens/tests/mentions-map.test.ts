@@ -55,6 +55,26 @@ describe("aggregateMentions", () => {
     expect(typeof us?.lon).toBe("number");
   });
 
+  it("infers a home country for fixed-home outlets when none is reported", () => {
+    const agg = aggregateMentions([
+      {
+        status: { source: "guardian", connected: true, count: 1 },
+        mentions: [{ source: "guardian", id: "gu1", text: "X", url: "https://gu.example/1" }],
+      },
+      {
+        status: { source: "nyt", connected: true, count: 1 },
+        mentions: [{ source: "nyt", id: "ny1", text: "Y", url: "https://ny.example/1" }],
+      },
+      {
+        status: { source: "reddit", connected: true, count: 1 },
+        mentions: [{ source: "reddit", id: "rd1", text: "Z", url: "https://rd.example/1" }],
+      },
+    ]);
+    expect(agg.byCountry.find((c) => c.key === "GB")?.count).toBe(1); // Guardian -> UK
+    expect(agg.byCountry.find((c) => c.key === "US")?.count).toBe(1); // NYT -> US
+    expect(agg.countryUnknown).toBe(1); // reddit has no fixed home
+  });
+
   it("centroidForCountry resolves both ISO codes and English names", () => {
     expect(centroidForCountry("IL")?.code).toBe("IL");
     expect(centroidForCountry("Israel")?.code).toBe("IL");

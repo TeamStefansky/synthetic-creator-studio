@@ -10,7 +10,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { CountryCount } from "@/lib/mentions-map";
 
-const STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+// Raster style (PNG tiles) - renders reliably without vector tiles/glyphs/sprites.
+const RASTER_STYLE: any = {
+  version: 8,
+  sources: {
+    carto: {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© CARTO © OpenStreetMap contributors",
+    },
+  },
+  layers: [{ id: "carto", type: "raster", source: "carto" }],
+};
 
 function useMapPoints(data: CountryCount[]) {
   return useMemo(
@@ -35,7 +51,7 @@ export default function MentionsMap({ data }: { data: CountryCount[] }) {
         const max = Math.max(1, ...points.map((p) => p.count));
         map = new maplibregl.Map({
           container: ref.current,
-          style: STYLE,
+          style: RASTER_STYLE,
           center: [10, 25],
           zoom: 1.1,
           attributionControl: { compact: true },
@@ -67,13 +83,6 @@ export default function MentionsMap({ data }: { data: CountryCount[] }) {
               "circle-stroke-color": "#7F49E1",
               "circle-stroke-width": 1.5,
             },
-          });
-          map.addLayer({
-            id: "counts",
-            type: "symbol",
-            source: "mentions",
-            layout: { "text-field": ["to-string", ["get", "count"]], "text-size": 12, "text-allow-overlap": true },
-            paint: { "text-color": "#EBEBEB" },
           });
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
           map.on("mouseenter", "bubbles", (e: any) => {
