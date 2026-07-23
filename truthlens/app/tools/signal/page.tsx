@@ -20,9 +20,10 @@ export default function SignalPage({ searchParams }: { searchParams: { entity?: 
       <p className="text-xs text-ink-secondary">
         SIGNAL plots real public mentions collected server-side (news, Bluesky, Reddit, Hacker News,
         RSS and the news APIs you have connected). Markers sit at the source country&rsquo;s centroid -
-        the outlet&rsquo;s location, never a person&rsquo;s. No sentiment or trend is inferred; every card,
-        marker and figure traces to a collected public source, and sources without a key show as
-        &ldquo;off&rdquo;.
+        the outlet&rsquo;s location, never a person&rsquo;s. Sentiment is classified server-side per collected
+        mention (with a confidence); the gauge is computed from those labels, never invented, and shows
+        how many mentions were actually labeled. Sources or layers without a key show as &ldquo;off&rdquo; /
+        &ldquo;not connected&rdquo;.
       </p>
       <Disclaimer variant="inline" />
     </div>

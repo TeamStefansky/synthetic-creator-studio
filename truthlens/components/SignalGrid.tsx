@@ -26,8 +26,11 @@ const RECON_STEPS = [
   "Sweeping GDELT news wires + press APIs…",
   "Listening on Bluesky, Reddit, Hacker News…",
   "Geolocating mention clusters…",
+  "Classifying sentiment on collected mentions…",
   "De-duplicating and compiling the grid…",
 ];
+
+const SENT_ICON: Record<string, string> = { pos: "▲", neg: "▼", neu: "■" };
 
 export default function SignalGrid({ initialEntity = "" }: { initialEntity?: string }) {
   const [entity, setEntity] = useState(initialEntity);
@@ -54,7 +57,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     setFilter("all");
     setStep(0);
     try {
-      const r = await fetch(`/api/mentions?entity=${encodeURIComponent(e)}`);
+      const r = await fetch(`/api/mentions?entity=${encodeURIComponent(e)}&sentiment=1`);
       const txt = await r.text();
       let json: MentionsApiResponse & { error?: string };
       try {
@@ -245,6 +248,15 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                     <div className="sg-foot">
                       <span>{m.date}</span>
                       {m.account && <span>· {m.account}</span>}
+                      {m.sentiment && (
+                        <span
+                          className={`sg-s${m.sentiment}`}
+                          title={`sentiment: ${m.sentiment} (confidence ${Math.round((m.sentimentConfidence || 0) * 100)}%)`}
+                          style={{ marginLeft: "auto" }}
+                        >
+                          {SENT_ICON[m.sentiment]} {m.sentiment}
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
@@ -325,6 +337,11 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <div className="sg-dfoot">
                 <span>{isoDate(selMention.timestamp)}</span>
                 <span>{selMention.country || ""}</span>
+                {selMention.sentiment && (
+                  <span className={`sg-s${selMention.sentiment}`}>
+                    {SENT_ICON[selMention.sentiment]} {selMention.sentiment}
+                  </span>
+                )}
               </div>
               {selMention.url && (
                 <p style={{ marginBottom: 0 }}>
@@ -352,6 +369,80 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
           <div className="sg-scroll">
             <div className={`sg-summary ${data ? "" : "sg-empty"}`} dir="auto">
               {data ? data.summary : "A real, sourced intelligence picture appears here after a scan. No sentiment or trend is invented — every figure traces to a collected public mention."}
+            </div>
+
+            {/* Sentiment - server-side classification of the COLLECTED mentions.
+                The score is computed from per-mention labels (never asked for as
+                one number); no key or no labels -> honest not-connected/Unknown. */}
+            <div className="sg-blk">
+              <div className="sg-ph sg-sub">
+                <i style={{ background: "var(--sg-pos)" }} />
+                SENTIMENT
+              </div>
+              <div className="sg-gauge">
+                {!data ? (
+                  <div className="sg-empty" style={{ padding: 0 }}>—</div>
+                ) : !data.sentiment ? (
+                  <div className="sg-empty" style={{ padding: 0 }}>Not requested for this scan.</div>
+                ) : !data.sentiment.available ? (
+                  <div className="sg-empty" style={{ padding: 0 }}>
+                    Not connected — {data.sentiment.reason}
+                  </div>
+                ) : data.sentiment.score === null ? (
+                  <div className="sg-empty" style={{ padding: 0 }}>
+                    Unknown — no mention could be labeled.
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      className="sg-gval"
+                      style={{
+                        color:
+                          data.sentiment.score > 15
+                            ? "var(--sg-pos)"
+                            : data.sentiment.score < -15
+                              ? "var(--sg-neg)"
+                              : "var(--sg-text)",
+                      }}
+                    >
+                      {data.sentiment.score > 0 ? "+" : ""}
+                      {data.sentiment.score}
+                    </div>
+                    <div className="sg-gtrack">
+                      <div
+                        className="sg-gfill"
+                        style={
+                          data.sentiment.score >= 0
+                            ? {
+                                left: "50%",
+                                right: `${50 - Math.abs(data.sentiment.score) / 2}%`,
+                                background: "linear-gradient(90deg, var(--sg-cyan), var(--sg-pos))",
+                              }
+                            : {
+                                right: "50%",
+                                left: `${50 - Math.abs(data.sentiment.score) / 2}%`,
+                                background: "linear-gradient(90deg, var(--sg-neg), var(--sg-cyan))",
+                              }
+                        }
+                      />
+                    </div>
+                    <div className="sg-glabels">
+                      <span>NEGATIVE</span>
+                      <span>NEUTRAL</span>
+                      <span>POSITIVE</span>
+                    </div>
+                    <div className="sg-gmeta">
+                      <span className="sg-spos">▲ {data.sentiment.pos}</span>
+                      <span className="sg-sneu">■ {data.sentiment.neu}</span>
+                      <span className="sg-sneg">▼ {data.sentiment.neg}</span>
+                      <span style={{ marginLeft: "auto" }}>
+                        labeled {data.sentiment.labeled}/{data.total}
+                      </span>
+                    </div>
+                    <div className="sg-galt">{data.sentiment.alternative}</div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Signal by type - replaces the original's fabricated sentiment gauge. */}
@@ -571,6 +662,15 @@ const CSS = `
 .sg-bar-track{flex:1;height:6px;background:var(--sg-ink);border-radius:3px;overflow:hidden}
 .sg-bar-fill{height:6px;border-radius:3px;transition:width .5s ease;min-width:2px}
 .sg-bar-num{width:26px;text-align:right;color:var(--sg-dim)}
+.sg-gauge{padding:12px 14px}
+.sg-gval{text-align:center;font-size:22px;font-weight:700;margin-bottom:8px;letter-spacing:.05em}
+.sg-gtrack{height:6px;background:var(--sg-ink);border:1px solid var(--sg-line);position:relative;border-radius:3px}
+.sg-gtrack::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--sg-line)}
+.sg-gfill{position:absolute;top:0;bottom:0;border-radius:3px;transition:all .9s ease}
+.sg-glabels{display:flex;justify-content:space-between;font-size:9px;color:var(--sg-dim);margin-top:6px;letter-spacing:.08em}
+.sg-gmeta{display:flex;gap:12px;font-size:10.5px;color:var(--sg-dim);margin-top:8px}
+.sg-galt{font-size:9.5px;color:var(--sg-dim);margin-top:7px;line-height:1.45}
+.sg-spos{color:var(--sg-pos)} .sg-sneg{color:var(--sg-neg)} .sg-sneu{color:var(--sg-dim)}
 .sg-talker{padding:8px 14px;border-bottom:1px solid var(--sg-line);font-size:11.5px}
 .sg-talker:last-child{border-bottom:0}
 .sg-talker b{color:var(--sg-text)}

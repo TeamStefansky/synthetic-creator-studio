@@ -14,6 +14,7 @@
 
 import type { CountryCount, MapMention, MentionSourceType } from "./mentions-map";
 import type { SourceStatus } from "./narrative/types";
+import type { SentimentLabel, SentimentSummary } from "./signal-sentiment";
 
 export const SOURCE_TYPES: MentionSourceType[] = ["news", "social", "forum", "video"];
 
@@ -31,6 +32,10 @@ export interface SignalMention extends MapMention {
   snippet: string;
   /** YYYY-MM-DD extracted from the timestamp (empty when none). */
   date: string;
+  /** Server-side classified sentiment toward the entity (absent = not labeled,
+   * shown as unlabeled - never defaulted to neutral). */
+  sentiment?: SentimentLabel;
+  sentimentConfidence?: number;
 }
 
 export interface TypeCount {
@@ -52,9 +57,12 @@ export interface MentionsApiResponse {
   entity: string;
   total: number;
   sources: SourceStatus[];
-  mentions: MapMention[];
+  mentions: (MapMention & { sentiment?: SentimentLabel; sentimentConfidence?: number })[];
   byCountry: CountryCount[];
   countryUnknown: number;
+  /** Present when the scan ran with ?sentiment=1 (available:false = honest
+   * "not connected", rendered as such - never faked). */
+  sentiment?: SentimentSummary;
   generatedAt?: string;
 }
 
@@ -69,6 +77,7 @@ export interface SignalData {
   talkers: Talker[];
   timeline: TimelineEvent[];
   summary: string;
+  sentiment?: SentimentSummary;
   generatedAt?: string;
 }
 
@@ -184,6 +193,7 @@ export function buildSignal(api: MentionsApiResponse): SignalData {
     talkers,
     timeline,
     summary,
+    sentiment: api.sentiment,
     generatedAt: api.generatedAt,
   };
 }

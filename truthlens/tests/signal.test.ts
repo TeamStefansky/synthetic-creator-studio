@@ -132,8 +132,35 @@ describe("buildSignal", () => {
     expect(s.byType.find((t) => t.type === "forum")?.count).toBe(1);
     expect(s.talkers.length).toBe(3);
     expect(s.timeline.map((e) => e.date)).toEqual(["2024-06-02", "2024-06-03", "2024-06-04"]);
-    // No sentiment field is fabricated anywhere in the model.
+    // When the API supplied no sentiment (not requested / not connected),
+    // none appears in the model - it is never defaulted or invented.
     expect(JSON.stringify(s)).not.toMatch(/sentiment/i);
+  });
+
+  it("passes a real server-side sentiment summary through untouched", () => {
+    const s = buildSignal({
+      ...api,
+      sentiment: {
+        available: true, considered: 3, labeled: 3, pos: 2, neg: 1, neu: 0,
+        score: 33, alternative: "Automated labels; tone can also reflect topic mix.",
+      },
+    });
+    expect(s.sentiment?.score).toBe(33);
+    expect(s.sentiment?.labeled).toBe(3);
+  });
+
+  it("passes an honest not-connected sentiment through", () => {
+    const s = buildSignal({
+      ...api,
+      sentiment: {
+        available: false, reason: "Sentiment layer not connected (no ANTHROPIC_API_KEY).",
+        considered: 0, labeled: 0, pos: 0, neg: 0, neu: 0, score: null,
+        alternative: "n/a",
+      },
+    });
+    expect(s.sentiment?.available).toBe(false);
+    expect(s.sentiment?.reason).toMatch(/ANTHROPIC_API_KEY/);
+    expect(s.sentiment?.score).toBeNull();
   });
 
   it("passes source statuses through, including an honest not-connected one", () => {
