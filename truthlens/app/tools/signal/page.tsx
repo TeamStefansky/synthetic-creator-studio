@@ -1,6 +1,7 @@
 import { Radio } from "lucide-react";
 import SignalGrid from "@/components/SignalGrid";
 import Disclaimer from "@/components/Disclaimer";
+import FullBleed from "@/components/FullBleed";
 
 // SIGNAL - Brand Intelligence Grid. A full-console view of Brand Mentions: the
 // same real, server-collected public mentions (GET /api/mentions) rendered as a
@@ -17,6 +18,7 @@ export default function SignalPage({ searchParams }: { searchParams: { entity?: 
   const initial = (searchParams?.entity || "").trim();
   return (
     <div className="space-y-6">
+      <FullBleed />
       <div>
         <div className="flex items-center gap-2">
           <Radio className="h-6 w-6 text-brand-soft" />
