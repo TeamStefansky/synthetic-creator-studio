@@ -99,6 +99,7 @@ export async function buildRelBoard(company: string): Promise<RelBoardResult> {
     return extractJson(textOf(msg));
   }
 
+  const started = Date.now();
   try {
     let parsed = await once(baseMessages);
     let result = parsed ? validateRelGraph(parsed, company) : { ok: false, errors: ["no JSON returned"] as string[] };
@@ -112,16 +113,17 @@ export async function buildRelBoard(company: string): Promise<RelBoardResult> {
       result = parsed ? validateRelGraph(parsed, company) : { ok: false, errors: ["no JSON on retry"] };
     }
     if (!result.ok || !result.graph) {
-      return { available: false, reason: `Could not produce a valid graph: ${result.errors.join("; ").slice(0, 160)}` };
+      return { available: false, reason: `Could not produce a valid graph: ${result.errors.join("; ").slice(0, 160)} [model=${LLM_MODEL}, ${Date.now() - started}ms]` };
     }
     return { available: true, graph: result.graph };
   } catch (e: any) {
     const m = String(e?.message || "error");
-    if (/429|rate.?limit|overloaded|529/i.test(m)) return { available: false, reason: "Anthropic is rate-limited/overloaded right now - try again shortly." };
-    if (/timeout|aborted|timed out/i.test(m)) return { available: false, reason: "The research call timed out - try again." };
-    if (/credit balance|billing|insufficient/i.test(m)) return { available: false, reason: "Paused - Anthropic account out of credits." };
-    if (/401|invalid x-api-key|authentication/i.test(m)) return { available: false, reason: "ANTHROPIC_API_KEY appears invalid." };
-    if (/model|not_found|404/i.test(m)) return { available: false, reason: `Model issue: ${m.slice(0, 120)} (check ANTHROPIC_MODEL).` };
-    return { available: false, reason: `Engine failed: ${m.slice(0, 140)}` };
+    const diag = ` [model=${LLM_MODEL}, ${Date.now() - started}ms]`;
+    if (/429|rate.?limit|overloaded|529/i.test(m)) return { available: false, reason: "Anthropic is rate-limited/overloaded right now - try again shortly." + diag };
+    if (/timeout|aborted|timed out/i.test(m)) return { available: false, reason: "The research call timed out - try again." + diag };
+    if (/credit balance|billing|insufficient/i.test(m)) return { available: false, reason: "Paused - Anthropic account out of credits." + diag };
+    if (/401|invalid x-api-key|authentication/i.test(m)) return { available: false, reason: "ANTHROPIC_API_KEY appears invalid." + diag };
+    if (/model|not_found|404|400/i.test(m)) return { available: false, reason: `Model issue - check ANTHROPIC_MODEL: ${m.slice(0, 120)}` + diag };
+    return { available: false, reason: `Engine failed: ${m.slice(0, 140)}` + diag };
   }
 }
