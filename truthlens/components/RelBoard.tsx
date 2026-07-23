@@ -49,7 +49,13 @@ export default function RelBoard() {
     if (q.length < 2) return;
     setLoading(true); setError(""); setGraph(null); setSelected(null);
     try {
-      const r = await fetch(`/api/relboard?company=${encodeURIComponent(q)}`);
+      // POST + no-store so a browser/CDN never replays a stale GET response.
+      const r = await fetch(`/api/relboard`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ company: q }),
+      });
       // Read text first, then parse - so a non-JSON error body never crashes
       // the client with "Unexpected token"; show the real message instead.
       const txt = await r.text();

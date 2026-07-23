@@ -8,6 +8,9 @@ import { cacheGet, cacheSet } from "@/lib/cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 90; // spec: ~90s request timeout
+export const dynamic = "force-dynamic"; // never cache the research result at the edge
+
+const NO_STORE = { "Cache-Control": "no-store, max-age=0" };
 
 const CACHE_MS = 30 * 60_000;
 
@@ -22,17 +25,17 @@ async function handle(company: string) {
   try {
     const ck = `relboard:${q.toLowerCase()}`;
     const cached = await cacheGet<any>(ck, CACHE_MS);
-    if (cached) return NextResponse.json({ ...cached, cached: true });
+    if (cached) return NextResponse.json({ ...cached, cached: true }, { headers: NO_STORE });
 
     const res = await buildRelBoard(q);
     if (!res.available) {
-      return NextResponse.json({ available: false, reason: res.reason }, { status: 200 });
+      return NextResponse.json({ available: false, reason: res.reason }, { status: 200, headers: NO_STORE });
     }
     const out = { available: true, ...res.graph, cached: false };
     await cacheSet(ck, out);
-    return NextResponse.json(out);
+    return NextResponse.json(out, { headers: NO_STORE });
   } catch (e: any) {
-    return NextResponse.json({ available: false, reason: e?.message || "Relationship engine failed" }, { status: 200 });
+    return NextResponse.json({ available: false, reason: e?.message || "Relationship engine failed" }, { status: 200, headers: NO_STORE });
   }
 }
 
