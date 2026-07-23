@@ -1,4 +1,4 @@
-import { Plug, CheckCircle2, Circle } from "lucide-react";
+import { Plug, CheckCircle2, Circle, ExternalLink } from "lucide-react";
 import { connectionSummary } from "@/lib/connections";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -50,15 +50,24 @@ export default function StatusPage() {
                   <Circle className="mt-0.5 h-4 w-4 shrink-0 text-ink-muted" />
                 )}
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className={i.connected ? "text-ink" : "text-ink-secondary"}>{i.label}</span>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    {i.href ? (
+                      <a href={i.href} target="_blank" rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1 hover:underline ${i.connected ? "text-ink" : "text-ink-secondary"}`}>
+                        {i.label} <ExternalLink className="h-3 w-3 text-ink-muted" />
+                      </a>
+                    ) : (
+                      <span className={i.connected ? "text-ink" : "text-ink-secondary"}>{i.label}</span>
+                    )}
                     {i.keyless && <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">keyless</span>}
                     {i.note && <span className="rounded bg-yellow-500/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-yellow-200/80">{i.note}</span>}
                   </div>
                   {!i.connected && (
                     <div className="mt-0.5 text-xs text-ink-secondary">
                       set <span className="font-mono text-ink">{i.missing.join(i.anyOf ? " or " : " + ")}</span>
-                      {i.getUrl ? <> · <span className="text-ink-muted">{i.getUrl}</span></> : null}
+                      {i.href ? (
+                        <> · <a href={i.href} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">{i.getUrl || "get key"} ↗</a></>
+                      ) : i.getUrl ? <> · <span className="text-ink-muted">{i.getUrl}</span></> : null}
                     </div>
                   )}
                 </div>

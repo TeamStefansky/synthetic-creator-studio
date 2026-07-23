@@ -16,6 +16,7 @@
 
 import type { MapMention, MentionSourceType } from "./mentions-map";
 import type { NarrativeThread } from "./signal-narratives";
+import { outletId, outletName } from "./signal";
 
 export interface NetworkNode {
   id: string;
@@ -62,9 +63,12 @@ export function buildSourceNetwork(mentions: MapMention[], threads: NarrativeThr
   const communityVotes = new Map<string, Map<number, number>>();
 
   mentions.forEach((m, idx) => {
-    const label = (m.account || "").trim();
-    if (!label) return;
-    const id = `${m.source}:${label.toLowerCase()}`;
+    const account = (m.account || "").trim();
+    if (!account) return;
+    // Surface the OUTLET, never a journalist's name; byline sources collapse
+    // into one outlet node (CLAUDE.md rule 1).
+    const id = outletId(m.source, account);
+    const label = outletName(m.source, account);
     let node = nodes.get(id);
     if (!node) {
       node = { id, label, source: m.source, sourceType: m.sourceType, community: -1, count: 0, mentions: [] };

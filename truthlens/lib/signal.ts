@@ -29,6 +29,27 @@ export const TYPE_COLORS: Record<MentionSourceType, string> = {
   video: "#F5D742",
 };
 
+// Sources whose `account` field is a journalist BYLINE (a named individual),
+// not a handle. On the map/graph we surface the OUTLET, never the person
+// (CLAUDE.md rule 1 + "nodes are accounts/outlets, never people").
+const BYLINE_SOURCES: Record<string, string> = {
+  guardian: "The Guardian",
+  nyt: "The New York Times",
+};
+
+/** Outlet/account display for map + graph nodes - never a person's name.
+ * Byline sources collapse to their outlet; everyone else keeps their handle. */
+export function outletName(source: string, account?: string): string {
+  return BYLINE_SOURCES[source] || account || source;
+}
+
+/** Stable node id for graph views: byline sources collapse into ONE outlet
+ * node; handle-based sources stay per-account. */
+export function outletId(source: string, account?: string): string {
+  if (BYLINE_SOURCES[source]) return source;
+  return `${source}:${(account || source).toLowerCase()}`;
+}
+
 export interface SignalMention extends MapMention {
   /** First sentence/line of the mention text (for the card headline). */
   title: string;

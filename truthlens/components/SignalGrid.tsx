@@ -19,6 +19,7 @@ import {
   buildSignal,
   isoDate,
   NARR_COLORS,
+  outletName,
   resolveThreads,
   TYPE_COLORS,
   type MentionsApiResponse,
@@ -636,10 +637,9 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                       <circle className="sg-pulse" r={7} fill="none" stroke={col} strokeWidth={1.4}
                         style={{ animationDelay: `${(idx % 5) * 0.35}s` }} />
                       <circle r={selected === idx ? 5 : 3.4} fill={col} stroke="#050506" strokeWidth={1.2} />
-                      {tf.k >= 2.2 && (m.account || m.source) && (
+                      {view === "map" && tf.k >= 2.6 && (
                         <text className="sg-mlabel" y={16} textAnchor="middle">
-                          {m.account || m.source}
-                          {tf.k >= 4 && m.account ? <tspan className="sg-msub" x={0} dy={10}>{m.source}</tspan> : null}
+                          {outletName(m.source, m.account)}
                         </text>
                       )}
                     </g>
@@ -923,7 +923,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                       <div className="sg-geocities">
                         {g.items.slice(0, 4).map((it, i) => (
                           <span key={i}>
-                            <em dir="auto">{it.account || it.source}</em> — {it.source}
+                            <em dir="auto">{outletName(it.source, it.account)}</em> — {it.source}
                             {i < Math.min(3, g.items.length - 1) ? <br /> : null}
                           </span>
                         ))}
