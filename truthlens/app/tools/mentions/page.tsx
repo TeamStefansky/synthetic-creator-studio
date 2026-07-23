@@ -7,6 +7,7 @@ import type { Mention } from "@/lib/narrative/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import MentionsMap from "@/components/MentionsMap";
+import PredictionMarkets from "@/components/PredictionMarkets";
 
 interface Result extends MentionsAggregate { entity: string; generatedAt: string }
 
@@ -117,6 +118,9 @@ export default function BrandMentionsPage() {
             <div className="label-muted mb-2 flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> World map (drag to pan, scroll to zoom, hover a bubble)</div>
             <MentionsMap data={result.byCountry} />
           </div>
+
+          {/* Prediction markets matching this brand/term (renders only if any). */}
+          <PredictionMarkets query={result.entity} />
 
           {/* Geographic breakdown - the "where in the world" view. */}
           <div className="card">
