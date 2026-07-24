@@ -34,6 +34,7 @@ function externalNodeUrl(node: { kind?: string; label?: string }): string | null
 export default function NetworkGraph({ network }: { network: OperatorNetwork }) {
   const router = useRouter();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const fgRef = useRef<any>(null);
   const [width, setWidth] = useState(600);
   const [isMobile, setIsMobile] = useState(false);
   const [hovering, setHovering] = useState(false);
@@ -68,6 +69,19 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
     [network],
   );
 
+  // Spread the layout so nodes/labels don't pile up: stronger repulsion, longer
+  // links, and a scale-aware distance so denser graphs breathe more.
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    const n = network.nodes.length;
+    const spread = Math.min(2.2, 1 + n / 40); // more nodes -> push harder
+    fg.d3Force("charge")?.strength((isMobile ? -150 : -260) * spread).distanceMax(isMobile ? 380 : 640);
+    fg.d3Force("link")?.distance(isMobile ? 55 : 78).strength(0.5);
+    fg.d3Force("center")?.strength(0.05);
+    fg.d3ReheatSimulation?.();
+  }, [data, isMobile, network.nodes.length]);
+
   // Clickable list of every domain node (target + siblings) - reliable on mobile.
   const domainLinks = useMemo(
     () =>
@@ -93,14 +107,17 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
       style={{ cursor: hovering ? "pointer" : "default" }}
     >
       <ForceGraph2D
+        ref={fgRef}
         graphData={data as any}
         width={width}
-        height={isMobile ? 320 : 460}
+        height={isMobile ? 340 : 520}
         backgroundColor="rgba(0,0,0,0)"
         nodeRelSize={isMobile ? 4 : 5}
         linkColor={() => "rgba(255,255,255,0.18)"}
         linkWidth={1}
-        cooldownTicks={isMobile ? 60 : 120}
+        warmupTicks={isMobile ? 40 : 80}
+        cooldownTicks={isMobile ? 80 : 160}
+        onEngineStop={() => fgRef.current?.zoomToFit(400, isMobile ? 26 : 56)}
         onNodeClick={(n: any) => clickNode(n)}
         onNodeHover={(n: any) => setHovering(!!n)}
         nodeColor={(n: any) => (n.flaggedFake ? STATUS.high : KIND_COLOR[n.kind] || TOKENS.textSecondary)}
@@ -109,11 +126,30 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
           // On mobile only label the target node to reduce clutter.
           if (isMobile && node.kind !== "target") return;
           const label = node.label as string;
-          const fontSize = Math.max(10 / scale, 3);
+          const text = label.length > 30 ? label.slice(0, 29) + "…" : label;
+          const fontSize = Math.max((isMobile ? 9 : 10) / scale, 2.5);
           ctx.font = `${fontSize}px ui-sans-serif, system-ui`;
-          ctx.fillStyle = node.kind === "target" ? TOKENS.text : "rgba(229,231,235,0.8)";
+          // Alternate label side by node kind so neighbouring labels don't stack:
+          // target/domain above the node, everything else below it.
+          const above = node.kind === "target" || node.kind === "domain";
+          const r = (isMobile ? 4 : 5) + 1;
+          const ly = node.y + (above ? -(r + fontSize) : r + fontSize);
+          const tw = ctx.measureText(text).width;
+          const padX = 3 / scale, padY = 2 / scale;
+          // Background pill keeps text readable even when nodes sit close.
+          ctx.fillStyle = "rgba(6,8,15,0.78)";
+          ctx.beginPath();
+          const rx = node.x - tw / 2 - padX, ry = ly - fontSize / 2 - padY, rw = tw + padX * 2, rh = fontSize + padY * 2, rr = 2 / scale;
+          ctx.moveTo(rx + rr, ry);
+          ctx.arcTo(rx + rw, ry, rx + rw, ry + rh, rr);
+          ctx.arcTo(rx + rw, ry + rh, rx, ry + rh, rr);
+          ctx.arcTo(rx, ry + rh, rx, ry, rr);
+          ctx.arcTo(rx, ry, rx + rw, ry, rr);
+          ctx.fill();
+          ctx.fillStyle = node.flaggedFake ? STATUS.high : node.kind === "target" ? TOKENS.text : "rgba(229,231,235,0.88)";
           ctx.textAlign = "center";
-          ctx.fillText(label.length > 28 ? label.slice(0, 27) + "…" : label, node.x, node.y + 9);
+          ctx.textBaseline = "middle";
+          ctx.fillText(text, node.x, ly);
         }}
       />
       <div className="flex flex-wrap gap-3 px-3 py-2 text-xs text-ink-secondary">
