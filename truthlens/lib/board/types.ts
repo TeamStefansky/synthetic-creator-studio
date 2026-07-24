@@ -80,6 +80,11 @@ export interface Fingerprint {
   wildcardCertOrCdnIssuer: boolean; // cert is wildcard or CDN-issued
   createdAt?: string;          // domain registration date (pair-derived proximity)
   boilerplate?: string;        // normalized footer/copyright text (similarity)
+  ip?: string;                 // primary A-record IP (for the network graph)
+  neighbors?: string[];        // reverse-IP neighbour domains (dedicated hosts only)
+  gaIds?: string[];            // Google Analytics IDs (network hubs)
+  adsenseIds?: string[];       // AdSense IDs (network hubs)
+  sans?: string[];             // TLS SAN domains (operator signal)
   errors: string[];            // per-source failures (failure isolation)
 }
 
@@ -108,9 +113,17 @@ export interface PairEdge {
 
 export interface SourceStatus { source: string; ok: boolean; note?: string }
 
+// Reuse the proven operator-network graph shape (lib/network.ts / NetworkGraph).
+export interface BoardNetwork {
+  nodes: { id: string; label: string; kind: "target" | "domain" | "ip" | "ga" | "adsense" | "account"; flaggedFake?: boolean }[];
+  edges: { source: string; target: string; reason: string }[];
+  note?: string;
+}
+
 export interface BoardResult {
   entities: string[];
   edges: PairEdge[];                       // only pairs with >=1 overlap, strongest first
+  network: BoardNetwork;                   // merged operator-network across all domains
   matrix: (ConfidenceLevel | null)[][];    // entity x entity aggregate strength
   rubricVersion: string;
   generatedAt: string;

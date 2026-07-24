@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Globe, Server, Mail, Lock, Cpu, History, AlertTriangle, Network as NetIcon,
-  Share2, Radar, TrendingUp, Search,
+  Share2, Radar, TrendingUp, Search, ArrowUpRight,
 } from "lucide-react";
 import type { Report, OsintDossier } from "@/lib/types";
 import { fmtDate } from "@/lib/ui";
@@ -207,9 +207,23 @@ function ReportInner() {
 
       {/* Network graph */}
       <section className="card">
-        <div className="mb-3 flex items-center gap-2">
-          <NetIcon className="h-5 w-5 text-brand-soft" />
-          <h2 className="text-lg font-semibold">Operator Network</h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <NetIcon className="h-5 w-5 text-brand-soft" />
+            <h2 className="text-lg font-semibold">Operator Network</h2>
+          </div>
+          {(() => {
+            // Send this domain + its discovered domain nodes to the Link Board
+            // for a calibrated, evidenced overlap comparison.
+            const domains = [report.domain, ...report.network.nodes.filter((n) => n.kind === "domain").map((n) => n.label)]
+              .filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 12);
+            return domains.length >= 2 ? (
+              <a href={`/tools/linkboard?domains=${encodeURIComponent(domains.join(","))}`}
+                className="inline-flex items-center gap-1 text-xs font-medium text-brand-soft hover:underline">
+                Compare in Link Board <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            ) : null;
+          })()}
         </div>
         <NetworkGraph network={report.network} />
         {report.network.note && (

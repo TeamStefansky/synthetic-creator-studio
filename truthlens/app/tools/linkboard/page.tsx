@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Network, ArrowRight, ChevronDown, ChevronRight, ExternalLink, ShieldQuestion } from "lucide-react";
+
+// Force-directed operator-network graph (same component Site Report uses).
+// ssr:false - react-force-graph needs the browser.
+const NetworkGraph = dynamic(() => import("@/components/NetworkGraph"), { ssr: false });
 import Disclaimer from "@/components/Disclaimer";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import ToolIntro from "@/components/ToolIntro";
@@ -88,8 +93,15 @@ export default function LinkBoardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const compare = async () => {
-    const domains = input.split(/[\s,]+/).map((d) => d.trim()).filter(Boolean);
+  // Prefill + auto-run from ?domains= (used by Site Report's "Compare in Link Board").
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("domains");
+    if (q && q.trim()) { setInput(q.split(/[\s,]+/).filter(Boolean).join("\n")); compare(q); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const compare = async (raw?: string) => {
+    const domains = (raw ?? input).split(/[\s,]+/).map((d) => d.trim()).filter(Boolean);
     if (domains.length < 2) { setError("Enter at least two domains (comma or newline separated)."); return; }
     setLoading(true); setError(""); setResult(null);
     try {
@@ -129,7 +141,7 @@ export default function LinkBoardPage() {
         />
         <div className="mt-2 flex items-center justify-between gap-2">
           <p className="text-xs text-ink-secondary">Public data + ordinary HTTP only. Cached per day for reproducibility.</p>
-          <button onClick={compare} disabled={loading} className="btn shrink-0">
+          <button onClick={() => compare()} disabled={loading} className="btn shrink-0">
             {loading ? "Comparing…" : <>Compare <ArrowRight className="h-4 w-4" /></>}
           </button>
         </div>
@@ -151,6 +163,22 @@ export default function LinkBoardPage() {
 
       {result && (
         <div className="space-y-6">
+          {/* operator network graph - the visual "who is connected to whom" */}
+          <div className="card">
+            <div className="label-muted mb-2 flex items-center gap-1"><Network className="h-3.5 w-3.5" /> Operator network</div>
+            {result.network && result.network.nodes.length > 1 ? (
+              <>
+                <NetworkGraph network={result.network as any} />
+                {result.network.note && <p className="mt-2 text-[11px] text-ink-secondary">{result.network.note}</p>}
+              </>
+            ) : (
+              <p className="text-sm text-ink-secondary">
+                No shared infrastructure or reverse-IP neighbours were collected for these domains, so there is no network to draw.
+                Check the collection status below - if sources show issues, the lookups were blocked/rate-limited, not that the domains are unrelated.
+              </p>
+            )}
+          </div>
+
           {/* overlap matrix */}
           <div className="card">
             <div className="label-muted mb-2 flex items-center gap-1"><Network className="h-3.5 w-3.5" /> Overlap matrix</div>

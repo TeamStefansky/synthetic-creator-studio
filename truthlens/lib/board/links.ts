@@ -73,6 +73,10 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
   let wildcardCertOrCdnIssuer = false;
   let createdAt: string | undefined;
   let boilerplate: string | undefined;
+  let neighbors: string[] = [];
+  const gaIds: string[] = [];
+  const adsenseIds: string[] = [];
+  const sans: string[] = [];
 
   // DNS + IP + hosting
   let primaryIp: string | undefined;
@@ -89,7 +93,7 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
     if (p24) push(artifacts, "ip_24", `${p24}.0/24`);
     if (p16) push(artifacts, "ip_16", `${p16}.0.0/16`);
     try {
-      const [ipInfo, hosting, neighbors] = await Promise.all([
+      const [ipInfo, hosting, neighborList] = await Promise.all([
         enrichIp(primaryIp).catch(() => null),
         lookupHosting(primaryIp).catch(() => null),
         reverseIp(primaryIp).catch(() => [] as string[]),
@@ -101,7 +105,8 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
         if (ipInfo.country) push(artifacts, "hosting_country", ipInfo.country);
       }
       if (hosting) cdn = !!hosting.cdn || !!hosting.cdnMasksOrigin;
-      neighborCount = Array.isArray(neighbors) ? neighbors.length : null;
+      neighbors = Array.isArray(neighborList) ? neighborList.map((n) => n.toLowerCase().replace(/^www\./, "")).filter((d) => d && d !== entity) : [];
+      neighborCount = neighbors.length;
     } catch (e: any) { errors.push(`ip: ${e?.message || "failed"}`); }
   }
 
@@ -115,6 +120,7 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
       if (s === entity) continue;
       if (s.startsWith("*.")) { wildcardCertOrCdnIssuer = true; continue; }
       push(artifacts, "ssl_san", s);
+      sans.push(s);
     }
     if (cdnIssuer) wildcardCertOrCdnIssuer = true;
   } catch (e: any) { errors.push(`ssl: ${e?.message || "failed"}`); }
@@ -144,8 +150,8 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
     const tech = techFingerprint(html, hdrs, entity);
     if (tech.cms) push(artifacts, "cms", tech.cms);
     for (const f of tech.frameworks || []) push(artifacts, "framework", f);
-    for (const g of tech.gaIds || []) push(artifacts, "ga_id", g);
-    for (const a of tech.adsenseIds || []) push(artifacts, "adsense_id", a);
+    for (const g of tech.gaIds || []) { push(artifacts, "ga_id", g); gaIds.push(g); }
+    for (const a of tech.adsenseIds || []) { push(artifacts, "adsense_id", a); adsenseIds.push(a); }
 
     // strong ID-bearing tags via regex (no new dependency)
     for (const m of html.matchAll(/GTM-[A-Z0-9]{4,}/g)) push(artifacts, "gtm_id", m[0]);
@@ -191,9 +197,60 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
     if (copy) { const n = normalizeText(copy); if (n.length >= 8) boilerplate = n; }
   } catch (e: any) { errors.push(`http: ${e?.message || "failed"}`); }
 
-  const fp: Fingerprint = { entity, artifacts, neighborCount, cdn, wildcardCertOrCdnIssuer, errors, ...(createdAt ? { createdAt } : {}), ...(boilerplate ? { boilerplate } : {}) } as Fingerprint;
+  const fp: Fingerprint = {
+    entity, artifacts, neighborCount, cdn, wildcardCertOrCdnIssuer, errors,
+    ip: primaryIp, neighbors, gaIds, adsenseIds, sans,
+    ...(createdAt ? { createdAt } : {}), ...(boilerplate ? { boilerplate } : {}),
+  } as Fingerprint;
   await cacheSet(ck, fp);
   return fp;
+}
+
+// ---- operator network (same shape as Site Report's NetworkGraph) ------------
+// Merge every pasted domain's infrastructure into ONE graph. Because shared
+// nodes (an IP, a GA/AdSense id, an SSL SAN host) get the SAME id, two domains
+// that share one are automatically connected - that IS the network. Reverse-IP
+// neighbours are only expanded on dedicated hosts (CDN/shared IPs are noise).
+const NET_SHARED_IP_THRESHOLD = 12;
+
+export function buildLinkNetwork(fps: Fingerprint[]): import("./types").BoardNetwork {
+  const nodes = new Map<string, import("./types").BoardNetwork["nodes"][number]>();
+  const edges: import("./types").BoardNetwork["edges"] = [];
+  const seenEdge = new Set<string>();
+  const addNode = (id: string, label: string, kind: import("./types").BoardNetwork["nodes"][number]["kind"]) => {
+    if (!nodes.has(id)) nodes.set(id, { id, label, kind });
+  };
+  const addEdge = (source: string, target: string, reason: string) => {
+    if (source === target) return;
+    const k = `${source}|${target}|${reason}`;
+    if (seenEdge.has(k)) return;
+    seenEdge.add(k);
+    edges.push({ source, target, reason });
+  };
+
+  let hidden = 0;
+  for (const f of fps) {
+    addNode(f.entity, f.entity, "target");
+    if (f.ip) {
+      const ipId = `ip:${f.ip}`;
+      addNode(ipId, f.ip, "ip");
+      addEdge(f.entity, ipId, "hosted on IP");
+      const dedicated = !f.cdn && (f.neighborCount ?? 0) <= NET_SHARED_IP_THRESHOLD;
+      if (dedicated) {
+        for (const n of (f.neighbors || []).slice(0, 20)) { addNode(n, n, "domain"); addEdge(ipId, n, "shared dedicated IP"); }
+      } else {
+        hidden += f.neighbors?.length || 0;
+      }
+    }
+    for (const san of (f.sans || []).slice(0, 25)) { addNode(san, san, "domain"); addEdge(f.entity, san, "shared SSL certificate (SAN)"); }
+    for (const g of f.gaIds || []) { const id = `ga:${g}`; addNode(id, g, "ga"); addEdge(f.entity, id, "Google Analytics ID"); }
+    for (const a of f.adsenseIds || []) { const id = `ad:${a}`; addNode(id, a, "adsense"); addEdge(f.entity, id, "AdSense ID"); }
+  }
+
+  const note = hidden > 0
+    ? `${hidden} reverse-IP co-tenant domain(s) hidden - they sit on a CDN/shared host, so they are not a reliable operator link. Shared IP, SSL, and analytics/ad IDs between your domains are shown.`
+    : undefined;
+  return { nodes: [...nodes.values()], edges, note };
 }
 
 // ---- pairwise comparison ----------------------------------------------------
@@ -263,6 +320,7 @@ export function compareFingerprints(fps: Fingerprint[]): BoardResult {
 
   return {
     entities, edges, matrix,
+    network: buildLinkNetwork(fps),
     rubricVersion: BOARD_RUBRIC_VERSION,
     generatedAt: new Date().toISOString(),
     sources,
