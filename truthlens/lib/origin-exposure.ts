@@ -197,7 +197,7 @@ async function loadCloudflareRanges(): Promise<Cidr[]> {
 
 async function crtshNames(domain: string): Promise<string[]> {
   const url = `https://crt.sh/?q=%25.${encodeURIComponent(domain)}&output=json`;
-  const data = await getJson<any[]>(url, { timeoutMs: 25000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
+  const data = await getJson<any[]>(url, { timeoutMs: 14000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
   if (!Array.isArray(data)) return [];
   const names = new Set<string>();
   for (const entry of data) {
@@ -319,7 +319,7 @@ function looksLikeIp(s: string): boolean {
 async function hackerTargetHosts(domain: string, cfRanges: Cidr[]): Promise<{ name: string; ip: string }[] | null> {
   const key = process.env.HACKERTARGET_API_KEY?.trim();
   const url = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(domain)}${key ? `&apikey=${encodeURIComponent(key)}` : ""}`;
-  const txt = await getText(url, { timeoutMs: 12000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
+  const txt = await getText(url, { timeoutMs: 8000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
   if (!txt) return null;
   // Free-tier error/limit bodies are plain text without a comma-separated row.
   if (!txt.includes(",") || /api count exceeded|error|no records|invalid/i.test(txt.split("\n")[0])) return null;
@@ -342,7 +342,7 @@ async function otxPassiveDns(domain: string, cfRanges: Cidr[]): Promise<HistRow[
   if (key) headers["X-OTX-API-KEY"] = key;
   const data = await getJson<any>(
     `https://otx.alienvault.com/api/v1/indicators/domain/${encodeURIComponent(domain)}/passive_dns`,
-    { timeoutMs: 15000, headers },
+    { timeoutMs: 8000, headers },
   );
   if (!data || !Array.isArray(data.passive_dns)) return null;
   const rows: HistRow[] = [];
@@ -359,7 +359,7 @@ async function securityTrailsRows(domain: string, cfRanges: Cidr[]): Promise<His
   const key = process.env.SECURITYTRAILS_API_KEY?.trim();
   if (!key) return null;
   const data = await getJson<any>(`https://api.securitytrails.com/v1/history/${encodeURIComponent(domain)}/dns/a`, {
-    timeoutMs: 15000, headers: { apikey: key, Accept: "application/json" },
+    timeoutMs: 8000, headers: { apikey: key, Accept: "application/json" },
   });
   if (!data || !Array.isArray(data.records)) return null;
   const rows: HistRow[] = [];
@@ -379,10 +379,13 @@ async function historicalDns(domain: string, cfRanges: Cidr[]): Promise<Historic
   const merged = new Map<string, HistRow>();
   const sources: string[] = [];
 
-  const otx = await otxPassiveDns(domain, cfRanges).catch(() => null);
+  // Run both passive-DNS sources in PARALLEL (they are independent) so the two
+  // lookups don't stack sequentially into the function's time budget.
+  const [otx, st] = await Promise.all([
+    otxPassiveDns(domain, cfRanges).catch(() => null),
+    securityTrailsRows(domain, cfRanges).catch(() => null),
+  ]);
   if (otx !== null) { sources.push("AlienVault OTX"); mergeHist(merged, otx); }
-
-  const st = await securityTrailsRows(domain, cfRanges).catch(() => null);
   if (st !== null) { sources.push("SecurityTrails"); mergeHist(merged, st); }
 
   if (sources.length === 0) {
@@ -423,6 +426,13 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   const cfRanges = await loadCloudflareRanges();
   const resolver = makeResolver();
 
+  // Kick off the independent slow phases NOW so they overlap the CT + DNS work
+  // instead of stacking sequentially into the function's time budget.
+  const historicalP = historicalDns(domain, cfRanges).catch(
+    () => ({ available: false, candidates: [], note: "Historical DNS lookup failed." } as HistoricalDns),
+  );
+  const htP = hackerTargetHosts(domain, cfRanges).catch(() => null);
+
   // Candidate names: apex + www + common subs + CT-log names, capped.
   const ct = await crtshNames(domain).catch(() => []);
   const candidateNames = new Set<string>([domain, `www.${domain}`]);
@@ -461,7 +471,7 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
 
   // Additional current mappings from HackerTarget host search (free OSINT, another
   // vantage). Merge non-CDN, non-duplicate records into the exposed set.
-  const htRows = await hackerTargetHosts(domain, cfRanges).catch(() => null);
+  const htRows = await htP;
   if (htRows) {
     const seenPair = new Set(exposed.map((e) => `${e.name}|${e.ip}`));
     for (const { name, ip } of htRows) {
@@ -506,10 +516,8 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     if (p) { rec.provider = p.provider; rec.org = p.org; }
   }
 
-  // Historical DNS origin candidates (free passive-DNS OSINT + optional keys).
-  const historical = await historicalDns(domain, cfRanges).catch(
-    () => ({ available: false, candidates: [], note: "Historical DNS lookup failed." }),
-  );
+  // Historical DNS origin candidates (kicked off earlier; just await it here).
+  const historical = await historicalP;
 
   // De-duplicated candidate origins (current + CT + historical), enriched.
   const candMap = new Map<string, OriginCandidate>();

@@ -30,7 +30,19 @@ export default function OriginExposurePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: d }),
       });
-      const data = await r.json();
+      // Parse text-first: a platform timeout/crash returns a NON-JSON page, so
+      // r.json() would throw the opaque "Unexpected token 'A'..." error. Surface
+      // a readable message instead.
+      const txt = await r.text();
+      let data: any;
+      try { data = JSON.parse(txt); }
+      catch {
+        throw new Error(
+          r.status === 504 || /timeout|invocation/i.test(txt)
+            ? "The audit took too long for this domain (large certificate/DNS footprint). Please try again — partial results are cached."
+            : txt.slice(0, 160) || `Audit failed (${r.status})`,
+        );
+      }
       if (!r.ok) throw new Error(data.error || "Audit failed");
       setResult(data);
     } catch (e: any) {
