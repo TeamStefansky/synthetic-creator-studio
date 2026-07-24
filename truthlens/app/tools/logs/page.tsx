@@ -47,7 +47,7 @@ export default function LogsPage() {
       if (!r.ok) throw new Error(data.error || "Analysis failed");
       setResult(data.analysis);
       setCoord(data.coordination);
-      recordSearch("site", "log analysis", "log analysis", data);
+      recordSearch("logs", "log analysis", "log analysis", data);
     } catch (e: any) {
       setError(e.message);
     } finally {

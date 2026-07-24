@@ -167,7 +167,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
       // map/feed render immediately and we never wait on the LLM in this call.
       const json = await parse(await fetch(`/api/mentions?entity=${encodeURIComponent(e)}`));
       setData(buildSignal(json));
-      recordSearch("post", e, `SIGNAL: ${e}`, json);
+      recordSearch("signal", e, `SIGNAL: ${e}`, json);
       setContext(await ctxPromise);
       setLoading(false);
       // Phase 2 - sentiment + narratives. Collection is now cached server-side,

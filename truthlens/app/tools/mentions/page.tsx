@@ -39,7 +39,7 @@ export default function BrandMentionsPage() {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Scan failed");
       setResult(data);
-      recordSearch("post", e, `mentions: ${e}`, data);
+      recordSearch("mentions", e, `mentions: ${e}`, data);
     } catch (err: any) {
       setError(err.message);
     } finally {

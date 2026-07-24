@@ -57,7 +57,7 @@ export default function OriginExposurePage() {
       }
       if (!r.ok) throw new Error(data.error || "Audit failed");
       setResult(data);
-      recordSearch("site", d, `${d} — origin exposure`, data); // feed cross-search network
+      recordSearch("origin", d, `${d} — origin exposure`, data); // feed cross-search network
     } catch (e: any) {
       setError(e.message);
     } finally {

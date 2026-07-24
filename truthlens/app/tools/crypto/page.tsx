@@ -5,6 +5,7 @@ import { Coins, ArrowRight, ExternalLink } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import type { CryptoInfo } from "@/lib/crypto-osint";
+import { recordSearch } from "@/lib/clues/record";
 
 // Crypto OSINT - public blockchain address lookup (Bitcoin via Blockstream, EVM
 // via Blockscout). Read-only public ledger facts, cited to the explorer.
@@ -26,6 +27,7 @@ export default function CryptoPage() {
       const txt = await r.text();
       let data: any; try { data = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
       setResult(data);
+      recordSearch("crypto", a, `crypto: ${a}`, data);
     } catch (e: any) { setError(e?.message || "lookup failed"); }
     finally { setLoading(false); }
   };

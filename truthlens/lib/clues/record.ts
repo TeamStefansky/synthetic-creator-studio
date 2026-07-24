@@ -8,20 +8,22 @@ import { genId, saveLocal, type CheckRecord } from "@/lib/check/history";
 import { extractEntities } from "./extract";
 import { linkAndRecord } from "./index";
 
-export function recordSearch(type: string, input: string, headline: string, result: any): void {
+export function recordSearch(type: string, input: string, headline: string, result: any, level?: string): void {
   if (typeof window === "undefined") return;
+  const rec: CheckRecord = {
+    id: genId(),
+    type: type as CheckRecord["type"],
+    input,
+    headline: headline || input,
+    level,
+    createdAt: new Date().toISOString(),
+    result, // full result so the search reopens with its data
+  };
+  // Save to history WITH the result; if localStorage is full, retry without the
+  // (large) result blob so the history entry + entity links still persist.
+  try { saveLocal(rec); }
+  catch { try { saveLocal({ ...rec, result: undefined }); } catch { /* give up */ } }
+
   const entities = extractEntities(type, input, result);
-  if (!entities.length) return; // nothing linkable - don't clutter the index
-  try {
-    const rec: CheckRecord = {
-      id: genId(),
-      type: type as CheckRecord["type"],
-      input,
-      headline: headline || input,
-      createdAt: new Date().toISOString(),
-      // result intentionally omitted to keep localStorage small.
-    };
-    saveLocal(rec);
-    linkAndRecord(rec.id, entities);
-  } catch { /* best-effort; never break the tool */ }
+  if (entities.length) { try { linkAndRecord(rec.id, entities); } catch { /* ignore */ } }
 }

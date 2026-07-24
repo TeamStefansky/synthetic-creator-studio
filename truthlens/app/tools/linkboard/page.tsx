@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Network, ArrowRight, ChevronDown, ChevronRight, ExternalLink, ShieldQuestion } from "lucide-react";
+import { Network, ArrowRight, ChevronDown, ChevronRight, ExternalLink, ShieldQuestion, Download, Trash2 } from "lucide-react";
 
 // Force-directed operator-network graph (same component Site Report uses).
 // ssr:false - react-force-graph needs the browser.
@@ -98,6 +98,24 @@ export default function LinkBoardPage() {
   const [searchNet, setSearchNet] = useState<SearchNetwork | null>(null); // cross-search network
   useEffect(() => { setSearchNet(buildSearchNetwork()); }, []);
 
+  const exportSearchNetworkCsv = () => {
+    if (!searchNet) return;
+    const byId = new Map(searchNet.nodes.map((n) => [n.id, n]));
+    const rows: string[][] = [["search", "shared_entity", "link_type"]];
+    for (const e of searchNet.edges) {
+      rows.push([byId.get(e.source)?.label || e.source, byId.get(e.target)?.label || e.target, e.reason]);
+    }
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a"); a.href = url; a.download = "search-network.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+  const clearSearchMemory = () => {
+    if (!window.confirm("Clear the cross-search network memory in this browser? Your saved search history is kept.")) return;
+    try { localStorage.removeItem("tl:clueindex"); } catch { /* ignore */ }
+    setSearchNet(buildSearchNetwork());
+  };
+
   // Prefill + auto-run from ?domains= (used by Site Report's "Compare in Link Board").
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("domains");
@@ -118,7 +136,7 @@ export default function LinkBoardPage() {
       let data: any; try { data = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
       if (!r.ok) throw new Error(data.error || `comparison failed (${r.status})`);
       setResult(data);
-      recordSearch("site", domains.join(", "), `Link Board: ${domains.slice(0, 3).join(", ")}${domains.length > 3 ? "…" : ""}`, data);
+      recordSearch("linkboard", domains.join(", "), `Link Board: ${domains.slice(0, 3).join(", ")}${domains.length > 3 ? "…" : ""}`, data);
       setSearchNet(buildSearchNetwork()); // include this comparison in the cross-search network
     } catch (e: any) { setError(e?.message || "comparison failed"); }
     finally { setLoading(false); }
@@ -162,7 +180,11 @@ export default function LinkBoardPage() {
         <div className="card">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <div className="label-muted flex items-center gap-1"><Network className="h-3.5 w-3.5" /> Network across your searches</div>
-            <button onClick={() => setSearchNet(buildSearchNetwork())} className="text-xs text-brand-soft hover:underline">Refresh</button>
+            <div className="flex items-center gap-3 text-xs">
+              <button onClick={() => setSearchNet(buildSearchNetwork())} className="text-brand-soft hover:underline">Refresh</button>
+              <button onClick={exportSearchNetworkCsv} className="inline-flex items-center gap-1 text-brand-soft hover:underline"><Download className="h-3.5 w-3.5" /> CSV</button>
+              <button onClick={clearSearchMemory} className="inline-flex items-center gap-1 text-ink-secondary hover:text-risk-high"><Trash2 className="h-3.5 w-3.5" /> Clear</button>
+            </div>
           </div>
           <NetworkGraph network={searchNet as any} />
           <p className="mt-2 text-[11px] text-ink-secondary">

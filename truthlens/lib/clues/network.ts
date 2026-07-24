@@ -12,7 +12,7 @@ const KEY = "tl:clueindex";
 
 // Map a clue EntityKind onto the operator-network node kinds NetworkGraph knows.
 const KIND_MAP: Record<string, OperatorNetwork["nodes"][number]["kind"]> = {
-  ip: "ip", asn: "ip",
+  ip: "ip", asn: "ip", net_org: "ip",
   domain: "domain", ssl_san: "domain", email_domain: "domain",
   ga_id: "ga", adsense_id: "adsense", account: "account",
 };

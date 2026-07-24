@@ -13,6 +13,8 @@ import { fmtDate } from "@/lib/ui";
 
 const TYPE_LABEL: Record<string, string> = {
   site: "Site Report", post: "Post Check", logs: "Log Analyzer", email: "Email Tracer",
+  origin: "Origin Exposure", mentions: "Brand Mentions", signal: "SIGNAL Grid",
+  linkboard: "Link Board", sanctions: "Sanctions Screening", crypto: "Crypto OSINT",
 };
 
 export default function HistoryPage() {

@@ -5,6 +5,7 @@ import { ShieldAlert, ArrowRight, ExternalLink, PlugZap } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import type { SanctionScreen } from "@/lib/opensanctions";
+import { recordSearch } from "@/lib/clues/record";
 
 // Sanctions screening - checks a name/organization against consolidated PUBLIC
 // sanctions & watchlists (OFAC/EU/UN/UK...) via OpenSanctions. Lawful disclosure
@@ -32,6 +33,7 @@ export default function SanctionsPage() {
       const txt = await r.text();
       let data: any; try { data = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
       setResult(data);
+      recordSearch("sanctions", query, `sanctions: ${query}`, data);
     } catch (e: any) { setError(e?.message || "screening failed"); }
     finally { setLoading(false); }
   };
