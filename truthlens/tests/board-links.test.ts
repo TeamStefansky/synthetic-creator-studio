@@ -19,7 +19,9 @@ describe("compareFingerprints - meaningful vs noise", () => {
       fp("a.com", [["server_header", "nginx"], ["cms", "wordpress"], ["hosting_country", "US"]]),
       fp("b.com", [["server_header", "nginx"], ["cms", "wordpress"], ["hosting_country", "US"]]),
     ]);
-    expect(r.edges).toHaveLength(0);
+    // "no meaningful edge" = Unknown strength + null matrix cell (the pair may
+    // still be listed so the UI can reveal it as common-only, honestly labeled).
+    expect(r.edges.filter((e) => e.strength !== "Unknown")).toHaveLength(0);
     expect(r.matrix[0][1]).toBeNull();
   });
 
@@ -28,7 +30,8 @@ describe("compareFingerprints - meaningful vs noise", () => {
       fp("a.com", [["ip", "104.18.0.1"], ["asn", "AS13335"], ["as_org", "Cloudflare, Inc."]], { cdn: true, neighborCount: 9999 }),
       fp("b.com", [["ip", "104.18.0.1"], ["asn", "AS13335"], ["as_org", "Cloudflare, Inc."]], { cdn: true, neighborCount: 9999 }),
     ]);
-    expect(r.edges).toHaveLength(0);
+    expect(r.edges.filter((e) => e.strength !== "Unknown")).toHaveLength(0);
+    expect(r.matrix[0][1]).toBeNull();
   });
 
   it("a shared unique GA id draws a Strong edge", () => {

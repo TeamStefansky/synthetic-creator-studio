@@ -92,6 +92,7 @@ export default function LinkBoardPage() {
   const [result, setResult] = useState<BoardResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showAll, setShowAll] = useState(false); // reveal common/weak-only pairs too
 
   // Prefill + auto-run from ?domains= (used by Site Report's "Compare in Link Board").
   useEffect(() => {
@@ -221,14 +222,31 @@ export default function LinkBoardPage() {
           </div>
 
           {/* edges */}
-          <div className="space-y-3">
-            <div className="label-muted">Connected pairs ({result.edges.length})</div>
-            {result.edges.length === 0 ? (
-              <div className="card text-sm text-ink-secondary">No pair shares a discriminating artifact — only common-by-default facts, which don&apos;t establish a link. That is a valid, common result.</div>
-            ) : (
-              result.edges.map((e, i) => <EdgeCard key={i} edge={e} />)
-            )}
-          </div>
+          {(() => {
+            const strong = result.edges.filter((e) => e.strength !== "Unknown");
+            const visible = showAll ? result.edges : strong;
+            const commonOnly = result.edges.length - strong.length;
+            return (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="label-muted">Connected pairs ({visible.length})</div>
+                  {commonOnly > 0 && (
+                    <button onClick={() => setShowAll((v) => !v)} className="text-xs text-brand-soft hover:underline">
+                      {showAll ? "Hide" : "Show"} {commonOnly} pair(s) sharing only common infrastructure
+                    </button>
+                  )}
+                </div>
+                {visible.length === 0 ? (
+                  <div className="card text-sm text-ink-secondary">
+                    No pair shares a discriminating artifact — only common-by-default facts (which don&apos;t establish a link).
+                    {commonOnly > 0 && <> Use &ldquo;Show {commonOnly} pair(s)&rdquo; above to see them anyway, labeled as common.</>} That is a valid, common result.
+                  </div>
+                ) : (
+                  visible.map((e, i) => <EdgeCard key={i} edge={e} />)
+                )}
+              </div>
+            );
+          })()}
 
           {/* sources / collection status */}
           <div className="card">
@@ -237,7 +255,7 @@ export default function LinkBoardPage() {
               {result.fingerprints.map((f) => (
                 <span key={f.entity} title={f.errors.join("; ") || `${f.artifactCount} artifacts collected`}
                   className={`rounded-full border px-2.5 py-0.5 text-xs ${f.errors.length ? "border-yellow-500/30 bg-yellow-500/5 text-yellow-200/80" : "border-white/15 text-ink-secondary"}`}>
-                  {f.entity} · {f.artifactCount} artifact{f.artifactCount === 1 ? "" : "s"}{f.errors.length ? ` · ${f.errors.length} source issue(s)` : ""}
+                  {f.entity} · {f.artifactCount} artifact{f.artifactCount === 1 ? "" : "s"}{typeof f.authority === "number" ? ` · PR ${f.authority}` : ""}{f.errors.length ? ` · ${f.errors.length} source issue(s)` : ""}
                 </span>
               ))}
             </div>

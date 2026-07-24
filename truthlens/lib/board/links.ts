@@ -16,6 +16,7 @@ import { reverseIp } from "@/lib/reverseip";
 import { fingerprint as techFingerprint } from "@/lib/fingerprint";
 import { normalizeText, jaccard, signatureOf } from "@/lib/similarity";
 import { cacheGet, cacheSet } from "@/lib/cache";
+import { fetchOpenPageRankBulk } from "@/lib/authority";
 import { calibrateOverlap, buildPairEdge, BOARD_RUBRIC_VERSION } from "./calibrate";
 import type { Artifact, Fingerprint, BoardResult, OverlapItem, PairEdge, SourceStatus } from "./types";
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
@@ -308,8 +309,11 @@ export function compareFingerprints(fps: Fingerprint[]): BoardResult {
       if (!pruned.length) continue;
 
       const edge = buildPairEdge(A.entity, B.entity, pruned);
+      // Matrix stays calibrated (null when only common-by-default facts overlap),
+      // but we KEEP every pair that shares anything so the UI can optionally
+      // reveal common/weak overlaps too - visible, just honestly labeled.
       matrix[i][j] = matrix[j][i] = edge.strength === "Unknown" ? null : edge.strength;
-      if (edge.strength !== "Unknown") edges.push(edge);
+      edges.push(edge);
     }
   }
 
@@ -342,5 +346,14 @@ export async function runBoard(domains: string[]): Promise<BoardResult> {
   const fps = await Promise.all(uniq.map((d) => collectFingerprint(d).catch((e): Fingerprint => ({
     entity: d, artifacts: [], neighborCount: null, cdn: false, wildcardCertOrCdnIssuer: false, errors: [`collect: ${e?.message || "failed"}`],
   }))));
-  return compareFingerprints(fps);
+  const result = compareFingerprints(fps);
+  // Enrich with Open PageRank domain authority (bulk) when a key is set.
+  try {
+    const authority = await fetchOpenPageRankBulk(uniq, false);
+    result.fingerprints = result.fingerprints.map((f) => {
+      const a = authority.get(f.entity)?.rank;
+      return a != null ? { ...f, authority: a } : f;
+    });
+  } catch { /* authority is optional enrichment */ }
+  return result;
 }
