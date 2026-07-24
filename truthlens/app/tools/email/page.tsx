@@ -5,6 +5,7 @@ import { Mail, MapPin, ShieldAlert, ShieldCheck, ArrowDown } from "lucide-react"
 import type { EmailTraceResult } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import { recordSearch } from "@/lib/clues/record";
 
 // A safe, fictional sample (no real brand) that demonstrates a spoofed email:
 // "from" a bank, but sent from an unrelated host with SPF/DKIM/DMARC failing.
@@ -43,6 +44,7 @@ export default function EmailPage() {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Trace failed");
       setResult(data);
+      recordSearch("email", (data?.domain || "email"), `email trace${data?.domain ? `: ${data.domain}` : ""}`, data);
     } catch (e: any) {
       setError(e.message);
     } finally {

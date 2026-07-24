@@ -5,6 +5,7 @@ import { ScrollText, Upload, AlertTriangle, ChevronDown, ChevronRight } from "lu
 import type { LogAnalysisResult, CoordinationResult, IpAggregate } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import { recordSearch } from "@/lib/clues/record";
 
 // A tiny sample so a first-timer can see what a result looks like without having
 // to find their own logs. Mixes a search-engine bot, a datacenter burst, and a
@@ -46,6 +47,7 @@ export default function LogsPage() {
       if (!r.ok) throw new Error(data.error || "Analysis failed");
       setResult(data.analysis);
       setCoord(data.coordination);
+      recordSearch("site", "log analysis", "log analysis", data);
     } catch (e: any) {
       setError(e.message);
     } finally {

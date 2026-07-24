@@ -33,6 +33,7 @@ import { buildSourceNetwork, type NetworkNode } from "@/lib/signal-network";
 import { anomalyReport, type SeriesAnomaly } from "@/lib/signal-anomaly";
 import { borderByName, COUNTRIES, type BorderCountry } from "@/lib/geo-borders";
 import { countryName } from "@/lib/countries";
+import { recordSearch } from "@/lib/clues/record";
 
 type Filter = "all" | MentionSourceType;
 type View = "map" | "web" | "net";
@@ -166,6 +167,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
       // map/feed render immediately and we never wait on the LLM in this call.
       const json = await parse(await fetch(`/api/mentions?entity=${encodeURIComponent(e)}`));
       setData(buildSignal(json));
+      recordSearch("post", e, `SIGNAL: ${e}`, json);
       setContext(await ctxPromise);
       setLoading(false);
       // Phase 2 - sentiment + narratives. Collection is now cached server-side,

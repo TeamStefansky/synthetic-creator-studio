@@ -10,6 +10,7 @@ import {
 import type { PostCheckResult, PostVerdict } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import { recordSearch } from "@/lib/clues/record";
 
 function verdictStyle(v: PostVerdict) {
   switch (v) {
@@ -79,6 +80,7 @@ function PostCheckInner() {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Check failed");
       setRes(data);
+      recordSearch("post", t.slice(0, 80), "post check", data);
     } catch (e: any) {
       setError(e.message);
     } finally {
