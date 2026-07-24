@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Radar, Plus, X, RefreshCw, Loader2, Bell, ShieldCheck, ShieldQuestion, ShieldAlert, PlugZap } from "lucide-react";
+import { Radar, Plus, X, RefreshCw, Loader2, Bell, ShieldCheck, ShieldQuestion, ShieldAlert, PlugZap, ArrowUpRight } from "lucide-react";
 import { fmtDate } from "@/lib/ui";
 
 interface Watch {
@@ -176,6 +176,14 @@ export default function ContinuousWatch() {
                     <div className="mt-2 text-xs text-ink-secondary">
                       {w.lastCheckedAt ? <>last checked {fmtDate(w.lastCheckedAt)}</> : "not checked yet"}
                     </div>
+                    {/* Per-brand dashboard: every mention across all sources +
+                        prediction markets + world map, each with a source link. */}
+                    <Link
+                      href={`/tools/mentions?entity=${encodeURIComponent(w.name)}`}
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-brand-soft hover:underline"
+                    >
+                      Open dashboard <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
                 );
               })}

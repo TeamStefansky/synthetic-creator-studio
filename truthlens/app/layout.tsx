@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Nav from "@/components/Nav";
+import AlertsBell from "@/components/AlertsBell";
 
 export const metadata: Metadata = {
   title: "TruthLens - fake-news risk & infrastructure exposure",
@@ -30,6 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
           </div>
         </div>
+        {/* Global in-app alerts - surfaces Brand Watch escalations on every page. */}
+        <AlertsBell />
       </body>
     </html>
   );
