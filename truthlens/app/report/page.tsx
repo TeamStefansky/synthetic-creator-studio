@@ -13,6 +13,7 @@ import ScoreGauge from "@/components/ScoreGauge";
 import InfraCard from "@/components/InfraCard";
 import ContentAnalysisCard from "@/components/ContentAnalysisCard";
 import NetworkGraph from "@/components/NetworkGraph";
+import { recordSearch } from "@/lib/clues/record";
 import LoadingChecklist from "@/components/LoadingChecklist";
 import Disclaimer from "@/components/Disclaimer";
 import OsintPanel from "@/components/OsintPanel";
@@ -52,7 +53,7 @@ function ReportInner() {
         return data as Report;
       })
       .then((data) => {
-        if (!cancelled) setReport(data);
+        if (!cancelled) { setReport(data); recordSearch("site", data.domain || url, data.domain || url, data); }
       })
       .catch((e) => {
         if (!cancelled) setError(e.message || "Analysis failed");

@@ -8,6 +8,7 @@ import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import NetworkGraph from "@/components/NetworkGraph";
 import { flagEmoji, countryName } from "@/lib/countries";
+import { recordSearch } from "@/lib/clues/record";
 
 // "🇮🇱 Tel Aviv, Israel" for a record's geo (blank when unknown).
 function locLabel(country?: string, city?: string): string {
@@ -56,6 +57,7 @@ export default function OriginExposurePage() {
       }
       if (!r.ok) throw new Error(data.error || "Audit failed");
       setResult(data);
+      recordSearch("site", d, `${d} — origin exposure`, data); // feed cross-search network
     } catch (e: any) {
       setError(e.message);
     } finally {

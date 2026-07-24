@@ -12,6 +12,8 @@ import ConfidenceBadge from "@/components/ConfidenceBadge";
 import ToolIntro from "@/components/ToolIntro";
 import type { BoardResult, PairEdge } from "@/lib/board/types";
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
+import { buildSearchNetwork, type SearchNetwork } from "@/lib/clues/network";
+import { recordSearch } from "@/lib/clues/record";
 
 // Link Board - calibrated domain/infrastructure overlap. Nodes are domains/infra
 // (never people); every overlap carries evidence + an alternative; common-by-
@@ -93,6 +95,8 @@ export default function LinkBoardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(false); // reveal common/weak-only pairs too
+  const [searchNet, setSearchNet] = useState<SearchNetwork | null>(null); // cross-search network
+  useEffect(() => { setSearchNet(buildSearchNetwork()); }, []);
 
   // Prefill + auto-run from ?domains= (used by Site Report's "Compare in Link Board").
   useEffect(() => {
@@ -114,6 +118,8 @@ export default function LinkBoardPage() {
       let data: any; try { data = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
       if (!r.ok) throw new Error(data.error || `comparison failed (${r.status})`);
       setResult(data);
+      recordSearch("site", domains.join(", "), `Link Board: ${domains.slice(0, 3).join(", ")}${domains.length > 3 ? "…" : ""}`, data);
+      setSearchNet(buildSearchNetwork()); // include this comparison in the cross-search network
     } catch (e: any) { setError(e?.message || "comparison failed"); }
     finally { setLoading(false); }
   };
@@ -148,6 +154,23 @@ export default function LinkBoardPage() {
         </div>
         {error && <p className="mt-2 text-sm text-risk-high">{error}</p>}
       </div>
+
+      {/* Network across ALL your searches - an entity (IP / domain / analytics ID
+          / ASN / SSL SAN) seen in 2+ searches links those searches together.
+          Browser-local; grows as you run Site Report / Origin / Link Board. */}
+      {searchNet && searchNet.linkCount > 0 && (
+        <div className="card">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="label-muted flex items-center gap-1"><Network className="h-3.5 w-3.5" /> Network across your searches</div>
+            <button onClick={() => setSearchNet(buildSearchNetwork())} className="text-xs text-brand-soft hover:underline">Refresh</button>
+          </div>
+          <NetworkGraph network={searchNet as any} />
+          <p className="mt-2 text-[11px] text-ink-secondary">
+            {searchNet.linkCount} shared {searchNet.linkCount === 1 ? "entity links" : "entities link"} {searchNet.searchCount} of your searches
+            (IP / domain / analytics ID / ASN / TLS SAN seen in more than one search). Saved in this browser; grows as you run Site Report, Origin, and Link Board.
+          </p>
+        </div>
+      )}
 
       {!result && !loading && (
         <ToolIntro
