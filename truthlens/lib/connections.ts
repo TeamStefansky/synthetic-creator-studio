@@ -81,6 +81,9 @@ export const INTEGRATIONS: Integration[] = [
   { key: "openpagerank", label: "Open PageRank (domain authority)", category: "OSINT enrichment", envVars: ["OPENPAGERANK_KEY"], getUrl: "domcop.com/openpagerank", href: "https://www.domcop.com/openpagerank/" },
   { key: "factcheck", label: "Google Fact Check", category: "OSINT enrichment", envVars: ["GOOGLE_FACTCHECK_KEY"], getUrl: "developers.google.com/fact-check", href: "https://developers.google.com/fact-check/tools/api" },
   { key: "securitytrails", label: "SecurityTrails (historical DNS)", category: "OSINT enrichment", envVars: ["SECURITYTRAILS_API_KEY"], getUrl: "securitytrails.com", href: "https://securitytrails.com/corp/api" },
+  { key: "opensanctions", label: "OpenSanctions (sanctions/watchlist screening)", category: "OSINT enrichment", envVars: ["OPENSANCTIONS_API_KEY"], getUrl: "opensanctions.org/api", href: "https://www.opensanctions.org/api/" },
+  { key: "blockstream", label: "Blockstream (Bitcoin explorer)", category: "OSINT enrichment", envVars: [], href: "https://github.com/Blockstream/esplora/blob/master/API.md" },
+  { key: "blockscout", label: "Blockscout (EVM explorer)", category: "OSINT enrichment", envVars: [], href: "https://docs.blockscout.com/devs/apis" },
 
   // --- Nonprofit registries ---
   { key: "propublica", label: "ProPublica Nonprofit Explorer (US IRS 990)", category: "Nonprofit registries", envVars: [], href: "https://projects.propublica.org/nonprofits/api" },
