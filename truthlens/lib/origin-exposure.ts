@@ -14,6 +14,7 @@
 
 import { Resolver } from "dns/promises";
 import { getText, getJson } from "./http";
+import { enrichIp } from "./ip";
 import { cacheGet, cacheSet } from "./cache";
 
 const TTL = 24 * 60 * 60 * 1000; // per-day reproducibility
@@ -54,6 +55,9 @@ export interface OriginExposureRecord {
   /** Hosting provider inferred from public RDAP (undefined = not looked up). */
   provider?: string;
   org?: string;
+  /** Approximate geolocation of the IP (IP-geo; VPN/anycast can mislead). */
+  country?: string;
+  city?: string;
 }
 
 /** A de-duplicated candidate IP the OWNER should verify (we never confirm it). */
@@ -62,6 +66,9 @@ export interface OriginCandidate {
   version: "v4" | "v6";
   provider?: string;
   org?: string;
+  /** Approximate geolocation of the IP (IP-geo; VPN/anycast can mislead). */
+  country?: string;
+  city?: string;
   /** where it surfaced: current DNS, a CT-log hostname, or historical DNS. */
   sources: string[];
 }
@@ -505,15 +512,19 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     evidence.push(`${proxiedCount} record(s) across the checked names all resolve inside Cloudflare ranges.`);
   }
 
-  // Enrich unique exposed IPs with public RDAP provider/ASN owner (bounded).
-  const providerByIp = new Map<string, { provider?: string; org?: string }>();
+  // Enrich unique exposed IPs with public RDAP provider/ASN owner + IP-geo
+  // (country/city), fetched in parallel per IP (bounded).
+  const providerByIp = new Map<string, { provider?: string; org?: string; country?: string; city?: string }>();
   await mapLimit(uniqueExposedIps.slice(0, 25), 5, async (ip) => {
-    const p = await providerForIp(ip).catch(() => null);
-    if (p) providerByIp.set(ip, p);
+    const [p, geo] = await Promise.all([
+      providerForIp(ip).catch(() => null),
+      enrichIp(ip).catch(() => null),
+    ]);
+    if (p || geo) providerByIp.set(ip, { provider: p?.provider ?? geo?.asnOrg, org: p?.org, country: geo?.country, city: geo?.city });
   });
   for (const rec of exposed) {
     const p = providerByIp.get(rec.ip);
-    if (p) { rec.provider = p.provider; rec.org = p.org; }
+    if (p) { rec.provider = p.provider; rec.org = p.org; rec.country = p.country; rec.city = p.city; }
   }
 
   // Historical DNS origin candidates (kicked off earlier; just await it here).
@@ -523,13 +534,17 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   const candMap = new Map<string, OriginCandidate>();
   for (const rec of exposed) {
     const src = rec.source || (rec.name === domain || rec.name === `www.${domain}` ? "current DNS" : `subdomain ${rec.name}`);
-    const c = candMap.get(rec.ip) || { ip: rec.ip, version: rec.version, provider: rec.provider, org: rec.org, sources: [] };
+    const c = candMap.get(rec.ip) || { ip: rec.ip, version: rec.version, provider: rec.provider, org: rec.org, country: rec.country, city: rec.city, sources: [] };
     if (!c.sources.includes(src)) c.sources.push(src);
     candMap.set(rec.ip, c);
   }
   for (const h of historical.candidates) {
-    const p = providerByIp.get(h.ip) || (await providerForIp(h.ip).catch(() => null)) || {};
-    const c = candMap.get(h.ip) || { ip: h.ip, version: h.ip.includes(":") ? "v6" : "v4", provider: p.provider, org: p.org, sources: [] };
+    let p = providerByIp.get(h.ip);
+    if (!p) {
+      const [pr, geo] = await Promise.all([providerForIp(h.ip).catch(() => null), enrichIp(h.ip).catch(() => null)]);
+      p = { provider: pr?.provider ?? geo?.asnOrg, org: pr?.org, country: geo?.country, city: geo?.city };
+    }
+    const c = candMap.get(h.ip) || { ip: h.ip, version: h.ip.includes(":") ? "v6" : "v4", provider: p.provider, org: p.org, country: p.country, city: p.city, sources: [] };
     if (!c.sources.includes("historical DNS")) c.sources.push("historical DNS");
     candMap.set(h.ip, c);
   }

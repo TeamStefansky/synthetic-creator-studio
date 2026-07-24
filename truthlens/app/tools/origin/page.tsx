@@ -140,6 +140,7 @@ export default function OriginExposurePage() {
                       <th className="py-1 pr-4 font-medium">Name</th>
                       <th className="py-1 pr-4 font-medium">IP</th>
                       <th className="py-1 pr-4 font-medium">Provider</th>
+                      <th className="py-1 pr-4 font-medium">Location</th>
                       <th className="py-1 pr-4 font-medium">Source</th>
                       <th className="py-1 font-medium">Version</th>
                     </tr>
@@ -150,6 +151,7 @@ export default function OriginExposurePage() {
                         <td className="py-1 pr-4 text-ink">{r.name}</td>
                         <td className="py-1 pr-4 text-risk-high">{r.ip}</td>
                         <td className="py-1 pr-4 text-ink-secondary">{r.provider || r.org || "-"}</td>
+                        <td className="py-1 pr-4 text-ink-secondary">{[r.city, r.country].filter(Boolean).join(", ") || "-"}</td>
                         <td className="py-1 pr-4 text-ink-secondary">{r.source || "current DNS"}</td>
                         <td className="py-1 text-ink-secondary">{r.version}</td>
                       </tr>
