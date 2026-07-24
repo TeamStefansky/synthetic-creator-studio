@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { ShieldAlert, ShieldCheck, Server, HelpCircle, ArrowRight } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ShieldAlert, ShieldCheck, Server, HelpCircle, ArrowRight, MapPin } from "lucide-react";
 import type { OriginExposureReport, OriginExposureBand } from "@/lib/origin-exposure";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import MentionsMap from "@/components/MentionsMap";
+import { flagEmoji, countryName } from "@/lib/countries";
+import { centroidForCountry, type CountryCount } from "@/lib/mentions-map";
+
+// "🇮🇱 Tel Aviv, Israel" for a record's geo (blank when unknown).
+function locLabel(country?: string, city?: string): string {
+  if (!country && !city) return "";
+  const name = country ? (countryName(country) || country) : "";
+  const flag = country ? flagEmoji(country) : "";
+  return `${flag ? flag + " " : ""}${[city, name].filter(Boolean).join(", ")}`;
+}
 
 const BAND_UI: Record<OriginExposureBand, { label: string; cls: string; Icon: any }> = {
   possible_exposure: { label: "Possible origin exposure", cls: "text-risk-high", Icon: ShieldAlert },
@@ -53,6 +64,21 @@ export default function OriginExposurePage() {
   };
 
   const band = result ? BAND_UI[result.band] : null;
+
+  // Exposed + historical origin IPs grouped by country centroid, for the map.
+  const originGeo = useMemo<CountryCount[]>(() => {
+    if (!result) return [];
+    const by = new Map<string, CountryCount>();
+    const add = (country?: string) => {
+      const c = centroidForCountry(country);
+      if (!c) return;
+      const e = by.get(c.code) || { key: c.code, label: countryName(c.code) || c.code, flag: flagEmoji(c.code), count: 0, code: c.code, lat: c.lat, lon: c.lon };
+      e.count++; by.set(c.code, e);
+    };
+    for (const r of result.exposed) add(r.country);
+    for (const h of result.historical.candidates) add(h.country);
+    return [...by.values()];
+  }, [result]);
 
   return (
     <div className="space-y-6">
@@ -151,7 +177,7 @@ export default function OriginExposurePage() {
                         <td className="py-1 pr-4 text-ink">{r.name}</td>
                         <td className="py-1 pr-4 text-risk-high">{r.ip}</td>
                         <td className="py-1 pr-4 text-ink-secondary">{r.provider || r.org || "-"}</td>
-                        <td className="py-1 pr-4 text-ink-secondary">{[r.city, r.country].filter(Boolean).join(", ") || "-"}</td>
+                        <td className="py-1 pr-4 text-ink-secondary">{locLabel(r.country, r.city) || "-"}</td>
                         <td className="py-1 pr-4 text-ink-secondary">{r.source || "current DNS"}</td>
                         <td className="py-1 text-ink-secondary">{r.version}</td>
                       </tr>
@@ -165,17 +191,26 @@ export default function OriginExposurePage() {
             </div>
           )}
 
+          {originGeo.length > 0 && (
+            <div className="card">
+              <div className="label-muted mb-2 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Exposed origins on the map</div>
+              <MentionsMap data={originGeo} />
+              <p className="mt-2 text-[11px] text-ink-secondary">Approximate IP-geolocation - VPN / anycast / CDN can shift the apparent location; confirm before acting.</p>
+            </div>
+          )}
+
           <div className="card">
             <div className="label-muted mb-2">Historical DNS (previously-exposed origins)</div>
             {result.historical.available ? (
               result.historical.candidates.length > 0 ? (
                 <div className="overflow-x-auto scroll-thin">
                   <table className="w-full text-left text-sm">
-                    <thead className="text-ink-secondary"><tr><th className="py-1 pr-4 font-medium">IP</th><th className="py-1 pr-4 font-medium">First seen</th><th className="py-1 font-medium">Last seen</th></tr></thead>
+                    <thead className="text-ink-secondary"><tr><th className="py-1 pr-4 font-medium">IP</th><th className="py-1 pr-4 font-medium">Location</th><th className="py-1 pr-4 font-medium">First seen</th><th className="py-1 font-medium">Last seen</th></tr></thead>
                     <tbody className="font-mono text-xs">
                       {result.historical.candidates.map((h, i) => (
                         <tr key={i} className="border-t border-white/5">
                           <td className="py-1 pr-4 text-risk-unknown">{h.ip}</td>
+                          <td className="py-1 pr-4 text-ink-secondary">{locLabel(h.country, h.city) || "-"}</td>
                           <td className="py-1 pr-4 text-ink-secondary">{h.firstSeen || "-"}</td>
                           <td className="py-1 text-ink-secondary">{h.lastSeen || "-"}</td>
                         </tr>

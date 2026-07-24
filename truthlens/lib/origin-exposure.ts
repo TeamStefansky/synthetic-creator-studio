@@ -75,7 +75,7 @@ export interface OriginCandidate {
 
 export interface HistoricalDns {
   available: boolean;
-  candidates: { ip: string; firstSeen?: string; lastSeen?: string }[];
+  candidates: { ip: string; firstSeen?: string; lastSeen?: string; country?: string; city?: string; provider?: string }[];
   note: string;
 }
 
@@ -544,6 +544,8 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
       const [pr, geo] = await Promise.all([providerForIp(h.ip).catch(() => null), enrichIp(h.ip).catch(() => null)]);
       p = { provider: pr?.provider ?? geo?.asnOrg, org: pr?.org, country: geo?.country, city: geo?.city };
     }
+    // annotate the historical row so the Historical DNS table can show location
+    h.country = p.country; h.city = p.city; h.provider = p.provider;
     const c = candMap.get(h.ip) || { ip: h.ip, version: h.ip.includes(":") ? "v6" : "v4", provider: p.provider, org: p.org, country: p.country, city: p.city, sources: [] };
     if (!c.sources.includes("historical DNS")) c.sources.push("historical DNS");
     candMap.set(h.ip, c);
