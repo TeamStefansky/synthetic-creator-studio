@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { ShieldAlert, ShieldCheck, Server, HelpCircle, ArrowRight, MapPin } from "lucide-react";
+import { ShieldAlert, ShieldCheck, Server, HelpCircle, ArrowRight, Network as NetIcon } from "lucide-react";
 import type { OriginExposureReport, OriginExposureBand } from "@/lib/origin-exposure";
+import type { OperatorNetwork } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
-import MentionsMap from "@/components/MentionsMap";
+import NetworkGraph from "@/components/NetworkGraph";
 import { flagEmoji, countryName } from "@/lib/countries";
-import { centroidForCountry, type CountryCount } from "@/lib/mentions-map";
 
 // "🇮🇱 Tel Aviv, Israel" for a record's geo (blank when unknown).
 function locLabel(country?: string, city?: string): string {
@@ -65,19 +65,38 @@ export default function OriginExposurePage() {
 
   const band = result ? BAND_UI[result.band] : null;
 
-  // Exposed + historical origin IPs grouped by country centroid, for the map.
-  const originGeo = useMemo<CountryCount[]>(() => {
-    if (!result) return [];
-    const by = new Map<string, CountryCount>();
-    const add = (country?: string) => {
-      const c = centroidForCountry(country);
-      if (!c) return;
-      const e = by.get(c.code) || { key: c.code, label: countryName(c.code) || c.code, flag: flagEmoji(c.code), count: 0, code: c.code, lat: c.lat, lon: c.lon };
-      e.count++; by.set(c.code, e);
+  // Origin network: domain -> subdomains -> exposed/historical IPs (with geo on
+  // the IP label). Shared IPs connect multiple subdomains automatically. Rendered
+  // as the OSINT-style force-directed graph.
+  const originNetwork = useMemo<OperatorNetwork>(() => {
+    const nodes = new Map<string, OperatorNetwork["nodes"][number]>();
+    const edges: OperatorNetwork["edges"] = [];
+    const seen = new Set<string>();
+    const addEdge = (source: string, target: string, reason: string) => {
+      const k = `${source}|${target}|${reason}`;
+      if (source === target || seen.has(k)) return;
+      seen.add(k); edges.push({ source, target, reason });
     };
-    for (const r of result.exposed) add(r.country);
-    for (const h of result.historical.candidates) add(h.country);
-    return [...by.values()];
+    if (!result) return { nodes: [], edges: [] };
+    const dom = result.domain;
+    nodes.set(dom, { id: dom, label: dom, kind: "target" });
+    const ipLabel = (ip: string, country?: string, city?: string) => {
+      const loc = [city, country && (countryName(country) || country)].filter(Boolean).join(", ");
+      return loc ? `${ip}  ${flagEmoji(country)} ${loc}` : ip;
+    };
+    for (const r of result.exposed) {
+      const nameId = r.name && r.name !== dom ? r.name : dom;
+      if (nameId !== dom) { nodes.set(nameId, { id: nameId, label: r.name, kind: "domain" }); addEdge(dom, nameId, "subdomain"); }
+      const ipId = `ip:${r.ip}`;
+      nodes.set(ipId, { id: ipId, label: ipLabel(r.ip, r.country, r.city), kind: "ip", flaggedFake: true });
+      addEdge(nameId, ipId, r.source || "resolves outside CDN");
+    }
+    for (const h of result.historical.candidates) {
+      const ipId = `ip:${h.ip}`;
+      if (!nodes.has(ipId)) nodes.set(ipId, { id: ipId, label: ipLabel(h.ip, h.country, h.city), kind: "ip" });
+      addEdge(dom, ipId, "historical origin");
+    }
+    return { nodes: [...nodes.values()], edges };
   }, [result]);
 
   return (
@@ -191,11 +210,11 @@ export default function OriginExposurePage() {
             </div>
           )}
 
-          {originGeo.length > 0 && (
+          {originNetwork.nodes.length > 1 && (
             <div className="card">
-              <div className="label-muted mb-2 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Exposed origins on the map</div>
-              <MentionsMap data={originGeo} />
-              <p className="mt-2 text-[11px] text-ink-secondary">Approximate IP-geolocation - VPN / anycast / CDN can shift the apparent location; confirm before acting.</p>
+              <div className="label-muted mb-2 flex items-center gap-1"><NetIcon className="h-3.5 w-3.5" /> Origin network map</div>
+              <NetworkGraph network={originNetwork} />
+              <p className="mt-2 text-[11px] text-ink-secondary">Domain → subdomains → exposed / historical origin IPs (geolocation on each IP). Shared IPs link multiple names. Approximate IP-geo; confirm before acting.</p>
             </div>
           )}
 
