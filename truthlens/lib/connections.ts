@@ -24,6 +24,9 @@ export interface Integration {
   envVars: string[];
   /** true = any ONE of envVars is enough (e.g. KV vs Upstash). */
   anyOf?: boolean;
+  /** connected when ANY one of these groups has ALL its vars present (e.g. a
+   *  URL+TOKEN pair). Use for creds that are only usable together. */
+  pairs?: string[][];
   /** Where to obtain the key (shown in the not-connected checklist). */
   getUrl?: string;
   /** Link to the source / provider (docs or signup). Shown for every source. */
@@ -65,7 +68,7 @@ export const INTEGRATIONS: Integration[] = [
   { key: "acled", label: "ACLED (political violence)", category: "Geopolitics & forecast", envVars: ["ACLED_KEY", "ACLED_EMAIL"], getUrl: "acleddata.com / myACLED", href: "https://acleddata.com/api-documentation/" },
 
   // --- Persistence ---
-  { key: "kv", label: "KV store (cache + monitor history)", category: "Persistence", envVars: ["KV_REST_API_URL", "KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"], anyOf: true, getUrl: "Vercel KV integration, or Upstash Redis", href: "https://vercel.com/docs/storage/vercel-kv" },
+  { key: "kv", label: "KV store (cache + monitor history)", category: "Persistence", envVars: ["KV_REST_API_URL", "KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"], pairs: [["KV_REST_API_URL", "KV_REST_API_TOKEN"], ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"]], getUrl: "Vercel KV integration, or Upstash Redis (needs BOTH a REST URL and a REST TOKEN)", href: "https://vercel.com/docs/storage/vercel-kv" },
 
   // --- Social authenticity ---
   { key: "instagram", label: "Instagram (Meta Graph business discovery)", category: "Social (authenticity)", envVars: ["META_GRAPH_TOKEN", "IG_USER_ID"], getUrl: "developers.facebook.com (App Review pending)", href: "https://developers.facebook.com/docs/instagram-api/reference/ig-user/business_discovery" },
@@ -102,6 +105,11 @@ export function connectionStatus(): ConnStatus[] {
     let missing: string[] = [];
     if (keyless) {
       connected = true;
+    } else if (i.pairs) {
+      // connected only when at least one full group (e.g. URL+TOKEN) is present -
+      // a lone URL or lone token is NOT usable and must not read as connected.
+      connected = i.pairs.some((group) => group.every(present));
+      missing = connected ? [] : (i.pairs.find((g) => g.some(present)) || i.pairs[0]).filter((v) => !present(v));
     } else if (i.anyOf) {
       connected = i.envVars.some(present);
       missing = connected ? [] : i.envVars;
