@@ -81,6 +81,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
   const [pane, setPane] = useState<"left" | "right">("left");
   const [dims, setDims] = useState({ vw: 0, vh: 0 });
   const [tf, setTf] = useState<Tf>({ k: 1, tx: 0, ty: 0 });
+  const [handTool, setHandTool] = useState(false); // explicit pan/grab mode
   const [reduceMotion, setReduceMotion] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -521,7 +522,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
   }, [view, zoomAt, clampTf]);
 
   const selectMention = (idx: number, fromMap: boolean) => {
-    if (dragging.current) return;
+    if (dragging.current || handTool) return; // hand tool = pure pan, no select
     setSelectedNode(null);
     setSelected(idx);
     if (fromMap) cardRefs.current[idx]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -641,7 +642,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
         {/* ---- map zone ---- */}
         <div
           ref={mapzoneRef}
-          className="sg-mapzone"
+          className={`sg-mapzone${handTool && view !== "net" ? " sg-hand" : ""}`}
           onClick={(e) => {
             if (dragging.current) return;
             const t = e.target as HTMLElement;
@@ -826,6 +827,8 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
 
           {view !== "net" && (
             <div className="sg-zoomctl">
+              <button aria-label="Hand tool (drag to pan)" title="Hand tool - drag to pan" aria-pressed={handTool}
+                className={handTool ? "sg-on" : ""} onClick={() => setHandTool((v) => !v)}>✋</button>
               <button aria-label="Zoom in" onClick={() => zoomAt(dims.vw / 2, dims.vh / 2, 1.5)}>+</button>
               <button aria-label="Zoom out" onClick={() => zoomAt(dims.vw / 2, dims.vh / 2, 0.66)}>−</button>
               <button aria-label="Reset view" onClick={() => setTf({ k: 1, tx: 0, ty: 0 })}>⌂</button>
@@ -1358,6 +1361,10 @@ const CSS = `
   width:30px;height:30px;font-size:15px;line-height:1;font-family:var(--sg-mono);cursor:pointer}
 .sg-zoomctl button:last-child{border-bottom:0}
 .sg-zoomctl button:hover{color:var(--sg-accent)}
+.sg-zoomctl button.sg-on{color:var(--color-on-primary);background-image:var(--gradient-brand);font-weight:700}
+.sg-mapzone.sg-hand{cursor:grab}
+.sg-mapzone.sg-hand:active{cursor:grabbing}
+.sg-mapzone.sg-hand .sg-marker{cursor:grab}
 .sg-webhint{position:absolute;left:14px;bottom:10px;font-size:10px;color:var(--sg-dim);
   letter-spacing:.12em;pointer-events:none;max-width:70%}
 .sg-threadbar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:25;
