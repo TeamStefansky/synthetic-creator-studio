@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Coins, ArrowRight, ExternalLink } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
@@ -31,6 +31,13 @@ export default function CryptoPage() {
     } catch (e: any) { setError(e?.message || "lookup failed"); }
     finally { setLoading(false); }
   };
+
+  // Prefill + auto-run from ?address= (used by cross-tool pivots).
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("address");
+    if (v && v.trim()) { setAddr(v.trim()); lookup(v.trim()); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">

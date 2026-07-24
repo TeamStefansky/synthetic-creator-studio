@@ -7,6 +7,7 @@ import { Network, ArrowRight, ChevronDown, ChevronRight, ExternalLink, ShieldQue
 // Force-directed operator-network graph (same component Site Report uses).
 // ssr:false - react-force-graph needs the browser.
 const NetworkGraph = dynamic(() => import("@/components/NetworkGraph"), { ssr: false });
+import CaseBoard from "@/components/CaseBoard";
 import Disclaimer from "@/components/Disclaimer";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import ToolIntro from "@/components/ToolIntro";
@@ -96,6 +97,8 @@ export default function LinkBoardPage() {
   const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(false); // reveal common/weak-only pairs too
   const [searchNet, setSearchNet] = useState<SearchNetwork | null>(null); // cross-search network
+  const [boardKey, setBoardKey] = useState(0); // bump to rebuild the case board
+  const refreshBoard = () => { setSearchNet(buildSearchNetwork()); setBoardKey((k) => k + 1); };
   useEffect(() => { setSearchNet(buildSearchNetwork()); }, []);
 
   const exportSearchNetworkCsv = () => {
@@ -113,7 +116,7 @@ export default function LinkBoardPage() {
   const clearSearchMemory = () => {
     if (!window.confirm("Clear the cross-search network memory in this browser? Your saved search history is kept.")) return;
     try { localStorage.removeItem("tl:clueindex"); } catch { /* ignore */ }
-    setSearchNet(buildSearchNetwork());
+    refreshBoard();
   };
 
   // Prefill + auto-run from ?domains= (used by Site Report's "Compare in Link Board").
@@ -137,7 +140,7 @@ export default function LinkBoardPage() {
       if (!r.ok) throw new Error(data.error || `comparison failed (${r.status})`);
       setResult(data);
       recordSearch("linkboard", domains.join(", "), `Link Board: ${domains.slice(0, 3).join(", ")}${domains.length > 3 ? "…" : ""}`, data);
-      setSearchNet(buildSearchNetwork()); // include this comparison in the cross-search network
+      refreshBoard(); // include this comparison in the cross-search network + case board
     } catch (e: any) { setError(e?.message || "comparison failed"); }
     finally { setLoading(false); }
   };
@@ -173,6 +176,11 @@ export default function LinkBoardPage() {
         {error && <p className="mt-2 text-sm text-risk-high">{error}</p>}
       </div>
 
+      {/* Conclusions layer - "were connections found, how strong, what next" -
+          synthesised from the same cross-search clue index. Shown whenever the
+          board has at least one shared entity linking 2+ searches. */}
+      {searchNet && searchNet.linkCount > 0 && <CaseBoard refreshKey={boardKey} />}
+
       {/* Network across ALL your searches - an entity (IP / domain / analytics ID
           / ASN / SSL SAN) seen in 2+ searches links those searches together.
           Browser-local; grows as you run Site Report / Origin / Link Board. */}
@@ -181,7 +189,7 @@ export default function LinkBoardPage() {
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <div className="label-muted flex items-center gap-1"><Network className="h-3.5 w-3.5" /> Network across your searches</div>
             <div className="flex items-center gap-3 text-xs">
-              <button onClick={() => setSearchNet(buildSearchNetwork())} className="text-brand-soft hover:underline">Refresh</button>
+              <button onClick={refreshBoard} className="text-brand-soft hover:underline">Refresh</button>
               <button onClick={exportSearchNetworkCsv} className="inline-flex items-center gap-1 text-brand-soft hover:underline"><Download className="h-3.5 w-3.5" /> CSV</button>
               <button onClick={clearSearchMemory} className="inline-flex items-center gap-1 text-ink-secondary hover:text-risk-high"><Trash2 className="h-3.5 w-3.5" /> Clear</button>
             </div>

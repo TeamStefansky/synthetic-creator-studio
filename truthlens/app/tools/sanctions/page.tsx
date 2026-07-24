@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldAlert, ArrowRight, ExternalLink, PlugZap } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
@@ -37,6 +37,13 @@ export default function SanctionsPage() {
     } catch (e: any) { setError(e?.message || "screening failed"); }
     finally { setLoading(false); }
   };
+
+  // Prefill + auto-run from ?q= (used by Case Board "Next: Screen operator").
+  useEffect(() => {
+    const v = new URLSearchParams(window.location.search).get("q");
+    if (v && v.trim().length >= 2) { setQ(v.trim()); screen(v.trim()); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-6">

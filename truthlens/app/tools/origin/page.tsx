@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ShieldAlert, ShieldCheck, Server, HelpCircle, ArrowRight, Network as NetIcon } from "lucide-react";
 import type { OriginExposureReport, OriginExposureBand } from "@/lib/origin-exposure";
 import type { OperatorNetwork } from "@/lib/types";
@@ -64,6 +64,13 @@ export default function OriginExposurePage() {
       setLoading(false);
     }
   };
+
+  // Prefill + auto-run from ?domain= (used by Case Board "Next: Origin Exposure").
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("domain");
+    if (q && q.trim().length >= 2) { setDomain(q.trim()); audit(q.trim()); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const band = result ? BAND_UI[result.band] : null;
 
