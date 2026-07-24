@@ -5,8 +5,12 @@
 // endpoints only; a source without its key renders "not connected", never faked.
 // Failure of one source never aborts the batch.
 //
-// Sources:
+// Sources (federated - there is NO single global nonprofit registry; each
+// jurisdiction runs its own and only some expose an official public API. We
+// connect the ones that do and show the rest honestly as "not connected"):
 //   - ProPublica Nonprofit Explorer (US IRS 990) - keyless, public.
+//   - Israel רשם העמותות via data.gov.il CKAN - keyless, official open data.
+//   - GLEIF worldwide Legal Entity Identifier index - keyless (every continent).
 //   - UK Charity Commission Register - official API, needs CHARITY_COMMISSION_KEY.
 
 import { getJson } from "@/lib/http";
@@ -150,7 +154,104 @@ const charityCommission: NgoSource = {
   },
 };
 
-export const NGO_SOURCES: NgoSource[] = [propublica, charityCommission];
+// ---- Israel - רשם העמותות via data.gov.il CKAN (keyless, official) ----------
+// Israel's Corporations Authority publishes the associations (עמותות) register
+// on the government open-data portal. We self-discover the datastore resource id
+// (it drifts over time) via CKAN package_search, cached per process, so no
+// fragile hardcoded id. Override with ISRAEL_NGO_RESOURCE_ID if ever needed.
+
+const IL_BASE = "https://data.gov.il/api/3/action";
+let ilResourceId: string | null | undefined; // undefined = not looked up yet
+
+async function israelResourceId(): Promise<string | null> {
+  if (ilResourceId !== undefined) return ilResourceId;
+  if (process.env.ISRAEL_NGO_RESOURCE_ID) return (ilResourceId = process.env.ISRAEL_NGO_RESOURCE_ID);
+  try {
+    const data = await getJson<any>(`${IL_BASE}/package_search?q=${encodeURIComponent("עמותות")}&rows=10`, {
+      timeoutMs: 12000, headers: { "User-Agent": UA },
+    });
+    const pkgs: any[] = data?.result?.results || [];
+    // Prefer a resource that clearly is the associations register and is queryable.
+    for (const p of pkgs) for (const r of p.resources || []) {
+      if (r.datastore_active && /(עמות|amuta|ngo|nonprofit|association)/i.test(`${r.name || ""} ${p.title || ""} ${p.name || ""}`)) return (ilResourceId = r.id);
+    }
+    for (const p of pkgs) for (const r of p.resources || []) if (r.datastore_active) return (ilResourceId = r.id);
+  } catch { /* fall through to null */ }
+  return (ilResourceId = null);
+}
+
+/** Case/space-insensitive lookup of the first row field whose key matches any hint. */
+function fieldByHint(row: Record<string, any>, hints: RegExp): string | undefined {
+  for (const [k, v] of Object.entries(row)) {
+    if (hints.test(k) && v != null && String(v).trim()) return String(v).trim();
+  }
+  return undefined;
+}
+
+const israel: NgoSource = {
+  name: "israel",
+  available: () => true,
+  reason: "Israeli associations register (רשם העמותות) via data.gov.il - keyless.",
+  async search(q) {
+    const resource = await israelResourceId();
+    if (!resource) throw new Error("could not locate the Israeli registry dataset on data.gov.il");
+    const url = `${IL_BASE}/datastore_search?resource_id=${encodeURIComponent(resource)}&q=${encodeURIComponent(q)}&limit=25`;
+    const data = await getJson<any>(url, { timeoutMs: 15000, headers: { "User-Agent": UA } });
+    const rows: any[] = data?.result?.records || [];
+    return rows.map((row): NgoRecord => {
+      const regId = fieldByHint(row, /(מספר.?עמותה|מספר.?ארגון|association.?number|registration)/i);
+      const name = fieldByHint(row, /(שם.?עמותה|שם.?ארגון|שם.?בעברית|organization|charity.?name|name)/i) || "(ללא שם)";
+      return {
+        source: "israel",
+        id: `il-amuta:${regId || name}`,
+        name,
+        country: "IL",
+        registrationId: regId,
+        status: fieldByHint(row, /(סטטוס|מצב|status)/i),
+        category: fieldByHint(row, /(מטרה|מטרות|סיווג|תחום|category|purpose)/i),
+        city: fieldByHint(row, /(עיר|ישוב|יישוב|city)/i),
+        // The registry entry on the official Guidestar/רשות התאגידים portal.
+        url: regId ? `https://www.guidestar.org.il/organization/${regId}` : undefined,
+      };
+    });
+  },
+};
+
+// ---- GLEIF - worldwide Legal Entity Identifier index (keyless, official) -----
+// Covers legal entities on every continent (companies AND the many NGOs/nonprofits
+// that hold an LEI). The genuinely global backbone: name, country, legal form and
+// registration status, cited to the official GLEIF record. Organization-level only.
+
+const gleif: NgoSource = {
+  name: "gleif",
+  available: () => true,
+  reason: "GLEIF worldwide legal-entity index - keyless.",
+  async search(q) {
+    const url = `https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=${encodeURIComponent(q)}&page%5Bsize%5D=20`;
+    const data = await getJson<any>(url, { timeoutMs: 15000, headers: { "User-Agent": UA, Accept: "application/vnd.api+json" } });
+    const rows: any[] = data?.data || [];
+    return rows.map((row): NgoRecord => {
+      const a = row?.attributes || {};
+      const ent = a.entity || {};
+      const addr = ent.legalAddress || {};
+      const lei = a.lei || row.id;
+      return {
+        source: "gleif",
+        id: `lei:${lei}`,
+        name: ent.legalName?.name || "(unnamed)",
+        country: (addr.country || ent.jurisdiction || "").toString().toUpperCase(),
+        registrationId: lei,
+        classification: ent.legalForm?.id && ent.legalForm.id !== "8888" ? ent.legalForm.id : undefined,
+        status: a.registration?.status || ent.status,
+        city: addr.city,
+        region: addr.region,
+        url: lei ? `https://search.gleif.org/#/record/${lei}` : undefined,
+      };
+    });
+  },
+};
+
+export const NGO_SOURCES: NgoSource[] = [propublica, israel, gleif, charityCommission];
 
 /** Run every registry in parallel, isolating failures. */
 export async function collectNgo(query: string): Promise<NgoResult[]> {

@@ -47,9 +47,10 @@ export default function NgoPage() {
           <h1 className="font-display text-2xl font-bold">Nonprofit <span className="gradient-text">Registry</span></h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          Look up nonprofits / NGOs in public regulatory registries - US IRS Form 990 (ProPublica
-          Nonprofit Explorer) and the UK Charity Commission (with a key). Organization-level facts
-          from public filings only: registration ID, classification, category and reported financials.
+          Look up nonprofits / NGOs across public regulatory registries worldwide - US IRS Form 990
+          (ProPublica), Israel&rsquo;s רשם העמותות (data.gov.il), the worldwide GLEIF legal-entity
+          index (every continent), and the UK Charity Commission (with a key). Organization-level
+          facts from public filings only: registration ID, classification, category and financials.
         </p>
       </div>
 
@@ -76,11 +77,11 @@ export default function NgoPage() {
           examplesLabel="Try it"
           examples={[{ label: "Search \"Red Cross\"", onClick: () => { setQ("Red Cross"); search("Red Cross"); } }]}
           legend={[
-            { label: "US (IRS 990)", tone: "neutral", text: "ProPublica Nonprofit Explorer - keyless." },
+            { label: "US / Israel / worldwide", tone: "legit", text: "IRS 990, רשם העמותות, and GLEIF (global) - all keyless." },
             { label: "UK charities", tone: "unknown", text: "Charity Commission - set a key to enable." },
             { label: "Organizations only", tone: "neutral", text: "no trustee/officer person records." },
           ]}
-          note="Financial figures are as filed with the regulator; classification/category are the registry's own, not a judgement."
+          note="No single global nonprofit registry exists - each jurisdiction runs its own. We federate the official public registers that expose an API and show any region without one honestly as 'not connected', never faked. Figures are as filed with the regulator; classification/category are the registry's own, not a judgement."
         />
       )}
 
