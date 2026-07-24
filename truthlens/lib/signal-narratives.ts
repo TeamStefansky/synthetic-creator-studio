@@ -94,7 +94,10 @@ ${withText.map((r) => `${r.i}|${r.t}`).join("\n")}
 """`;
 
   async function once(): Promise<NarrativeThread[] | null> {
-    const client = new Anthropic({ apiKey: key });
+    // Fail fast (no retries + hard timeout) so a slow model degrades to an
+    // honest "unavailable" result rather than hanging the serverless function
+    // past maxDuration and producing a bodyless FUNCTION_INVOCATION_TIMEOUT.
+    const client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: 28_000 });
     const msg = await client.messages.create({
       model: LLM_MODEL, max_tokens: 1500, system,
       messages: [{ role: "user", content: user }],

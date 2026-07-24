@@ -125,7 +125,11 @@ ${lines.join("\n")}
 """`;
 
   async function once(): Promise<MentionSentiment[] | null> {
-    const client = new Anthropic({ apiKey: key });
+    // Fail fast: no SDK retries and a hard per-call timeout so a slow/rate-
+    // limited model degrades to an honest "unavailable" result instead of
+    // hanging the whole serverless function past its maxDuration (which returns
+    // FUNCTION_INVOCATION_TIMEOUT with no JSON body to the client).
+    const client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: 28_000 });
     const msg = await client.messages.create({
       model: LLM_MODEL, max_tokens: 2000, system,
       messages: [{ role: "user", content: user }],

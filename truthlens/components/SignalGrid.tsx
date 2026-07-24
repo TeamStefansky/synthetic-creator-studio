@@ -66,6 +66,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
   const [data, setData] = useState<SignalData | null>(null);
   const [context, setContext] = useState<SignalContext | null>(null);
   const [loading, setLoading] = useState(false);
+  const [enriching, setEnriching] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState(-1);
@@ -149,24 +150,35 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     setFilter("all");
     setView("map");
     setStep(0);
+    const parse = async (r: Response): Promise<MentionsApiResponse & { error?: string }> => {
+      const txt = await r.text();
+      let json: MentionsApiResponse & { error?: string };
+      try { json = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
+      if (!r.ok) throw new Error(json.error || `scan failed (${r.status})`);
+      return json;
+    };
     try {
       const ctxPromise = fetch(`/api/signal-context?entity=${encodeURIComponent(e)}`)
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null);
-      const r = await fetch(`/api/mentions?entity=${encodeURIComponent(e)}&sentiment=1&narratives=1`);
-      const txt = await r.text();
-      let json: MentionsApiResponse & { error?: string };
-      try {
-        json = JSON.parse(txt);
-      } catch {
-        throw new Error(txt.slice(0, 160) || "unreadable response");
-      }
-      if (!r.ok) throw new Error(json.error || `scan failed (${r.status})`);
+      // Phase 1 - mentions only. Fast (collection is bounded + cached), so the
+      // map/feed render immediately and we never wait on the LLM in this call.
+      const json = await parse(await fetch(`/api/mentions?entity=${encodeURIComponent(e)}`));
       setData(buildSignal(json));
       setContext(await ctxPromise);
+      setLoading(false);
+      // Phase 2 - sentiment + narratives. Collection is now cached server-side,
+      // so this call only does the (bounded, fail-fast) LLM work. Kept separate
+      // so a slow model can never time out the whole scan; on failure we keep
+      // the phase-1 picture and the analysis panels stay honestly "unavailable".
+      setEnriching(true);
+      try {
+        const enriched = await parse(await fetch(`/api/mentions?entity=${encodeURIComponent(e)}&sentiment=1&narratives=1`));
+        setData(buildSignal(enriched));
+      } catch { /* keep phase-1 data; enrichment stays unavailable */ }
+      finally { setEnriching(false); }
     } catch (err: any) {
       setError(err?.message || "scan failed");
-    } finally {
       setLoading(false);
     }
   }, [entity]);
@@ -917,7 +929,9 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
 
         {/* ---- right: analysis ---- */}
         <aside className={`sg-right ${pane === "right" ? "sg-show" : ""}`}>
-          <div className="sg-ph"><i />ANALYSIS</div>
+          <div className="sg-ph"><i />ANALYSIS
+            {enriching && <span style={{ marginLeft: "auto", color: "var(--sg-accent)" }}>analyzing…</span>}
+          </div>
           <div className="sg-scroll">
             <div className={`sg-summary ${data ? "" : "sg-empty"}`} dir="auto">
               {data ? data.summary : "A real, sourced intelligence picture appears here after a scan. Every figure traces to a collected public mention or an official public data series."}
