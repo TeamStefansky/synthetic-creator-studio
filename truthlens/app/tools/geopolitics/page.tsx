@@ -14,9 +14,11 @@ interface Result extends GeopoliticsAggregate { generatedAt: string }
 
 const KIND_LABEL: Record<string, string> = {
   conflict: "Conflict", humanitarian: "Humanitarian", disaster: "Disaster", forecast: "Forecast", macro: "Macro",
+  fire: "Wildfire", spaceweather: "Space weather", aviation: "Aviation",
 };
 const KIND_COLOR: Record<string, string> = {
   conflict: "#F0454F", humanitarian: "#E1804A", disaster: "#F5D742", forecast: "#A98BF0", macro: "#22C55E",
+  fire: "#FF6B35", spaceweather: "#5EC8F2", aviation: "#9AA7B8",
 };
 
 function fmt(ts?: string) {
@@ -167,7 +169,7 @@ export default function GeopoliticsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {/* events */}
             <div className="card">
-              <div className="label-muted mb-2 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Events (conflict · humanitarian · disaster)</div>
+              <div className="label-muted mb-2 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Events (conflict · humanitarian · disaster · fire · space weather · aviation)</div>
               {events.length === 0 ? (
                 <p className="text-sm text-ink-secondary">No events in this region.</p>
               ) : (

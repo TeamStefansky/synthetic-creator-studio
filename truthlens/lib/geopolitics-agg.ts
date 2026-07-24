@@ -29,7 +29,7 @@ export interface GeopoliticsAggregate {
   macro: GeoRecord[];
 }
 
-const KIND_ORDER: GeoKind[] = ["conflict", "humanitarian", "disaster", "forecast", "macro"];
+const KIND_ORDER: GeoKind[] = ["conflict", "humanitarian", "disaster", "fire", "spaceweather", "aviation", "forecast", "macro"];
 
 function ts(r: GeoRecord): number {
   const t = r.ts ? Date.parse(r.ts) : NaN;
@@ -49,8 +49,9 @@ export function aggregateGeopolitics(results: GeoResult[], limit = 120): Geopoli
     all.push(rec);
   }
 
+  const EVENT_KINDS: GeoKind[] = ["conflict", "humanitarian", "disaster", "fire", "spaceweather", "aviation"];
   const events = all
-    .filter((r) => r.kind === "conflict" || r.kind === "humanitarian" || r.kind === "disaster")
+    .filter((r) => EVENT_KINDS.includes(r.kind))
     .sort((a, b) => ts(b) - ts(a));
   const forecasts = all
     .filter((r) => r.kind === "forecast")

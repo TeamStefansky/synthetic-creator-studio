@@ -66,6 +66,9 @@ export const INTEGRATIONS: Integration[] = [
   { key: "worldbank", label: "World Bank (governance)", category: "Geopolitics & forecast", envVars: [], href: "https://datahelpdesk.worldbank.org/knowledgebase/articles/889392" },
   { key: "imf", label: "IMF (GDP growth)", category: "Geopolitics & forecast", envVars: [], href: "https://www.imf.org/external/datamapper/api/help" },
   { key: "acled", label: "ACLED (political violence)", category: "Geopolitics & forecast", envVars: ["ACLED_KEY", "ACLED_EMAIL"], getUrl: "acleddata.com / myACLED", href: "https://acleddata.com/api-documentation/" },
+  { key: "swpc", label: "NOAA SWPC (space weather)", category: "Geopolitics & forecast", envVars: [], href: "https://www.swpc.noaa.gov/products-and-data" },
+  { key: "opensky", label: "OpenSky Network (aviation)", category: "Geopolitics & forecast", envVars: [], href: "https://openskynetwork.github.io/opensky-api/" },
+  { key: "firms", label: "NASA FIRMS (active wildfires)", category: "Geopolitics & forecast", envVars: ["FIRMS_MAP_KEY"], getUrl: "firms.modaps.eosdis.nasa.gov/api/map_key", href: "https://firms.modaps.eosdis.nasa.gov/api/" },
 
   // --- Persistence ---
   { key: "kv", label: "KV store (cache + monitor history)", category: "Persistence", envVars: ["KV_REST_API_URL", "KV_REST_API_TOKEN", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"], pairs: [["KV_REST_API_URL", "KV_REST_API_TOKEN"], ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"]], getUrl: "Vercel KV integration, or Upstash Redis (needs BOTH a REST URL and a REST TOKEN)", href: "https://vercel.com/docs/storage/vercel-kv" },

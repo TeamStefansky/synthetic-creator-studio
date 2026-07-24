@@ -9,10 +9,10 @@
 // Keyless (live everywhere): UCDP, ReliefWeb, USGS, NASA EONET, Polymarket,
 // Metaculus. Key-gated (free registration): ACLED.
 
-import { getJson } from "@/lib/http";
+import { getJson, getText } from "@/lib/http";
 import type { SourceStatus } from "./narrative/types";
 
-export type GeoKind = "conflict" | "humanitarian" | "disaster" | "forecast" | "macro";
+export type GeoKind = "conflict" | "humanitarian" | "disaster" | "forecast" | "macro" | "fire" | "spaceweather" | "aviation";
 
 export interface GeoRecord {
   uid: string;
@@ -302,8 +302,104 @@ const imf: GeoSource = {
   },
 };
 
+// ---- feeds ported from OSIRIS (github.com/simplifaisoul/osiris, MIT) ---------
+// Reimplemented natively against the same official public endpoints.
+
+/** Rough region tag from coordinates (for point feeds that lack a country). */
+function regionForLatLon(lat: number, lon: number): string {
+  if (lat >= 12 && lat <= 42 && lon >= 25 && lon <= 63) return "israel_me";
+  if ((lat >= 34 && lat <= 71 && lon >= -11 && lon <= 40) || // Europe
+      (lat >= 24 && lat <= 50 && lon >= -125 && lon <= -66)) return "europe_us"; // US
+  return "global";
+}
+
+/** NASA FIRMS - active wildfires (VIIRS). Free MAP_KEY (firms.modaps.eosdis.nasa.gov). */
+const firms: GeoSource = {
+  name: "firms",
+  available: () => !!process.env.FIRMS_MAP_KEY,
+  reason: "Set FIRMS_MAP_KEY (free at firms.modaps.eosdis.nasa.gov/api/map_key).",
+  async fetch(limit) {
+    const key = process.env.FIRMS_MAP_KEY;
+    const csv = await getText(
+      `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/VIIRS_SNPP_NRT/world/1`,
+      { timeoutMs: 15000, headers: { "User-Agent": UA } },
+    );
+    if (!csv) return [];
+    const lines = csv.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const cols = lines[0].split(",");
+    const idx = (n: string) => cols.indexOf(n);
+    const iLat = idx("latitude"), iLon = idx("longitude"), iFrp = idx("frp"), iDate = idx("acq_date"), iConf = idx("confidence");
+    const out: GeoRecord[] = [];
+    for (let i = 1; i < lines.length && out.length < limit; i++) {
+      const c = lines[i].split(",");
+      const lat = Number(c[iLat]), lon = Number(c[iLon]);
+      if (!isFinite(lat) || !isFinite(lon)) continue;
+      const frp = Number(c[iFrp]) || 0;
+      const region = regionForLatLon(lat, lon);
+      if (region === "global") continue; // keep the feed focused on the two regions
+      out.push({
+        uid: `firms:${lat.toFixed(3)},${lon.toFixed(3)}:${c[iDate] || i}`,
+        source: "firms", kind: "fire", ts: c[iDate],
+        title: `Active fire at ${lat.toFixed(2)}, ${lon.toFixed(2)}${c[iConf] ? ` (conf ${c[iConf]})` : ""}`,
+        country: "", region, score: Math.round(frp), scoreKind: "FRP (MW)",
+      });
+    }
+    return out;
+  },
+};
+
+/** NOAA SWPC - space-weather alerts (geomagnetic storms, solar flares). Keyless. */
+const swpc: GeoSource = {
+  name: "swpc",
+  available: () => true,
+  async fetch(limit) {
+    const data = await getJson<any[]>("https://services.swpc.noaa.gov/products/alerts.json", { timeoutMs: 12000, headers: { "User-Agent": UA } });
+    return (Array.isArray(data) ? data : []).slice(0, limit).map((a: any): GeoRecord => {
+      const msg = String(a?.message || "").replace(/\s+/g, " ").trim();
+      const headline = msg.split(/ALERT:|WATCH:|WARNING:|SUMMARY:/).pop()?.trim().slice(0, 120) || (a?.product_id || "Space-weather alert");
+      return {
+        uid: `swpc:${a?.product_id || headline}:${a?.issue_datetime || ""}`,
+        source: "swpc", kind: "spaceweather", ts: a?.issue_datetime,
+        title: `Space weather: ${headline}`, country: "", region: "global",
+      };
+    });
+  },
+};
+
+/** OpenSky - live aircraft count per region (keyless anonymous; bbox-scoped). */
+const OPEN_SKY_BBOX: Record<string, [number, number, number, number]> = {
+  // [lamin, lomin, lamax, lomax]
+  israel_me: [12, 25, 42, 63],
+  europe_us: [34, -11, 71, 40],
+};
+const opensky: GeoSource = {
+  name: "opensky",
+  available: () => true,
+  async fetch() {
+    const out: GeoRecord[] = [];
+    for (const [region, bb] of Object.entries(OPEN_SKY_BBOX)) {
+      const data = await getJson<any>(
+        `https://opensky-network.org/api/states/all?lamin=${bb[0]}&lomin=${bb[1]}&lamax=${bb[2]}&lomax=${bb[3]}`,
+        { timeoutMs: 9000, headers: { "User-Agent": UA } },
+      ).catch(() => null);
+      const count = Array.isArray(data?.states) ? data.states.length : null;
+      if (count == null) continue;
+      const label = REGIONS.find((r) => r.key === region)?.label || region;
+      out.push({
+        uid: `opensky:${region}:${data?.time || ""}`,
+        source: "opensky", kind: "aviation", ts: data?.time ? new Date(data.time * 1000).toISOString() : undefined,
+        title: `${count} aircraft currently tracked over ${label}`,
+        country: "", region, score: count, scoreKind: "aircraft",
+      });
+    }
+    return out;
+  },
+};
+
 export const GEO_SOURCES: GeoSource[] = [
   ucdp, acled, reliefweb, usgs, eonet, polymarket, metaculus, worldbank, imf,
+  firms, swpc, opensky,
 ];
 
 /** Run every geopolitics source in parallel, isolating failures. */
