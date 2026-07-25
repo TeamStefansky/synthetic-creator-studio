@@ -119,7 +119,10 @@ export function synthesizeCase(input: CaseInputs): CaseFile {
   const enteredCaseAt = input.enteredCaseAt || new Date().toISOString();
   const ledger = buildLedger(draftsFromTools(input.toolOutputs), enteredCaseAt);
   const timeline = buildTimeline(ledger);
-  const boardEdges = input.boardEdges || [];
+  // Canonicalize edge order so conclusions are independent of collection order
+  // (the agent's determinism guarantee: same final ledger => same case).
+  const boardEdges = [...(input.boardEdges || [])].sort((a, b) =>
+    (a.a + a.b + a.strength).localeCompare(b.a + b.b + b.strength));
   const clusters = buildClusters(input.entities, boardEdges);
   const path = buildPath(input.claimInstances || []);
   const deception = input.deception || assessDeception({});
