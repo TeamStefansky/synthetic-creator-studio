@@ -11,6 +11,8 @@ import { runInvestigation, type Collector } from "@/lib/agent/loop";
 import { runAdversary } from "@/lib/agent/adversary";
 import { assessDeception } from "@/lib/case/deception";
 import { buildSitrep } from "@/lib/agent/sitrep";
+import { buildPremortem } from "@/lib/agent/premortem";
+import { runValidation } from "@/lib/agent/validation";
 import { AGENT_CEILING } from "@/lib/agent/authority";
 import type { StrengthEdge } from "@/lib/case/cluster";
 import { isIndividualCharacteristic } from "@/lib/board/calibrate";
@@ -50,7 +52,12 @@ export async function POST(req: Request) {
 
     const loadBearing = run.caseFile.clusters.find((c) => c.dependsOn)?.dependsOn?.why;
     const adversary = runAdversary({ ach: run.caseFile.ach, deception: assessDeception({}), loadBearing });
-    const sitrep = buildSitrep({ record: run.record, caseFile: run.caseFile, adversary, notPursued: [] });
+    const validation = runValidation();
+    const premortem = buildPremortem(run.caseFile).statements.map((s) => `${s.label}: ${s.text}`);
+    const sitrep = buildSitrep({
+      record: run.record, caseFile: run.caseFile, adversary, notPursued: [],
+      measuredFpr: validation.falsePositiveRate, fixtureSuiteVersion: validation.fixtureSuiteVersion, premortem,
+    });
 
     return NextResponse.json(
       { record: run.record, sitrep, network: board.network, journal: run.journal },

@@ -21,6 +21,11 @@ export interface SitrepInput {
   adversary: AdversaryResult;
   notPursued: NotPursued[];
   previous?: PriorJudgment;
+  // Layer 06 · P7 surfacing:
+  measuredFpr?: number;
+  fixtureSuiteVersion?: string;
+  premortem?: string[];
+  conceptionWarning?: string;
 }
 
 export interface Sitrep {
@@ -78,7 +83,14 @@ export function buildSitrep(input: SitrepInput): Sitrep {
     ? input.notPursued.map((n) => `${n.task} [diag ${n.diagnosticity.toFixed(2)}] — ${n.reason}`).join("\n")
     : NONE;
 
-  const order = ["STATUS", "BOTTOM LINE", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED"];
+  // Layer 06 · P7 — method reliability, premortem, and the conception watch.
+  S["METHOD RELIABILITY"] = input.measuredFpr != null
+    ? `measured false-positive rate ${(input.measuredFpr * 100).toFixed(1)}% (fixture suite ${input.fixtureSuiteVersion ?? "n/a"})`
+    : NONE;
+  S["THE PREMORTEM"] = input.premortem?.length ? input.premortem.join("\n") : NONE;
+  S["CONCEPTION WATCH"] = input.conceptionWarning || "no conception warning — the leading hypothesis is still accumulating contradictions normally";
+
+  const order = ["STATUS", "BOTTOM LINE", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
   const markdown = ["# THE INVESTIGATOR — situation report", "", "Decision-support, not a verdict. Nodes are infrastructure/accounts, never people.", "", ...order.map((k) => `## ${k}\n${S[k]}`)].join("\n");
 
   return { version: SITREP_VERSION, sections: S, markdown };

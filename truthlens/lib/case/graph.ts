@@ -71,6 +71,50 @@ export function bridges(nodes: string[], edges: UndirectedEdge[]): UndirectedEdg
   return [...uniq.values()].sort((x, y) => key(x).localeCompare(key(y)));
 }
 
+/**
+ * Betweenness centrality (Brandes, unweighted, undirected) — identifies brokers:
+ * the nodes that most span the structure. Layer 06 · P7. Deterministic.
+ * NOTE: a node is central partly because you LOOKED at its neighbourhood; every
+ * centrality value must be rendered with its collection boundary (seed + hop
+ * depth), enforced by the narrator validator.
+ */
+export function betweennessCentrality(nodes: string[], edges: UndirectedEdge[]): Record<string, number> {
+  const adj = adjacency(nodes, edges);
+  const all = [...adj.keys()].sort();
+  const cb: Record<string, number> = {};
+  for (const n of all) cb[n] = 0;
+
+  for (const s of all) {
+    const stack: string[] = [];
+    const pred = new Map<string, string[]>();
+    const sigma = new Map<string, number>();
+    const dist = new Map<string, number>();
+    for (const v of all) { pred.set(v, []); sigma.set(v, 0); dist.set(v, -1); }
+    sigma.set(s, 1); dist.set(s, 0);
+    const queue: string[] = [s];
+    while (queue.length) {
+      const v = queue.shift()!;
+      stack.push(v);
+      for (const w of adj.get(v) || []) {
+        if (dist.get(w)! < 0) { dist.set(w, dist.get(v)! + 1); queue.push(w); }
+        if (dist.get(w)! === dist.get(v)! + 1) { sigma.set(w, sigma.get(w)! + sigma.get(v)!); pred.get(w)!.push(v); }
+      }
+    }
+    const delta = new Map<string, number>();
+    for (const v of all) delta.set(v, 0);
+    while (stack.length) {
+      const w = stack.pop()!;
+      for (const v of pred.get(w) || []) {
+        delta.set(v, delta.get(v)! + (sigma.get(v)! / sigma.get(w)!) * (1 + delta.get(w)!));
+      }
+      if (w !== s) cb[w] += delta.get(w)!;
+    }
+  }
+  // Undirected: each pair counted twice.
+  for (const n of all) cb[n] = cb[n] / 2;
+  return cb;
+}
+
 /** Topological order, or null if the directed graph has a cycle. Deterministic. */
 export function topoOrder(nodes: string[], edges: DirectedEdge[]): string[] | null {
   const indeg = new Map<string, number>();

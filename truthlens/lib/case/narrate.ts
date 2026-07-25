@@ -26,7 +26,13 @@ export interface RawStatement {
   confidence?: ConfidenceAxis | string;
   rung: Rung;
   assertsOrdering?: { from: string; to: string };
+  // Layer 06: a statement citing centrality must carry its collection boundary
+  // (seed set + hop depth) — a sampled network's centrality is often an artifact
+  // of the sampling.
+  centralityBoundary?: string;
 }
+
+const CITES_CENTRALITY = /\b(central|centrality|broker|betweenness)\b/i;
 
 export interface DropRecord { statement: RawStatement; reason: string }
 
@@ -63,6 +69,7 @@ export function dropReason(s: RawStatement, ctx: ValidationCtx): string | null {
   if (hasL && !isLikelihoodTerm(s.likelihood)) return `likelihood not in lexicon: ${s.likelihood}`;
   if (hasC && !isConfidenceLevel(s.confidence)) return `confidence not in {${CONFIDENCE_LEVELS.join(",")}}: ${s.confidence}`;
   if (hasBannedPhrase(s.text)) return "banned phrasing (vague authority / bare hedge as likelihood / % beside a lexicon term)";
+  if (CITES_CENTRALITY.test(s.text) && !s.centralityBoundary) return "centrality claim without its collection boundary (seed + hop depth)";
   return null;
 }
 
