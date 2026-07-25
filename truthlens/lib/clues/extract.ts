@@ -37,7 +37,7 @@ function host(u: string): string | null {
 }
 
 /** Registrable-ish domain: last two labels (e.g. ns0.1984.is -> 1984.is). */
-function regDomain(h?: string | null): string | null {
+export function regDomain(h?: string | null): string | null {
   const v = (h || "").trim().toLowerCase().replace(/\.$/, "");
   if (!v || !v.includes(".")) return null;
   const parts = v.split(".");
@@ -49,7 +49,7 @@ function regDomain(h?: string | null): string | null {
  * "1984 ehf" (an origin ASN) and "ns0.1984.is" (a nameserver) both collapse to
  * "1984" and link the two searches. Returns null for generic providers / noise.
  */
-function normalizeNetOrg(raw?: string | null): string | null {
+export function normalizeNetOrg(raw?: string | null): string | null {
   let s = (raw || "").toLowerCase().trim();
   if (!s || GENERIC_NET.test(s)) return null;
   s = s.replace(/[.,/&]+/g, " ").replace(NET_SUFFIX, " ").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, "-");
