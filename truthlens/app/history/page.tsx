@@ -5,10 +5,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trash2, RotateCcw } from "lucide-react";
+import { Trash2, RotateCcw, Network, ArrowRight } from "lucide-react";
 import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
 import { CheckRecord, listLocal, removeLocal } from "@/lib/check/history";
+import { buildFindings, type FindingsReport } from "@/lib/clues/findings";
 import { fmtDate } from "@/lib/ui";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -20,9 +21,11 @@ const TYPE_LABEL: Record<string, string> = {
 export default function HistoryPage() {
   const [local, setLocal] = useState<CheckRecord[]>([]);
   const [shared, setShared] = useState<CheckRecord[] | null>(null);
+  const [findings, setFindings] = useState<FindingsReport | null>(null);
 
   useEffect(() => {
     setLocal(listLocal());
+    setFindings(buildFindings());
     fetch("/api/checks").then((r) => r.json()).then((d) => { if (d.connected) setShared(d.checks || []); }).catch(() => {});
   }, []);
 
@@ -58,6 +61,26 @@ export default function HistoryPage() {
         <h1 className="font-display text-xl font-bold tracking-tight text-white">History</h1>
         <p className="mt-1.5 text-sm text-ink-secondary">Every check you run is saved here automatically - re-openable, no filing.</p>
       </div>
+
+      {/* Cross-search conclusions - a bridge from "my searches" to the Case Board. */}
+      {findings && findings.findings.length > 0 && (
+        <Link href="/tools/linkboard" className="block">
+          <div className="card flex flex-wrap items-center gap-3 border-brand/30 bg-brand/[0.04] transition hover:bg-brand/[0.08]">
+            <Network className="h-5 w-5 shrink-0 text-brand-soft" />
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold text-ink">
+                {findings.findings.length} connection{findings.findings.length === 1 ? "" : "s"} found across {findings.linkedSearches} of your searches
+              </div>
+              <div className="truncate text-xs text-ink-secondary">
+                {findings.clusters.length > 0 && <>{findings.clusters.length} cluster{findings.clusters.length === 1 ? "" : "s"} · </>}
+                strongest: {findings.strongest} · open the Case Board for leads, evidence and next steps.
+              </div>
+            </div>
+            {findings.strongest && <ConfidenceBadge level={findings.strongest as ConfidenceLevel} />}
+            <ArrowRight className="h-4 w-4 shrink-0 text-brand-soft" />
+          </div>
+        </Link>
+      )}
 
       {local.length === 0 ? (
         <div className="card text-sm text-ink-secondary">
