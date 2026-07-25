@@ -18,11 +18,76 @@ import type { BoardArtifactKind, Tier, OverlapItem, PairEdge } from "./types";
 
 // Bump on any change to tiers / calibration / combination so historical results
 // stay interpretable (CLAUDE.md: scoring rubrics are versioned).
-export const BOARD_RUBRIC_VERSION = "board-overlap-v1";
+export const BOARD_RUBRIC_VERSION = "board-overlap-v2";
+// Method layer (06) version stamp for the characteristic classification + gates.
+export const METHOD_VERSION = "method-v1";
 
 // Reverse-IP neighbour count above which a shared IP is treated as a busy /
 // multi-tenant host (mirrors lib/network.ts SHARED_IP_THRESHOLD).
 export const SHARED_IP_THRESHOLD = 12;
+
+// --- Class vs. individual characteristics (layer 06 · P1) --------------------
+// Forensic rule: class characteristics NARROW a population and can never
+// identify, no matter how many accumulate. Individuation requires at least one
+// individual characteristic. An artifact whose base rate cannot be estimated is
+// `class` by DEFAULT — the burden is on individuation, not on commonality.
+export type CharacteristicClass = "class" | "individual";
+
+export interface Characteristic {
+  characteristicClass: CharacteristicClass;
+  baseRate: number;        // estimated P(two unrelated entities share this)
+  provenance: string;      // where the estimate comes from
+}
+
+// EVERY BoardArtifactKind MUST appear here (schema-completeness test).
+export const CHARACTERISTIC: Record<BoardArtifactKind, Characteristic> = {
+  // individual — account-specific / deliberate / near-unique
+  ssl_san: { characteristicClass: "individual", baseRate: 0.01, provenance: "non-wildcard SAN provisioning is operator-specific (operator estimate)" },
+  ga_id: { characteristicClass: "individual", baseRate: 0.002, provenance: "GA property ids are account-scoped (operator estimate)" },
+  adsense_id: { characteristicClass: "individual", baseRate: 0.002, provenance: "ca-pub- ids are publisher-account-scoped" },
+  gtm_id: { characteristicClass: "individual", baseRate: 0.003, provenance: "GTM containers are account-scoped" },
+  fb_pixel_id: { characteristicClass: "individual", baseRate: 0.003, provenance: "pixel ids are ad-account-scoped" },
+  matomo_id: { characteristicClass: "individual", baseRate: 0.002, provenance: "self-hosted analytics host+id is distinctive" },
+  yandex_id: { characteristicClass: "individual", baseRate: 0.003, provenance: "metrica ids are account-scoped" },
+  hotjar_id: { characteristicClass: "individual", baseRate: 0.004, provenance: "hotjar site ids are account-scoped" },
+  clarity_id: { characteristicClass: "individual", baseRate: 0.004, provenance: "clarity ids are account-scoped" },
+  verification_token: { characteristicClass: "individual", baseRate: 0.005, provenance: "site-verification tokens are property-scoped" },
+  csp_report_uri: { characteristicClass: "individual", baseRate: 0.02, provenance: "a distinctive report endpoint is operator-configured" },
+  boilerplate: { characteristicClass: "individual", baseRate: 0.03, provenance: "near-duplicate content signature (similarity-measured)" },
+  social_handle: { characteristicClass: "individual", baseRate: 0.02, provenance: "an org's published handle is account-specific" },
+  org_email: { characteristicClass: "individual", baseRate: 0.02, provenance: "org-published contact address is org-specific" },
+  org_phone: { characteristicClass: "individual", baseRate: 0.03, provenance: "org-published contact phone is org-specific" },
+  // class — infrastructure / commodity / shared-by-default
+  ip: { characteristicClass: "class", baseRate: 0.1, provenance: "shared/virtual hosting places unrelated sites on one IP; base rate unknown -> class" },
+  ip_24: { characteristicClass: "class", baseRate: 0.2, provenance: "a /24 spans many tenants" },
+  ip_16: { characteristicClass: "class", baseRate: 0.4, provenance: "a /16 spans very many tenants" },
+  asn: { characteristicClass: "class", baseRate: 0.5, provenance: "an ASN spans thousands of unrelated customers" },
+  as_org: { characteristicClass: "class", baseRate: 0.45, provenance: "a hosting org serves many unrelated customers" },
+  ptr_pattern: { characteristicClass: "class", baseRate: 0.3, provenance: "PTR templates are host-provider-wide" },
+  ns_set: { characteristicClass: "class", baseRate: 0.35, provenance: "managed-DNS providers serve many unrelated domains" },
+  mx_host: { characteristicClass: "class", baseRate: 0.4, provenance: "shared mail providers (Google/Microsoft) are ubiquitous" },
+  registrar: { characteristicClass: "class", baseRate: 0.5, provenance: "registrars serve millions of unrelated domains" },
+  outbound_domain: { characteristicClass: "class", baseRate: 0.3, provenance: "common outbound links are widely shared" },
+  third_party_origin: { characteristicClass: "class", baseRate: 0.4, provenance: "embedded third-party origins (CDNs/widgets) are ubiquitous" },
+  server_header: { characteristicClass: "class", baseRate: 0.6, provenance: "nginx/Apache are near-universal" },
+  cms: { characteristicClass: "class", baseRate: 0.5, provenance: "WordPress et al. run a large fraction of the web" },
+  framework: { characteristicClass: "class", baseRate: 0.4, provenance: "popular frameworks are widely used" },
+  hosting_country: { characteristicClass: "class", baseRate: 0.5, provenance: "a country contains countless unrelated entities" },
+  reg_date_proximity: { characteristicClass: "class", baseRate: 0.3, provenance: "registration-date proximity is weak and common" },
+};
+
+export function isIndividualCharacteristic(kind: BoardArtifactKind): boolean {
+  return CHARACTERISTIC[kind]?.characteristicClass === "individual";
+}
+
+/**
+ * The rung a set of shared artifact kinds can support. `common-operation`
+ * requires at least one INDIVIDUAL characteristic; class characteristics alone —
+ * however many — can never individualize, so they cap at `association`.
+ */
+export function rungForCharacteristics(kinds: BoardArtifactKind[]): "association" | "common-operation" {
+  return kinds.some(isIndividualCharacteristic) ? "common-operation" : "association";
+}
 
 // Whole-board saturation: a calibrated (non-strong) fact shared by ~all entities
 // in a board of this size is common WITHIN the set and stops contributing.

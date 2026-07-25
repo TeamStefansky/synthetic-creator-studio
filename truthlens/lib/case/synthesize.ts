@@ -87,10 +87,10 @@ function deriveBottomLine(clusters: Cluster[], ach: AchResult, ledger: Ledger, g
   const linked = clusters.filter((c) => c.members.length > 1 && STRENGTH_RANK[c.confidence] >= STRENGTH_RANK["Medium"]);
   const strongest = linked.reduce<ConfidenceLevel>((m, c) => (STRENGTH_RANK[c.confidence] > STRENGTH_RANK[m] ? c.confidence : m), "Unknown");
 
-  // Rung: association by default; common-operation only with >=2 High bridging
-  // edges in one cluster (multiple independent individualizing classes). Never
-  // attribution from structure alone.
-  const commonOp = linked.some((c) => c.bridgingEdges.filter((e) => e.strength === "High").length >= 2);
+  // Rung: association by default; common-operation requires at least one
+  // INDIVIDUAL characteristic among a cluster's bridging edges (class features,
+  // however many, never individualize). Never attribution from structure alone.
+  const commonOp = linked.some((c) => c.bridgingEdges.some((e) => e.characteristic === "individual"));
   const rung: Rung = commonOp ? "common-operation" : "association";
 
   // Confidence: bounded by corroboration and the gaps picture (a separate axis).

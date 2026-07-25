@@ -17,6 +17,10 @@ export interface StrengthEdge {
   strength: ConfidenceLevel;
   evidenceId?: string;   // the load-bearing evidence item behind this edge
   reason?: string;
+  // Layer 06: class characteristics never individualize, so a class edge — even at
+  // Moderate+ — displays but never FORMS a cluster. Undefined is treated as
+  // allowed (backward-compatible with pre-06 callers).
+  characteristic?: "class" | "individual";
 }
 
 export interface Cluster {
@@ -30,6 +34,9 @@ export interface Cluster {
 }
 
 const isModeratePlus = (e: StrengthEdge) => STRENGTH_RANK[e.strength] >= STRENGTH_RANK[CLUSTER_MIN_STRENGTH];
+// A cluster-forming edge is Moderate+ AND not a pure class characteristic — class
+// features narrow a population but can never individualize into a cluster.
+const formsCluster = (e: StrengthEdge) => isModeratePlus(e) && e.characteristic !== "class";
 const norm = (a: string, b: string) => (a < b ? { a, b } : { a: b, b: a });
 const eqEdge = (e: StrengthEdge, a: string, b: string) => (e.a === a && e.b === b) || (e.a === b && e.b === a);
 
@@ -38,13 +45,14 @@ const eqEdge = (e: StrengthEdge, a: string, b: string) => (e.a === a && e.b === 
  * for display within a component and can never merge two. Pure + deterministic.
  */
 export function buildClusters(nodes: string[], edges: StrengthEdge[]): Cluster[] {
-  const strong = edges.filter(isModeratePlus);
+  const strong = edges.filter(formsCluster);
   const comps = connectedComponents(nodes, strong.map((e) => ({ a: e.a, b: e.b })));
 
   return comps.map((members, id): Cluster => {
     const inSet = new Set(members);
     const bridging = strong.filter((e) => inSet.has(e.a) && inSet.has(e.b));
-    const weakInside = edges.filter((e) => !isModeratePlus(e) && inSet.has(e.a) && inSet.has(e.b));
+    // Display-only edges inside the component: weak, OR Moderate+ but class-only.
+    const weakInside = edges.filter((e) => !formsCluster(e) && inSet.has(e.a) && inSet.has(e.b));
 
     // Weakest load-bearing link. Singleton (no bridging edge) => Unknown.
     const confidence: ConfidenceLevel = bridging.length

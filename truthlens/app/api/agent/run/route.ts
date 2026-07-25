@@ -13,6 +13,7 @@ import { assessDeception } from "@/lib/case/deception";
 import { buildSitrep } from "@/lib/agent/sitrep";
 import { AGENT_CEILING } from "@/lib/agent/authority";
 import type { StrengthEdge } from "@/lib/case/cluster";
+import { isIndividualCharacteristic } from "@/lib/board/calibrate";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -32,7 +33,10 @@ export async function POST(req: Request) {
     const board = await runBoard(seed);
     const edges: StrengthEdge[] = board.edges
       .filter((e) => e.strength !== "Unknown")
-      .map((e) => ({ a: e.a, b: e.b, strength: e.strength, evidenceId: `${e.a}:${e.b}`, reason: e.top?.display }));
+      .map((e) => ({
+        a: e.a, b: e.b, strength: e.strength, evidenceId: `${e.a}:${e.b}`, reason: e.top?.display,
+        characteristic: e.top ? (isIndividualCharacteristic(e.top.kind) ? "individual" as const : "class" as const) : undefined,
+      }));
 
     const collector: Collector = (cycle) =>
       cycle === 1
