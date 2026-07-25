@@ -30,6 +30,7 @@ const links = [
   { href: "/tools/crypto", label: "Crypto OSINT", icon: Coins, match: (p: string) => p.startsWith("/tools/crypto") },
   { href: "/tools/relboard", label: "Relationship Board", icon: Network, match: (p: string) => p.startsWith("/tools/relboard") },
   { href: "/tools/linkboard", label: "Link Board", icon: Share2, match: (p: string) => p.startsWith("/tools/linkboard") },
+  { href: "/case", label: "Case Synthesis", icon: ScrollText, match: (p: string) => p.startsWith("/case") },
   { href: "/monitor", label: "Monitor", icon: Activity, match: (p: string) => p.startsWith("/monitor") },
   { href: "/status", label: "Connections", icon: Plug, match: (p: string) => p.startsWith("/status") },
   { href: "/about", label: "About", icon: Info, match: (p: string) => p.startsWith("/about") },
