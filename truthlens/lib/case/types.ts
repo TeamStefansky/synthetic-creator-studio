@@ -77,3 +77,7 @@ export interface Ledger {
   items: EvidenceItem[];
   byId: Record<string, EvidenceItem>;
 }
+
+// Hypotheses always present in the ACH set (P5). The null and the deception
+// hypothesis are members, never optional extras.
+export type HypothesisKind = "same_operator" | "coincidence_null" | "deception";

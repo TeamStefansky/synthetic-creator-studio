@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { ALL_FIXTURES } from "./fixtures/tool-outputs";
+import { orderOf } from "../../lib/case/calibrate-time";
+import { buildClusters, type StrengthEdge } from "../../lib/case/cluster";
+import { classifyOutcome, scoreContribution } from "../../lib/case/negative";
+import { eventTime } from "../../lib/case/adapters/util";
 
 // ============================================================================
 // Layer 03 · P0 — target-behavior specs (discovery, no production code yet).
@@ -12,26 +16,29 @@ import { ALL_FIXTURES } from "./fixtures/tool-outputs";
 // shipping a red suite to production.
 // ============================================================================
 
-describe("case synthesis — target behaviours (P0)", () => {
-  // P3 (graph/direction): lib/case/graph.ts + timeline direction matrix.
-  it.todo(
-    "T4-only pair yields `order not established` — a shared-content pair where one endpoint's only " +
-    "timestamp is our crawl time (T4) and the other is also T4 produces a related-but-unordered edge, " +
-    "no arrow in either direction, and is NOT silently dropped [activates in 03·P3]",
-  );
+describe("case synthesis — target behaviours (P0, activated as phases land)", () => {
+  // ACTIVATED in 03·P3 (graph/direction).
+  it("T4-only pair yields order_not_established, not silently dropped", () => {
+    expect(orderOf(eventTime("2026-01-01T00:00:00Z", "T4"), eventTime("2026-02-01T00:00:00Z", "T4"))).toBe("order_not_established");
+  });
 
-  // P3 (clusters): lib/case/cluster.ts — only Moderate+ edges create/extend a component.
-  it.todo(
-    "weak edges never join components — the boardResult fixture's Low ASN edge (b.com↔c.com) must not " +
-    "merge c.com into the a/b cluster formed by the High shared GA id [activates in 03·P3]",
-  );
+  // ACTIVATED in 03·P3 (clusters).
+  it("weak edges never join components", () => {
+    const edges: StrengthEdge[] = [
+      { a: "a.com", b: "b.com", strength: "High" },  // GA-id cluster
+      { a: "b.com", b: "c.com", strength: "Low" },   // ASN — must not pull c.com in
+    ];
+    const clusters = buildClusters(["a.com", "b.com", "c.com"], edges);
+    expect(clusters.find((c) => c.members.includes("a.com"))!.members).not.toContain("c.com");
+  });
 
-  // P4 (negative evidence vs gaps): lib/case/gaps.ts + negative.ts + the ACH scorer.
-  it.todo(
-    "a gap must not score in the ACH matrix — an absence from a truncated/rate-limited search is a Gap " +
-    "(scores zero both directions), never NegativeEvidence; only a four-condition-adequate absence " +
-    "scores against a hypothesis [activates in 03·P4]",
-  );
+  // ACTIVATED in 03·P4 (negative evidence vs gaps).
+  it("a gap must not score in the ACH matrix; only an adequate absence does", () => {
+    const gap = classifyOutcome({ id: "g", hypothesis: "same_operator", expectedKind: "ssl_san", predicted: true, searchCapable: false, coverageComplete: true, found: false, where: "crt.sh" });
+    const neg = classifyOutcome({ id: "n", hypothesis: "same_operator", expectedKind: "ssl_san", predicted: true, searchCapable: true, coverageComplete: true, found: false, where: "crt.sh" });
+    expect(scoreContribution(gap, "same_operator")).toBe(0);
+    expect(scoreContribution(neg, "same_operator")).toBe(-1);
+  });
 
   // P6 (validator): lib/case/narrate.ts + lexicon.ts — statement validation.
   it.todo(
