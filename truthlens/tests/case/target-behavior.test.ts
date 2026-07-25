@@ -4,6 +4,8 @@ import { orderOf } from "../../lib/case/calibrate-time";
 import { buildClusters, type StrengthEdge } from "../../lib/case/cluster";
 import { classifyOutcome, scoreContribution } from "../../lib/case/negative";
 import { eventTime } from "../../lib/case/adapters/util";
+import { dropReason } from "../../lib/case/narrate";
+import { exceedsRung } from "../../lib/case/lexicon";
 
 // ============================================================================
 // Layer 03 · P0 — target-behavior specs (discovery, no production code yet).
@@ -40,17 +42,18 @@ describe("case synthesis — target behaviours (P0, activated as phases land)", 
     expect(scoreContribution(neg, "same_operator")).toBe(-1);
   });
 
-  // P6 (validator): lib/case/narrate.ts + lexicon.ts — statement validation.
-  it.todo(
-    "a FACT label without directly observed evidence is rejected — the validator drops it, counts the " +
-    "drop, and surfaces the count to the user [activates in 03·P6]",
-  );
+  // ACTIVATED in 03·P6 (validator).
+  it("a FACT label without directly observed evidence is rejected", () => {
+    const ctx = { validEvidenceIds: new Set(["ev2"]), observedEvidenceIds: new Set<string>(), establishedOrderings: new Set<string>(), deceptionComplete: false };
+    expect(dropReason({ text: "a shares b", label: "FACT", evidenceIds: ["ev2"], rung: "association" }, ctx)).toMatch(/FACT label without a directly observed/);
+  });
 
-  // P6 (validator): rung ladder enforcement.
-  it.todo(
-    "language may not exceed the recorded rung — an `operated by the same group` statement attached to " +
-    "an `association`-rung cluster is rejected and rewritten to the association-rung verb [activates in 03·P6]",
-  );
+  // ACTIVATED in 03·P6 (rung ladder).
+  it("language may not exceed the recorded rung", () => {
+    expect(exceedsRung("the two are operated by the same group", "association")).toBe(true);
+    const ctx = { validEvidenceIds: new Set(["ev1"]), observedEvidenceIds: new Set(["ev1"]), establishedOrderings: new Set<string>(), deceptionComplete: false };
+    expect(dropReason({ text: "operated by the same group", label: "INFERENCE", evidenceIds: ["ev1"], rung: "association" }, ctx)).toMatch(/exceeds recorded rung/);
+  });
 });
 
 // A green sanity check now: the discovery fixtures carry the evidence-bearing
