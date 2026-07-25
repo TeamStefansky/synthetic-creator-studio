@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins,
+  ShieldAlert, Coins, Bot,
 } from "lucide-react";
 
 const links = [
@@ -31,6 +31,7 @@ const links = [
   { href: "/tools/relboard", label: "Relationship Board", icon: Network, match: (p: string) => p.startsWith("/tools/relboard") },
   { href: "/tools/linkboard", label: "Link Board", icon: Share2, match: (p: string) => p.startsWith("/tools/linkboard") },
   { href: "/case", label: "Case Synthesis", icon: ScrollText, match: (p: string) => p.startsWith("/case") },
+  { href: "/investigator", label: "The Investigator", icon: Bot, match: (p: string) => p.startsWith("/investigator") },
   { href: "/monitor", label: "Monitor", icon: Activity, match: (p: string) => p.startsWith("/monitor") },
   { href: "/status", label: "Connections", icon: Plug, match: (p: string) => p.startsWith("/status") },
   { href: "/about", label: "About", icon: Info, match: (p: string) => p.startsWith("/about") },
