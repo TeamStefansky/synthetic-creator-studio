@@ -144,3 +144,22 @@ LLM model id comes from ONE constant: `LLM_MODEL` in `lib/llm.ts` - default
 
 ## Reporting
 End every session with: what changed, which data sources are connected vs. stubbed (and why), which ethics gates you touched and the tests that prove them, and anything skipped or deferred. Never silently drop a UI behavior or a safeguard.
+
+## Investigator layers — non-negotiable invariants
+
+Full list: `docs/investigator/CLAUDE-invariants.md`. Read it before any work under `lib/case/*`,
+`lib/agent/*`, or `lib/board/calibrate.ts`. Summary of what may never be weakened:
+
+- Evidence is append-only and content-hashed. A gap is not negative evidence.
+- Direction requires T2+ at both ends; otherwise `order not established`. T4 is an upper bound only.
+- Class characteristics never individualize. Weak edges never form clusters. Confidence is the
+  minimum over load-bearing evidence.
+- Likelihood and confidence are separate. Every statement is labeled and cited. Language may not
+  exceed its recorded rung. Every conclusion has a falsification list.
+- The hypothesis set always includes the null and the deception hypothesis.
+- The agent is autonomous only to `association`, never expands scope, never acts in the world, and a
+  partial-coverage run never retracts.
+- No person nodes anywhere. Every threshold is a named export. Scores are computed in TypeScript,
+  never by the model.
+
+If a task appears to require an exception, stop and report the conflict rather than working around it.
