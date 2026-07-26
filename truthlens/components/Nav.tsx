@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins, Bot,
+  ShieldAlert, Coins, Bot, LogOut,
 } from "lucide-react";
 
 // Six mission hubs. The flat tool list is grouped into the areas of the mission:
@@ -121,6 +121,19 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           })}
         </div>
       ))}
+      <button
+        onClick={async () => {
+          try { await fetch("/api/auth/login", { method: "DELETE" }); } catch { /* ignore */ }
+          onNavigate?.();
+          window.location.href = "/login";
+        }}
+        className="mt-1 flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm text-ink-secondary transition hover:bg-white/[0.04] hover:text-white"
+      >
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-bg-elev text-ink-secondary">
+          <LogOut className="h-4 w-4" />
+        </span>
+        <span className="truncate">Sign out</span>
+      </button>
     </nav>
   );
 }

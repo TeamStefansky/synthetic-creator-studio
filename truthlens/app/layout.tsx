@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Nav from "@/components/Nav";
-import AlertsBell from "@/components/AlertsBell";
+import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "TruthLens - fake-news risk & infrastructure exposure",
@@ -23,16 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-bg-base font-sans text-ink antialiased">
-        <div className="lg:flex lg:items-start">
-          <Nav />
-          <div className="min-w-0 flex-1">
-            {/* Each page renders its own single Disclaimer (footer or inline
-                variant); no global footer copy here, so it never doubles up. */}
-            <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-          </div>
-        </div>
-        {/* Global in-app alerts - surfaces Brand Watch escalations on every page. */}
-        <AlertsBell />
+        {/* AppShell picks the frame: full-bleed for /login + /welcome, the Nav +
+            main shell (with the global alerts bell) for every other route. */}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

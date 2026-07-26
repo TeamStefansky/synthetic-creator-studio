@@ -1,37 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
+import { AUTH_COOKIE, expectedToken } from "@/lib/auth";
 
-// Optional site-wide password gate (HTTP Basic Auth).
-// - Locked ONLY when the SITE_PASSWORD environment variable is set.
-// - Any username is accepted; the password must equal SITE_PASSWORD.
-// - The password is NEVER stored in the repo — set it in the host's env vars.
-// Without SITE_PASSWORD the site is open (so local dev isn't blocked).
+// Cookie-based access gate (styled /login page instead of a Basic-Auth popup).
+// - Active ONLY when SITE_PASSWORD is set; otherwise the app is open (honest
+//   "gate not configured", never a fake lock).
+// - /login and /welcome are always public; self-authenticating endpoints (cron via
+//   CRON_SECRET, share/embed) are excluded so scheduled jobs and embeds keep working.
+// - Unauthenticated page requests redirect to /login?next=…; API requests get 401.
 
 export const config = {
-  // Protect everything except Next.js internals, static assets, and the cron
-  // endpoint (which authenticates itself via CRON_SECRET).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|api/monitor|api/share|embed).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|api/auth|api/monitor|api/share|api/watch/scan|api/case/scan|embed).*)",
+  ],
 };
 
-export function middleware(req: NextRequest) {
-  const password = process.env.SITE_PASSWORD;
-  if (!password) return NextResponse.next();
+const PUBLIC_PATHS = ["/login", "/welcome"];
 
-  const auth = req.headers.get("authorization");
-  if (auth) {
-    const [scheme, encoded] = auth.split(" ");
-    if (scheme === "Basic" && encoded) {
-      try {
-        const decoded = atob(encoded);
-        const pass = decoded.slice(decoded.indexOf(":") + 1);
-        if (pass === password) return NextResponse.next();
-      } catch {
-        /* fall through to 401 */
-      }
-    }
+export async function middleware(req: NextRequest) {
+  const expected = await expectedToken();
+  if (!expected) return NextResponse.next(); // gate not configured → open
+
+  const { pathname } = req.nextUrl;
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+    return NextResponse.next();
   }
 
-  return new NextResponse("Authentication required.", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="TruthLens", charset="UTF-8"' },
-  });
+  const token = req.cookies.get(AUTH_COOKIE)?.value;
+  if (token && token === expected) return NextResponse.next();
+
+  if (pathname.startsWith("/api/")) {
+    return new NextResponse(JSON.stringify({ error: "authentication required" }), {
+      status: 401,
+      headers: { "content-type": "application/json" },
+    });
+  }
+  const url = req.nextUrl.clone();
+  url.pathname = "/login";
+  url.searchParams.set("next", pathname + (req.nextUrl.search || ""));
+  return NextResponse.redirect(url);
 }
