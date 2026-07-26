@@ -324,7 +324,17 @@ export default function LinkBoardPage() {
                   ))}
                 </ul>
               )}
-              <p className="mt-2 text-[11px] text-ink-secondary">Org-level, cited. Co-hosting is context, not guilt. Never a claim about a private individual.</p>
+              {result.operatorReputation.publicOfficers && result.operatorReputation.publicOfficers.officers.length > 0 && (
+                <div className="mt-2 border-t border-white/5 pt-2">
+                  <div className="label-muted mb-1">Officers on public record (disclosed, cited)</div>
+                  <ul className="space-y-0.5">
+                    {result.operatorReputation.publicOfficers.officers.map((o, i) => (
+                      <li key={i} className="text-xs text-ink-secondary"><span className="text-ink">{o.name}</span>{o.role ? ` · ${o.role}` : ""}{o.sourceUrl && <> · <a href={o.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">register</a></>}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <p className="mt-2 text-[11px] text-ink-secondary">Org-level, cited. Co-hosting is context, not guilt. Named officers are official public-record disclosure — never inferred, never a verdict.</p>
             </div>
           )}
 

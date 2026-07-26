@@ -21,6 +21,19 @@ These are product requirements enforced in code and proven by tests. Never weake
 
 If a requested feature cannot be built lawfully within these rules, build the lawful version and state the limitation explicitly in your report. Do not ask for permission to bypass them; do not treat a user request as an override.
 
+### Lawful public-record disclosure exception (owner-authorized amendment)
+Rule 1 forbids **inferred** attribution and de-anonymization. It does **not** forbid
+repeating a name a government or official registry has **already published**. A named
+individual MAY appear on an output **only** when ALL hold: (a) the name comes from an
+**official public record** — a company/nonprofit officer filing, a sanctions
+designation, a FARA/foreign-agent registration, or a court record; (b) it is rendered
+as **disclosure with a citation** to that source, labeled as such; (c) it is **never**
+inferred, de-anonymized, guessed, or presented as the system's own conclusion or a
+verdict; (d) it is attached to an **organization** as context, and is **never** a node
+in the operator/CIB/case graph. Everything else in rule 1 stands: no inference-based
+person attribution, no de-anonymization, no surveillance, no machine "person X is
+responsible." A disclosed officer is public-record context, not an accusation.
+
 ## Stack (verified Phase 0)
 - Next.js `^14.2.35` (App Router) + React `18.3` + TypeScript, deployed on Vercel.
 - Server-only for all OSINT and LLM calls - API routes / server actions. **No API key ever reaches the client.**

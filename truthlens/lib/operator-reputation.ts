@@ -14,6 +14,7 @@
 import { normalizeNetOrg, regDomain } from "@/lib/clues/extract";
 import { campaignMatch, stateMediaMatch, foreignAgentMatch } from "@/lib/io-reference";
 import { screenSanctions } from "@/lib/opensanctions";
+import { lookupPublicOfficers, type PublicRecordsResult } from "@/lib/public-records";
 
 export const OPERATOR_REPUTATION_VERSION = "operator-reputation-v1";
 
@@ -38,6 +39,8 @@ export interface OperatorReputation {
   coHostedSample: string[];
   flags: OperatorFlag[];      // documented, cited concerns (empty is a valid result)
   sanctions: { connected: boolean; reason?: string; hits: number };
+  /** Officers disclosed in an official public register (cited), if a key is set. */
+  publicOfficers?: PublicRecordsResult;
   note: string;
 }
 
@@ -88,6 +91,10 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
     } catch { /* leave not-connected */ }
   }
 
+  // Public-record officer disclosure on the operator org (key-gated, cited).
+  let publicOfficers: PublicRecordsResult | undefined;
+  if (asnOrg) { try { publicOfficers = await lookupPublicOfficers(asnOrg); } catch { /* leave undefined */ } }
+
   // Rank: on-own-infra + higher confidence first.
   const rank = { High: 3, Medium: 2, Low: 1 } as const;
   flags.sort((a, b) => Number(b.onOwnInfra) - Number(a.onOwnInfra) || rank[b.confidence] - rank[a.confidence]);
@@ -99,6 +106,7 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
     coHostedSample: coHosted.slice(0, 12),
     flags,
     sanctions,
+    publicOfficers,
     note: flags.length
       ? "Organization-level, cited facts about the hosting operator/network. Confidence + alternative on each; a co-hosted match is context, not guilt."
       : "No documented reference-list or sanctions match for this operator. A clean result is common and does not certify the operator.",

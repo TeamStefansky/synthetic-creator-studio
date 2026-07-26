@@ -94,6 +94,9 @@ export function buildSitrep(input: SitrepInput): Sitrep {
     ? [
         `Operator(s): ${rep.operators.join(", ") || rep.asnOrg || "unknown"} · ${rep.coHostedCount} co-hosted domain(s) · sanctions: ${rep.sanctions.connected ? `${rep.sanctions.hits} hit(s)` : "not connected"}`,
         ...rep.flags.map((f) => `- [${f.kind.replace(/_/g, " ")} · ${f.confidence} · ${f.onOwnInfra ? "own infra" : "co-hosted"}] ${f.detail} (re: ${f.subject})${f.citation ? ` — ${f.citation}` : ""}. Could also be: ${f.alternative}`),
+        ...(rep.publicOfficers?.officers.length
+          ? ["Officers on public record (disclosed, cited — not attribution):", ...rep.publicOfficers.officers.map((o) => `- ${o.name}${o.role ? ` · ${o.role}` : ""} — ${o.sourceUrl || o.source}`)]
+          : []),
         rep.flags.length ? "" : rep.note,
       ].filter(Boolean).join("\n")
     : NONE;

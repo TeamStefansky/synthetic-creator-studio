@@ -383,7 +383,25 @@ function OperatorReputationCard({ rep }: { rep: NonNullable<Report["operatorRepu
           </div>
         </div>
       )}
-      <p className="mt-3 text-[11px] text-ink-secondary">Organization-level, cited. Shared/CDN hosting places unrelated sites together — co-hosting is context, not evidence about this site. Never a claim about a private individual.</p>
+      {rep.publicOfficers && (rep.publicOfficers.officers.length > 0 || rep.publicOfficers.connected) && (
+        <div className="mt-3 border-t border-white/5 pt-2">
+          <div className="label-muted mb-1">Officers on public record (disclosed, cited)</div>
+          {rep.publicOfficers.officers.length === 0 ? (
+            <p className="text-xs text-ink-secondary">{rep.publicOfficers.reason || rep.publicOfficers.note}</p>
+          ) : (
+            <ul className="space-y-0.5">
+              {rep.publicOfficers.officers.map((o, i) => (
+                <li key={i} className="text-xs text-ink-secondary">
+                  <span className="text-ink">{o.name}</span>{o.role ? ` · ${o.role}` : ""}{o.jurisdiction ? ` · ${o.jurisdiction}` : ""}
+                  {o.sourceUrl && <> · <a href={o.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">register</a></>}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-1 text-[11px] text-ink-muted">{rep.publicOfficers.note}</p>
+        </div>
+      )}
+      <p className="mt-3 text-[11px] text-ink-secondary">Organization-level, cited. Shared/CDN hosting places unrelated sites together — co-hosting is context, not evidence about this site. Named officers are official public-record disclosure, cited — never inferred, never a verdict.</p>
     </section>
   );
 }
