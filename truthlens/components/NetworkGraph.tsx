@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { forceCollide } from "d3-force-3d";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Search } from "lucide-react";
 import type { OperatorNetwork } from "@/lib/types";
@@ -70,16 +71,24 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
   );
 
   // Spread the layout so nodes/labels don't pile up: stronger repulsion, longer
-  // links, and a scale-aware distance so denser graphs breathe more.
+  // links, and — crucially — a COLLISION force whose radius accounts for each
+  // node's label width, so two labels can never occupy the same space. Without
+  // this, force-graph only repels node *centres* and long labels still overlap.
+  const collideRadius = (node: any) => {
+    const len = Math.min(String(node.label || "").length, 30);
+    return (isMobile ? 5 : 7) + len * (isMobile ? 1.7 : 2.6);
+  };
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
     const n = network.nodes.length;
     const spread = Math.min(2.2, 1 + n / 40); // more nodes -> push harder
     fg.d3Force("charge")?.strength((isMobile ? -150 : -260) * spread).distanceMax(isMobile ? 380 : 640);
-    fg.d3Force("link")?.distance(isMobile ? 55 : 78).strength(0.5);
-    fg.d3Force("center")?.strength(0.05);
+    fg.d3Force("link")?.distance(isMobile ? 60 : 90).strength(0.4);
+    fg.d3Force("center")?.strength(0.04);
+    fg.d3Force("collide", forceCollide(collideRadius).strength(1).iterations(2));
     fg.d3ReheatSimulation?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isMobile, network.nodes.length]);
 
   // Clickable list of every domain node (target + siblings) - reliable on mobile.
