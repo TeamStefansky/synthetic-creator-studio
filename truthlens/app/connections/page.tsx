@@ -240,8 +240,8 @@ export default function ConnectionsPage() {
             <div className="label-muted">Starter list</div>
             <p className="mt-1 text-sm text-ink-secondary">
               <span className="text-ink">{starter.title}</span> — {starter.total} outlets across {starter.countries.length} countries.
-              Add a whole country (or all, capped at {IMPORT_CAP}); each site is validated and only those
-              with a discoverable RSS/Atom feed are kept.
+              Pick a country to add all its outlets, or add a Europe-wide spread (top 2 per country) in
+              one click; each site is validated and only those with a discoverable RSS/Atom feed are kept.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -249,7 +249,7 @@ export default function ConnectionsPage() {
               value={starterCountry} onChange={(e) => setStarterCountry(e.target.value)} disabled={busy}
               className="rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand"
             >
-              <option value="">All countries ({starter.total})</option>
+              <option value="">Europe-wide spread (top 2 per country)</option>
               {starter.countries.map((c) => (
                 <option key={c.country} value={c.country}>{c.country} ({c.count})</option>
               ))}

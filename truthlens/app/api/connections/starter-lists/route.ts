@@ -39,9 +39,25 @@ export async function GET(req: Request) {
 
   const list = LISTS.find((l) => l.id === id);
   if (!list) return NextResponse.json({ error: "Unknown list." }, { status: 404 });
-  const entries = country
-    ? list.entries.filter((e) => e.country.toLowerCase() === country.toLowerCase())
-    : list.entries;
+
+  let entries: Entry[];
+  if (country) {
+    entries = list.entries.filter((e) => e.country.toLowerCase() === country.toLowerCase());
+  } else {
+    // No country → return a geographic SPREAD: the top `perCountry` ranked outlets
+    // from EACH country (entries are already in rank order within a country), so a
+    // single capped "add all" covers all of Europe rather than just the first
+    // alphabetical countries.
+    const perCountry = Math.min(Math.max(parseInt(searchParams.get("perCountry") || "2", 10) || 2, 1), 10);
+    const taken = new Map<string, number>();
+    entries = [];
+    for (const e of list.entries) {
+      const n = taken.get(e.country) || 0;
+      if (n >= perCountry) continue;
+      taken.set(e.country, n + 1);
+      entries.push(e);
+    }
+  }
   return NextResponse.json(
     { id: list.id, title: list.title, country: country || null, urls: entries.map((e) => e.url) },
     { headers: { "Cache-Control": "public, max-age=3600" } },
