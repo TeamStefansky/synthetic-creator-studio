@@ -349,7 +349,7 @@ function OperatorReputationCard({ rep }: { rep: NonNullable<Report["operatorRepu
         <h2 className="text-lg font-semibold">Hosting operator reputation</h2>
       </div>
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
-        {rep.asnOrg && <span className="rounded-full border border-white/15 px-2 py-0.5">operator: <span className="text-ink">{rep.asnOrg}</span></span>}
+        {rep.asnOrg && <span className="rounded-full border border-white/15 px-2 py-0.5">{rep.asnOrgIsFrontend ? "frontend (CDN)" : "operator"}: <span className="text-ink">{rep.asnOrg}</span></span>}
         {rep.operators.map((o) => <span key={o} className="rounded-full border border-white/15 px-2 py-0.5">{o}</span>)}
         <span className="rounded-full border border-white/15 px-2 py-0.5">{rep.coHostedCount} co-hosted domain(s)</span>
         <span className={`rounded-full border px-2 py-0.5 ${rep.sanctions.connected ? "border-white/15" : "border-yellow-500/30 bg-yellow-500/5 text-yellow-200/80"}`} title={rep.sanctions.reason || ""}>

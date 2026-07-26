@@ -16,7 +16,34 @@ import { campaignMatch, stateMediaMatch, foreignAgentMatch } from "@/lib/io-refe
 import { screenSanctions } from "@/lib/opensanctions";
 import { lookupPublicOfficers, type PublicRecordsResult } from "@/lib/public-records";
 
-export const OPERATOR_REPUTATION_VERSION = "operator-reputation-v1";
+export const OPERATOR_REPUTATION_VERSION = "operator-reputation-v2";
+
+// A sanctions/watchlist name-match must clear a strong score before it is shown at
+// all — a weak fuzzy match on an org string is exactly how a garbage "hit" (an
+// unrelated person's name) leaks in. Confidence is derived from the score, never
+// asserted. Screening runs on the REAL operator, never on a mega-provider/CDN
+// frontend (screening "Google LLC" or "Cloudflare, Inc." is meaningless).
+const SANCTIONS_SURFACE_MIN = 0.85; // below this: not shown
+const SANCTIONS_HIGH = 0.92;        // at/above this: High
+const SANCTIONS_PERSON_MIN = 0.95;  // org-name → Person hit needs near-exact (usually coincidence)
+
+export function sanctionConfidence(score: number | null, schema: string): FlagConfidence | null {
+  if (score == null) return null; // no score => can't assert strength; caller falls back to caption match
+  const isPerson = /person/i.test(schema);
+  if (isPerson && score < SANCTIONS_PERSON_MIN) return null;
+  if (score < SANCTIONS_SURFACE_MIN) return null;
+  if (isPerson) return "Medium"; // an org-name matching a person is capped — never High
+  return score >= SANCTIONS_HIGH ? "High" : "Medium";
+}
+
+// Fallback when the API returns no score: keep the hit only if the query's
+// significant tokens actually appear in the designated entity's caption.
+function captionMatches(query: string, caption: string): boolean {
+  const toks = query.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length >= 3);
+  if (!toks.length) return false;
+  const cap = caption.toLowerCase();
+  return toks.every((t) => cap.includes(t));
+}
 
 export type OperatorFlagKind = "sanctions" | "documented_campaign" | "state_media" | "foreign_agent";
 export type FlagConfidence = "Low" | "Medium" | "High";
@@ -34,7 +61,8 @@ export interface OperatorFlag {
 export interface OperatorReputation {
   version: string;
   operators: string[];        // normalized operator tokens (e.g. "1984")
-  asnOrg?: string;            // raw hosting/network org label
+  asnOrg?: string;            // raw hosting/network org label (real operator when known)
+  asnOrgIsFrontend?: boolean; // true when asnOrg is only a CDN/mega-provider frontend, not the real operator
   coHostedCount: number;
   coHostedSample: string[];
   flags: OperatorFlag[];      // documented, cited concerns (empty is a valid result)
@@ -69,7 +97,11 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
     (input.asnOrgs || []).map((s) => normalizeNetOrg(s)).filter((s): s is string => !!s)
       .concat((input.nameserverHosts || []).map((h) => { const rd = regDomain(h); return rd ? normalizeNetOrg(rd.split(".")[0]) : null; }).filter((s): s is string => !!s)),
   )];
-  const asnOrg = (input.asnOrgs || []).find((s) => !!s) || undefined;
+  // The REAL operator(s): raw asnOrg strings that survive the mega-provider filter
+  // (normalizeNetOrg returns null for Google/Cloudflare/etc.). Sanctions + officer
+  // lookups run on these — never on the CDN frontend. Display prefers a real one.
+  const realAsnOrgs = [...new Set((input.asnOrgs || []).filter((s): s is string => !!s && !!normalizeNetOrg(s)))];
+  const asnOrg = realAsnOrgs[0] || (input.asnOrgs || []).find((s) => !!s) || undefined;
 
   const nsDomains = [...new Set((input.nameserverHosts || []).map((h) => regDomain(h)).filter((d): d is string => !!d))];
   const coHosted = [...new Set(input.coHosted || [])];
@@ -78,22 +110,30 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
   for (const d of nsDomains) flags.push(...refFlags(d, true));
   for (const d of coHosted.slice(0, 50)) flags.push(...refFlags(d, false));
 
-  // Sanctions screening on the operator org (key-gated -> honest not-connected).
+  // Sanctions screening on the REAL operator org(s) — key-gated -> honest
+  // not-connected. Only strong matches surface; weak fuzzy matches (the source of
+  // garbage "hits" like an unrelated person's name) are dropped, never shown.
   let sanctions: OperatorReputation["sanctions"] = { connected: false, hits: 0 };
-  if (asnOrg) {
+  let surfaced = 0;
+  for (const target of realAsnOrgs.slice(0, 2)) {
     try {
-      const screen = await screenSanctions(asnOrg);
-      sanctions = { connected: screen.connected, reason: screen.reason, hits: screen.hits.length };
-      if (screen.connected && screen.hits.length) {
-        const h = screen.hits[0];
-        flags.push({ kind: "sanctions", subject: asnOrg, detail: `possible public sanctions/watchlist match: ${h.caption} (${h.datasets.slice(0, 3).join(", ")})`, citation: h.url, confidence: "High", onOwnInfra: true, alternative: "A name match is not proof of identity — the sanctioned entity may be a different organization with a similar name; confirm before acting." });
+      const screen = await screenSanctions(target);
+      if (!sanctions.connected) sanctions = { connected: screen.connected, reason: screen.reason, hits: 0 };
+      if (!screen.connected) continue;
+      for (const h of screen.hits) {
+        const conf = sanctionConfidence(h.score, h.schema)
+          ?? (h.score == null && captionMatches(target, h.caption) ? "Medium" : null);
+        if (!conf) continue; // weak/irrelevant match: not shown
+        surfaced++;
+        flags.push({ kind: "sanctions", subject: target, detail: `possible public sanctions/watchlist match: ${h.caption} (${h.schema}${h.score != null ? `, score ${h.score.toFixed(2)}` : ""}; ${h.datasets.slice(0, 3).join(", ")})`, citation: h.url, confidence: conf, onOwnInfra: true, alternative: "A name match is not proof of identity — the designated entity may be a different party with a similar name; confirm against the cited source before acting." });
       }
     } catch { /* leave not-connected */ }
   }
+  sanctions.hits = surfaced;
 
-  // Public-record officer disclosure on the operator org (key-gated, cited).
+  // Public-record officer disclosure on the REAL operator org (key-gated, cited).
   let publicOfficers: PublicRecordsResult | undefined;
-  if (asnOrg) { try { publicOfficers = await lookupPublicOfficers(asnOrg); } catch { /* leave undefined */ } }
+  if (asnOrg && realAsnOrgs.length) { try { publicOfficers = await lookupPublicOfficers(realAsnOrgs[0]); } catch { /* leave undefined */ } }
 
   // Rank: on-own-infra + higher confidence first.
   const rank = { High: 3, Medium: 2, Low: 1 } as const;
@@ -102,6 +142,7 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
   return {
     version: OPERATOR_REPUTATION_VERSION,
     operators, asnOrg,
+    asnOrgIsFrontend: !realAsnOrgs.length && !!asnOrg,
     coHostedCount: coHosted.length,
     coHostedSample: coHosted.slice(0, 12),
     flags,
