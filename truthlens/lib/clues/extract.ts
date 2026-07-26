@@ -4,6 +4,8 @@
 // Site Report operator-graph uses (shared IP / GA / AdSense / SSL SAN), applied
 // generically to every check type. Pure + unit-tested.
 
+import { extractGaIds, extractAdsenseIds } from "@/lib/trackers";
+
 export type EntityKind =
   | "ip" | "domain" | "asn" | "net_org" | "account" | "email_domain" | "ga_id" | "adsense_id" | "ssl_san";
 
@@ -13,8 +15,6 @@ export interface Entity {
 }
 
 const IPV4 = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g;
-const GA = /\b(?:G-[A-Z0-9]{6,}|UA-\d{4,}-\d+|GT-[A-Z0-9]{6,})\b/g;
-const ADSENSE = /\bca-pub-\d{10,}\b/g;
 const ASN = /\bAS\d{2,6}\b/gi;
 const ASN_ORG = /"asnOrg"\s*:\s*"([^"]+)"/g;
 const PRIVATE_IP = /^(?:10\.|127\.|0\.|169\.254\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/;
@@ -73,8 +73,8 @@ export function extractEntities(type: string, input: string, result: any): Entit
 
   // Regex sweep over the whole blob.
   for (const m of blob.match(IPV4) || []) if (!PRIVATE_IP.test(m)) add("ip", m);
-  for (const m of blob.match(GA) || []) add("ga_id", m.toUpperCase());
-  for (const m of blob.match(ADSENSE) || []) add("adsense_id", m.toLowerCase());
+  for (const g of extractGaIds(blob)) add("ga_id", g.toUpperCase());
+  for (const a of extractAdsenseIds(blob)) add("adsense_id", a.toLowerCase());
   for (const m of blob.match(ASN) || []) add("asn", m.toUpperCase());
   // Hosting/network operator (e.g. "1984 ehf") from every asnOrg field, wherever
   // it is nested - this is what links two sites on the same niche host.

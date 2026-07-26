@@ -18,6 +18,7 @@ import { normalizeText, jaccard, signatureOf } from "@/lib/similarity";
 import { assessOperatorReputation } from "@/lib/operator-reputation";
 import { crossLookup } from "@/lib/bridge";
 import { buildOperatorGraph, SHARED_IP_THRESHOLD } from "@/lib/network";
+import { extractRichTrackers } from "@/lib/trackers";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { fetchOpenPageRankBulk } from "@/lib/authority";
 import { calibrateOverlap, buildPairEdge, BOARD_RUBRIC_VERSION } from "./calibrate";
@@ -157,15 +158,8 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
     for (const g of tech.gaIds || []) { push(artifacts, "ga_id", g); gaIds.push(g); }
     for (const a of tech.adsenseIds || []) { push(artifacts, "adsense_id", a); adsenseIds.push(a); }
 
-    // strong ID-bearing tags via regex (no new dependency)
-    for (const m of html.matchAll(/GTM-[A-Z0-9]{4,}/g)) push(artifacts, "gtm_id", m[0]);
-    for (const m of html.matchAll(/fbq\(\s*['"]init['"]\s*,\s*['"](\d{6,})['"]/g)) push(artifacts, "fb_pixel_id", m[1]);
-    for (const m of html.matchAll(/hotjar[^0-9]{0,20}hjid\s*[:=]\s*(\d{4,})/gi)) push(artifacts, "hotjar_id", m[1]);
-    for (const m of html.matchAll(/clarity[^"']{0,40}["']([a-z0-9]{8,12})["']/gi)) push(artifacts, "clarity_id", m[1]);
-    for (const m of html.matchAll(/ym\(\s*(\d{5,})\s*,/g)) push(artifacts, "yandex_id", m[1]);
-    const matomoHost = html.match(/\/\/([a-z0-9.-]+)\/matomo\.js/i)?.[1] || html.match(/setTrackerUrl[^"']+["']https?:\/\/([a-z0-9.-]+)\//i)?.[1];
-    const matomoSite = html.match(/setSiteId["',\s]+["']?(\d+)/i)?.[1];
-    if (matomoHost && matomoSite) push(artifacts, "matomo_id", `${matomoHost.toLowerCase()}#${matomoSite}`, `${matomoHost} site ${matomoSite}`);
+    // strong ID-bearing tags (GTM / Meta pixel / Hotjar / Clarity / Yandex / Matomo)
+    for (const t of extractRichTrackers(html)) push(artifacts, t.kind as any, t.value, t.display);
     for (const m of html.matchAll(/name=["']google-site-verification["']\s+content=["']([^"']+)["']/gi)) push(artifacts, "verification_token", `google:${m[1]}`);
 
     // embedded third-party origins (script/img/iframe) + outbound link domains

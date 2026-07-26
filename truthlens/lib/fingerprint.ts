@@ -4,10 +4,9 @@
 
 import * as cheerio from "cheerio";
 import type { TechInfo, SeoInfo } from "./types";
+import { extractGaIds, extractAdsenseIds } from "./trackers";
 
 const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
-const GA_RE = /\b(G-[A-Z0-9]{6,}|UA-\d{4,}-\d{1,4})\b/g;
-const ADSENSE_RE = /\bca-pub-\d{10,}\b/g;
 
 const AD_NETWORKS: { name: string; re: RegExp }[] = [
   { name: "Google AdSense", re: /pagead2\.googlesyndication|adsbygoogle/i },
@@ -52,17 +51,6 @@ function detectCms(html: string, headers: Record<string, string>): string | unde
   return undefined;
 }
 
-function matchAll(re: RegExp, html: string): string[] {
-  const out = new Set<string>();
-  let m: RegExpExecArray | null;
-  const r = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
-  while ((m = r.exec(html)) !== null) {
-    out.add(m[1] || m[0]);
-    if (out.size > 50) break;
-  }
-  return Array.from(out);
-}
-
 function hasLink($: cheerio.CheerioAPI, patterns: RegExp): boolean {
   let found = false;
   $("a").each((_, el) => {
@@ -85,8 +73,8 @@ export function fingerprint(
   const adNetworks = AD_NETWORKS.filter((a) => a.re.test(html)).map((a) => a.name);
   const trackers = TRACKERS.filter((t) => t.re.test(html)).map((t) => t.name);
 
-  const gaIds = matchAll(GA_RE, html);
-  const adsenseIds = matchAll(ADSENSE_RE, html);
+  const gaIds = extractGaIds(html);
+  const adsenseIds = extractAdsenseIds(html);
 
   // Emails: from mailto: and raw text, excluding obvious asset filenames.
   const emails = new Set<string>();
