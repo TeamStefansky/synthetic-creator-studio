@@ -316,6 +316,9 @@ export interface PostCheckResult {
    * (authentic vs AI/edited, whether it supports the caption or is miscaptioned,
    * and any visual manipulation signs). Absent when no image was analyzed. */
   imageAssessment?: string;
+  /** OCR: text transcribed verbatim from the image (jersey/number, captions,
+   * overlays, watermarks, signs). Absent when no image was analyzed. */
+  imageText?: string;
 }
 
 // --- Social amplification / bot analysis (X/Twitter; needs X_BEARER_TOKEN) --

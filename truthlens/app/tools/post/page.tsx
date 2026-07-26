@@ -234,10 +234,16 @@ function PostCheckInner() {
 
               <div className="card"><p className="text-sm text-ink">{res.summary}</p></div>
 
-              {res.imageAssessment && (
+              {(res.imageAssessment || res.imageText) && (
                 <div className="card border-brand/30 bg-brand/[0.04]">
                   <h3 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-ink"><ImageIcon className="h-4 w-4 text-brand-soft" /> Image forensics</h3>
-                  <p className="text-sm text-ink-secondary">{res.imageAssessment}</p>
+                  {res.imageAssessment && <p className="text-sm text-ink-secondary">{res.imageAssessment}</p>}
+                  {res.imageText && (
+                    <div className="mt-3 border-t border-white/5 pt-2">
+                      <div className="label-muted mb-1">Text in image (OCR)</div>
+                      <p className="whitespace-pre-wrap font-mono text-xs text-ink-secondary">{res.imageText}</p>
+                    </div>
+                  )}
                 </div>
               )}
 

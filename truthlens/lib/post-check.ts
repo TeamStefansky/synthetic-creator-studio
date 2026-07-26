@@ -68,7 +68,7 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 } as any],
       system:
         "You are a rigorous fact-checker AND image-forensics analyst. Identify the concrete, check-worthy factual claims and verify them using web_search against reliable sources. Distinguish fact from opinion/satire. Cite real sources. Never fabricate. Be calibrated: use 'Unverified' when evidence is thin. " +
-        "When an IMAGE is provided, scrutinize the IMAGE ITSELF as well as the text - a post can be fake because its PHOTO is fake or miscaptioned even when the caption's standalone fact is true. Look for: implausible or impossible details (e.g. an implausible jersey/kit number, wrong logos or text, a person/outfit/setting that does not fit the claimed event), distorted anatomy (hands, teeth, ears), warped or nonsensical text, inconsistent lighting/shadows/reflections, and AI-generation or photo-editing artifacts. Judge whether the image is authentic vs AI-generated/edited, and whether it genuinely SUPPORTS the caption or is out-of-context/miscaptioned. " +
+        "When an IMAGE is provided: (1) OCR - transcribe VERBATIM all text visible in the image (jersey name and number, captions, overlays, watermarks, signs); read the exact letters shown, do NOT 'correct' them into a more plausible name. (2) Scrutinize the IMAGE ITSELF as well as the text - a post can be fake because its PHOTO is fake or miscaptioned even when the caption's standalone fact is true. Look for: implausible or impossible details (e.g. an implausible jersey/kit number, a name+number that does not match a real player, wrong logos or text, a person/outfit/setting that does not fit the claimed event), distorted anatomy (hands, teeth, ears), warped or nonsensical text, inconsistent lighting/shadows/reflections, and AI-generation or photo-editing artifacts. (3) If the image clearly depicts a widely-recognizable PUBLIC figure (a celebrity, athlete, politician, or public official) and it is relevant to the assessment, you MAY note who it appears to be, hedged ('appears to be …'). NEVER attempt to identify, name, or de-anonymize a PRIVATE / non-public individual - that is prohibited; describe them only generically ('a person'). This is fact-check context on public figures, not surveillance. Judge whether the image is authentic vs AI-generated/edited, and whether it genuinely SUPPORTS the caption or is out-of-context/miscaptioned. " +
         "The overall verdict must reflect the WHOLE post: if the image is manipulated, AI-generated, or miscaptioned, the post is at least 'Misleading' (or 'Likely False' if the image fabricates the event) EVEN IF the caption's fact is independently true. Output is consumed by software - end with a single JSON object and nothing after it.",
       messages: [
         {
@@ -85,7 +85,8 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
   "confidence": "Low | Medium | High",
   "summary": "2-3 sentence plain-language conclusion covering BOTH the claims and (if an image was given) the image's authenticity",
   "claims": [{"claim":"the specific claim","verdict":"supported | contradicted | unverified | misleading","assessment":"what the sources show"}],${input.image ? `
-  "imageAssessment": "1-3 sentences: is the image authentic, AI-generated, or edited? does it actually support the caption or is it miscaptioned/out-of-context? name the specific visual signs (e.g. implausible jersey number, distorted hands, warped text, lighting mismatch).",` : ""}
+  "imageText": "verbatim OCR of ALL text visible in the image (jersey name+number, captions, overlays, watermarks); empty string if none",
+  "imageAssessment": "1-3 sentences: is the image authentic, AI-generated, or edited? if a widely-recognizable PUBLIC figure is shown and relevant, note who it appears to be (hedged) - but never a private individual. does it actually support the caption or is it miscaptioned/out-of-context? name the specific visual signs (e.g. implausible jersey name/number, distorted hands, warped text, lighting mismatch).",` : ""}
   "manipulationTechniques": ["e.g. miscaptioned/out-of-context image, AI-generated image, doctored photo, missing context, doctored quote, false attribution"],
   "aiGeneratedLikelihood": 0-100 (${input.image ? "your estimate the IMAGE is AI-generated or digitally manipulated, from the visual artifacts you see" : "0 when there is no image"}),
   "redFlags": ["specific warning signs${input.image ? " in the text AND the image" : " in the text"}"],
@@ -121,6 +122,7 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
         .filter((s) => s.url)
         .slice(0, 20),
       imageAssessment: input.image && parsed.imageAssessment ? String(parsed.imageAssessment).slice(0, 800) : undefined,
+      imageText: input.image && parsed.imageText ? String(parsed.imageText).slice(0, 600) : undefined,
       note: "Fact-check with sources - indicators, not a final legal ruling. Verify the sources yourself.",
     };
   } catch (e: any) {

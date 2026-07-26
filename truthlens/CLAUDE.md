@@ -34,6 +34,19 @@ in the operator/CIB/case graph. Everything else in rule 1 stands: no inference-b
 person attribution, no de-anonymization, no surveillance, no machine "person X is
 responsible." A disclosed officer is public-record context, not an accusation.
 
+### Public-figure recognition in submitted media (owner-authorized clarification)
+When a user submits an image to Post Check for fake-news analysis, the analyzer MAY
+note that the image **appears to depict a widely-recognizable PUBLIC figure** (a
+celebrity, athlete, politician, or public official) when that is relevant to the
+assessment (e.g. a miscaptioned or doctored photo of a public figure). This is
+ordinary fact-checking of public figures, not surveillance. Strict bounds: it is
+**hedged** ("appears to be"); it applies ONLY to public figures; a **private /
+non-public individual is NEVER identified, named, or de-anonymized** — describe them
+generically ("a person"); and it is never person-tracking, cross-platform linking,
+or attribution of responsibility. OCR of visible text in a submitted image is always
+allowed. This clarification is limited to the Post Check media analyzer and does not
+loosen the no-person-node / no-de-anonymization rules anywhere else.
+
 ## Stack (verified Phase 0)
 - Next.js `^14.2.35` (App Router) + React `18.3` + TypeScript, deployed on Vercel.
 - Server-only for all OSINT and LLM calls - API routes / server actions. **No API key ever reaches the client.**
