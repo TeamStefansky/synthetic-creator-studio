@@ -8,7 +8,7 @@
 // scoping is a future item once there is per-user identity (see NOTES.md).
 
 import { storeAvailable, kvGetJson, kvSetJson } from "@/lib/store";
-import { assertSafeUrl, safeFetchText, parseFeed, PREVIEW_ITEMS } from "./fetch";
+import { assertSafeUrl, safeFetchText, parseFeed, discoverFeedUrls, COMMON_FEED_PATHS, PREVIEW_ITEMS } from "./fetch";
 
 export const FEEDS_KEY = "conn:feeds:default";       // single-workspace KV namespace
 export const LOCAL_FEEDS_KEY = "tl:connections:feeds"; // client localStorage fallback
@@ -43,33 +43,70 @@ export interface FeedPreview {
   sampleTitles: string[];
 }
 
-/** Normalize for dedup: lowercase scheme+host, strip trailing slash + hash. */
+/** Normalize for dedup: add https:// when the scheme is missing (so a bare
+ * "cnn.com" works), lowercase scheme+host, strip trailing slash + hash. */
 export function normalizeFeedUrl(raw: string): string {
-  const u = new URL(raw.trim());
+  let s = raw.trim();
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) s = "https://" + s;
+  const u = new URL(s);
   u.protocol = u.protocol.toLowerCase();
   u.hostname = u.hostname.toLowerCase();
   u.hash = "";
-  let s = u.toString();
+  s = u.toString();
   if (s.endsWith("/")) s = s.slice(0, -1);
   return s;
 }
 
-/** Validate a URL and return a preview (title + a few item titles). Throws a
- * user-safe error when it is unsafe or does not parse — the caller must NOT save
- * a feed that fails this. */
-export async function validateAndPreview(rawUrl: string): Promise<FeedPreview> {
-  const normalized = normalizeFeedUrl(rawUrl); // throws on invalid URL
-  await assertSafeUrl(normalized);             // SSRF guard
-  const { text } = await safeFetchText(normalized);
-  const parsed = parseFeed(text);              // throws when not RSS/Atom
+export const MAX_DISCOVERY_TRIES = 8; // candidate feed URLs probed when a site is pasted
+
+function toPreview(url: string, parsed: ReturnType<typeof parseFeed>): FeedPreview {
   return {
-    url: normalized,
+    url: normalizeFeedUrl(url),
     title: parsed.title,
     siteUrl: parsed.siteUrl,
     kind: parsed.kind,
     itemCount: parsed.items.length,
     sampleTitles: parsed.items.slice(0, PREVIEW_ITEMS).map((i) => i.title).filter(Boolean),
   };
+}
+
+/** Validate a URL and return a preview (title + a few item titles). If the URL is a
+ * site homepage rather than a feed, AUTO-DISCOVER the site's own declared feed
+ * (<link rel="alternate"> + common feed paths) so the user can just paste e.g.
+ * cnn.com. Throws a user-safe error when nothing safe parses — the caller must NOT
+ * save a feed that fails this. */
+export async function validateAndPreview(rawUrl: string): Promise<FeedPreview> {
+  const normalized = normalizeFeedUrl(rawUrl); // throws on invalid URL
+  await assertSafeUrl(normalized);             // SSRF guard
+  const { text, finalUrl } = await safeFetchText(normalized);
+
+  // 1) Already a feed? Use it directly.
+  try {
+    return toPreview(normalized, parseFeed(text));
+  } catch { /* not a feed — try to discover the site's feed below */ }
+
+  // 2) Discover from the page's autodiscovery tags, then common feed paths.
+  const origin = new URL(finalUrl).origin;
+  const candidates = [
+    ...discoverFeedUrls(text, finalUrl),
+    ...COMMON_FEED_PATHS.map((p) => `${origin}${p}`),
+  ];
+  const seen = new Set<string>([normalized]);
+  let tried = 0;
+  for (const cand of candidates) {
+    if (tried >= MAX_DISCOVERY_TRIES) break;
+    let key: string;
+    try { key = normalizeFeedUrl(cand); } catch { continue; }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    tried++;
+    try {
+      await assertSafeUrl(key);
+      const res = await safeFetchText(key);
+      return toPreview(key, parseFeed(res.text));
+    } catch { /* try the next candidate */ }
+  }
+  throw new Error("No RSS or Atom feed found at this site. Try the site's feed URL (often /rss or /feed).");
 }
 
 // ---- server-side (KV) persistence -------------------------------------------

@@ -154,6 +154,32 @@ export function sanitizeText(s: string, max = 500): string {
     .slice(0, max);
 }
 
+// ---- feed auto-discovery -----------------------------------------------------
+// So a user can paste a site's homepage (e.g. cnn.com) instead of hunting for its
+// exact feed URL. We read the site's OWN declared feed(s) via the standard
+// <link rel="alternate" type="application/rss+xml|atom+xml"> autodiscovery tag, then
+// fall back to conventional feed paths. This is not content scraping — only the
+// site's declared RSS/Atom feed is ever ingested.
+
+export const COMMON_FEED_PATHS = [
+  "/feed", "/rss", "/rss.xml", "/feed.xml", "/atom.xml", "/index.xml",
+  "/feeds/posts/default", "/blog/feed", "/en/rss", "/?feed=rss2",
+];
+
+/** Candidate feed URLs declared in a page's <link rel="alternate"> autodiscovery
+ * tags (absolute-resolved against baseUrl), most-specific first. */
+export function discoverFeedUrls(html: string, baseUrl: string): string[] {
+  const out: string[] = [];
+  for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
+    if (!/\brel=["']?[^"'>]*\balternate\b/i.test(tag)) continue;
+    if (!/\btype=["'](?:application\/(?:rss|atom)\+xml|application\/xml|text\/xml)["']/i.test(tag)) continue;
+    const href = tag.match(/\bhref=["']([^"']+)["']/i)?.[1];
+    if (!href) continue;
+    try { out.push(new URL(href, baseUrl).toString()); } catch { /* skip */ }
+  }
+  return [...new Set(out)];
+}
+
 // ---- parse (RSS + Atom) ------------------------------------------------------
 
 function tag(block: string, name: string): string {

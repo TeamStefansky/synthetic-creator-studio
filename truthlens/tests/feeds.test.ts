@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText } from "../lib/feeds/fetch";
+import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText, discoverFeedUrls } from "../lib/feeds/fetch";
 import { normalizeFeedUrl, validateAndPreview } from "../lib/feeds/store";
 
 describe("SSRF guard", () => {
@@ -66,6 +66,27 @@ describe("normalizeFeedUrl", () => {
   it("lowercases host, strips trailing slash + hash for dedup", () => {
     expect(normalizeFeedUrl("HTTPS://Ex.COM/Feed/#top")).toBe("https://ex.com/Feed");
     expect(normalizeFeedUrl("https://ex.com/feed")).toBe("https://ex.com/feed");
+  });
+  it("adds https:// when the scheme is missing (bare domain)", () => {
+    expect(normalizeFeedUrl("cnn.com")).toBe("https://cnn.com");
+    expect(normalizeFeedUrl("www.example.com/rss")).toBe("https://www.example.com/rss");
+  });
+});
+
+describe("discoverFeedUrls (paste a homepage, find its feed)", () => {
+  it("extracts RSS/Atom autodiscovery <link rel=alternate> hrefs, resolved absolute", () => {
+    const html = `<html><head>
+      <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss/topstories.xml">
+      <link rel="alternate" type="application/atom+xml" href="https://cdn.cnn.com/atom.xml">
+      <link rel="stylesheet" href="/style.css">
+    </head></html>`;
+    const found = discoverFeedUrls(html, "https://www.cnn.com/");
+    expect(found).toContain("https://www.cnn.com/rss/topstories.xml");
+    expect(found).toContain("https://cdn.cnn.com/atom.xml");
+    expect(found).not.toContain("/style.css");
+  });
+  it("returns [] when there is no autodiscovery tag", () => {
+    expect(discoverFeedUrls("<html><head></head></html>", "https://x.com")).toEqual([]);
   });
 });
 

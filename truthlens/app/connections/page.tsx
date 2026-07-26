@@ -99,7 +99,8 @@ export default function ConnectionsPage() {
           <h1 className="font-display text-2xl font-bold">Connections</h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          Add your own RSS / Atom feeds as data sources. Each is validated on add and then
+          Add news sites or feeds as data sources - paste a site homepage (e.g. cnn.com) and we
+          find its feed automatically, or paste a feed URL directly. Each is validated, then
           included in narrative analysis and Brand Watch alongside the built-in sources.
         </p>
       </div>
@@ -107,7 +108,7 @@ export default function ConnectionsPage() {
       {!feeds.length && (
         <ToolIntro
           heading="Bring your own sources"
-          what={<>Paste an RSS or Atom feed URL (one per line, or comma-separated). We validate it, show a quick preview, and save it. From then on its items flow into narrative monitoring like any other source - with its own connected / error / empty status.</>}
+          what={<>Paste a news site (e.g. <span className="text-ink">cnn.com</span>) or a feed URL - one per line, or comma-separated. If you give a homepage we find its RSS/Atom feed automatically; we validate it, show a quick preview, and save it. From then on its items flow into narrative monitoring like any other source - with its own connected / error / empty status.</>}
           legend={[
             { label: "Validated on add", tone: "legit", text: "a feed that doesn't parse is rejected and never saved." },
             { label: "SSRF-guarded", tone: "neutral", text: "internal / private addresses are blocked; only public http(s) feeds." },
@@ -121,7 +122,7 @@ export default function ConnectionsPage() {
       <div className="card space-y-3">
         <textarea
           value={input} onChange={(e) => { setInput(e.target.value); setErr(""); }}
-          placeholder={"https://example.com/feed.xml\nhttps://another.site/atom.xml"}
+          placeholder={"cnn.com\nhttps://www.theguardian.com/world/rss"}
           className="h-24 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-sm outline-none focus:border-brand scroll-thin"
         />
         <div className="flex flex-wrap items-center gap-2">
