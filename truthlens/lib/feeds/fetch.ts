@@ -166,6 +166,57 @@ export const COMMON_FEED_PATHS = [
   "/feeds/posts/default", "/blog/feed", "/en/rss", "/?feed=rss2",
 ];
 
+// Curated, well-known public RSS/Atom endpoints for major outlets. Many big
+// publishers (CNN, BBC, NYT, ...) serve NO <link rel="alternate"> autodiscovery
+// tag and host their feed on a SEPARATE subdomain (e.g. rss.cnn.com) with a
+// non-standard path, so neither autodiscovery nor same-origin /rss probing finds
+// it. This map is tried FIRST for those hosts. It is operator-maintained reference
+// data (CLAUDE.md); every entry is still validated on add, so a moved endpoint
+// simply fails over to generic discovery rather than saving anything unverified.
+export const KNOWN_FEEDS: Record<string, string[]> = {
+  "cnn.com": ["http://rss.cnn.com/rss/cnn_topstories.rss", "http://rss.cnn.com/rss/cnn_world.rss"],
+  "bbc.com": ["https://feeds.bbci.co.uk/news/rss.xml", "https://feeds.bbci.co.uk/news/world/rss.xml"],
+  "bbc.co.uk": ["https://feeds.bbci.co.uk/news/rss.xml", "https://feeds.bbci.co.uk/news/world/rss.xml"],
+  "nytimes.com": ["https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"],
+  "theguardian.com": ["https://www.theguardian.com/world/rss", "https://www.theguardian.com/international/rss"],
+  "washingtonpost.com": ["https://feeds.washingtonpost.com/rss/world", "https://feeds.washingtonpost.com/rss/national"],
+  "aljazeera.com": ["https://www.aljazeera.com/xml/rss/all.xml"],
+  "npr.org": ["https://feeds.npr.org/1001/rss.xml"],
+  "foxnews.com": ["https://moxie.foxnews.com/google-publisher/latest.xml", "https://moxie.foxnews.com/google-publisher/world.xml"],
+  "dw.com": ["https://rss.dw.com/rdf/rss-en-all"],
+  "france24.com": ["https://www.france24.com/en/rss"],
+  "timesofisrael.com": ["https://www.timesofisrael.com/feed/"],
+  "jpost.com": ["https://www.jpost.com/rss/rssfeedsheadlines.aspx"],
+  "ynetnews.com": ["https://www.ynetnews.com/Integration/StoryRss3082.xml"],
+};
+
+/** Curated feed URLs for a hostname (matches the host itself or any subdomain of a
+ * known registrable domain, e.g. www.cnn.com → cnn.com). [] when none is known. */
+export function knownFeedsFor(hostname: string): string[] {
+  const h = hostname.toLowerCase().replace(/\.$/, "");
+  for (const key of Object.keys(KNOWN_FEEDS)) {
+    if (h === key || h.endsWith("." + key)) return KNOWN_FEEDS[key];
+  }
+  return [];
+}
+
+// Publishers often put their feed on a dedicated subdomain (rss./feeds.). Probe a
+// small set of those for the long tail of sites not in KNOWN_FEEDS.
+export const FEED_SUBDOMAINS = ["rss", "feeds"];
+
+/** Feed-subdomain candidates (rss.<bare>, feeds.<bare>) with a couple of common
+ * paths, for a hostname that isn't already such a subdomain. */
+export function feedSubdomainCandidates(hostname: string): string[] {
+  const h = hostname.toLowerCase().replace(/\.$/, "");
+  const bare = h.replace(/^www\./, "");
+  const out: string[] = [];
+  for (const sub of FEED_SUBDOMAINS) {
+    if (h === `${sub}.${bare}` || h.startsWith(`${sub}.`)) continue;
+    for (const p of ["/rss.xml", "/feed", ""]) out.push(`https://${sub}.${bare}${p}`);
+  }
+  return [...new Set(out)];
+}
+
 /** Candidate feed URLs declared in a page's <link rel="alternate"> autodiscovery
  * tags (absolute-resolved against baseUrl), most-specific first. */
 export function discoverFeedUrls(html: string, baseUrl: string): string[] {

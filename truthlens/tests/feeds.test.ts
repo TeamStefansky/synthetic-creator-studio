@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText, discoverFeedUrls } from "../lib/feeds/fetch";
+import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText, discoverFeedUrls, knownFeedsFor, feedSubdomainCandidates } from "../lib/feeds/fetch";
 import { normalizeFeedUrl, validateAndPreview } from "../lib/feeds/store";
 
 describe("SSRF guard", () => {
@@ -87,6 +87,29 @@ describe("discoverFeedUrls (paste a homepage, find its feed)", () => {
   });
   it("returns [] when there is no autodiscovery tag", () => {
     expect(discoverFeedUrls("<html><head></head></html>", "https://x.com")).toEqual([]);
+  });
+});
+
+describe("knownFeedsFor (curated feeds for major outlets)", () => {
+  it("matches the host itself and any subdomain of a known outlet", () => {
+    expect(knownFeedsFor("cnn.com")).toContain("http://rss.cnn.com/rss/cnn_topstories.rss");
+    expect(knownFeedsFor("www.cnn.com")).toContain("http://rss.cnn.com/rss/cnn_topstories.rss");
+    expect(knownFeedsFor("edition.cnn.com")).toContain("http://rss.cnn.com/rss/cnn_topstories.rss");
+  });
+  it("returns [] for an unknown host (falls through to generic discovery)", () => {
+    expect(knownFeedsFor("some-random-blog.example")).toEqual([]);
+  });
+});
+
+describe("feedSubdomainCandidates (rss./feeds. probing for the long tail)", () => {
+  it("builds rss./feeds. candidates from the bare domain, skipping www", () => {
+    const c = feedSubdomainCandidates("www.example.com");
+    expect(c).toContain("https://rss.example.com/rss.xml");
+    expect(c).toContain("https://feeds.example.com/feed");
+    expect(c).toContain("https://rss.example.com");
+  });
+  it("does not re-probe a host that is already a feed subdomain", () => {
+    expect(feedSubdomainCandidates("rss.example.com").every((u) => !u.startsWith("https://rss.rss."))).toBe(true);
   });
 });
 

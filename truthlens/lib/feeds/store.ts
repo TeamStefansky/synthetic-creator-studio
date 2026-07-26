@@ -8,7 +8,7 @@
 // scoping is a future item once there is per-user identity (see NOTES.md).
 
 import { storeAvailable, kvGetJson, kvSetJson } from "@/lib/store";
-import { assertSafeUrl, safeFetchText, parseFeed, discoverFeedUrls, COMMON_FEED_PATHS, PREVIEW_ITEMS } from "./fetch";
+import { assertSafeUrl, safeFetchText, parseFeed, discoverFeedUrls, knownFeedsFor, feedSubdomainCandidates, COMMON_FEED_PATHS, PREVIEW_ITEMS } from "./fetch";
 
 export const FEEDS_KEY = "conn:feeds:default";       // single-workspace KV namespace
 export const LOCAL_FEEDS_KEY = "tl:connections:feeds"; // client localStorage fallback
@@ -57,7 +57,7 @@ export function normalizeFeedUrl(raw: string): string {
   return s;
 }
 
-export const MAX_DISCOVERY_TRIES = 8; // candidate feed URLs probed when a site is pasted
+export const MAX_DISCOVERY_TRIES = 12; // generic candidate feed URLs probed when a site is pasted
 
 function toPreview(url: string, parsed: ReturnType<typeof parseFeed>): FeedPreview {
   return {
@@ -70,28 +70,49 @@ function toPreview(url: string, parsed: ReturnType<typeof parseFeed>): FeedPrevi
   };
 }
 
+/** Fetch a candidate URL (SSRF-guarded) and return its preview if it parses as a
+ * feed; null on any failure so the caller can try the next candidate. */
+async function tryCandidate(cand: string): Promise<FeedPreview | null> {
+  try {
+    const key = normalizeFeedUrl(cand);
+    await assertSafeUrl(key);
+    const { text } = await safeFetchText(key);
+    return toPreview(key, parseFeed(text));
+  } catch { return null; }
+}
+
 /** Validate a URL and return a preview (title + a few item titles). If the URL is a
- * site homepage rather than a feed, AUTO-DISCOVER the site's own declared feed
- * (<link rel="alternate"> + common feed paths) so the user can just paste e.g.
- * cnn.com. Throws a user-safe error when nothing safe parses — the caller must NOT
- * save a feed that fails this. */
+ * site homepage rather than a feed, AUTO-DISCOVER the site's feed so the user can
+ * just paste e.g. cnn.com: (1) a curated known feed for major outlets, (2) the
+ * page's own <link rel="alternate"> autodiscovery tags, (3) common feed paths, (4)
+ * feed subdomains (rss./feeds.). Throws a user-safe error when nothing safe parses —
+ * the caller must NOT save a feed that fails this. */
 export async function validateAndPreview(rawUrl: string): Promise<FeedPreview> {
   const normalized = normalizeFeedUrl(rawUrl); // throws on invalid URL
+  const host = new URL(normalized).hostname;
   await assertSafeUrl(normalized);             // SSRF guard
-  const { text, finalUrl } = await safeFetchText(normalized);
 
-  // 1) Already a feed? Use it directly.
+  // 1) Curated known feed for this outlet (handles CNN/BBC/NYT-style separate feed
+  //    subdomains that have no autodiscovery tag). Tried before fetching the page.
+  for (const cand of knownFeedsFor(host)) {
+    const p = await tryCandidate(cand);
+    if (p) return p;
+  }
+
+  // 2) Is the pasted URL itself a feed?
+  const { text, finalUrl } = await safeFetchText(normalized);
   try {
     return toPreview(normalized, parseFeed(text));
-  } catch { /* not a feed — try to discover the site's feed below */ }
+  } catch { /* not a feed — discover the site's feed below */ }
 
-  // 2) Discover from the page's autodiscovery tags, then common feed paths.
+  // 3) Discover: autodiscovery tags, then common paths, then feed subdomains.
   const origin = new URL(finalUrl).origin;
   const candidates = [
     ...discoverFeedUrls(text, finalUrl),
     ...COMMON_FEED_PATHS.map((p) => `${origin}${p}`),
+    ...feedSubdomainCandidates(host),
   ];
-  const seen = new Set<string>([normalized]);
+  const seen = new Set<string>([normalizeFeedUrl(normalized)]);
   let tried = 0;
   for (const cand of candidates) {
     if (tried >= MAX_DISCOVERY_TRIES) break;
@@ -100,11 +121,8 @@ export async function validateAndPreview(rawUrl: string): Promise<FeedPreview> {
     if (seen.has(key)) continue;
     seen.add(key);
     tried++;
-    try {
-      await assertSafeUrl(key);
-      const res = await safeFetchText(key);
-      return toPreview(key, parseFeed(res.text));
-    } catch { /* try the next candidate */ }
+    const p = await tryCandidate(key);
+    if (p) return p;
   }
   throw new Error("No RSS or Atom feed found at this site. Try the site's feed URL (often /rss or /feed).");
 }
