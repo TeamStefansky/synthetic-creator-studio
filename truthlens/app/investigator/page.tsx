@@ -7,7 +7,7 @@
 // proposed for analyst approval; attribution is never reached. Nodes are
 // infrastructure, never people.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Bot, ArrowRight, Download, ShieldCheck } from "lucide-react";
 const NetworkGraph = dynamic(() => import("@/components/NetworkGraph"), { ssr: false });
@@ -30,6 +30,17 @@ function firstDomain(label: string): string | null {
   return m ? m[1].toLowerCase() : null;
 }
 
+// A stable, browser-local attribution handle so runs are attributed automatically
+// (the frozen rule requires an initiator) — entered once, never re-typed.
+function autoHandle(): string {
+  if (typeof window === "undefined") return "analyst";
+  try {
+    let h = localStorage.getItem("tl:investigator:handle");
+    if (!h) { h = `analyst-${Math.random().toString(36).slice(2, 8)}`; localStorage.setItem("tl:investigator:handle", h); }
+    return h;
+  } catch { return "analyst"; }
+}
+
 export default function InvestigatorPage() {
   const [seed, setSeed] = useState("");
   const [question, setQuestion] = useState("");
@@ -38,6 +49,7 @@ export default function InvestigatorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showJournal, setShowJournal] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const run = async () => {
     const seedEntities = seed.split(/[\s,]+/).map((d) => d.trim()).filter(Boolean);
@@ -58,13 +70,13 @@ export default function InvestigatorPage() {
   // (the browser-local cross-search clue index) — no manual link-pasting — and
   // carries the auto-derived insights into the run, then enriches externally and
   // reports like an investigative brief.
-  const investigateMySearches = async () => {
+  const investigateMySearches = async (silent = false) => {
     const findings = buildFindings();
-    if (!findings.findings.length) { setError("No cross-search connections yet — run a few Site Report / Origin / Link Board searches first, then let the investigator work from them."); return; }
+    if (!findings.findings.length) { if (!silent) setError("No cross-search connections yet — run a few Site Report / Origin / Link Board searches first, then let the investigator work from them."); return; }
     const seeds = [...new Set(findings.findings.flatMap((f) => f.searches.map((s) => firstDomain(s.label)).filter((d): d is string => !!d)))].slice(0, 12);
-    if (seeds.length < 2) { setError("Your searches don't yet share enough domain-level entities to investigate. Run a couple more site/origin searches."); return; }
+    if (seeds.length < 2) { if (!silent) setError("Your searches don't yet share enough domain-level entities to investigate. Run a couple more site/origin searches."); return; }
     const insights = findings.findings.slice(0, 12).map((f) => f.evidence);
-    const who = initiator.trim() || "analyst";
+    const who = initiator.trim() || autoHandle();
     setLoading(true); setError(""); setData(null);
     try {
       const r = await fetch("/api/agent/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ seedEntities: seeds, question: "What connects the things I have been searching, and what does external enrichment reveal?", initiator: who, insights }), cache: "no-store" });
@@ -81,6 +93,17 @@ export default function InvestigatorPage() {
     const url = URL.createObjectURL(new Blob([data.sitrep.markdown], { type: "text/markdown" }));
     const a = document.createElement("a"); a.href = url; a.download = "situation-report.md"; a.click(); URL.revokeObjectURL(url);
   };
+
+  // Fully automatic: attribute the run to a stable local handle and investigate
+  // your own searches on load — no fields to fill, no button to press.
+  useEffect(() => {
+    setInitiator(autoHandle());
+    investigateMySearches(true); // silent: no error banner if there's nothing to investigate yet
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist any handle the analyst chooses to override with.
+  useEffect(() => { if (initiator.trim()) { try { localStorage.setItem("tl:investigator:handle", initiator.trim()); } catch { /* ignore */ } } }, [initiator]);
 
   return (
     <div className="space-y-6">
@@ -99,18 +122,31 @@ export default function InvestigatorPage() {
       </div>
 
       <div className="card space-y-2">
-        <textarea value={seed} onChange={(e) => { setSeed(e.target.value); setError(""); }} placeholder={"Seed entities (2-12 domains), one per line or comma-separated"} className="h-20 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-sm outline-none focus:border-brand scroll-thin" />
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Question (e.g. are these operated together?)" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
-          <input value={initiator} onChange={(e) => setInitiator(e.target.value)} placeholder="Your name/handle (attribution — required)" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand sm:max-w-xs" />
+        {/* Primary: fully automatic — runs on your own searches, no fields to fill. */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-1 text-sm text-ink-secondary">
+            <ShieldCheck className="h-4 w-4 text-brand-soft" />
+            Runs automatically on your searches — read-only, budgeted, ceiling <span className="text-ink">association</span>, attributed to you.
+          </p>
+          <button onClick={() => investigateMySearches()} disabled={loading} className="btn shrink-0">
+            {loading ? "Investigating…" : <>Investigate my searches <ArrowRight className="h-4 w-4" /></>}
+          </button>
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <p className="flex items-center gap-1 text-xs text-ink-secondary"><ShieldCheck className="h-3.5 w-3.5" /> Read-only · budgeted · ceiling: association · a run is attributed and reproducible.</p>
-          <div className="flex shrink-0 items-center gap-2">
-            <button onClick={investigateMySearches} disabled={loading} title="Seed the run from your own searches across the system — no links to paste" className="rounded-xl border border-brand/40 px-3 py-2 text-sm text-brand-soft transition hover:bg-brand/10 disabled:opacity-50">Investigate my searches</button>
-            <button onClick={run} disabled={loading} className="btn">{loading ? "Investigating…" : <>Run <ArrowRight className="h-4 w-4" /></>}</button>
+
+        {/* Advanced (optional): investigate specific domains instead. */}
+        <button onClick={() => setShowAdvanced((v) => !v)} className="text-xs text-brand-soft hover:underline">
+          {showAdvanced ? "Hide" : "Advanced:"} investigate specific domains instead
+        </button>
+        {showAdvanced && (
+          <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <textarea value={seed} onChange={(e) => { setSeed(e.target.value); setError(""); }} placeholder={"Optional — specific domains (2-12), one per line or comma-separated"} className="h-20 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-sm outline-none focus:border-brand scroll-thin" />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Question (optional)" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
+              <input value={initiator} onChange={(e) => setInitiator(e.target.value)} placeholder="Attribution handle (auto-set)" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand sm:max-w-xs" />
+              <button onClick={run} disabled={loading} className="btn shrink-0">{loading ? "…" : <>Run <ArrowRight className="h-4 w-4" /></>}</button>
+            </div>
           </div>
-        </div>
+        )}
         {error && <p className="text-sm text-risk-high">{error}</p>}
       </div>
 
