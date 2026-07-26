@@ -11,6 +11,7 @@ import CaseBoard from "@/components/CaseBoard";
 import Disclaimer from "@/components/Disclaimer";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import ToolIntro from "@/components/ToolIntro";
+import CrossLinksCard from "@/components/CrossLinksCard";
 import type { BoardResult, PairEdge } from "@/lib/board/types";
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import { buildSearchNetwork, type SearchNetwork } from "@/lib/clues/network";
@@ -300,6 +301,9 @@ export default function LinkBoardPage() {
               </div>
             );
           })()}
+
+          {/* infra -> narrative bridge: documented lists & monitored narratives */}
+          {result.crossLinks && <CrossLinksCard cross={result.crossLinks} />}
 
           {/* hosting-operator reputation - who is the shared host, documented + cited */}
           {result.operatorReputation && (result.operatorReputation.flags.length > 0 || result.operatorReputation.coHostedCount > 0) && (

@@ -61,10 +61,18 @@ export async function POST(req: Request) {
     // is computed inside runBoard and rides on the board result.
     const operatorReputation = board.operatorReputation;
 
+    // infra -> narrative bridge: the investigator autonomously surfaces which seed
+    // domains match a documented list or amplify a monitored narrative (computed in
+    // runBoard). These become INSIGHTS the analyst never had to paste in.
+    const crossInsights = (board.crossLinks?.hits || []).map(
+      (h) => `${h.domain} — ${h.detail} [${h.confidence}]${h.citation ? ` (cite: ${h.citation})` : ""}. Could also be: ${h.alternative}`,
+    );
+    const allInsights = [...insights, ...crossInsights];
+
     const sitrep = buildSitrep({
       record: run.record, caseFile: run.caseFile, adversary, notPursued: [],
       measuredFpr: validation.falsePositiveRate, fixtureSuiteVersion: validation.fixtureSuiteVersion, premortem,
-      insights, operatorReputation,
+      insights: allInsights, operatorReputation,
     });
 
     return NextResponse.json(

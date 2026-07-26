@@ -16,6 +16,7 @@ import { reverseIp } from "@/lib/reverseip";
 import { fingerprint as techFingerprint } from "@/lib/fingerprint";
 import { normalizeText, jaccard, signatureOf } from "@/lib/similarity";
 import { assessOperatorReputation } from "@/lib/operator-reputation";
+import { crossLookup } from "@/lib/bridge";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { fetchOpenPageRankBulk } from "@/lib/authority";
 import { calibrateOverlap, buildPairEdge, BOARD_RUBRIC_VERSION } from "./calibrate";
@@ -370,5 +371,11 @@ export async function runBoard(domains: string[]): Promise<BoardResult> {
       coHosted: [...new Set(fps.flatMap((f) => f.neighbors || []))],
     });
   } catch { /* reputation is optional enrichment */ }
+  // infra -> narrative bridge: do any compared domains (or their co-tenants) match
+  // a documented list or amplify a monitored narrative? Leads, not proof.
+  try {
+    const crossDomains = [...uniq, ...new Set(fps.flatMap((f) => f.neighbors || []))];
+    result.crossLinks = await crossLookup(crossDomains);
+  } catch { /* bridge is optional enrichment */ }
   return result;
 }

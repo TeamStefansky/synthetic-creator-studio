@@ -131,4 +131,7 @@ export interface BoardResult {
   fingerprints: { entity: string; artifactCount: number; errors: string[]; authority?: number; asnOrg?: string; nsDomains?: string[]; neighbors?: string[] }[];
   /** Documented, cited, org-level reputation of the shared hosting operator(s). */
   operatorReputation?: import("@/lib/operator-reputation").OperatorReputation;
+  /** infra -> narrative bridge: compared domains that match a documented list or
+   * amplify a monitored narrative (leads with an innocent alternative). */
+  crossLinks?: import("@/lib/bridge").CrossLookupResult;
 }
