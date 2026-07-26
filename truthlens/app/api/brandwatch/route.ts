@@ -10,6 +10,7 @@ import { extractNarratives } from "@/lib/narrative/clusters";
 import { foreignEnrichment } from "@/lib/narrative/foreign";
 import { detectMirroring } from "@/lib/narrative/mirroring";
 import { deepenAmplifiers, type AmplifierOperators } from "@/lib/bridge";
+import { recordAmplifiers } from "@/lib/evidence-store";
 import { archiveEvidence } from "@/lib/archive";
 import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { Mention, ThreatResult, NarrativeExtraction, ForeignEnrichment, MirroringResult } from "@/lib/narrative/types";
@@ -86,6 +87,9 @@ export async function GET(req: NextRequest) {
         result.operatorReputation = ops.reputation;
         result.amplifierOperatorCount = ops.operatorCount;
       }
+      // Record this narrative's amplifier domains in the shared evidence store so
+      // the infra tools can later ask "does this domain also amplify a narrative?".
+      await recordAmplifiers(entity, foreign.intel.map((d) => d.domain), new Date().toISOString());
     }
 
     // Preserve the top evidence URLs (deep scans only) before they change/vanish.

@@ -24,6 +24,7 @@ import SocialMediaPanel from "@/components/SocialMediaPanel";
 import GeoOriginCard from "@/components/GeoOriginCard";
 import OriginChainCard from "@/components/OriginChainCard";
 import CibPanel from "@/components/CibPanel";
+import CrossLinksCard from "@/components/CrossLinksCard";
 
 function ReportInner() {
   const params = useSearchParams();
@@ -208,6 +209,9 @@ function ReportInner() {
 
       {/* Hosting-operator reputation - documented, cited, org-level facts */}
       {report.operatorReputation && <OperatorReputationCard rep={report.operatorReputation} />}
+
+      {/* infra -> narrative bridge: documented lists & monitored narratives */}
+      {report.crossLinks && <CrossLinksCard cross={report.crossLinks} />}
 
       {/* Network graph */}
       <section className="card">

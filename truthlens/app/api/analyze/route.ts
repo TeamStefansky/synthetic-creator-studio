@@ -23,6 +23,7 @@ import { buildNetwork } from "@/lib/network";
 import { tracePropagation } from "@/lib/propagation";
 import { assessCoordination } from "@/lib/coordination";
 import { assessOperatorReputation } from "@/lib/operator-reputation";
+import { crossLookup } from "@/lib/bridge";
 import type { Report, Maybe } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -161,6 +162,16 @@ export async function POST(req: NextRequest) {
     coHosted: reverseNeighbors,
   }).catch(() => undefined);
 
+  // infra -> narrative bridge: do any of this site's domains (itself + its
+  // operator-network siblings + co-tenants) match a documented list or amplify a
+  // monitored narrative? A hit is a lead with an innocent alternative, never proof.
+  const crossDomains = [
+    domain,
+    ...network.nodes.filter((n) => n.kind === "domain" || n.kind === "target").map((n) => n.label),
+    ...reverseNeighbors,
+  ];
+  const crossLinks = await crossLookup(crossDomains).catch(() => undefined);
+
   const report: Report = {
     url: norm.url,
     domain,
@@ -177,6 +188,7 @@ export async function POST(req: NextRequest) {
     coordination,
     media: { images },
     operatorReputation,
+    crossLinks,
   };
 
   // Cache the report for 24h - but NOT when content analysis failed despite a
