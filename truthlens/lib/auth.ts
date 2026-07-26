@@ -8,9 +8,19 @@
 export const AUTH_COOKIE = "tl_auth";
 const SALT = "truthlens-gate:v1:";
 
-/** True when a password gate is configured for this deployment. */
+// Owner-chosen default access password. Overridable per-deployment with
+// SITE_PASSWORD (recommended for real secrecy — this default is visible in the
+// repo). The gate is therefore always ON.
+const DEFAULT_PASSWORD = "291986";
+
+/** The active access password: SITE_PASSWORD if set, else the owner default. */
+export function accessPassword(): string {
+  return process.env.SITE_PASSWORD || DEFAULT_PASSWORD;
+}
+
+/** The gate is always enabled (there is always an access password). */
 export function gateEnabled(): boolean {
-  return !!(process.env.SITE_PASSWORD && process.env.SITE_PASSWORD.length > 0);
+  return true;
 }
 
 /** The opaque cookie token for a given password (hex SHA-256; never the password). */
@@ -20,8 +30,7 @@ export async function authToken(password: string): Promise<string> {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** The token the cookie must equal to be authenticated, or null when no gate. */
+/** The token the cookie must equal to be authenticated. */
 export async function expectedToken(): Promise<string | null> {
-  const p = process.env.SITE_PASSWORD;
-  return p ? authToken(p) : null;
+  return authToken(accessPassword());
 }

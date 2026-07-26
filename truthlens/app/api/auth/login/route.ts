@@ -4,7 +4,7 @@
 // gate is not configured (never fakes a successful login).
 
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE, authToken, gateEnabled } from "@/lib/auth";
+import { AUTH_COOKIE, authToken, gateEnabled, accessPassword } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const password = String(body?.password || "");
   if (!password) return NextResponse.json({ ok: false, error: "Enter the access password." }, { status: 400 });
 
-  if (password !== process.env.SITE_PASSWORD) {
+  if (password !== accessPassword()) {
     return NextResponse.json({ ok: false, error: "Incorrect password." }, { status: 401 });
   }
 
