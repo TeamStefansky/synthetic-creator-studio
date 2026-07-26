@@ -24,7 +24,7 @@ const groups: NavGroup[] = [
   {
     group: "Analyze",
     items: [
-      { href: "/check", label: "Check (any input)", icon: CheckCircle, match: (p) => p.startsWith("/check") },
+      { href: "/check", label: "Check", icon: CheckCircle, match: (p) => p.startsWith("/check") },
       { href: "/", label: "Site Report", icon: FileSearch, match: (p) => p === "/" || p.startsWith("/report") },
       { href: "/tools/post", label: "Post Check", icon: ShieldQuestion, match: (p) => p.startsWith("/tools/post") },
       { href: "/tools/logs", label: "Log Analyzer", icon: ScrollText, match: (p) => p.startsWith("/tools/logs") },

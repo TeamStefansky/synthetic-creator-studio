@@ -150,8 +150,11 @@ function CheckInner() {
   return (
     <div className="animate-fade-up space-y-6">
       <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-white">Check</h1>
-        <p className="mt-1.5 max-w-2xl text-sm text-ink-secondary">
+        <div className="flex items-center gap-2">
+          <Search className="h-6 w-6 text-brand-soft" />
+          <h1 className="font-display text-2xl font-bold">Check</h1>
+        </div>
+        <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
           Paste a URL, a post link, a claim, email headers, or a log. We detect the type and run the
           right check. Indicators with evidence - not a verdict.
         </p>
