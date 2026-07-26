@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trash2, RotateCcw, Network, ArrowRight } from "lucide-react";
+import { Trash2, RotateCcw, Network, ArrowRight, History as HistoryIcon } from "lucide-react";
 import ConfidenceBadge, { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
 import { CheckRecord, listLocal, removeLocal } from "@/lib/check/history";
@@ -58,8 +58,11 @@ export default function HistoryPage() {
   return (
     <div className="animate-fade-up space-y-4">
       <div>
-        <h1 className="font-display text-xl font-bold tracking-tight text-white">History</h1>
-        <p className="mt-1.5 text-sm text-ink-secondary">Every check you run is saved here automatically - re-openable, no filing.</p>
+        <div className="flex items-center gap-2">
+          <HistoryIcon className="h-6 w-6 text-brand-soft" />
+          <h1 className="font-display text-2xl font-bold">History</h1>
+        </div>
+        <p className="mt-1 text-sm text-ink-secondary">Every check you run is saved here automatically - re-openable, no filing.</p>
       </div>
 
       {/* Cross-search conclusions - a bridge from "my searches" to the Case Board. */}

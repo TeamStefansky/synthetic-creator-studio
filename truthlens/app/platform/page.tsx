@@ -113,7 +113,7 @@ export default function BrandWatchPage() {
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand shadow-glow">
               <Radar className="h-5 w-5 text-white" />
             </span>
-            <h1 className="font-display text-xl font-bold tracking-tight text-white">Brand <span className="gradient-text">Watch</span></h1>
+            <h1 className="font-display text-2xl font-bold">Brand <span className="gradient-text">Watch</span></h1>
           </div>
           <p className="mt-1.5 max-w-2xl text-sm text-ink-secondary">
             Enter a brand, client, product, or keyword to see live indicators of a coordinated
