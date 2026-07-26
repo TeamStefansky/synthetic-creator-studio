@@ -102,14 +102,15 @@ export default function ConnectionsPage() {
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
           Add news sites or feeds as data sources - paste a site homepage (e.g. cnn.com) and we
           find its feed automatically, or paste a feed URL directly. Each is validated, then
-          included in narrative analysis and Brand Watch alongside the built-in sources.
+          included everywhere the built-in sources are used - SIGNAL Grid, Brand Mentions,
+          Brand Watch and narrative analysis - as the same shared source.
         </p>
       </div>
 
       {!feeds.length && (
         <ToolIntro
           heading="Bring your own sources"
-          what={<>Paste a news site (e.g. <span className="text-ink">cnn.com</span>, <span className="text-ink">bbc.com</span>, <span className="text-ink">nytimes.com</span>) or a feed URL - one per line, or comma-separated. If you give a homepage we find its RSS/Atom feed automatically (major outlets are recognized directly; others via their declared feed or common feed paths); we validate it, show a quick preview, and save it. From then on its items flow into narrative monitoring like any other source - with its own connected / error / empty status.</>}
+          what={<>Paste a news site (e.g. <span className="text-ink">cnn.com</span>, <span className="text-ink">bbc.com</span>, <span className="text-ink">nytimes.com</span>) or a feed URL - one per line, or comma-separated. If you give a homepage we find its RSS/Atom feed automatically (major outlets are recognized directly; others via their declared feed or common feed paths); we validate it, show a quick preview, and save it. From then on its items flow into SIGNAL Grid, Brand Mentions, Brand Watch and narrative analysis like any other source - with its own connected / error / empty status.</>}
           legend={[
             { label: "Validated on add", tone: "legit", text: "a feed that doesn't parse is rejected and never saved." },
             { label: "SSRF-guarded", tone: "neutral", text: "internal / private addresses are blocked; only public http(s) feeds." },

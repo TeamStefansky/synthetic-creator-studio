@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText, discoverFeedUrls, knownFeedsFor, feedSubdomainCandidates } from "../lib/feeds/fetch";
 import { normalizeFeedUrl, validateAndPreview } from "../lib/feeds/store";
 import { parseFeedInput } from "../lib/feeds/input";
+import { SOURCES } from "../lib/narrative/sources";
 
 describe("SSRF guard", () => {
   it("blocks private / loopback / link-local / metadata IPs", () => {
@@ -88,6 +89,14 @@ describe("discoverFeedUrls (paste a homepage, find its feed)", () => {
   });
   it("returns [] when there is no autodiscovery tag", () => {
     expect(discoverFeedUrls("<html><head></head></html>", "https://x.com")).toEqual([]);
+  });
+});
+
+describe("Connections feeds reach every mention surface", () => {
+  it("the rss source is part of the shared SOURCES aggregation (SIGNAL Grid / Brand Mentions / Brand Watch all use it)", () => {
+    // collectMentions runs SOURCES; /api/mentions (SIGNAL Grid + Brand Mentions) and
+    // brandwatch both call collectMentions, so saved feeds flow everywhere via rss.
+    expect(SOURCES.some((s) => s.name === "rss")).toBe(true);
   });
 });
 
