@@ -63,6 +63,28 @@ export const REGIONS: Region[] = [
     terms: ["ukraine", "russia", "nato", "european union", "united states", "putin", "biden", "trump"],
   },
   {
+    key: "asia_pacific",
+    label: "Asia-Pacific",
+    countries: ["China", "India", "Japan", "South Korea", "North Korea", "Taiwan", "Pakistan",
+      "Indonesia", "Philippines", "Thailand", "Vietnam", "Singapore", "Malaysia", "Myanmar",
+      "Bangladesh", "Sri Lanka", "Australia", "New Zealand"],
+    terms: ["china", "beijing", "taiwan", "north korea", "pyongyang", "south china sea", "indo-pacific", "new delhi"],
+  },
+  {
+    key: "africa",
+    label: "Africa",
+    countries: ["South Africa", "Nigeria", "Kenya", "Ethiopia", "Sudan", "Somalia", "Libya",
+      "Mali", "Ghana", "Uganda", "Tanzania", "Zimbabwe", "Democratic Republic of the Congo", "Congo"],
+    terms: ["sahel", "horn of africa", "sub-saharan"],
+  },
+  {
+    key: "latam",
+    label: "Latin America",
+    countries: ["Brazil", "Argentina", "Mexico", "Chile", "Colombia", "Venezuela", "Peru",
+      "Bolivia", "Ecuador", "Cuba", "Nicaragua", "Guatemala"],
+    terms: ["latin america", "caracas", "bogota"],
+  },
+  {
     key: "global",
     label: "Global",
     countries: [],

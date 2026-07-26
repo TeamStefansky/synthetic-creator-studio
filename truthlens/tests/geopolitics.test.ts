@@ -16,8 +16,14 @@ describe("matchRegion", () => {
     expect(matchRegion("Ukraine")).toBe("europe_us");
     expect(matchRegion("NATO summit communique")).toBe("europe_us");
   });
+  it("tags Asia-Pacific, Africa and Latin America", () => {
+    expect(matchRegion("Typhoon near the Philippines")).toBe("asia_pacific");
+    expect(matchRegion("Beijing statement on Taiwan")).toBe("asia_pacific");
+    expect(matchRegion("Protests in Nigeria")).toBe("africa");
+    expect(matchRegion("Election in Brazil")).toBe("latam");
+  });
   it("falls back to global", () => {
-    expect(matchRegion("Typhoon near the Philippines")).toBe("global");
+    expect(matchRegion("Deep-sea mining treaty talks")).toBe("global");
     expect(matchRegion("")).toBe("global");
   });
 });
