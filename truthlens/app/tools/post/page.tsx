@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ShieldQuestion, Loader2, ExternalLink, AlertTriangle, CheckCircle2, XCircle,
-  HelpCircle, Upload, X, Share2, Check, Code, LayoutGrid,
+  HelpCircle, Upload, X, Share2, Check, Code, LayoutGrid, Image as ImageIcon,
 } from "lucide-react";
 import type { PostCheckResult, PostVerdict } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
@@ -233,6 +233,13 @@ function PostCheckInner() {
               {shareMsg && <p className="flex items-center gap-1.5 text-xs text-risk-legit"><Check className="h-3.5 w-3.5" />{shareMsg}</p>}
 
               <div className="card"><p className="text-sm text-ink">{res.summary}</p></div>
+
+              {res.imageAssessment && (
+                <div className="card border-brand/30 bg-brand/[0.04]">
+                  <h3 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-ink"><ImageIcon className="h-4 w-4 text-brand-soft" /> Image forensics</h3>
+                  <p className="text-sm text-ink-secondary">{res.imageAssessment}</p>
+                </div>
+              )}
 
               {res.claims.length > 0 && (
                 <div className="card">

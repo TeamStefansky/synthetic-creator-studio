@@ -312,6 +312,10 @@ export interface PostCheckResult {
   redFlags: string[];
   sources: { title: string; url: string }[];
   note: string;
+  /** When a screenshot/image was submitted: an assessment of the IMAGE itself
+   * (authentic vs AI/edited, whether it supports the caption or is miscaptioned,
+   * and any visual manipulation signs). Absent when no image was analyzed. */
+  imageAssessment?: string;
 }
 
 // --- Social amplification / bot analysis (X/Twitter; needs X_BEARER_TOKEN) --
