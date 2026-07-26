@@ -128,5 +128,5 @@ export interface BoardResult {
   rubricVersion: string;
   generatedAt: string;
   sources: SourceStatus[];
-  fingerprints: { entity: string; artifactCount: number; errors: string[]; authority?: number }[];
+  fingerprints: { entity: string; artifactCount: number; errors: string[]; authority?: number; asnOrg?: string; nsDomains?: string[]; neighbors?: string[] }[];
 }

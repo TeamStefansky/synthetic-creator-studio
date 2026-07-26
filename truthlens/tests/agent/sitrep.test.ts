@@ -36,6 +36,18 @@ describe("situation report (05·P5)", () => {
     expect(s.sections["CHANGED SINCE LAST REPORT"]).toMatch(/RETRACTION/);
   });
 
+  it("surfaces auto-insights from searches + external operator enrichment", () => {
+    const cf = synthesizeCase({ entities: ["a.com", "b.com"], boardEdges: [], enteredCaseAt: "2026-01-01T00:00:00Z" });
+    const adv = runAdversary({ ach: cf.ach, deception: assessDeception({}) });
+    const s = buildSitrep({
+      record, caseFile: cf, adversary: adv, notPursued: [],
+      insights: ['Shared host/operator "1984" appears in 2 searches: shovrimshtika.org, techforpalestine.org.'],
+      operatorReputation: { version: "v", operators: ["1984"], asnOrg: "1984 ehf", coHostedCount: 3, coHostedSample: ["x.com"], flags: [], sanctions: { connected: false, hits: 0 }, note: "clean" } as any,
+    });
+    expect(s.sections["INSIGHTS FROM YOUR SEARCHES"]).toMatch(/1984/);
+    expect(s.sections["EXTERNAL ENRICHMENT — OPERATOR"]).toMatch(/1984 ehf|co-hosted/i);
+  });
+
   it("an undetermined adversary verdict is reflected in the bottom line", () => {
     const cf = synthesizeCase({ entities: ["a.com", "b.com"], boardEdges: [{ a: "a.com", b: "b.com", strength: "High" }], enteredCaseAt: "2026-01-01T00:00:00Z" });
     const adv = runAdversary({ ach: cf.ach, deception: assessDeception({}) }); // one signal => easy counter-case

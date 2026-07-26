@@ -13,6 +13,7 @@ import { Bot, ArrowRight, Download, ShieldCheck } from "lucide-react";
 const NetworkGraph = dynamic(() => import("@/components/NetworkGraph"), { ssr: false });
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import { buildFindings } from "@/lib/clues/findings";
 
 interface RunResponse {
   record: { status: string; coverage: string; stopCondition?: string; ceiling: string; cycles: number };
@@ -21,7 +22,13 @@ interface RunResponse {
   journal: { entries: { seq: number; cycle: number; type: string; detail: string }[] };
 }
 
-const ORDER = ["STATUS", "BOTTOM LINE", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
+const ORDER = ["STATUS", "BOTTOM LINE", "INSIGHTS FROM YOUR SEARCHES", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "EXTERNAL ENRICHMENT — OPERATOR", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
+
+const DOMAIN_RE = /\b([a-z0-9-]+(?:\.[a-z0-9-]+)+)\b/i;
+function firstDomain(label: string): string | null {
+  const m = label.replace(/^https?:\/\//, "").match(DOMAIN_RE);
+  return m ? m[1].toLowerCase() : null;
+}
 
 export default function InvestigatorPage() {
   const [seed, setSeed] = useState("");
@@ -39,6 +46,28 @@ export default function InvestigatorPage() {
     setLoading(true); setError(""); setData(null);
     try {
       const r = await fetch("/api/agent/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ seedEntities, question, initiator }), cache: "no-store" });
+      const txt = await r.text();
+      let j: any; try { j = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
+      if (!r.ok) throw new Error(j.error || `run failed (${r.status})`);
+      setData(j);
+    } catch (e: any) { setError(e?.message || "run failed"); }
+    finally { setLoading(false); }
+  };
+
+  // Autonomous mode: the agent seeds itself from the analyst's OWN searches
+  // (the browser-local cross-search clue index) — no manual link-pasting — and
+  // carries the auto-derived insights into the run, then enriches externally and
+  // reports like an investigative brief.
+  const investigateMySearches = async () => {
+    const findings = buildFindings();
+    if (!findings.findings.length) { setError("No cross-search connections yet — run a few Site Report / Origin / Link Board searches first, then let the investigator work from them."); return; }
+    const seeds = [...new Set(findings.findings.flatMap((f) => f.searches.map((s) => firstDomain(s.label)).filter((d): d is string => !!d)))].slice(0, 12);
+    if (seeds.length < 2) { setError("Your searches don't yet share enough domain-level entities to investigate. Run a couple more site/origin searches."); return; }
+    const insights = findings.findings.slice(0, 12).map((f) => f.evidence);
+    const who = initiator.trim() || "analyst";
+    setLoading(true); setError(""); setData(null);
+    try {
+      const r = await fetch("/api/agent/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ seedEntities: seeds, question: "What connects the things I have been searching, and what does external enrichment reveal?", initiator: who, insights }), cache: "no-store" });
       const txt = await r.text();
       let j: any; try { j = JSON.parse(txt); } catch { throw new Error(txt.slice(0, 160) || "unreadable response"); }
       if (!r.ok) throw new Error(j.error || `run failed (${r.status})`);
@@ -77,7 +106,10 @@ export default function InvestigatorPage() {
         </div>
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-1 text-xs text-ink-secondary"><ShieldCheck className="h-3.5 w-3.5" /> Read-only · budgeted · ceiling: association · a run is attributed and reproducible.</p>
-          <button onClick={run} disabled={loading} className="btn shrink-0">{loading ? "Investigating…" : <>Run <ArrowRight className="h-4 w-4" /></>}</button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button onClick={investigateMySearches} disabled={loading} title="Seed the run from your own searches across the system — no links to paste" className="rounded-xl border border-brand/40 px-3 py-2 text-sm text-brand-soft transition hover:bg-brand/10 disabled:opacity-50">Investigate my searches</button>
+            <button onClick={run} disabled={loading} className="btn">{loading ? "Investigating…" : <>Run <ArrowRight className="h-4 w-4" /></>}</button>
+          </div>
         </div>
         {error && <p className="text-sm text-risk-high">{error}</p>}
       </div>

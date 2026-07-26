@@ -328,7 +328,12 @@ export function compareFingerprints(fps: Fingerprint[]): BoardResult {
     rubricVersion: BOARD_RUBRIC_VERSION,
     generatedAt: new Date().toISOString(),
     sources,
-    fingerprints: fps.map((f) => ({ entity: f.entity, artifactCount: f.artifacts.length, errors: f.errors })),
+    fingerprints: fps.map((f) => ({
+      entity: f.entity, artifactCount: f.artifacts.length, errors: f.errors,
+      asnOrg: f.artifacts.find((a) => a.kind === "as_org")?.value,
+      nsDomains: f.artifacts.filter((a) => a.kind === "ns_set").map((a) => a.value),
+      neighbors: f.neighbors || [],
+    })),
   };
 }
 

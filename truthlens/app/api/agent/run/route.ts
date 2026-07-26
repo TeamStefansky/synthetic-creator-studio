@@ -16,6 +16,7 @@ import { runValidation } from "@/lib/agent/validation";
 import { AGENT_CEILING } from "@/lib/agent/authority";
 import type { StrengthEdge } from "@/lib/case/cluster";
 import { isIndividualCharacteristic } from "@/lib/board/calibrate";
+import { assessOperatorReputation } from "@/lib/operator-reputation";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
   const seed: string[] = Array.isArray(body?.seedEntities) ? body.seedEntities.filter(Boolean) : [];
   const initiator: string = (body?.initiator || req.headers.get("x-initiator") || "").toString();
   const question: string = (body?.question || "Which of these are connected?").toString();
+  // Auto-insights derived by the browser from the analyst's own searches.
+  const insights: string[] = Array.isArray(body?.insights) ? body.insights.filter((x: any) => typeof x === "string").slice(0, 20) : [];
 
   if (seed.length < 2) return NextResponse.json({ error: "Provide at least two seed entities." }, { status: 400 });
   if (!initiator.trim()) return NextResponse.json({ error: "An attributed run requires an initiator." }, { status: 400 });
@@ -54,9 +57,20 @@ export async function POST(req: Request) {
     const adversary = runAdversary({ ach: run.caseFile.ach, deception: assessDeception({}), loadBearing });
     const validation = runValidation();
     const premortem = buildPremortem(run.caseFile).statements.map((s) => `${s.label}: ${s.text}`);
+
+    // External enrichment: when the agent finds an operator thread-end, it pulls
+    // documented, cited, org-level facts about the host/network (co-hosted,
+    // sanctions, documented-campaign/state-media lists).
+    const operatorReputation = await assessOperatorReputation({
+      asnOrgs: board.fingerprints.map((f) => f.asnOrg),
+      nameserverHosts: board.fingerprints.flatMap((f) => f.nsDomains || []),
+      coHosted: [...new Set(board.fingerprints.flatMap((f) => f.neighbors || []))],
+    }).catch(() => undefined);
+
     const sitrep = buildSitrep({
       record: run.record, caseFile: run.caseFile, adversary, notPursued: [],
       measuredFpr: validation.falsePositiveRate, fixtureSuiteVersion: validation.fixtureSuiteVersion, premortem,
+      insights, operatorReputation,
     });
 
     return NextResponse.json(

@@ -26,6 +26,9 @@ export interface SitrepInput {
   fixtureSuiteVersion?: string;
   premortem?: string[];
   conceptionWarning?: string;
+  // Auto-insights from the analyst's own searches + external operator enrichment.
+  insights?: string[];
+  operatorReputation?: import("@/lib/operator-reputation").OperatorReputation;
 }
 
 export interface Sitrep {
@@ -84,13 +87,24 @@ export function buildSitrep(input: SitrepInput): Sitrep {
     : NONE;
 
   // Layer 06 · P7 — method reliability, premortem, and the conception watch.
+  S["INSIGHTS FROM YOUR SEARCHES"] = input.insights?.length ? input.insights.map((i) => `- ${i}`).join("\n") : NONE;
+
+  const rep = input.operatorReputation;
+  S["EXTERNAL ENRICHMENT — OPERATOR"] = rep
+    ? [
+        `Operator(s): ${rep.operators.join(", ") || rep.asnOrg || "unknown"} · ${rep.coHostedCount} co-hosted domain(s) · sanctions: ${rep.sanctions.connected ? `${rep.sanctions.hits} hit(s)` : "not connected"}`,
+        ...rep.flags.map((f) => `- [${f.kind.replace(/_/g, " ")} · ${f.confidence} · ${f.onOwnInfra ? "own infra" : "co-hosted"}] ${f.detail} (re: ${f.subject})${f.citation ? ` — ${f.citation}` : ""}. Could also be: ${f.alternative}`),
+        rep.flags.length ? "" : rep.note,
+      ].filter(Boolean).join("\n")
+    : NONE;
+
   S["METHOD RELIABILITY"] = input.measuredFpr != null
     ? `measured false-positive rate ${(input.measuredFpr * 100).toFixed(1)}% (fixture suite ${input.fixtureSuiteVersion ?? "n/a"})`
     : NONE;
   S["THE PREMORTEM"] = input.premortem?.length ? input.premortem.join("\n") : NONE;
   S["CONCEPTION WATCH"] = input.conceptionWarning || "no conception warning — the leading hypothesis is still accumulating contradictions normally";
 
-  const order = ["STATUS", "BOTTOM LINE", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
+  const order = ["STATUS", "BOTTOM LINE", "INSIGHTS FROM YOUR SEARCHES", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "EXTERNAL ENRICHMENT — OPERATOR", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
   const markdown = ["# THE INVESTIGATOR — situation report", "", "Decision-support, not a verdict. Nodes are infrastructure/accounts, never people.", "", ...order.map((k) => `## ${k}\n${S[k]}`)].join("\n");
 
   return { version: SITREP_VERSION, sections: S, markdown };
