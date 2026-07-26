@@ -4,7 +4,7 @@
 // Gated behind ANTHROPIC_API_KEY. Indicators with sources - not a final ruling.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { LLM_MODEL } from "./llm";
+import { LLM_MODEL, VISION_MODEL, isModelAccessError } from "./llm";
 import type { PostCheckResult, PostVerdict, Confidence } from "./types";
 
 const VERDICTS: PostVerdict[] = ["Likely False", "Misleading", "Unverified", "Likely True", "Opinion or Satire"];
@@ -62,13 +62,12 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
 
   try {
     const client = new Anthropic({ apiKey: key });
-    const msg = await client.messages.create({
-      model: LLM_MODEL,
+    const params: any = {
       max_tokens: 2500,
       tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 } as any],
       system:
         "You are a rigorous fact-checker AND image-forensics analyst. Identify the concrete, check-worthy factual claims and verify them using web_search against reliable sources. Distinguish fact from opinion/satire. Cite real sources. Never fabricate. Be calibrated: use 'Unverified' when evidence is thin. " +
-        "When an IMAGE is provided: (1) OCR - transcribe VERBATIM all text visible in the image (jersey name and number, captions, overlays, watermarks, signs); read the exact letters shown, do NOT 'correct' them into a more plausible name. (2) Scrutinize the IMAGE ITSELF as well as the text - a post can be fake because its PHOTO is fake or miscaptioned even when the caption's standalone fact is true. Look for: implausible or impossible details (e.g. an implausible jersey/kit number, a name+number that does not match a real player, wrong logos or text, a person/outfit/setting that does not fit the claimed event), distorted anatomy (hands, teeth, ears), warped or nonsensical text, inconsistent lighting/shadows/reflections, and AI-generation or photo-editing artifacts. (3) If the image clearly depicts a widely-recognizable PUBLIC figure (a celebrity, athlete, politician, or public official) and it is relevant to the assessment, you MAY note who it appears to be, hedged ('appears to be …'). NEVER attempt to identify, name, or de-anonymize a PRIVATE / non-public individual - that is prohibited; describe them only generically ('a person'). This is fact-check context on public figures, not surveillance. Judge whether the image is authentic vs AI-generated/edited, and whether it genuinely SUPPORTS the caption or is out-of-context/miscaptioned. " +
+        "When an IMAGE is provided: (1) OCR - transcribe VERBATIM all text visible in the image (jersey name and number, captions, overlays, watermarks, signs); read the exact letters shown, do NOT 'correct' them into a more plausible name. (2) Scrutinize the IMAGE ITSELF as well as the text - a post can be fake because its PHOTO is fake or miscaptioned even when the caption's standalone fact is true. Look for: implausible or impossible details (e.g. an implausible jersey/kit number, a name+number that does not match a real player, wrong logos or text, a person/outfit/setting that does not fit the claimed event), distorted anatomy (hands, teeth, ears), warped or nonsensical text, inconsistent lighting/shadows/reflections, and AI-generation or photo-editing artifacts. (3) If the image clearly depicts a widely-recognizable PUBLIC figure (a celebrity, athlete, politician, or public official) and you recognize it, STATE who it appears to be (hedged) when it is material to whether the post is misleading - that recognition is often the whole point of the check, so do not over-refuse to name a well-known public figure; if you are genuinely unsure of the identity, say so rather than guess. NEVER attempt to identify, name, or de-anonymize a PRIVATE / non-public individual - that is prohibited; describe them only generically ('a person'). This is fact-check context on public figures, not surveillance. Judge whether the image is authentic vs AI-generated/edited, and whether it genuinely SUPPORTS the caption or is out-of-context/miscaptioned. " +
         "The overall verdict must reflect the WHOLE post: if the image is manipulated, AI-generated, or miscaptioned, the post is at least 'Misleading' (or 'Likely False' if the image fabricates the event) EVEN IF the caption's fact is independently true. Output is consumed by software - end with a single JSON object and nothing after it.",
       messages: [
         {
@@ -96,7 +95,22 @@ export async function checkPost(input: PostInput): Promise<PostCheckResult> {
           ] as any,
         },
       ],
-    });
+    };
+
+    // Prefer the capable vision model for image analysis (public-figure recognition
+    // + forensics); fall back to LLM_MODEL if the account lacks access to it, so the
+    // feature never hard-breaks (the reason the default was reverted historically).
+    const candidates = input.image ? [...new Set([VISION_MODEL, LLM_MODEL])] : [LLM_MODEL];
+    let msg: any = null, modelErr: any = null;
+    for (let i = 0; i < candidates.length; i++) {
+      try { msg = await client.messages.create({ model: candidates[i], ...params }); break; }
+      catch (e: any) {
+        modelErr = e;
+        if (i < candidates.length - 1 && isModelAccessError(String(e?.message || ""))) continue;
+        throw e;
+      }
+    }
+    if (!msg) throw modelErr;
 
     const textBlock = [...msg.content].reverse().find((b) => b.type === "text");
     const raw = textBlock && textBlock.type === "text" ? textBlock.text : "";

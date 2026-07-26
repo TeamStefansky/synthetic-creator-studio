@@ -153,7 +153,11 @@ collection → Unknown; no posting-hour band mapped to a country; inferred edges
 ## Model
 LLM model id comes from ONE constant: `LLM_MODEL` in `lib/llm.ts` - default
 `claude-sonnet-4-6` (widely available), overridable per-environment with
-`ANTHROPIC_MODEL`. No model literal anywhere else in the repo.
+`ANTHROPIC_MODEL`. No model literal anywhere else in the repo. Vision-heavy analysis
+(Post Check image forensics + public-figure recognition) uses `VISION_MODEL`
+(default `claude-fable-5`, override `ANTHROPIC_VISION_MODEL`) and **falls back to
+`LLM_MODEL` on a model-access error**, so preferring a Claude-5 vision model never
+hard-breaks the feature when the account lacks access.
 
 ## Data sources (connect in priority order; see docs/BUILD_ORDER.md for the full guide)
 - **Keyless, already on:** GDELT DOC 2.0, Bluesky public AppView, Hacker News, Reddit,
