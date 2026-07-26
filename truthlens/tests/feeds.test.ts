@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText, discoverFeedUrls, knownFeedsFor, feedSubdomainCandidates } from "../lib/feeds/fetch";
 import { normalizeFeedUrl, validateAndPreview } from "../lib/feeds/store";
-import { parseFeedInput } from "../lib/feeds/input";
+import { parseFeedInput, extractFeedCandidates } from "../lib/feeds/input";
 import { SOURCES } from "../lib/narrative/sources";
 
 describe("SSRF guard", () => {
@@ -113,6 +113,20 @@ describe("parseFeedInput (paste box → URL list)", () => {
   });
   it("dedups and drops blanks", () => {
     expect(parseFeedInput("cnn.com\n\ncnn.com")).toEqual(["cnn.com"]);
+  });
+});
+
+describe("extractFeedCandidates (import a spreadsheet / CSV of sites)", () => {
+  it("pulls the site column out of tab-separated Excel paste, ignoring country + header cells", () => {
+    const pasted = "Country\tWebsite\nUnited States\tcnn.com\nUnited Kingdom\tbbc.com\nFrance\thttps://www.france24.com/en/rss";
+    expect(extractFeedCandidates(pasted)).toEqual(["cnn.com", "bbc.com", "https://www.france24.com/en/rss"]);
+  });
+  it("parses CSV rows and dedups, dropping blanks and non-site cells", () => {
+    const csv = 'name,url\n"CNN","cnn.com"\n"BBC","bbc.com"\n"CNN again","cnn.com"\n"Notes","see below"';
+    expect(extractFeedCandidates(csv)).toEqual(["cnn.com", "bbc.com"]);
+  });
+  it("ignores emails and bare file names", () => {
+    expect(extractFeedCandidates("editor@cnn.com\nreport.xlsx\ncnn.com")).toEqual(["cnn.com"]);
   });
 });
 

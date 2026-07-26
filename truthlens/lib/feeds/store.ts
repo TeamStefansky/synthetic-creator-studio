@@ -12,7 +12,7 @@ import { assertSafeUrl, safeFetchText, parseFeed, discoverFeedUrls, knownFeedsFo
 
 export const FEEDS_KEY = "conn:feeds:default";       // single-workspace KV namespace
 export const LOCAL_FEEDS_KEY = "tl:connections:feeds"; // client localStorage fallback
-export const MAX_FEEDS = 25;               // per-scope cap
+export const MAX_FEEDS = 100;              // per-scope cap (bulk import of a source list)
 export const MAX_ITEMS_PER_FEED = 40;      // items ingested per feed per scan
 export const FEED_FETCH_BUDGET = 20;       // max feeds fetched in one scan (timeout budget)
 export const FEED_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // per (feedUrl, day)

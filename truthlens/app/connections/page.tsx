@@ -6,11 +6,11 @@
 // status (ok/error/empty), enable/disable, edit title, remove, re-test. When the
 // KV store is not connected, feeds are kept in this browser only (honest state).
 
-import { useCallback, useEffect, useState } from "react";
-import { Rss, Plus, Trash2, RefreshCw, Loader2, Power, Pencil, ExternalLink, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Rss, Plus, Trash2, RefreshCw, Loader2, Power, Pencil, ExternalLink, ShieldCheck, Upload } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
-import { parseFeedInput } from "@/lib/feeds/input";
+import { parseFeedInput, extractFeedCandidates } from "@/lib/feeds/input";
 
 interface UserFeed {
   id: string; url: string; title?: string; siteUrl?: string; addedAt: string;
@@ -36,6 +36,15 @@ export default function ConnectionsPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [starter, setStarter] = useState<{ id: string; title: string; total: number; countries: { country: string; count: number }[] } | null>(null);
+  const [starterCountry, setStarterCountry] = useState("");
+
+  // Import batches are capped so one paste can't fire thousands of validation
+  // fetches; anything beyond is reported, never silently dropped (CLAUDE.md rule 7).
+  const IMPORT_CAP = 100;
+  const IMPORT_CONCURRENCY = 5;
 
   const refresh = useCallback(async () => {
     try {
@@ -49,34 +58,100 @@ export default function ConnectionsPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const addFeeds = async () => {
-    const urls = parseFeedInput(input);
-    if (!urls.length) return;
+  useEffect(() => {
+    fetch("/api/connections/starter-lists").then((r) => r.json())
+      .then((j) => setStarter(j.lists?.[0] || null)).catch(() => setStarter(null));
+  }, []);
+
+  // Bulk-add a built-in starter list (optionally one country); each site is validated
+  // via the normal discovery+add flow, so only those with a real feed are saved.
+  const addStarter = async () => {
+    if (!starter) return;
     setBusy(true); setErr(""); setMsg("");
-    const added: string[] = []; const failed: string[] = [];
-    for (const url of urls) {
-      try {
-        const r = await fetch("/api/connections/feeds", {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
-        });
-        const j = await r.json();
-        if (!r.ok || j.error) { failed.push(`${url} - ${j.error || "failed"}`); continue; }
-        added.push(j.preview?.title || url);
-        if (j.connected === false && j.preview) {
-          // No KV: store locally.
-          const local = loadLocal();
-          if (!local.some((f) => f.url === j.preview.url)) {
-            local.push({ id: `local-${Date.now()}-${local.length}`, url: j.preview.url, title: j.preview.title, siteUrl: j.preview.siteUrl, addedAt: new Date().toISOString(), lastStatus: "ok", itemCount: j.preview.itemCount, enabled: true });
-            saveLocal(local);
-          }
-        }
-      } catch (e: any) { failed.push(`${url} - ${e?.message || "network error"}`); }
+    try {
+      const qs = new URLSearchParams({ id: starter.id });
+      if (starterCountry) qs.set("country", starterCountry);
+      const j = await (await fetch(`/api/connections/starter-lists?${qs}`)).json();
+      if (!j.urls?.length) { setErr("Nothing to add from that list."); setBusy(false); return; }
+      await runAdd(j.urls);
+    } catch (e: any) { setErr(`Could not load the list - ${e?.message || "error"}`); setBusy(false); }
+  };
+
+  // Add one URL; returns its title on success or throws with a user-safe reason.
+  const addOne = async (url: string): Promise<string> => {
+    const r = await fetch("/api/connections/feeds", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }),
+    });
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || "failed");
+    if (j.connected === false && j.preview) {
+      // No KV: store locally.
+      const local = loadLocal();
+      if (!local.some((f) => f.url === j.preview.url)) {
+        local.push({ id: `local-${Date.now()}-${local.length}`, url: j.preview.url, title: j.preview.title, siteUrl: j.preview.siteUrl, addedAt: new Date().toISOString(), lastStatus: "ok", itemCount: j.preview.itemCount, enabled: true });
+        saveLocal(local);
+      }
     }
+    return j.preview?.title || url;
+  };
+
+  // Validate + add many URLs with bounded concurrency and live progress. Each is
+  // validated server-side (SSRF + parse) before saving; failures are collected and
+  // reported, never hidden.
+  const runAdd = async (rawUrls: string[]) => {
+    const all = [...new Set(rawUrls)];
+    if (!all.length) return;
+    const urls = all.slice(0, IMPORT_CAP);
+    const overflow = all.length - urls.length;
+    setBusy(true); setErr(""); setMsg(""); setProgress({ done: 0, total: urls.length });
+    const added: string[] = []; const failed: string[] = [];
+    let idx = 0; let done = 0;
+    const worker = async () => {
+      for (;;) {
+        const i = idx++;
+        if (i >= urls.length) return;
+        const url = urls[i];
+        try { added.push(await addOne(url)); }
+        catch (e: any) { failed.push(`${url} - ${e?.message || "network error"}`); }
+        finally { done++; setProgress({ done, total: urls.length }); }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(IMPORT_CONCURRENCY, urls.length) }, worker));
     setInput("");
-    setMsg(added.length ? `Added ${added.length} feed(s).` : "");
-    setErr(failed.length ? `Could not add: ${failed.join("; ")}` : "");
+    const parts = [added.length ? `Added ${added.length} feed(s).` : ""];
+    if (overflow > 0) parts.push(`${overflow} beyond the ${IMPORT_CAP}-per-import limit were skipped.`);
+    setMsg(parts.filter(Boolean).join(" "));
+    // Show only the first few failures so the message stays readable.
+    setErr(failed.length ? `Could not add ${failed.length}: ${failed.slice(0, 8).join("; ")}${failed.length > 8 ? " …" : ""}` : "");
     await refresh();
-    setBusy(false);
+    setProgress(null); setBusy(false);
+  };
+
+  const addFeeds = async () => {
+    // A pasted spreadsheet selection arrives tab-separated with extra columns — pull
+    // the site cells out of it; a plain list keeps parseFeedInput (comma-URL safe).
+    const urls = /\t/.test(input) ? extractFeedCandidates(input) : parseFeedInput(input);
+    await runAdd(urls);
+  };
+
+  const onImportFile = async (file: File) => {
+    if (/\.xlsx?$/i.test(file.name) && !/\.csv$/i.test(file.name)) {
+      // Real .xlsx is a binary workbook; we don't bundle a spreadsheet parser. Guide
+      // the user to the two zero-dependency paths instead of failing silently.
+      setErr('Excel .xlsx can’t be read directly. In Excel: "Save As → CSV", then choose the file here — or copy the column of sites and paste it into the box above.');
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    try {
+      const text = await file.text();
+      const urls = extractFeedCandidates(text);
+      if (!urls.length) { setErr("No site/feed URLs found in that file."); }
+      else await runAdd(urls);
+    } catch (e: any) {
+      setErr(`Could not read that file - ${e?.message || "unknown error"}`);
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   const patch = async (id: string, body: any) => {
@@ -124,22 +199,71 @@ export default function ConnectionsPage() {
       <div className="card space-y-3">
         <textarea
           value={input} onChange={(e) => { setInput(e.target.value); setErr(""); }}
-          placeholder={"cnn.com\nhttps://www.theguardian.com/world/rss"}
+          placeholder={"cnn.com\nhttps://www.theguardian.com/world/rss\n\nOr paste a column of sites from Excel, or import a CSV below."}
           className="h-24 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-sm outline-none focus:border-brand scroll-thin"
         />
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={addFeeds} disabled={busy || !input.trim()} className="btn shrink-0">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Add feed(s)</>}
+            {busy && !progress ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Add feed(s)</>}
           </button>
+          <input
+            ref={fileRef} type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onImportFile(f); }}
+          />
+          <button onClick={() => fileRef.current?.click()} disabled={busy} className="btn-ghost shrink-0" title="Import a CSV/TSV list of sites (e.g. 'News websites by country')">
+            <Upload className="h-4 w-4" /> Import list (CSV)
+          </button>
+          {progress && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-ink-secondary">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Validating {progress.done}/{progress.total}…
+            </span>
+          )}
           {connected === false && (
             <span className="inline-flex items-center gap-1 text-xs text-yellow-200/80">
               <ShieldCheck className="h-3.5 w-3.5" /> Store not connected - feeds are saved in this browser only until KV is configured.
             </span>
           )}
         </div>
+        <p className="text-[11px] text-ink-muted">
+          Bulk-add up to {IMPORT_CAP} sites: paste a column copied from Excel, or import a CSV
+          (any column of site addresses works - country names and headers are ignored). Excel
+          .xlsx: use File → Save As → CSV first.
+        </p>
         {msg && <p className="text-sm text-risk-legit">{msg}</p>}
         {err && <p className="text-sm text-risk-high">{err}</p>}
       </div>
+
+      {/* Starter list (built-in "News websites by country") */}
+      {starter && (
+        <div className="card space-y-3">
+          <div>
+            <div className="label-muted">Starter list</div>
+            <p className="mt-1 text-sm text-ink-secondary">
+              <span className="text-ink">{starter.title}</span> — {starter.total} outlets across {starter.countries.length} countries.
+              Add a whole country (or all, capped at {IMPORT_CAP}); each site is validated and only those
+              with a discoverable RSS/Atom feed are kept.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={starterCountry} onChange={(e) => setStarterCountry(e.target.value)} disabled={busy}
+              className="rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand"
+            >
+              <option value="">All countries ({starter.total})</option>
+              {starter.countries.map((c) => (
+                <option key={c.country} value={c.country}>{c.country} ({c.count})</option>
+              ))}
+            </select>
+            <button onClick={addStarter} disabled={busy} className="btn shrink-0">
+              {busy && progress ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Add {starterCountry || "selection"}</>}
+            </button>
+          </div>
+          <p className="text-[11px] text-ink-muted">
+            Tip: many regional outlets don’t publish RSS or block automated access — those are
+            reported as failed and skipped, never faked.
+          </p>
+        </div>
+      )}
 
       {/* Feed list */}
       {feeds.length > 0 && (
