@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins, Bot, LogOut,
+  ShieldAlert, Coins, Bot, LogOut, Rss,
 } from "lucide-react";
 
 // Six mission hubs. The flat tool list is grouped into the areas of the mission:
@@ -62,6 +62,12 @@ const groups: NavGroup[] = [
     group: "Geopolitics",
     items: [
       { href: "/tools/geopolitics", label: "Geopolitics", icon: Globe2, match: (p) => p.startsWith("/tools/geopolitics") },
+    ],
+  },
+  {
+    group: "Connections",
+    items: [
+      { href: "/connections", label: "Feed Sources", icon: Rss, match: (p) => p.startsWith("/connections") },
     ],
   },
   {

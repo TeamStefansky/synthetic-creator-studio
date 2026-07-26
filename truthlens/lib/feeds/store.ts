@@ -89,8 +89,10 @@ async function saveFeeds(feeds: UserFeed[]): Promise<void> {
   await kvSetJson(FEEDS_KEY, feeds.slice(0, MAX_FEEDS));
 }
 
-/** Add (validated) or update-by-normalized-url. Returns the saved feed. */
-export async function addFeed(rawUrl: string, nowIso: string, newId: string): Promise<UserFeed> {
+/** Add (validated) or update-by-normalized-url. Returns the saved feed + the live
+ * preview (so the UI can confirm what it added). An invalid URL throws before any
+ * save. Requires KV (call feedsConnected() first for the local fallback path). */
+export async function addFeed(rawUrl: string, nowIso: string, newId: string): Promise<{ feed: UserFeed; preview: FeedPreview }> {
   const preview = await validateAndPreview(rawUrl);
   const feeds = await listFeeds();
   const existing = feeds.find((f) => f.url === preview.url);
@@ -102,7 +104,7 @@ export async function addFeed(rawUrl: string, nowIso: string, newId: string): Pr
     existing.itemCount = preview.itemCount;
     existing.lastError = undefined;
     await saveFeeds(feeds);
-    return existing;
+    return { feed: existing, preview };
   }
   if (feeds.length >= MAX_FEEDS) throw new Error(`Feed limit reached (${MAX_FEEDS}). Remove one first.`);
   const feed: UserFeed = {
@@ -111,7 +113,7 @@ export async function addFeed(rawUrl: string, nowIso: string, newId: string): Pr
   };
   feeds.push(feed);
   await saveFeeds(feeds);
-  return feed;
+  return { feed, preview };
 }
 
 export async function removeFeed(id: string): Promise<void> {
