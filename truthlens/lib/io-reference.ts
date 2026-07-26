@@ -82,6 +82,40 @@ export function foreignAgentMatch(domain?: string): ForeignAgentEntry | null {
   return lookup(foreignAgents, normalizeDomain(domain));
 }
 
+/** Documented-reference overlap over a set of mentions — the shared computation
+ * behind the threat engine's and CIB analyzer's documented-campaign/state-media +
+ * foreign-agent indicators (previously duplicated verbatim). Hit strings are
+ * human-readable and deduped; `*Ref` counts distinguish "no overlap" from
+ * "reference not populated". Organizations/domains only; a hit is a lead. */
+export interface DocumentedOverlap {
+  campaignRef: number;        // populated campaign + state-media reference size
+  foreignAgentRef: number;    // populated foreign-agent reference size
+  campaignHits: string[];
+  foreignAgentHits: string[];
+}
+export function documentedOverlap(
+  mentions: { url?: string; account?: string; accountId?: string }[],
+): DocumentedOverlap {
+  const refCounts = ioReferenceCounts();
+  const campaignRef = refCounts.campaigns + refCounts.stateMedia;
+  const campaignHits = new Set<string>();
+  const faHits = new Set<string>();
+  for (const m of mentions) {
+    for (const d of mentionDomains(m)) {
+      if (campaignRef > 0) {
+        const c = campaignMatch(d), s = stateMediaMatch(d);
+        if (c) campaignHits.add(`${d} - documented in “${c.campaign || "campaign"}” (${c.disclosedBy || "report"})`);
+        else if (s) campaignHits.add(`${d} - documented state-affiliated media${s.label ? ` (${s.label})` : ""}`);
+      }
+      if (refCounts.foreignAgents > 0) {
+        const fa = foreignAgentMatch(d);
+        if (fa) faHits.add(`${d} - ${fa.org} (${fa.registry || "registry"}${fa.registrationNo ? ` #${fa.registrationNo}` : ""})`);
+      }
+    }
+  }
+  return { campaignRef, foreignAgentRef: refCounts.foreignAgents, campaignHits: [...campaignHits], foreignAgentHits: [...faHits] };
+}
+
 /** Candidate registrable domains observed for a mention: from its URL host and,
  * for news adapters, from an account/accountId that is itself a domain. */
 export function mentionDomains(m: { url?: string; account?: string; accountId?: string }): string[] {

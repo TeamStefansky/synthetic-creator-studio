@@ -4,9 +4,7 @@
 
 import { RUBRIC_VERSION, SENTIMENT_LEXICON_VERSION, sentimentScore } from "./sentiment";
 import { clusterNearDuplicates } from "@/lib/similarity";
-import {
-  mentionDomains, campaignMatch, stateMediaMatch, foreignAgentMatch, ioReferenceCounts,
-} from "@/lib/io-reference";
+import { documentedOverlap } from "@/lib/io-reference";
 import type {
   Indicator, Level, Mention, SourceStatus, ThreatResult, ThreatStatus,
   ForeignEnrichment, MirroringResult,
@@ -230,19 +228,9 @@ export function computeThreat(
   //    appear in a PUBLISHED IO takedown report or a documented state-media list?
   //    Weight 0 for now (informational; scoring wiring + rubric bump land in P4).
   //    Reference ships EMPTY → Unknown ("cannot assess"), never a reassuring Low.
-  const refCounts = ioReferenceCounts();
-  const campaignRef = refCounts.campaigns + refCounts.stateMedia;
-  const campaignHits: string[] = [];
-  if (campaignRef > 0) {
-    for (const m of mentions) {
-      for (const d of mentionDomains(m)) {
-        const c = campaignMatch(d), s = stateMediaMatch(d);
-        if (c) campaignHits.push(`${d} - documented in “${c.campaign || "campaign"}” (${c.disclosedBy || "report"})`);
-        else if (s) campaignHits.push(`${d} - documented state-affiliated media${s.label ? ` (${s.label})` : ""}`);
-      }
-    }
-  }
-  const uniqCampaignHits = [...new Set(campaignHits)];
+  const overlap = documentedOverlap(mentions);
+  const campaignRef = overlap.campaignRef;
+  const uniqCampaignHits = overlap.campaignHits;
   indicators.push(ind(
     "documented_campaign", "Documented-campaign / state-media overlap",
     uniqCampaignHits.length ? 80 : 0,
@@ -259,27 +247,18 @@ export function computeThreat(
   // 9. Registered foreign-agent nexus - do amplifying domains belong to an org
   //    with a LAWFUL public foreign-agent disclosure (e.g. FARA)? A registration
   //    is a public administrative filing, NOT an accusation. Weight 0 for now.
-  const faHits: string[] = [];
-  if (refCounts.foreignAgents > 0) {
-    for (const m of mentions) {
-      for (const d of mentionDomains(m)) {
-        const fa = foreignAgentMatch(d);
-        if (fa) faHits.push(`${d} - ${fa.org} (${fa.registry || "registry"}${fa.registrationNo ? ` #${fa.registrationNo}` : ""})`);
-      }
-    }
-  }
-  const uniqFaHits = [...new Set(faHits)];
+  const uniqFaHits = overlap.foreignAgentHits;
   indicators.push(ind(
     "foreign_agent", "Registered foreign-agent nexus",
     uniqFaHits.length ? 70 : 0,
-    refCounts.foreignAgents === 0 ? 0 : (uniqFaHits.length ? 0.8 : 0.6),
-    refCounts.foreignAgents === 0
+    overlap.foreignAgentRef === 0 ? 0 : (uniqFaHits.length ? 0.8 : 0.6),
+    overlap.foreignAgentRef === 0
       ? ["Reference dataset not populated (0 entries) - populate data/io-reference/foreign-agent-registries.json (see scripts/refresh-fara.ts)."]
       : (uniqFaHits.length
           ? uniqFaHits.slice(0, 6)
-          : [`No overlap with the ${refCounts.foreignAgents} registered foreign-agent domain(s).`]),
+          : [`No overlap with the ${overlap.foreignAgentRef} registered foreign-agent domain(s).`]),
     "A foreign-agent registration is a lawful public disclosure, not an accusation - registered entities also produce ordinary, legitimate content.",
-    refCounts.foreignAgents === 0 ? "reference empty" : `${uniqFaHits.length} matched domain(s)`,
+    overlap.foreignAgentRef === 0 ? "reference empty" : `${uniqFaHits.length} matched domain(s)`,
   ));
 
   // Combine (Unknown signals excluded).

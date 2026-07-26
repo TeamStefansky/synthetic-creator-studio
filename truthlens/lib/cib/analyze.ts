@@ -10,9 +10,7 @@
 
 import type { Mention, ArchiveLink } from "@/lib/narrative/types";
 import { clusterNearDuplicates } from "@/lib/similarity";
-import {
-  mentionDomains, campaignMatch, stateMediaMatch, foreignAgentMatch, ioReferenceCounts,
-} from "@/lib/io-reference";
+import { documentedOverlap } from "@/lib/io-reference";
 import { assessAccount } from "@/lib/authenticity";
 import type { AuthenticityAssessment, AccountProfile } from "@/lib/authenticity";
 import {
@@ -155,37 +153,21 @@ export function analyzeCib(
 
   // --- Documented-reference overlap (organizations only; leads, never verdicts) ---
   // Ships EMPTY → "Not collected" until an operator populates data/io-reference/.
-  const refCounts = ioReferenceCounts();
-  const campaignRef = refCounts.campaigns + refCounts.stateMedia;
-  const campaignHits = new Set<string>();
-  const faHits = new Set<string>();
-  for (const m of mentions) {
-    for (const d of mentionDomains(m)) {
-      if (campaignRef > 0) {
-        const c = campaignMatch(d), s = stateMediaMatch(d);
-        if (c) campaignHits.add(`${d} - documented in “${c.campaign || "campaign"}” (${c.disclosedBy || "report"})`);
-        else if (s) campaignHits.add(`${d} - documented state-affiliated media${s.label ? ` (${s.label})` : ""}`);
-      }
-      if (refCounts.foreignAgents > 0) {
-        const fa = foreignAgentMatch(d);
-        if (fa) faHits.add(`${d} - ${fa.org} (${fa.registry || "registry"}${fa.registrationNo ? ` #${fa.registrationNo}` : ""})`);
-      }
-    }
-  }
+  const overlap = documentedOverlap(mentions);
   signals.push({
     name: "Documented-campaign / state-media overlap",
-    confidence: campaignRef === 0 ? "Not collected" : (campaignHits.size ? "Medium" : "Low"),
-    evidence: campaignRef === 0
+    confidence: overlap.campaignRef === 0 ? "Not collected" : (overlap.campaignHits.length ? "Medium" : "Low"),
+    evidence: overlap.campaignRef === 0
       ? ["Not collected - reference dataset not populated (populate data/io-reference/)."]
-      : (campaignHits.size ? [...campaignHits].slice(0, 6) : [`No overlap with the ${campaignRef} documented reference domain(s).`]),
+      : (overlap.campaignHits.length ? overlap.campaignHits.slice(0, 6) : [`No overlap with the ${overlap.campaignRef} documented reference domain(s).`]),
     alternative: "Citing or syndicating a documented outlet is not proof this specific content is part of that campaign.",
   });
   signals.push({
     name: "Registered foreign-agent nexus",
-    confidence: refCounts.foreignAgents === 0 ? "Not collected" : (faHits.size ? "Medium" : "Low"),
-    evidence: refCounts.foreignAgents === 0
+    confidence: overlap.foreignAgentRef === 0 ? "Not collected" : (overlap.foreignAgentHits.length ? "Medium" : "Low"),
+    evidence: overlap.foreignAgentRef === 0
       ? ["Not collected - reference dataset not populated (see scripts/refresh-fara.ts)."]
-      : (faHits.size ? [...faHits].slice(0, 6) : [`No overlap with the ${refCounts.foreignAgents} registered foreign-agent domain(s).`]),
+      : (overlap.foreignAgentHits.length ? overlap.foreignAgentHits.slice(0, 6) : [`No overlap with the ${overlap.foreignAgentRef} registered foreign-agent domain(s).`]),
     alternative: "A foreign-agent registration is a lawful public disclosure, not an accusation - registered entities also produce ordinary content.",
   });
 
