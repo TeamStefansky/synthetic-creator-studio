@@ -103,3 +103,41 @@ Read of the actual codebase before touching anything. **Stop-for-approval gate.*
    verification gates) — or verify with `tsc`/`build` + manual walkthroughs (no new deps)?
 2. **History for anonymous vs signed-in:** there is no auth system today. OK to do
    **anonymous = localStorage, shared/team = KV** (no login), and defer real accounts?
+
+## Connections — user-managed RSS/Atom feeds (SHIPPED, P1–P3)
+
+New capability: paste RSS/Atom feed URLs under **Connections → Feed Sources**
+(`/connections`); each validates on add (with a live preview) and then feeds the
+narrative / Brand Watch analysis as the `rss` source. Commits: `d6e8c15` (P1),
+`927ac61` (P2), `b94b214` (P3).
+
+- **Code:** `lib/feeds/fetch.ts` (SSRF-guarded `safeFetchText` + RSS/Atom `parseFeed`
+  + `sanitizeText`), `lib/feeds/store.ts` (`UserFeed`, caps, `validateAndPreview`,
+  KV CRUD, per-feed status), `app/api/connections/feeds/route.ts`,
+  `app/connections/page.tsx`, extended `rss` adapter in `lib/narrative/sources.ts`.
+  Placed under `lib/feeds/` (NOT `lib/connections/`, which is the existing
+  connection-STATUS module `lib/connections.ts` — spec's path would have collided).
+- **Storage & scope:** the deployment is **single-tenant** (one shared `SITE_PASSWORD`
+  = one workspace), so feeds live in ONE workspace KV namespace `conn:feeds:default`
+  when `storeAvailable()`, else the client keeps them in `localStorage`
+  (`tl:connections:feeds`) with an honest "store not connected" note. This is a
+  conscious refinement of the spec's "no identity → localStorage only": KV is needed
+  for the objective (server-side scans + cron must read the feeds), and with one
+  shared login there is exactly one tenant, so `:default` is that tenant's workspace,
+  not a cross-tenant/global namespace. **Per-user scoping is deferred** until there is
+  per-user identity (then key on `conn:feeds:{userId}`).
+- **SSRF rules** (every server-side fetch, validation + scan): http(s) only; reject
+  literal + DNS-resolved private/loopback/link-local/metadata ranges (10/8, 127/8,
+  0/8, 169.254/16 incl. 169.254.169.254, 172.16/12, 192.168/16, 100.64/10, CGNAT,
+  multicast, ::1, fe80::, fc00::/7, IPv4-mapped) and internal hostnames
+  (`localhost`, `.internal`, `.local`, `metadata.google.internal`); cap redirects
+  (3, re-checked each hop), size (2 MB), time (12 s); declared UA.
+- **Per-feed status:** the `rss` adapter records ok/error/empty (+ etag/last-modified)
+  per feed back to the store (`recordFeedStatuses`), driving the UI badges; one feed
+  erroring never aborts the others (failure isolation). Caching per `(feedUrl, day)`
+  via `lib/cache.ts`; conditional-GET (ETag/If-Modified-Since) honored.
+- **Tests:** `tests/feeds.test.ts` (SSRF blocks, sanitize, RSS+Atom parse, non-feed
+  rejected, dedup). Verified: tsc + `vitest` (481) + `next build`. `next lint` is not
+  configured in this repo (interactive setup); `playwright` e2e not run in-sandbox.
+- **Deferred future Connections types:** authenticated feeds, JSON-feed / sitemap,
+  per-feed language/region tagging, OPML import/export, and per-user feed scoping.
