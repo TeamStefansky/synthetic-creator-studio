@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText, discoverFeedUrls, knownFeedsFor, feedSubdomainCandidates } from "../lib/feeds/fetch";
 import { normalizeFeedUrl, validateAndPreview } from "../lib/feeds/store";
+import { parseFeedInput } from "../lib/feeds/input";
 
 describe("SSRF guard", () => {
   it("blocks private / loopback / link-local / metadata IPs", () => {
@@ -90,11 +91,30 @@ describe("discoverFeedUrls (paste a homepage, find its feed)", () => {
   });
 });
 
+describe("parseFeedInput (paste box → URL list)", () => {
+  it("does not split a URL that contains commas (Ynet-style)", () => {
+    // The exact bug the user hit: this single URL was shredded into 0 / 7340 / L-8 / 00.html
+    expect(parseFeedInput("https://www.ynet.co.il/home/0,7340,L-8,00.html"))
+      .toEqual(["https://www.ynet.co.il/home/0,7340,L-8,00.html"]);
+  });
+  it("splits on newlines and on a comma/semicolon followed by whitespace", () => {
+    expect(parseFeedInput("cnn.com\nbbc.com")).toEqual(["cnn.com", "bbc.com"]);
+    expect(parseFeedInput("a.com/feed, b.com/feed")).toEqual(["a.com/feed", "b.com/feed"]);
+    expect(parseFeedInput("a.com/feed ; b.com/feed")).toEqual(["a.com/feed", "b.com/feed"]);
+  });
+  it("dedups and drops blanks", () => {
+    expect(parseFeedInput("cnn.com\n\ncnn.com")).toEqual(["cnn.com"]);
+  });
+});
+
 describe("knownFeedsFor (curated feeds for major outlets)", () => {
   it("matches the host itself and any subdomain of a known outlet", () => {
     expect(knownFeedsFor("cnn.com")).toContain("http://rss.cnn.com/rss/cnn_topstories.rss");
     expect(knownFeedsFor("www.cnn.com")).toContain("http://rss.cnn.com/rss/cnn_topstories.rss");
     expect(knownFeedsFor("edition.cnn.com")).toContain("http://rss.cnn.com/rss/cnn_topstories.rss");
+  });
+  it("recognizes the Hebrew Ynet homepage host", () => {
+    expect(knownFeedsFor("www.ynet.co.il")).toContain("https://www.ynet.co.il/Integration/StoryRss2.xml");
   });
   it("returns [] for an unknown host (falls through to generic discovery)", () => {
     expect(knownFeedsFor("some-random-blog.example")).toEqual([]);

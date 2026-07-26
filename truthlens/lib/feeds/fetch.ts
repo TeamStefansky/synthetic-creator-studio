@@ -188,6 +188,7 @@ export const KNOWN_FEEDS: Record<string, string[]> = {
   "timesofisrael.com": ["https://www.timesofisrael.com/feed/"],
   "jpost.com": ["https://www.jpost.com/rss/rssfeedsheadlines.aspx"],
   "ynetnews.com": ["https://www.ynetnews.com/Integration/StoryRss3082.xml"],
+  "ynet.co.il": ["https://www.ynet.co.il/Integration/StoryRss2.xml"],
 };
 
 /** Curated feed URLs for a hostname (matches the host itself or any subdomain of a

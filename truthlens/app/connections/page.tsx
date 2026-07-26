@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Rss, Plus, Trash2, RefreshCw, Loader2, Power, Pencil, ExternalLink, ShieldCheck } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
+import { parseFeedInput } from "@/lib/feeds/input";
 
 interface UserFeed {
   id: string; url: string; title?: string; siteUrl?: string; addedAt: string;
@@ -49,7 +50,7 @@ export default function ConnectionsPage() {
   useEffect(() => { refresh(); }, [refresh]);
 
   const addFeeds = async () => {
-    const urls = [...new Set(input.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean))];
+    const urls = parseFeedInput(input);
     if (!urls.length) return;
     setBusy(true); setErr(""); setMsg("");
     const added: string[] = []; const failed: string[] = [];
