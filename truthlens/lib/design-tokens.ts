@@ -4,25 +4,25 @@
 // should hardcode a hex - import from here. (Wiring lands in the conform phase.)
 
 export const TOKENS = {
-  bg: "#050506",
-  surface: "#131314",
-  surface2: "#1E1E20",
-  sunken: "#0C0C0D",
-  text: "#EBEBEB",
-  textSecondary: "#9A9A9F",
-  textMuted: "#83838A",
-  border: "#232324",
-  borderStrong: "#37373A",
-  primary: "#7F49E1",
-  warm: "#E1804A",
+  bg: "#07080f",
+  surface: "#0E1020",
+  surface2: "#161828",
+  sunken: "#0B0D1A",
+  text: "#E8EAF2",
+  textSecondary: "#A5A8C2",
+  textMuted: "#8B8EA8",
+  border: "#20223A",
+  borderStrong: "#2D2F4A",
+  primary: "#7C3AED",
+  warm: "#22D3EE",
   badge: "#F5D742",
-  gradStart: "#E1804A",
-  gradMid: "#A25DA7",
-  gradEnd: "#7F49E1",
-  gradDeep: "#3B1E73",
+  gradStart: "#7C3AED",
+  gradMid: "#8B5CF6",
+  gradEnd: "#22D3EE",
+  gradDeep: "#1E1B4B",
 } as const;
 
-/** The signature gradient stops (orange -> magenta -> purple). */
+/** The signature gradient stops (violet -> light-violet -> cyan). */
 export const GRADIENT_STOPS = [TOKENS.gradStart, TOKENS.gradMid, TOKENS.gradEnd] as const;
 
 /** Functional risk/status hues (traffic-light semantics; retuned to Aurora). */
@@ -36,12 +36,12 @@ export const STATUS = {
  * gradient rule: distinct, accessible hues on the near-black canvas, anchored in
  * the Aurora family. */
 export const CLUSTER_PALETTE = [
-  "#7F49E1", // primary purple
-  "#E1804A", // warm orange
-  "#A25DA7", // magenta
-  "#2DD4BF", // teal
+  "#7C3AED", // primary violet
+  "#22D3EE", // cyan accent
+  "#A78BFA", // light violet
+  "#F472B6", // pink
+  "#34D399", // green
   "#38BDF8", // sky
-  "#F0454F", // rose
-  "#A3E635", // lime
   "#F5A623", // amber
+  "#F0454F", // rose
 ] as const;

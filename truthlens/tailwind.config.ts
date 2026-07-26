@@ -19,31 +19,33 @@ const config: Config = {
           unknown: "#F5A623", // warning amber
           high: "#F0454F",    // danger red
         },
-        // Canvas & surfaces - near-pure black.
+        // Canvas & surfaces - deep violet-black.
         bg: {
-          base: "#050506",
-          card: "#131314",
-          elev: "#1E1E20",
-          sunken: "#0C0C0D",
+          base: "#07080f",
+          card: "#0e1020",
+          elev: "#161828",
+          sunken: "#0b0d1a",
         },
-        // Brand / primary - electric purple (gradient anchor).
+        // Brand / primary - electric violet (gradient anchor).
         brand: {
-          DEFAULT: "#7F49E1",
-          soft: "#A98BF0",
+          DEFAULT: "#7C3AED",
+          soft: "#A78BFA",
         },
-        // --- Aurora role tokens (new; used as screens conform) ---
-        surface: { DEFAULT: "#131314", "2": "#1E1E20", sunken: "#0C0C0D" },
-        primary: { DEFAULT: "#7F49E1", hover: "#6E3BD0", active: "#5D32A7" },
-        ink: { DEFAULT: "#EBEBEB", secondary: "#9A9A9F", muted: "#83838A" },
-        line: { DEFAULT: "#232324", strong: "#37373A" },
-        warm: "#E1804A",
+        // Second accent - cyan.
+        accent: { DEFAULT: "#22D3EE", soft: "#67E8F9" },
+        // --- role tokens ---
+        surface: { DEFAULT: "#0e1020", "2": "#161828", sunken: "#0b0d1a" },
+        primary: { DEFAULT: "#7C3AED", hover: "#6D28D9", active: "#5B21B6" },
+        ink: { DEFAULT: "#E8EAF2", secondary: "#A5A8C2", muted: "#8B8EA8" },
+        line: { DEFAULT: "rgba(124,58,237,0.15)", strong: "rgba(124,58,237,0.34)" },
+        warm: "#22D3EE",
         badge: "#F5D742",
-        grad: { start: "#E1804A", mid: "#A25DA7", end: "#7F49E1", deep: "#3B1E73" },
+        grad: { start: "#7C3AED", mid: "#8B5CF6", end: "#22D3EE", deep: "#1E1B4B" },
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
-        display: ["Space Grotesk", "Clash Display", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Geist Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        display: ["Bricolage Grotesque", "Space Grotesk", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["Geist Mono", "JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       fontSize: {
         // Aurora display scale (additive; Tailwind defaults kept for the rest).
@@ -67,14 +69,14 @@ const config: Config = {
       boxShadow: {
         soft: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 30px -12px rgba(0,0,0,0.6)",
         // Soft glow under the gradient - Aurora primary purple.
-        glow: "0 0 0 1px rgba(127,73,225,0.25), 0 8px 40px -8px rgba(127,73,225,0.35)",
+        glow: "0 0 0 1px rgba(124,58,237,0.25), 0 8px 40px -8px rgba(124,58,237,0.35)",
       },
       backgroundImage: {
         "grid-faint":
           "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
         // The signature gradient, as a Tailwind utility (bg-gradient-brand).
-        "gradient-brand": "linear-gradient(120deg,#E1804A 0%,#A25DA7 50%,#7F49E1 100%)",
-        "gradient-soft": "linear-gradient(120deg,rgba(127,73,225,.16),rgba(225,128,74,.16))",
+        "gradient-brand": "linear-gradient(120deg,#7C3AED 0%,#8B5CF6 48%,#22D3EE 100%)",
+        "gradient-soft": "linear-gradient(120deg,rgba(124,58,237,.16),rgba(34,211,238,.16))",
       },
       keyframes: {
         "fade-up": {

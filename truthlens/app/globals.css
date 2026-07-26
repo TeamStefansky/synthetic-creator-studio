@@ -7,36 +7,37 @@
 :root {
   color-scheme: dark;
 
-  --color-bg: #050506;
-  --color-surface: #131314;
-  --color-surface-2: #1e1e20;
-  --color-surface-sunken: #0c0c0d;
+  --color-bg: #07080f;
+  --color-surface: #0e1020;
+  --color-surface-2: #161828;
+  --color-surface-sunken: #0b0d1a;
 
-  --color-text: #ebebeb;
-  --color-text-secondary: #9a9a9f;
-  --color-text-muted: #83838a; /* a11y: AA 4.5:1 on the near-black canvas (ref was #5E5E64 ~3:1) */
+  --color-text: #e8eaf2;
+  --color-text-secondary: #a5a8c2;
+  --color-text-muted: #8b8ea8; /* a11y: kept light enough for AA 4.5:1 on #07080f */
 
-  --color-border: #232324;
-  --color-border-strong: #37373a;
+  --color-border: rgba(124, 58, 237, 0.15);
+  --color-border-strong: rgba(124, 58, 237, 0.34);
 
-  --color-primary: #7f49e1;
-  --color-primary-hover: #6e3bd0;
-  --color-primary-active: #5d32a7;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-active: #5b21b6;
   --color-on-primary: #ffffff;
-  --color-primary-glow: rgba(127, 73, 225, 0.4);
-  --gradient-brand: linear-gradient(120deg, #e1804a 0%, #a25da7 50%, #7f49e1 100%);
-  --gradient-soft: linear-gradient(120deg, rgba(127, 73, 225, 0.16), rgba(225, 128, 74, 0.16));
-  --grad-start: #e1804a;
-  --grad-mid: #a25da7;
-  --grad-end: #7f49e1;
-  --grad-deep: #3b1e73;
+  --color-primary-glow: rgba(124, 58, 237, 0.4);
+  --gradient-brand: linear-gradient(120deg, #7c3aed 0%, #8b5cf6 48%, #22d3ee 100%);
+  --gradient-soft: linear-gradient(120deg, rgba(124, 58, 237, 0.16), rgba(34, 211, 238, 0.16));
+  --grad-start: #7c3aed;
+  --grad-mid: #8b5cf6;
+  --grad-end: #22d3ee;
+  --grad-deep: #1e1b4b;
 
-  --color-warm: #e1804a;
+  --color-warm: #22d3ee; /* re-skin: the second accent is now cyan, not orange */
+  --color-accent: #22d3ee;
   --color-badge: #f5d742;
 
-  --font-display: "Space Grotesk", "Clash Display", "Inter", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Space Grotesk", "Inter", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, monospace;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
 
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -61,7 +62,7 @@ body {
 /* Aurora canvas is flat near-black: one very subtle purple glow, nothing loud. */
 body {
   background-image:
-    radial-gradient(56rem 38rem at 50% -12%, rgba(127, 73, 225, 0.10), transparent 62%);
+    radial-gradient(56rem 38rem at 50% -12%, rgba(124, 58, 237, 0.12), transparent 62%);
   background-attachment: fixed;
 }
 
