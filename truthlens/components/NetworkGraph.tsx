@@ -75,19 +75,24 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
   // links, and — crucially — a COLLISION force whose radius accounts for each
   // node's label width, so two labels can never occupy the same space. Without
   // this, force-graph only repels node *centres* and long labels still overlap.
+  // Collision radius grows with the label so labels can't overlap; key nodes
+  // (targets/operators) reserve extra room because they are always labelled and
+  // tend to form tight hubs (many operators fan off one searched domain).
   const collideRadius = (node: any) => {
-    const len = Math.min(String(node.label || "").length, 30);
-    return (isMobile ? 5 : 7) + len * (isMobile ? 1.7 : 2.6);
+    const label = String(node.label || "");
+    const len = Math.min(label.length, 30);
+    const isKey = node.kind === "target" || /^host\/operator:/i.test(label) || node.flaggedFake;
+    return (isMobile ? 6 : 9) + len * (isMobile ? 1.9 : 3.0) + (isKey ? (isMobile ? 4 : 10) : 0);
   };
   useEffect(() => {
     const fg = fgRef.current;
     if (!fg) return;
     const n = network.nodes.length;
-    const spread = Math.min(2.2, 1 + n / 40); // more nodes -> push harder
-    fg.d3Force("charge")?.strength((isMobile ? -150 : -260) * spread).distanceMax(isMobile ? 380 : 640);
-    fg.d3Force("link")?.distance(isMobile ? 60 : 90).strength(0.4);
-    fg.d3Force("center")?.strength(0.04);
-    fg.d3Force("collide", forceCollide(collideRadius).strength(1).iterations(2));
+    const spread = Math.min(2.4, 1 + n / 32); // more nodes -> push harder
+    fg.d3Force("charge")?.strength((isMobile ? -170 : -320) * spread).distanceMax(isMobile ? 420 : 760);
+    fg.d3Force("link")?.distance(isMobile ? 70 : 120).strength(0.35);
+    fg.d3Force("center")?.strength(0.03);
+    fg.d3Force("collide", forceCollide(collideRadius).strength(1).iterations(3));
     fg.d3ReheatSimulation?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isMobile, network.nodes.length]);
@@ -120,7 +125,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         ref={fgRef}
         graphData={data as any}
         width={width}
-        height={isMobile ? 340 : 520}
+        height={isMobile ? 360 : Math.min(760, 520 + Math.max(0, network.nodes.length - 20) * 8)}
         backgroundColor="rgba(0,0,0,0)"
         nodeRelSize={isMobile ? 4 : 5}
         linkColor={() => "rgba(255,255,255,0.18)"}
