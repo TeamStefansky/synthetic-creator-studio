@@ -33,17 +33,32 @@ describe("mentionDomains", () => {
   });
 });
 
-describe("shipped reference is EMPTY and neutral", () => {
-  it("has a versioned tag and zero entries", () => {
+describe("shipped reference: cited state-media seed; campaign/FARA neutral-empty", () => {
+  it("has a versioned tag; state-media seeded, the other two empty", () => {
     expect(IO_REFERENCE_VERSION).toMatch(/^io-ref-v\d+$/);
     const c = ioReferenceCounts();
-    expect(c.stateMedia).toBe(0);
+    expect(c.stateMedia).toBeGreaterThan(0); // EU-cited seed
     expect(c.campaigns).toBe(0);
     expect(c.foreignAgents).toBe(0);
   });
-  it("matchers return null against the empty reference", () => {
+  it("state-media matches a seeded outlet and its subdomains, with a citation", () => {
+    const rt = stateMediaMatch("rt.com");
+    expect(rt).not.toBeNull();
+    expect(rt!.source).toMatch(/^https?:\/\//); // auditable — every seed entry is cited
+    expect(stateMediaMatch("actualidad.rt.com")).not.toBeNull(); // subdomain match
+    expect(stateMediaMatch("example.com")).toBeNull(); // unrelated domain: no match
+  });
+  it("EVERY seeded state-media entry carries a provenance URL (never faked)", () => {
+    // Re-read the shipped file through the public matcher surface: a domain with no
+    // citation must never ship. We assert the invariant on the known seed anchors.
+    for (const d of ["rt.com", "sputnikglobe.com", "ria.ru", "voiceofeurope.com"]) {
+      const hit = stateMediaMatch(d);
+      expect(hit, d).not.toBeNull();
+      expect(hit!.source, d).toMatch(/^https?:\/\//);
+    }
+  });
+  it("campaign + foreign-agent matchers return null against the empty references", () => {
     expect(campaignMatch("example.com")).toBeNull();
-    expect(stateMediaMatch("example.com")).toBeNull();
     expect(foreignAgentMatch("example.com")).toBeNull();
   });
 });
@@ -53,15 +68,30 @@ describe("threat engine - IO indicators with the empty (shipped) reference", () 
     { source: "gdelt", id: "1", text: "acme scandal spreads", account: "somewhere.com", url: "https://somewhere.com/a", timestamp: "2024-03-01T08:00:00Z" },
     { source: "gdelt", id: "2", text: "acme scandal spreads", account: "elsewhere.org", url: "https://elsewhere.org/b", timestamp: "2024-03-01T09:00:00Z" },
   ];
-  it("renders both IO indicators as Unknown (cannot assess), not a reassuring Low", () => {
+  it("foreign_agent (still-empty reference) renders Unknown, not a reassuring Low", () => {
     const r = computeThreat("acme", mentions, SRC);
-    for (const key of ["documented_campaign", "foreign_agent"]) {
-      const ind = r.indicators.find((i) => i.key === key);
-      expect(ind, key).toBeDefined();
-      expect(ind!.level).toBe("Unknown");
-      expect(ind!.signals.join(" ")).toMatch(/not populated/i);
-      expect(ind!.alternative.length).toBeGreaterThan(0);
-    }
+    const ind = r.indicators.find((i) => i.key === "foreign_agent")!;
+    expect(ind).toBeDefined();
+    expect(ind.level).toBe("Unknown");
+    expect(ind.signals.join(" ")).toMatch(/not populated/i);
+    expect(ind.alternative.length).toBeGreaterThan(0);
+  });
+  it("documented_campaign is now ASSESSABLE (state-media seed populated) → 'no overlap' for unrelated domains", () => {
+    const r = computeThreat("acme", mentions, SRC);
+    const ind = r.indicators.find((i) => i.key === "documented_campaign")!;
+    expect(ind).toBeDefined();
+    expect(ind.level).not.toBe("Unknown");        // reference is populated → can assess
+    expect(ind.signals.join(" ")).toMatch(/no overlap/i);
+  });
+  it("documented_campaign flags a mention on a seeded state-media domain", () => {
+    const stateMentions: Mention[] = [
+      { source: "gdelt", id: "1", text: "acme narrative", account: "rt.com", url: "https://rt.com/a", timestamp: "2024-03-01T08:00:00Z" },
+      { source: "gdelt", id: "2", text: "acme narrative", account: "elsewhere.org", url: "https://elsewhere.org/b", timestamp: "2024-03-01T09:00:00Z" },
+    ];
+    const r = computeThreat("acme", stateMentions, SRC);
+    const ind = r.indicators.find((i) => i.key === "documented_campaign")!;
+    expect(ind.signals.join(" ")).toMatch(/state-affiliated media/i);
+    expect(ind.alternative.length).toBeGreaterThan(0); // innocent alternative always present
   });
   it("IO indicators carry ZERO weight → adding them does not change the combined score", () => {
     // With an empty reference the indicators are Unknown and excluded from scoring,

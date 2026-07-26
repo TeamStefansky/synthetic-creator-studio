@@ -11,9 +11,13 @@ Publicly-documented, **organization-only** reference sets used to surface
 
 ## Non-negotiables (enforced in code + tests)
 
-- **Ships EMPTY and neutral.** TruthLens bakes in no political judgments. Every
-  file ships with `entries: []`; an empty reference renders as **Unknown /
-  "Not collected"** — never a reassuring "clean".
+- **Neutral, auditable, expandable.** TruthLens bakes in no political judgments.
+  `state-media-domains.json` carries a small seed of the Russian outlets whose
+  broadcasting the EU suspended, each cited to the official EU Council / EEAS
+  designation (RT, Sputnik, RIA Novosti, Izvestia, Rossiyskaya Gazeta, Voice of
+  Europe). The other two files ship with `entries: []`. An **empty** reference (or
+  an unmatched domain) renders as **Unknown / "Not collected"** — never a
+  reassuring "clean".
 - **Organizations only — never persons.** Do not add an individual under any file.
   `scripts/refresh-fara.ts` drops records that look like people.
 - **Every entry is auditable.** Each entry carries a provenance URL
@@ -28,7 +32,26 @@ Publicly-documented, **organization-only** reference sets used to surface
 
 See each file's `_comment` and `schema` for the exact entry shape.
 
-## Refreshing the foreign-agent registry
+## Refreshing the lists (operator-run)
+
+All three refresh scripts are **operator-run** — not part of the app runtime or
+the build. Each is throttled, defaults to a **dry run**, has **no fabricated
+default endpoint** (you supply the official/auditable source URL), keeps
+**organizations/domains only**, and **drops any record without a provenance URL**.
+Add `--write` to persist; `refresh-state-media.ts` / `refresh-campaigns.ts` also
+take `--merge` to union with the existing seed. Review the diff before committing.
+
+```bash
+# State media — from an auditable export; every record needs a source URL
+STATE_MEDIA_SOURCE_URL="https://<export>.json" npx tsx scripts/refresh-state-media.ts --merge --write
+
+# Documented campaigns — from a published takedown dataset; provenance required
+CAMPAIGN_SOURCE_URL="https://<dataset>.json" CAMPAIGN_DISCLOSED_BY="EU DisinfoLab" \
+CAMPAIGN_REPORT_URL="https://<report>" CAMPAIGN_NAME="Doppelganger" \
+  npx tsx scripts/refresh-campaigns.ts --write
+```
+
+### Refreshing the foreign-agent registry
 
 `scripts/refresh-fara.ts` is **operator-run** — not part of the app runtime or
 the build. It is throttled and defaults to a dry run.
