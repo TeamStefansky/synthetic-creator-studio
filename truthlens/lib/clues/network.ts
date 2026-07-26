@@ -31,9 +31,15 @@ export function buildSearchNetwork(): SearchNetwork {
   const byId = new Map(listLocal().map((c) => [c.id, c]));
 
   const nodes = new Map<string, OperatorNetwork["nodes"][number]>();
+  const edgeSet = new Set<string>(); // dedup identical source->target->reason edges
   const edges: OperatorNetwork["edges"] = [];
   const searches = new Set<string>();
   let linkCount = 0;
+
+  // Collapse repeated searches of the SAME subject into ONE node: searching
+  // techforpalestine.org three times should show one node, not three. Key the
+  // search node by its normalized display label, not by the (per-search) id.
+  const searchNodeId = (label: string) => `chk:${label.trim().toLowerCase()}`;
 
   for (const [ek, rawIds] of Object.entries(idx)) {
     const ids = [...new Set(rawIds)].filter((id) => byId.has(id));
@@ -48,10 +54,15 @@ export function buildSearchNetwork(): SearchNetwork {
 
     for (const id of ids) {
       const c = byId.get(id)!;
-      const cid = `chk:${id}`;
-      if (!nodes.has(cid)) nodes.set(cid, { id: cid, label: c.headline || c.input || id, kind: "target" });
+      const label = c.headline || c.input || id;
+      const cid = searchNodeId(label);
+      if (!nodes.has(cid)) nodes.set(cid, { id: cid, label, kind: "target" });
       searches.add(cid);
-      edges.push({ source: cid, target: eid, reason: `shared ${entityLabel[kind as EntityKind] || kind}` });
+      const reason = `shared ${entityLabel[kind as EntityKind] || kind}`;
+      const ekey = `${cid}|${eid}|${reason}`;
+      if (edgeSet.has(ekey)) continue;
+      edgeSet.add(ekey);
+      edges.push({ source: cid, target: eid, reason });
     }
   }
 

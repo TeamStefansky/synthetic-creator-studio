@@ -39,6 +39,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
   const [width, setWidth] = useState(600);
   const [isMobile, setIsMobile] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const hoverNodeRef = useRef<any>(null);
 
   // Domain/target -> run a fresh TruthLens report; IP/ID -> external OSINT pivot.
   const clickNode = (node: { kind?: string; label?: string }) => {
@@ -128,16 +129,24 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         cooldownTicks={isMobile ? 80 : 160}
         onEngineStop={() => fgRef.current?.zoomToFit(400, isMobile ? 26 : 56)}
         onNodeClick={(n: any) => clickNode(n)}
-        onNodeHover={(n: any) => setHovering(!!n)}
+        onNodeHover={(n: any) => { hoverNodeRef.current = n; setHovering(!!n); }}
         nodeColor={(n: any) => (n.flaggedFake ? STATUS.high : KIND_COLOR[n.kind] || TOKENS.textSecondary)}
         nodeCanvasObjectMode={() => "after"}
         nodeCanvasObject={(node: any, ctx: any, scale: number) => {
-          // On mobile only label the target node to reduce clutter.
-          if (isMobile && node.kind !== "target") return;
+          // Declutter: by default only the meaningful nodes are labelled — the
+          // searched targets and the hosting operators (the connective tissue of
+          // the investigation). Secondary nodes (IPs, sibling domains, ASNs) get
+          // labels only when you zoom in past a threshold or hover them. Without
+          // this, a dense graph draws ~15 labels at once and they overlap.
           const label = node.label as string;
+          const isOperator = /^host\/operator:/i.test(label);
+          const isKey = node.kind === "target" || isOperator || node.flaggedFake;
+          const hovered = hoverNodeRef.current && hoverNodeRef.current.id === node.id;
+          if (isMobile && !isKey && !hovered) return;
+          if (!isMobile && !isKey && !hovered && scale < 1.6) return;
           const text = label.length > 30 ? label.slice(0, 29) + "…" : label;
           const fontSize = Math.max((isMobile ? 9 : 10) / scale, 2.5);
-          ctx.font = `${fontSize}px ui-sans-serif, system-ui`;
+          ctx.font = `${isKey ? "600 " : ""}${fontSize}px ui-sans-serif, system-ui`;
           // Alternate label side by node kind so neighbouring labels don't stack:
           // target/domain above the node, everything else below it.
           const above = node.kind === "target" || node.kind === "domain";
@@ -168,6 +177,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         <Legend color={KIND_COLOR.ga} label="GA id" />
         <Legend color={KIND_COLOR.adsense} label="AdSense id" />
         <Legend color={STATUS.high} label="Flagged fake" />
+        <span className="ml-auto text-ink-muted">Targets & operators are labelled — zoom in or hover to reveal the rest.</span>
       </div>
 
       {/* Clickable domain links (tap-friendly; nodes are also clickable). */}
