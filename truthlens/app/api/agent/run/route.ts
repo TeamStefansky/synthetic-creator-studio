@@ -16,7 +16,6 @@ import { runValidation } from "@/lib/agent/validation";
 import { AGENT_CEILING } from "@/lib/agent/authority";
 import type { StrengthEdge } from "@/lib/case/cluster";
 import { isIndividualCharacteristic } from "@/lib/board/calibrate";
-import { assessOperatorReputation } from "@/lib/operator-reputation";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -58,14 +57,9 @@ export async function POST(req: Request) {
     const validation = runValidation();
     const premortem = buildPremortem(run.caseFile).statements.map((s) => `${s.label}: ${s.text}`);
 
-    // External enrichment: when the agent finds an operator thread-end, it pulls
-    // documented, cited, org-level facts about the host/network (co-hosted,
-    // sanctions, documented-campaign/state-media lists).
-    const operatorReputation = await assessOperatorReputation({
-      asnOrgs: board.fingerprints.map((f) => f.asnOrg),
-      nameserverHosts: board.fingerprints.flatMap((f) => f.nsDomains || []),
-      coHosted: [...new Set(board.fingerprints.flatMap((f) => f.neighbors || []))],
-    }).catch(() => undefined);
+    // External enrichment on the operator thread-end (documented, cited, org-level)
+    // is computed inside runBoard and rides on the board result.
+    const operatorReputation = board.operatorReputation;
 
     const sitrep = buildSitrep({
       record: run.record, caseFile: run.caseFile, adversary, notPursued: [],

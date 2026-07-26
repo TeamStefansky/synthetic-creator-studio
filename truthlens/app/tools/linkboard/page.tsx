@@ -301,6 +301,33 @@ export default function LinkBoardPage() {
             );
           })()}
 
+          {/* hosting-operator reputation - who is the shared host, documented + cited */}
+          {result.operatorReputation && (result.operatorReputation.flags.length > 0 || result.operatorReputation.coHostedCount > 0) && (
+            <div className="card">
+              <div className="label-muted mb-2 flex items-center gap-1"><Network className="h-3.5 w-3.5" /> Hosting operator reputation</div>
+              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
+                {result.operatorReputation.asnOrg && <span className="rounded-full border border-white/15 px-2 py-0.5">operator: <span className="text-ink">{result.operatorReputation.asnOrg}</span></span>}
+                <span className="rounded-full border border-white/15 px-2 py-0.5">{result.operatorReputation.coHostedCount} co-hosted</span>
+                <span className={`rounded-full border px-2 py-0.5 ${result.operatorReputation.sanctions.connected ? "border-white/15" : "border-yellow-500/30 bg-yellow-500/5 text-yellow-200/80"}`}>sanctions: {result.operatorReputation.sanctions.connected ? `${result.operatorReputation.sanctions.hits} hit(s)` : "not connected"}</span>
+              </div>
+              {result.operatorReputation.flags.length === 0 ? (
+                <p className="text-sm text-ink-secondary">{result.operatorReputation.note}</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {result.operatorReputation.flags.map((f, i) => (
+                    <li key={i} className="text-xs text-ink-secondary">
+                      <span className="rounded bg-white/5 px-1.5 py-0.5 uppercase tracking-wide">{f.kind.replace(/_/g, " ")}</span>{" "}
+                      <span className="text-ink">{f.detail}</span> <span className="text-ink-muted">· {f.confidence} · {f.onOwnInfra ? "own infra" : "co-hosted"}</span>
+                      {f.citation && <> · <a href={f.citation} target="_blank" rel="noopener noreferrer" className="text-brand-soft hover:underline">source</a></>}
+                      <div className="text-ink-muted">Could also be: {f.alternative}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-2 text-[11px] text-ink-secondary">Org-level, cited. Co-hosting is context, not guilt. Never a claim about a private individual.</p>
+            </div>
+          )}
+
           {/* sources / collection status */}
           <div className="card">
             <div className="label-muted mb-2">Collection status</div>

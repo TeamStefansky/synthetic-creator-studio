@@ -129,4 +129,6 @@ export interface BoardResult {
   generatedAt: string;
   sources: SourceStatus[];
   fingerprints: { entity: string; artifactCount: number; errors: string[]; authority?: number; asnOrg?: string; nsDomains?: string[]; neighbors?: string[] }[];
+  /** Documented, cited, org-level reputation of the shared hosting operator(s). */
+  operatorReputation?: import("@/lib/operator-reputation").OperatorReputation;
 }

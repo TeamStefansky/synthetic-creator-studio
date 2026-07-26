@@ -15,6 +15,7 @@ import { lookupRdap } from "@/lib/rdap";
 import { reverseIp } from "@/lib/reverseip";
 import { fingerprint as techFingerprint } from "@/lib/fingerprint";
 import { normalizeText, jaccard, signatureOf } from "@/lib/similarity";
+import { assessOperatorReputation } from "@/lib/operator-reputation";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { fetchOpenPageRankBulk } from "@/lib/authority";
 import { calibrateOverlap, buildPairEdge, BOARD_RUBRIC_VERSION } from "./calibrate";
@@ -360,5 +361,14 @@ export async function runBoard(domains: string[]): Promise<BoardResult> {
       return a != null ? { ...f, authority: a } : f;
     });
   } catch { /* authority is optional enrichment */ }
+  // Operator reputation: documented, cited, org-level facts about the shared
+  // host/network the compared domains sit behind (the "who is this host" answer).
+  try {
+    result.operatorReputation = await assessOperatorReputation({
+      asnOrgs: fps.map((f) => f.artifacts.find((a) => a.kind === "as_org")?.value),
+      nameserverHosts: fps.flatMap((f) => f.artifacts.filter((a) => a.kind === "ns_set").map((a) => a.value)),
+      coHosted: [...new Set(fps.flatMap((f) => f.neighbors || []))],
+    });
+  } catch { /* reputation is optional enrichment */ }
   return result;
 }
