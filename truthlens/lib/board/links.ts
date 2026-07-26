@@ -17,6 +17,7 @@ import { fingerprint as techFingerprint } from "@/lib/fingerprint";
 import { normalizeText, jaccard, signatureOf } from "@/lib/similarity";
 import { assessOperatorReputation } from "@/lib/operator-reputation";
 import { crossLookup } from "@/lib/bridge";
+import { buildOperatorGraph, SHARED_IP_THRESHOLD } from "@/lib/network";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { fetchOpenPageRankBulk } from "@/lib/authority";
 import { calibrateOverlap, buildPairEdge, BOARD_RUBRIC_VERSION } from "./calibrate";
@@ -210,50 +211,31 @@ export async function collectFingerprint(domain: string): Promise<Fingerprint> {
 }
 
 // ---- operator network (same shape as Site Report's NetworkGraph) ------------
-// Merge every pasted domain's infrastructure into ONE graph. Because shared
-// nodes (an IP, a GA/AdSense id, an SSL SAN host) get the SAME id, two domains
-// that share one are automatically connected - that IS the network. Reverse-IP
-// neighbours are only expanded on dedicated hosts (CDN/shared IPs are noise).
-const NET_SHARED_IP_THRESHOLD = 12;
+// The Link Board's N-domain adapter over the ONE shared operator-graph builder
+// (lib/network.ts). Shared nodes (an IP, a GA/AdSense id, an SSL SAN host) get the
+// SAME id, so two domains that share one are automatically connected - that IS the
+// network. Reverse-IP neighbours are only expanded on dedicated hosts. No fake
+// predicate is passed, keeping the board's current no-flag behaviour.
+const NET_SHARED_IP_THRESHOLD = SHARED_IP_THRESHOLD;
 
 export function buildLinkNetwork(fps: Fingerprint[]): import("./types").BoardNetwork {
-  const nodes = new Map<string, import("./types").BoardNetwork["nodes"][number]>();
-  const edges: import("./types").BoardNetwork["edges"] = [];
-  const seenEdge = new Set<string>();
-  const addNode = (id: string, label: string, kind: import("./types").BoardNetwork["nodes"][number]["kind"]) => {
-    if (!nodes.has(id)) nodes.set(id, { id, label, kind });
-  };
-  const addEdge = (source: string, target: string, reason: string) => {
-    if (source === target) return;
-    const k = `${source}|${target}|${reason}`;
-    if (seenEdge.has(k)) return;
-    seenEdge.add(k);
-    edges.push({ source, target, reason });
-  };
+  const { nodes, edges, hiddenSharedIpCount } = buildOperatorGraph(
+    fps.map((f) => ({
+      domain: f.entity,
+      ip: f.ip,
+      neighbors: f.neighbors,
+      ipIsShared: f.cdn || (f.neighborCount ?? 0) > NET_SHARED_IP_THRESHOLD,
+      neighborSlice: 20,
+      sans: f.sans,
+      gaIds: f.gaIds,
+      adsenseIds: f.adsenseIds,
+    })),
+  );
 
-  let hidden = 0;
-  for (const f of fps) {
-    addNode(f.entity, f.entity, "target");
-    if (f.ip) {
-      const ipId = `ip:${f.ip}`;
-      addNode(ipId, f.ip, "ip");
-      addEdge(f.entity, ipId, "hosted on IP");
-      const dedicated = !f.cdn && (f.neighborCount ?? 0) <= NET_SHARED_IP_THRESHOLD;
-      if (dedicated) {
-        for (const n of (f.neighbors || []).slice(0, 20)) { addNode(n, n, "domain"); addEdge(ipId, n, "shared dedicated IP"); }
-      } else {
-        hidden += f.neighbors?.length || 0;
-      }
-    }
-    for (const san of (f.sans || []).slice(0, 25)) { addNode(san, san, "domain"); addEdge(f.entity, san, "shared SSL certificate (SAN)"); }
-    for (const g of f.gaIds || []) { const id = `ga:${g}`; addNode(id, g, "ga"); addEdge(f.entity, id, "Google Analytics ID"); }
-    for (const a of f.adsenseIds || []) { const id = `ad:${a}`; addNode(id, a, "adsense"); addEdge(f.entity, id, "AdSense ID"); }
-  }
-
-  const note = hidden > 0
-    ? `${hidden} reverse-IP co-tenant domain(s) hidden - they sit on a CDN/shared host, so they are not a reliable operator link. Shared IP, SSL, and analytics/ad IDs between your domains are shown.`
+  const note = hiddenSharedIpCount > 0
+    ? `${hiddenSharedIpCount} reverse-IP co-tenant domain(s) hidden - they sit on a CDN/shared host, so they are not a reliable operator link. Shared IP, SSL, and analytics/ad IDs between your domains are shown.`
     : undefined;
-  return { nodes: [...nodes.values()], edges, note };
+  return { nodes, edges, note };
 }
 
 // ---- pairwise comparison ----------------------------------------------------
