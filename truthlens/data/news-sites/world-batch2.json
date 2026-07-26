@@ -1,0 +1,917 @@
+[
+{
+"country":"United States",
+"outlet":"CNN",
+"url":"cnn.com"
+},
+{
+"country":"United States",
+"outlet":"The New York Times",
+"url":"nytimes.com"
+},
+{
+"country":"United States",
+"outlet":"The Washington Post",
+"url":"washingtonpost.com"
+},
+{
+"country":"United States",
+"outlet":"Fox News",
+"url":"foxnews.com"
+},
+{
+"country":"United States",
+"outlet":"NPR",
+"url":"npr.org"
+},
+{
+"country":"United States",
+"outlet":"USA Today",
+"url":"usatoday.com"
+},
+{
+"country":"United States",
+"outlet":"Politico",
+"url":"politico.com"
+},
+{
+"country":"United States",
+"outlet":"The Hill",
+"url":"thehill.com"
+},
+{
+"country":"United States",
+"outlet":"NBC News",
+"url":"nbcnews.com"
+},
+{
+"country":"United States",
+"outlet":"CBS News",
+"url":"cbsnews.com"
+},
+{
+"country":"United States",
+"outlet":"ABC News",
+"url":"abcnews.go.com"
+},
+{
+"country":"United States",
+"outlet":"AP News",
+"url":"apnews.com"
+},
+{
+"country":"United States",
+"outlet":"Axios",
+"url":"axios.com"
+},
+{
+"country":"United States",
+"outlet":"The Atlantic",
+"url":"theatlantic.com"
+},
+{
+"country":"United States",
+"outlet":"Time",
+"url":"time.com"
+},
+{
+"country":"United States",
+"outlet":"Newsweek",
+"url":"newsweek.com"
+},
+{
+"country":"United States",
+"outlet":"Los Angeles Times",
+"url":"latimes.com"
+},
+{
+"country":"United States",
+"outlet":"Bloomberg",
+"url":"bloomberg.com"
+},
+{
+"country":"Canada",
+"outlet":"CBC",
+"url":"cbc.ca"
+},
+{
+"country":"Canada",
+"outlet":"CTV News",
+"url":"ctvnews.ca"
+},
+{
+"country":"Canada",
+"outlet":"Global News",
+"url":"globalnews.ca"
+},
+{
+"country":"Canada",
+"outlet":"National Post",
+"url":"nationalpost.com"
+},
+{
+"country":"Canada",
+"outlet":"The Globe and Mail",
+"url":"theglobeandmail.com"
+},
+{
+"country":"Canada",
+"outlet":"Toronto Star",
+"url":"thestar.com"
+},
+{
+"country":"Mexico",
+"outlet":"El Universal",
+"url":"eluniversal.com.mx"
+},
+{
+"country":"Mexico",
+"outlet":"Milenio",
+"url":"milenio.com"
+},
+{
+"country":"Mexico",
+"outlet":"Excelsior",
+"url":"excelsior.com.mx"
+},
+{
+"country":"Mexico",
+"outlet":"La Jornada",
+"url":"jornada.com.mx"
+},
+{
+"country":"Israel",
+"outlet":"The Times of Israel",
+"url":"timesofisrael.com"
+},
+{
+"country":"Israel",
+"outlet":"The Jerusalem Post",
+"url":"jpost.com"
+},
+{
+"country":"Israel",
+"outlet":"Haaretz",
+"url":"haaretz.com"
+},
+{
+"country":"Israel",
+"outlet":"Ynetnews",
+"url":"ynetnews.com"
+},
+{
+"country":"Israel",
+"outlet":"i24NEWS",
+"url":"i24news.tv"
+},
+{
+"country":"Israel",
+"outlet":"Israel Hayom",
+"url":"israelhayom.com"
+},
+{
+"country":"Israel",
+"outlet":"Arutz Sheva",
+"url":"israelnationalnews.com"
+},
+{
+"country":"Israel",
+"outlet":"Globes",
+"url":"en.globes.co.il"
+},
+{
+"country":"Israel",
+"outlet":"Ynet (Hebrew)",
+"url":"ynet.co.il"
+},
+{
+"country":"Israel",
+"outlet":"N12",
+"url":"n12.co.il"
+},
+{
+"country":"Israel",
+"outlet":"Walla",
+"url":"news.walla.co.il"
+},
+{
+"country":"Israel",
+"outlet":"Kan",
+"url":"kan.org.il"
+},
+{
+"country":"Palestinian Territories",
+"outlet":"Middle East Eye",
+"url":"middleeasteye.net"
+},
+{
+"country":"Palestinian Territories",
+"outlet":"Ma'an News",
+"url":"maannews.net"
+},
+{
+"country":"Palestinian Territories",
+"outlet":"WAFA",
+"url":"english.wafa.ps"
+},
+{
+"country":"Palestinian Territories",
+"outlet":"Palestine Chronicle",
+"url":"palestinechronicle.com"
+},
+{
+"country":"Palestinian Territories",
+"outlet":"Al-Monitor",
+"url":"al-monitor.com"
+},
+{
+"country":"Egypt",
+"outlet":"Ahram Online",
+"url":"english.ahram.org.eg"
+},
+{
+"country":"Egypt",
+"outlet":"Egypt Independent",
+"url":"egyptindependent.com"
+},
+{
+"country":"Egypt",
+"outlet":"Daily News Egypt",
+"url":"dailynewsegypt.com"
+},
+{
+"country":"Egypt",
+"outlet":"Egypt Today",
+"url":"egypttoday.com"
+},
+{
+"country":"Saudi Arabia",
+"outlet":"Arab News",
+"url":"arabnews.com"
+},
+{
+"country":"Saudi Arabia",
+"outlet":"Al Arabiya English",
+"url":"english.alarabiya.net"
+},
+{
+"country":"Saudi Arabia",
+"outlet":"Saudi Gazette",
+"url":"saudigazette.com.sa"
+},
+{
+"country":"Saudi Arabia",
+"outlet":"Asharq Al-Awsat",
+"url":"english.aawsat.com"
+},
+{
+"country":"United Arab Emirates",
+"outlet":"Gulf News",
+"url":"gulfnews.com"
+},
+{
+"country":"United Arab Emirates",
+"outlet":"Khaleej Times",
+"url":"khaleejtimes.com"
+},
+{
+"country":"United Arab Emirates",
+"outlet":"The National",
+"url":"thenationalnews.com"
+},
+{
+"country":"Qatar",
+"outlet":"Al Jazeera",
+"url":"aljazeera.com"
+},
+{
+"country":"Qatar",
+"outlet":"The Peninsula",
+"url":"thepeninsulaqatar.com"
+},
+{
+"country":"Qatar",
+"outlet":"Gulf Times",
+"url":"gulf-times.com"
+},
+{
+"country":"Qatar",
+"outlet":"Doha News",
+"url":"dohanews.co"
+},
+{
+"country":"Lebanon",
+"outlet":"L'Orient Today",
+"url":"today.lorientlejour.com"
+},
+{
+"country":"Lebanon",
+"outlet":"Naharnet",
+"url":"naharnet.com"
+},
+{
+"country":"Lebanon",
+"outlet":"Al Akhbar",
+"url":"al-akhbar.com"
+},
+{
+"country":"Jordan",
+"outlet":"The Jordan Times",
+"url":"jordantimes.com"
+},
+{
+"country":"Jordan",
+"outlet":"Roya News",
+"url":"en.royanews.tv"
+},
+{
+"country":"Jordan",
+"outlet":"Ammon News",
+"url":"ammonnews.net"
+},
+{
+"country":"Iraq",
+"outlet":"Rudaw",
+"url":"rudaw.net"
+},
+{
+"country":"Iraq",
+"outlet":"Kurdistan24",
+"url":"kurdistan24.net"
+},
+{
+"country":"Iraq",
+"outlet":"Shafaq News",
+"url":"shafaq.com"
+},
+{
+"country":"Iraq",
+"outlet":"Iraqi News",
+"url":"iraqinews.com"
+},
+{
+"country":"Iran",
+"outlet":"Tehran Times",
+"url":"tehrantimes.com"
+},
+{
+"country":"Iran",
+"outlet":"Press TV",
+"url":"presstv.ir"
+},
+{
+"country":"Iran",
+"outlet":"Mehr News",
+"url":"en.mehrnews.com"
+},
+{
+"country":"Iran",
+"outlet":"IRNA",
+"url":"en.irna.ir"
+},
+{
+"country":"Iran",
+"outlet":"Radio Farda",
+"url":"radiofarda.com"
+},
+{
+"country":"Turkey",
+"outlet":"Hurriyet Daily News",
+"url":"hurriyetdailynews.com"
+},
+{
+"country":"Turkey",
+"outlet":"Daily Sabah",
+"url":"dailysabah.com"
+},
+{
+"country":"Turkey",
+"outlet":"TRT World",
+"url":"trtworld.com"
+},
+{
+"country":"Turkey",
+"outlet":"Anadolu Agency",
+"url":"aa.com.tr"
+},
+{
+"country":"Turkey",
+"outlet":"Bianet",
+"url":"bianet.org"
+},
+{
+"country":"Syria",
+"outlet":"SANA",
+"url":"sana.sy"
+},
+{
+"country":"Syria",
+"outlet":"Enab Baladi",
+"url":"english.enabbaladi.net"
+},
+{
+"country":"Syria",
+"outlet":"Syria Direct",
+"url":"syriadirect.org"
+},
+{
+"country":"India",
+"outlet":"The Times of India",
+"url":"timesofindia.indiatimes.com"
+},
+{
+"country":"India",
+"outlet":"The Hindu",
+"url":"thehindu.com"
+},
+{
+"country":"India",
+"outlet":"Hindustan Times",
+"url":"hindustantimes.com"
+},
+{
+"country":"India",
+"outlet":"NDTV",
+"url":"ndtv.com"
+},
+{
+"country":"India",
+"outlet":"India Today",
+"url":"indiatoday.in"
+},
+{
+"country":"India",
+"outlet":"The Indian Express",
+"url":"indianexpress.com"
+},
+{
+"country":"India",
+"outlet":"The Economic Times",
+"url":"economictimes.indiatimes.com"
+},
+{
+"country":"India",
+"outlet":"Scroll",
+"url":"scroll.in"
+},
+{
+"country":"India",
+"outlet":"The Wire",
+"url":"thewire.in"
+},
+{
+"country":"Pakistan",
+"outlet":"Dawn",
+"url":"dawn.com"
+},
+{
+"country":"Pakistan",
+"outlet":"The Express Tribune",
+"url":"tribune.com.pk"
+},
+{
+"country":"Pakistan",
+"outlet":"The News International",
+"url":"thenews.com.pk"
+},
+{
+"country":"Pakistan",
+"outlet":"Geo News",
+"url":"geo.tv"
+},
+{
+"country":"Pakistan",
+"outlet":"ARY News",
+"url":"arynews.tv"
+},
+{
+"country":"China",
+"outlet":"Xinhua",
+"url":"english.news.cn"
+},
+{
+"country":"China",
+"outlet":"Global Times",
+"url":"globaltimes.cn"
+},
+{
+"country":"China",
+"outlet":"China Daily",
+"url":"chinadaily.com.cn"
+},
+{
+"country":"China",
+"outlet":"People's Daily",
+"url":"en.people.cn"
+},
+{
+"country":"China",
+"outlet":"CGTN",
+"url":"cgtn.com"
+},
+{
+"country":"China",
+"outlet":"South China Morning Post",
+"url":"scmp.com"
+},
+{
+"country":"Japan",
+"outlet":"The Japan Times",
+"url":"japantimes.co.jp"
+},
+{
+"country":"Japan",
+"outlet":"NHK World",
+"url":"nhk.or.jp"
+},
+{
+"country":"Japan",
+"outlet":"The Asahi Shimbun",
+"url":"asahi.com"
+},
+{
+"country":"Japan",
+"outlet":"The Mainichi",
+"url":"mainichi.jp"
+},
+{
+"country":"Japan",
+"outlet":"Nikkei Asia",
+"url":"asia.nikkei.com"
+},
+{
+"country":"Japan",
+"outlet":"Kyodo News",
+"url":"english.kyodonews.net"
+},
+{
+"country":"South Korea",
+"outlet":"The Korea Herald",
+"url":"koreaherald.com"
+},
+{
+"country":"South Korea",
+"outlet":"The Korea Times",
+"url":"koreatimes.co.kr"
+},
+{
+"country":"South Korea",
+"outlet":"Yonhap",
+"url":"en.yna.co.kr"
+},
+{
+"country":"South Korea",
+"outlet":"The Chosun Ilbo",
+"url":"chosun.com"
+},
+{
+"country":"Indonesia",
+"outlet":"The Jakarta Post",
+"url":"thejakartapost.com"
+},
+{
+"country":"Indonesia",
+"outlet":"Tempo",
+"url":"en.tempo.co"
+},
+{
+"country":"Indonesia",
+"outlet":"Kompas",
+"url":"kompas.com"
+},
+{
+"country":"Indonesia",
+"outlet":"Antara",
+"url":"en.antaranews.com"
+},
+{
+"country":"Philippines",
+"outlet":"Philippine Daily Inquirer",
+"url":"inquirer.net"
+},
+{
+"country":"Philippines",
+"outlet":"Rappler",
+"url":"rappler.com"
+},
+{
+"country":"Philippines",
+"outlet":"GMA News",
+"url":"gmanetwork.com"
+},
+{
+"country":"Philippines",
+"outlet":"The Manila Times",
+"url":"manilatimes.net"
+},
+{
+"country":"Philippines",
+"outlet":"Philstar",
+"url":"philstar.com"
+},
+{
+"country":"Thailand",
+"outlet":"Bangkok Post",
+"url":"bangkokpost.com"
+},
+{
+"country":"Thailand",
+"outlet":"The Nation",
+"url":"nationthailand.com"
+},
+{
+"country":"Thailand",
+"outlet":"Thai PBS World",
+"url":"thaipbsworld.com"
+},
+{
+"country":"Vietnam",
+"outlet":"VnExpress",
+"url":"e.vnexpress.net"
+},
+{
+"country":"Vietnam",
+"outlet":"Tuoi Tre News",
+"url":"tuoitrenews.vn"
+},
+{
+"country":"Vietnam",
+"outlet":"Vietnam News",
+"url":"vietnamnews.vn"
+},
+{
+"country":"Singapore",
+"outlet":"The Straits Times",
+"url":"straitstimes.com"
+},
+{
+"country":"Singapore",
+"outlet":"Channel News Asia",
+"url":"channelnewsasia.com"
+},
+{
+"country":"Singapore",
+"outlet":"Today",
+"url":"todayonline.com"
+},
+{
+"country":"Malaysia",
+"outlet":"The Star",
+"url":"thestar.com.my"
+},
+{
+"country":"Malaysia",
+"outlet":"New Straits Times",
+"url":"nst.com.my"
+},
+{
+"country":"Malaysia",
+"outlet":"Malaysiakini",
+"url":"malaysiakini.com"
+},
+{
+"country":"Malaysia",
+"outlet":"Free Malaysia Today",
+"url":"freemalaysiatoday.com"
+},
+{
+"country":"Russia",
+"outlet":"TASS",
+"url":"tass.com"
+},
+{
+"country":"Russia",
+"outlet":"RT",
+"url":"rt.com"
+},
+{
+"country":"Russia",
+"outlet":"The Moscow Times",
+"url":"themoscowtimes.com"
+},
+{
+"country":"Russia",
+"outlet":"Interfax",
+"url":"interfax.com"
+},
+{
+"country":"Russia",
+"outlet":"Meduza",
+"url":"meduza.io"
+},
+{
+"country":"Ukraine",
+"outlet":"The Kyiv Independent",
+"url":"kyivindependent.com"
+},
+{
+"country":"Ukraine",
+"outlet":"Kyiv Post",
+"url":"kyivpost.com"
+},
+{
+"country":"Ukraine",
+"outlet":"Ukrainska Pravda",
+"url":"pravda.com.ua"
+},
+{
+"country":"Ukraine",
+"outlet":"UNIAN",
+"url":"unian.info"
+},
+{
+"country":"Ukraine",
+"outlet":"Ukrinform",
+"url":"ukrinform.net"
+},
+{
+"country":"South Africa",
+"outlet":"News24",
+"url":"news24.com"
+},
+{
+"country":"South Africa",
+"outlet":"Mail & Guardian",
+"url":"mg.co.za"
+},
+{
+"country":"South Africa",
+"outlet":"IOL",
+"url":"iol.co.za"
+},
+{
+"country":"South Africa",
+"outlet":"Daily Maverick",
+"url":"dailymaverick.co.za"
+},
+{
+"country":"South Africa",
+"outlet":"TimesLIVE",
+"url":"timeslive.co.za"
+},
+{
+"country":"Nigeria",
+"outlet":"Punch",
+"url":"punchng.com"
+},
+{
+"country":"Nigeria",
+"outlet":"Vanguard",
+"url":"vanguardngr.com"
+},
+{
+"country":"Nigeria",
+"outlet":"The Guardian Nigeria",
+"url":"guardian.ng"
+},
+{
+"country":"Nigeria",
+"outlet":"Premium Times",
+"url":"premiumtimesng.com"
+},
+{
+"country":"Kenya",
+"outlet":"Daily Nation",
+"url":"nation.africa"
+},
+{
+"country":"Kenya",
+"outlet":"The Standard",
+"url":"standardmedia.co.ke"
+},
+{
+"country":"Kenya",
+"outlet":"The Star",
+"url":"the-star.co.ke"
+},
+{
+"country":"Ethiopia",
+"outlet":"Addis Standard",
+"url":"addisstandard.com"
+},
+{
+"country":"Ethiopia",
+"outlet":"The Reporter",
+"url":"thereporterethiopia.com"
+},
+{
+"country":"Brazil",
+"outlet":"Folha de S.Paulo",
+"url":"folha.uol.com.br"
+},
+{
+"country":"Brazil",
+"outlet":"O Globo",
+"url":"oglobo.globo.com"
+},
+{
+"country":"Brazil",
+"outlet":"G1",
+"url":"g1.globo.com"
+},
+{
+"country":"Brazil",
+"outlet":"Estadao",
+"url":"estadao.com.br"
+},
+{
+"country":"Argentina",
+"outlet":"Clarin",
+"url":"clarin.com"
+},
+{
+"country":"Argentina",
+"outlet":"La Nacion",
+"url":"lanacion.com.ar"
+},
+{
+"country":"Argentina",
+"outlet":"Infobae",
+"url":"infobae.com"
+},
+{
+"country":"Argentina",
+"outlet":"Pagina 12",
+"url":"pagina12.com.ar"
+},
+{
+"country":"Chile",
+"outlet":"La Tercera",
+"url":"latercera.com"
+},
+{
+"country":"Chile",
+"outlet":"Emol",
+"url":"emol.com"
+},
+{
+"country":"Chile",
+"outlet":"BioBioChile",
+"url":"biobiochile.cl"
+},
+{
+"country":"Colombia",
+"outlet":"El Tiempo",
+"url":"eltiempo.com"
+},
+{
+"country":"Colombia",
+"outlet":"El Espectador",
+"url":"elespectador.com"
+},
+{
+"country":"Colombia",
+"outlet":"Semana",
+"url":"semana.com"
+},
+{
+"country":"Australia",
+"outlet":"ABC News",
+"url":"abc.net.au"
+},
+{
+"country":"Australia",
+"outlet":"The Sydney Morning Herald",
+"url":"smh.com.au"
+},
+{
+"country":"Australia",
+"outlet":"The Age",
+"url":"theage.com.au"
+},
+{
+"country":"Australia",
+"outlet":"news.com.au",
+"url":"news.com.au"
+},
+{
+"country":"Australia",
+"outlet":"The Australian",
+"url":"theaustralian.com.au"
+},
+{
+"country":"Australia",
+"outlet":"Sky News Australia",
+"url":"skynews.com.au"
+},
+{
+"country":"New Zealand",
+"outlet":"The New Zealand Herald",
+"url":"nzherald.co.nz"
+},
+{
+"country":"New Zealand",
+"outlet":"Stuff",
+"url":"stuff.co.nz"
+},
+{
+"country":"New Zealand",
+"outlet":"RNZ",
+"url":"rnz.co.nz"
+},
+{
+"country":"New Zealand",
+"outlet":"Newshub",
+"url":"newshub.co.nz"
+}
+]

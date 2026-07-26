@@ -11,8 +11,14 @@
 
 import { getJson, getText } from "@/lib/http";
 import type { SourceStatus } from "./narrative/types";
+import { cacheGet, cacheSet } from "@/lib/cache";
+import { safeFetchText, parseFeed, type FeedItem } from "@/lib/feeds/fetch";
+import {
+  listFeeds, feedsConnected, normalizeFeedUrl,
+  FEED_FETCH_BUDGET, MAX_ITEMS_PER_FEED, FEED_CACHE_TTL_MS,
+} from "@/lib/feeds/store";
 
-export type GeoKind = "conflict" | "humanitarian" | "disaster" | "forecast" | "macro" | "fire" | "spaceweather" | "aviation";
+export type GeoKind = "conflict" | "humanitarian" | "disaster" | "forecast" | "macro" | "fire" | "spaceweather" | "aviation" | "news";
 
 export interface GeoRecord {
   uid: string;
@@ -397,9 +403,53 @@ const opensky: GeoSource = {
   },
 };
 
+// ---- user-managed RSS/Atom feeds (Connections) -------------------------------
+// The SAME saved feeds that power SIGNAL Grid / Brand Watch / narrative analysis
+// also feed the situational picture here: region-relevant headlines become "news"
+// GeoRecords. Region-tagged via matchRegion; items that don't map to a tracked
+// region are dropped to keep the view focused (firms does the same). SSRF-guarded
+// and cached per (feedUrl, day) for reproducibility; one failing feed never aborts.
+const feeds: GeoSource = {
+  name: "feeds",
+  available: () => feedsConnected() || !!process.env.RSS_FEEDS,
+  reason: "Add RSS/Atom feeds under Connections, or set RSS_FEEDS.",
+  async fetch(limit) {
+    const envFeeds = (process.env.RSS_FEEDS || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const saved = (await listFeeds().catch(() => [])).filter((f) => f.enabled);
+    const seen = new Map<string, { url: string; etag?: string; lastModified?: string }>();
+    for (const u of envFeeds) { try { const n = normalizeFeedUrl(u); if (!seen.has(n)) seen.set(n, { url: n }); } catch { /* skip bad env url */ } }
+    for (const f of saved) if (!seen.has(f.url)) seen.set(f.url, { url: f.url, etag: f.etag, lastModified: f.lastModified });
+    const list = [...seen.values()].slice(0, FEED_FETCH_BUDGET);
+    const day = new Date().toISOString().slice(0, 10);
+    const out: GeoRecord[] = [];
+    await Promise.all(list.map(async (feed) => {
+      try {
+        const ck = `geofeed:${feed.url}:${day}`;
+        let items = await cacheGet<FeedItem[]>(ck, FEED_CACHE_TTL_MS);
+        if (!items) {
+          const res = await safeFetchText(feed.url, { etag: feed.etag, lastModified: feed.lastModified });
+          items = res.notModified ? [] : parseFeed(res.text).items.slice(0, MAX_ITEMS_PER_FEED);
+          await cacheSet(ck, items);
+        }
+        const host = feed.url.split("/")[2] || feed.url;
+        for (const it of items) {
+          const region = matchRegion(`${it.title} ${it.summary || ""}`);
+          if (region === "global") continue; // keep the situational picture focused on tracked regions
+          out.push({
+            uid: `feeds:${host}:${it.guid || it.link || it.title}`,
+            source: "feeds", kind: "news", ts: it.timestamp,
+            title: it.title, url: it.link, country: "", region,
+          });
+        }
+      } catch { /* failure isolation per feed */ }
+    }));
+    return out.slice(0, Math.max(limit * 4, 200));
+  },
+};
+
 export const GEO_SOURCES: GeoSource[] = [
   ucdp, acled, reliefweb, usgs, eonet, polymarket, metaculus, worldbank, imf,
-  firms, swpc, opensky,
+  firms, swpc, opensky, feeds,
 ];
 
 /** Run every geopolitics source in parallel, isolating failures. */

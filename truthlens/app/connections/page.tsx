@@ -38,8 +38,11 @@ export default function ConnectionsPage() {
   const [err, setErr] = useState("");
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [starter, setStarter] = useState<{ id: string; title: string; total: number; countries: { country: string; count: number }[] } | null>(null);
+  type StarterList = { id: string; title: string; total: number; countries: { country: string; count: number }[] };
+  const [starterLists, setStarterLists] = useState<StarterList[]>([]);
+  const [starterListId, setStarterListId] = useState("");
   const [starterCountry, setStarterCountry] = useState("");
+  const starter = starterLists.find((l) => l.id === starterListId) || null;
 
   // Import batches are capped so one paste can't fire thousands of validation
   // fetches; anything beyond is reported, never silently dropped (CLAUDE.md rule 7).
@@ -60,7 +63,8 @@ export default function ConnectionsPage() {
 
   useEffect(() => {
     fetch("/api/connections/starter-lists").then((r) => r.json())
-      .then((j) => setStarter(j.lists?.[0] || null)).catch(() => setStarter(null));
+      .then((j) => { const lists = j.lists || []; setStarterLists(lists); setStarterListId(lists[0]?.id || ""); })
+      .catch(() => setStarterLists([]));
   }, []);
 
   // Bulk-add a built-in starter list (optionally one country); each site is validated
@@ -237,25 +241,34 @@ export default function ConnectionsPage() {
       {starter && (
         <div className="card space-y-3">
           <div>
-            <div className="label-muted">Starter list</div>
+            <div className="label-muted">Starter lists</div>
             <p className="mt-1 text-sm text-ink-secondary">
-              <span className="text-ink">{starter.title}</span> — {starter.total} outlets across {starter.countries.length} countries.
-              Pick a country to add all its outlets, or add a Europe-wide spread (top 2 per country) in
-              one click; each site is validated and only those with a discoverable RSS/Atom feed are kept.
+              Built-in lists of major outlets by country. Pick a country to add all its outlets, or add a
+              region-wide spread (top 2 per country) in one click; each site is validated and only those
+              with a discoverable RSS/Atom feed are kept. Added sources feed every tool - SIGNAL Grid,
+              Brand Watch, Geopolitics and narrative analysis.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <select
+              value={starterListId} onChange={(e) => { setStarterListId(e.target.value); setStarterCountry(""); }} disabled={busy}
+              className="rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand"
+            >
+              {starterLists.map((l) => (
+                <option key={l.id} value={l.id}>{l.title} ({l.total})</option>
+              ))}
+            </select>
+            <select
               value={starterCountry} onChange={(e) => setStarterCountry(e.target.value)} disabled={busy}
               className="rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand"
             >
-              <option value="">Europe-wide spread (top 2 per country)</option>
+              <option value="">Region-wide spread (top 2 per country)</option>
               {starter.countries.map((c) => (
                 <option key={c.country} value={c.country}>{c.country} ({c.count})</option>
               ))}
             </select>
             <button onClick={addStarter} disabled={busy} className="btn shrink-0">
-              {busy && progress ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Add {starterCountry || "selection"}</>}
+              {busy && progress ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4" /> Add {starterCountry || "spread"}</>}
             </button>
           </div>
           <p className="text-[11px] text-ink-muted">

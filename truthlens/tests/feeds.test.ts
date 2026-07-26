@@ -3,6 +3,7 @@ import { isBlockedIp, isBlockedHostname, assertSafeUrl, parseFeed, sanitizeText,
 import { normalizeFeedUrl, validateAndPreview } from "../lib/feeds/store";
 import { parseFeedInput, extractFeedCandidates } from "../lib/feeds/input";
 import { SOURCES } from "../lib/narrative/sources";
+import { GEO_SOURCES } from "../lib/geopolitics";
 
 describe("SSRF guard", () => {
   it("blocks private / loopback / link-local / metadata IPs", () => {
@@ -97,6 +98,9 @@ describe("Connections feeds reach every mention surface", () => {
     // collectMentions runs SOURCES; /api/mentions (SIGNAL Grid + Brand Mentions) and
     // brandwatch both call collectMentions, so saved feeds flow everywhere via rss.
     expect(SOURCES.some((s) => s.name === "rss")).toBe(true);
+  });
+  it("the feeds source is part of GEO_SOURCES (Geopolitics uses saved feeds too)", () => {
+    expect(GEO_SOURCES.some((s) => s.name === "feeds")).toBe(true);
   });
 });
 

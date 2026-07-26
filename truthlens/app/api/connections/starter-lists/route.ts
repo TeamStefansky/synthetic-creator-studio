@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import europeBatch1 from "@/data/news-sites/europe-batch1.json";
+import worldBatch2 from "@/data/news-sites/world-batch2.json";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,7 @@ interface StarterList { id: string; title: string; entries: Entry[] }
 
 const LISTS: StarterList[] = [
   { id: "europe-batch1", title: "Europe — top outlets by country", entries: europeBatch1 as Entry[] },
+  { id: "world-batch2", title: "World — Americas, Middle East, Asia, Africa, Oceania", entries: worldBatch2 as Entry[] },
 ];
 
 function countryCounts(entries: Entry[]): { country: string; count: number }[] {
