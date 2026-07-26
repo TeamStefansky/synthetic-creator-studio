@@ -16,7 +16,9 @@ const FEATURES = [
   { icon: Globe2, title: "Geopolitics picture", body: "Conflict, humanitarian, disaster and forecast signals from official sources - situational context for what you are investigating." },
 ];
 
-export default function WelcomePage() {
+export default function WelcomePage({ searchParams }: { searchParams?: { next?: string } }) {
+  const next = searchParams?.next && searchParams.next.startsWith("/") ? searchParams.next : "";
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#07080f] text-[#e8eaf2]">
       {/* Ambient glow */}
@@ -31,7 +33,7 @@ export default function WelcomePage() {
           </span>
           <span className="text-[15px] font-semibold tracking-tight">Truth<span className="text-[#a78bfa]">Lens</span></span>
         </div>
-        <Link href="/login" className="rounded-xl border border-[#7c3aed]/30 px-4 py-2 text-sm text-[#e8eaf2] transition hover:bg-white/5">
+        <Link href={loginHref} className="rounded-xl border border-[#7c3aed]/30 px-4 py-2 text-sm text-[#e8eaf2] transition hover:bg-white/5">
           Sign in
         </Link>
       </header>
@@ -50,7 +52,7 @@ export default function WelcomePage() {
           Indicators, never a verdict.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
-          <Link href="/login" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_28px_rgba(124,58,237,0.4)] transition hover:brightness-110">
+          <Link href={loginHref} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_28px_rgba(124,58,237,0.4)] transition hover:brightness-110">
             Enter the platform <ArrowRight className="h-4 w-4" />
           </Link>
           <a href="#features" className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-[#a5a8c2] transition hover:bg-white/5">

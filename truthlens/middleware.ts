@@ -34,8 +34,11 @@ export async function middleware(req: NextRequest) {
       headers: { "content-type": "application/json" },
     });
   }
+  // Unauthenticated visitors land on the public marketing page first (the front
+  // door); its "Sign in" CTA carries them to /login, which returns them to `next`.
   const url = req.nextUrl.clone();
-  url.pathname = "/login";
+  url.pathname = "/welcome";
+  url.search = "";
   url.searchParams.set("next", pathname + (req.nextUrl.search || ""));
   return NextResponse.redirect(url);
 }
