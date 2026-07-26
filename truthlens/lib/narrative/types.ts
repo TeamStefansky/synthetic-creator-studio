@@ -124,4 +124,9 @@ export interface ThreatResult {
   earliest?: Mention;
   /** Preserved copies of the top evidence URLs (deep scans). */
   archives?: ArchiveLink[];
+  /** narrative -> infra bridge (deep scans): the operator network + documented
+   * reputation of the hosting operators behind this narrative's amplifiers. */
+  operatorNetwork?: import("@/lib/types").OperatorNetwork;
+  operatorReputation?: import("@/lib/operator-reputation").OperatorReputation;
+  amplifierOperatorCount?: number;
 }

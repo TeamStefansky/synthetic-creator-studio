@@ -10,7 +10,10 @@ import {
   ShieldAlert, ShieldCheck, ShieldQuestion, Search, Loader2, RefreshCw,
   TrendingUp, Radar, HelpCircle, FileText, Sparkles,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import ToolIntro from "@/components/ToolIntro";
+import OperatorReputationCard from "@/components/OperatorReputationCard";
+const NetworkGraph = dynamic(() => import("@/components/NetworkGraph"), { ssr: false });
 
 interface Indicator {
   key: string; label: string; level: "Low" | "Medium" | "High" | "Unknown";
@@ -28,6 +31,9 @@ interface ThreatResult {
     clusters: { label: string; summary: string; hostility: string; alternative: string }[];
   };
   archives?: { url: string; archiveUrl: string; status: "archived" | "requested"; timestamp?: string }[];
+  operatorNetwork?: import("@/lib/types").OperatorNetwork;
+  operatorReputation?: import("@/lib/operator-reputation").OperatorReputation;
+  amplifierOperatorCount?: number;
 }
 
 const HOST_TONE: Record<string, string> = {
@@ -351,6 +357,23 @@ export default function BrandWatchPage() {
                   <span className="text-ink-secondary">Not connected.</span> {result.narratives.reason}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Narrative -> infra bridge (deep scan): who hosts the amplifiers */}
+          {result.operatorReputation && (
+            <OperatorReputationCard
+              rep={result.operatorReputation}
+              title="Operator network behind this narrative"
+              intro={`The hosting operators sitting behind the domains amplifying this narrative${result.amplifierOperatorCount ? ` (${result.amplifierOperatorCount} distinct operator${result.amplifierOperatorCount === 1 ? "" : "s"})` : ""}. A shared operator is context about the neighbourhood, not proof any single amplifier is state-directed.`}
+            />
+          )}
+          {result.operatorNetwork && result.operatorNetwork.nodes.length > 1 && (
+            <div className="card">
+              <h3 className="mb-3 flex items-center gap-2 font-semibold text-white">
+                <Radar className="h-4 w-4 text-brand-soft" /> Amplifier ↔ operator map
+              </h3>
+              <NetworkGraph network={result.operatorNetwork as any} />
             </div>
           )}
 
