@@ -22,6 +22,7 @@ import { scoreReport } from "@/lib/scoring";
 import { buildNetwork } from "@/lib/network";
 import { tracePropagation } from "@/lib/propagation";
 import { assessCoordination } from "@/lib/coordination";
+import { assessOperatorReputation } from "@/lib/operator-reputation";
 import type { Report, Maybe } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -152,6 +153,14 @@ export async function POST(req: NextRequest) {
   const propagation = await tracePropagation(article.quote, siblingDomains).catch(() => undefined);
   const coordination = assessCoordination({ network, propagation });
 
+  // Hosting-operator reputation: documented, cited, org-level facts about the
+  // network/host/nameserver operator + what else sits on the same infrastructure.
+  const operatorReputation = await assessOperatorReputation({
+    asnOrgs: [hosting?.asnOrg, originTrace?.likelyOrigin?.asnOrg, ...(originTrace?.candidates || []).map((c) => c.asnOrg)],
+    nameserverHosts: dns?.ns || [],
+    coHosted: reverseNeighbors,
+  }).catch(() => undefined);
+
   const report: Report = {
     url: norm.url,
     domain,
@@ -167,6 +176,7 @@ export async function POST(req: NextRequest) {
     propagation,
     coordination,
     media: { images },
+    operatorReputation,
   };
 
   // Cache the report for 24h - but NOT when content analysis failed despite a

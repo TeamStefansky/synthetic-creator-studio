@@ -280,6 +280,8 @@ export interface Report {
   propagation?: PropagationResult;
   coordination?: CoordinationResult;
   media?: { images: string[] }; // image URLs found on the page (for AI detection)
+  /** Documented, cited, org-level reputation of the hosting operator/network. */
+  operatorReputation?: import("./operator-reputation").OperatorReputation;
 }
 
 // --- Post / claim fact-check ("is this post fake?") -------------------------
