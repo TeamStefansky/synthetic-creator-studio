@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Bot, ArrowRight, Download, ShieldCheck } from "lucide-react";
+import { Bot, ArrowRight, Download, ShieldCheck, MessageCircle } from "lucide-react";
 const NetworkGraph = dynamic(() => import("@/components/NetworkGraph"), { ssr: false });
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
@@ -50,6 +50,9 @@ export default function InvestigatorPage() {
   const [error, setError] = useState("");
   const [showJournal, setShowJournal] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [chat, setChat] = useState<{ role: "you" | "investigator"; text: string }[]>([]);
+  const [q, setQ] = useState("");
+  const [asking, setAsking] = useState(false);
 
   const run = async () => {
     const seedEntities = seed.split(/[\s,]+/).map((d) => d.trim()).filter(Boolean);
@@ -92,6 +95,22 @@ export default function InvestigatorPage() {
     if (!data) return;
     const url = URL.createObjectURL(new Blob([data.sitrep.markdown], { type: "text/markdown" }));
     const a = document.createElement("a"); a.href = url; a.download = "situation-report.md"; a.click(); URL.revokeObjectURL(url);
+  };
+
+  // Ask the investigator — grounded strictly in the current report (server-side).
+  const ask = async () => {
+    const question = q.trim();
+    if (!question || !data) return;
+    const context = ORDER.map((k) => `## ${k}\n${data.sitrep.sections[k] || ""}`).join("\n");
+    setChat((c) => [...c, { role: "you", text: question }]);
+    setQ(""); setAsking(true);
+    try {
+      const r = await fetch("/api/agent/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, context }), cache: "no-store" });
+      const j = await r.json();
+      setChat((c) => [...c, { role: "investigator", text: j.answer || j.error || "no answer" }]);
+    } catch (e: any) {
+      setChat((c) => [...c, { role: "investigator", text: e?.message || "chat failed" }]);
+    } finally { setAsking(false); }
   };
 
   // Fully automatic: attribute the run to a stable local handle and investigate
@@ -193,6 +212,29 @@ export default function InvestigatorPage() {
                 {data.journal.entries.map((e) => <li key={e.seq}><span className="font-mono text-ink-muted">c{e.cycle} {e.type}</span> — {e.detail}</li>)}
               </ul>
             )}
+          </div>
+
+          {/* Ask the investigator — grounded strictly in this report */}
+          <div className="card">
+            <div className="label-muted mb-2 flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> Ask the investigator</div>
+            {chat.length > 0 && (
+              <div className="mb-2 max-h-72 space-y-2 overflow-y-auto scroll-thin">
+                {chat.map((m, i) => (
+                  <div key={i} className={m.role === "you" ? "text-right" : ""}>
+                    <div className={`inline-block max-w-[85%] rounded-xl px-3 py-2 text-sm ${m.role === "you" ? "bg-brand/15 text-ink" : "border border-white/10 bg-white/[0.03] text-ink-secondary"}`}>
+                      <div className="mb-0.5 text-[10px] uppercase tracking-wide text-ink-muted">{m.role === "you" ? "you" : "investigator"}</div>
+                      <div className="whitespace-pre-wrap">{m.text}</div>
+                    </div>
+                  </div>
+                ))}
+                {asking && <div className="text-xs text-ink-muted">investigator is thinking…</div>}
+              </div>
+            )}
+            <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="flex gap-2">
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask about this case — e.g. what connects these? who is the host? what would disprove it?" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
+              <button type="submit" disabled={asking || !q.trim()} className="btn shrink-0">{asking ? "…" : "Ask"}</button>
+            </form>
+            <p className="mt-2 text-[11px] text-ink-secondary">Answers come only from this report — never invented, never a private individual, never a verdict. &ldquo;Not in the collected data&rdquo; is a valid answer.</p>
           </div>
         </div>
       )}
