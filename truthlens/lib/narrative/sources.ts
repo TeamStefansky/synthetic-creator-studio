@@ -8,6 +8,11 @@
 import { getJson, getText } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import type { Mention, SourceStatus } from "./types";
+import { safeFetchText, parseFeed, type FeedItem } from "@/lib/feeds/fetch";
+import {
+  listFeeds, recordFeedStatuses, normalizeFeedUrl, feedsConnected,
+  FEED_FETCH_BUDGET, MAX_ITEMS_PER_FEED, FEED_CACHE_TTL_MS, type FeedStatus,
+} from "@/lib/feeds/store";
 
 export interface SourceResult {
   status: SourceStatus;
@@ -128,31 +133,60 @@ const reddit: NarrativeSource = {
   },
 };
 
+// RSS/Atom now merges the user's saved+enabled Connections feeds with the operator
+// RSS_FEEDS env defaults (deduped). Each feed is fetched through the SSRF-guarded
+// fetcher, cached per (url, day), and reports its own ok/error/empty status back to
+// the store (per-feed badges in the UI). One feed failing never aborts the others.
 const rss: NarrativeSource = {
   name: "rss",
-  available: () => !!process.env.RSS_FEEDS,
-  reason: "Set RSS_FEEDS (comma-separated feed URLs) to enable.",
+  available: () => !!process.env.RSS_FEEDS || feedsConnected(),
+  reason: "Add RSS/Atom feeds under Connections, or set RSS_FEEDS (comma-separated).",
   async search(q) {
-    const feeds = (process.env.RSS_FEEDS || "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 8);
+    const envFeeds = (process.env.RSS_FEEDS || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const saved = (await listFeeds().catch(() => [])).filter((f) => f.enabled);
+    // Merge + dedup by normalized URL; saved feeds carry etag/lastModified for conditional GET.
+    const seen = new Map<string, { url: string; title?: string; etag?: string; lastModified?: string }>();
+    for (const url of envFeeds) { try { const n = normalizeFeedUrl(url); if (!seen.has(n)) seen.set(n, { url: n }); } catch { /* skip bad env url */ } }
+    for (const f of saved) if (!seen.has(f.url)) seen.set(f.url, { url: f.url, title: f.title, etag: f.etag, lastModified: f.lastModified });
+    const feeds = [...seen.values()].slice(0, FEED_FETCH_BUDGET);
+
     const want = queryTerms(q);
+    const day = new Date().toISOString().slice(0, 10);
     const out: Mention[] = [];
-    for (const feed of feeds) {
-      const xml = await getText(feed, { timeoutMs: 12000, headers: { "User-Agent": UA } });
-      if (!xml) continue;
-      const host = feed.split("/")[2] || feed;
-      for (const item of xml.split(/<item[ >]/i).slice(1)) {
-        const title = strip(pick(item, "title"));
-        const desc = strip(pick(item, "description"));
-        const hay = `${title} ${desc}`.toLowerCase();
-        if (want.length && !want.some((t) => hay.includes(t))) continue;
-        out.push({
-          source: "rss", id: pick(item, "guid") || pick(item, "link") || title,
-          text: `${title}. ${desc}`.trim().replace(/\.$/, ""),
-          url: pick(item, "link") || undefined, account: host, accountId: host,
-          timestamp: toIso(pick(item, "pubDate")),
-        });
+    const statuses: { url: string; status: FeedStatus; error?: string; itemCount?: number; etag?: string; lastModified?: string }[] = [];
+
+    await Promise.all(feeds.map(async (feed) => {
+      try {
+        const ck = `rssfeed:${feed.url}:${day}`;
+        let items = await cacheGet<FeedItem[]>(ck, FEED_CACHE_TTL_MS);
+        let etag = feed.etag, lastModified = feed.lastModified;
+        if (!items) {
+          const res = await safeFetchText(feed.url, { etag: feed.etag, lastModified: feed.lastModified });
+          if (res.notModified) { items = []; }
+          else { const parsed = parseFeed(res.text); items = parsed.items.slice(0, MAX_ITEMS_PER_FEED); etag = res.etag; lastModified = res.lastModified; }
+          await cacheSet(ck, items);
+        }
+        const host = feed.url.split("/")[2] || feed.url;
+        let kept = 0;
+        for (const it of items) {
+          const hay = `${it.title} ${it.summary || ""}`.toLowerCase();
+          if (want.length && !want.some((t) => hay.includes(t))) continue;
+          kept++;
+          out.push({
+            source: "rss", id: it.guid || it.link || it.title,
+            text: `${it.title}. ${it.summary || ""}`.trim().replace(/\.$/, ""),
+            url: it.link, account: feed.title || host, accountId: host,
+            lang: it.lang, timestamp: it.timestamp,
+          });
+        }
+        statuses.push({ url: feed.url, status: items.length ? "ok" : "empty", itemCount: kept, etag, lastModified });
+      } catch (e: any) {
+        statuses.push({ url: feed.url, status: "error", error: (e?.message || "fetch failed").slice(0, 160) });
       }
-    }
+    }));
+
+    // Persist per-feed status back to the store (best-effort; drives the UI badges).
+    await recordFeedStatuses(statuses, new Date().toISOString());
     return out;
   },
 };
