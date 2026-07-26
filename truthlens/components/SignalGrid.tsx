@@ -146,11 +146,17 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     if (e.length < 2) return;
     setLoading(true);
     setError("");
+    // Wipe the PREVIOUS search's picture immediately so a new scan is a clean slate
+    // (old markers / narrative threads / zoom don't linger on the map until you
+    // manually clear the selected thread).
+    setData(null);
+    setContext(null);
     setSelected(-1);
     setSelectedNode(null);
     setNarrSel(-1);
     setFilter("all");
     setView("map");
+    setTf({ k: 1, tx: 0, ty: 0 });
     setStep(0);
     const parse = async (r: Response): Promise<MentionsApiResponse & { error?: string }> => {
       const txt = await r.text();
