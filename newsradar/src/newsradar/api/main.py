@@ -15,6 +15,7 @@ from newsradar.api.routers.events import router as events_router
 from newsradar.api.routers.interests import router as interests_router
 from newsradar.api.routers.public import router as public_router
 from newsradar.api.routers.reports import router as reports_router
+from newsradar.api.routers.site import router as site_router
 from newsradar.api.routers.sources import router as sources_router
 from newsradar.api.routers.watchlists import router as watchlists_router
 from newsradar.config import get_settings
@@ -46,6 +47,7 @@ app.include_router(reports_router)
 app.include_router(alerts_router)
 app.include_router(sources_router)
 app.include_router(interests_router)
+app.include_router(site_router)
 app.include_router(public_router)
 
 
