@@ -12,3 +12,7 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Generated artifacts (report/edition PDFs) and local Redis dump
+artifacts/
+dump.rdb
