@@ -431,6 +431,7 @@ const opensky: GeoSource = {
 // GeoRecords. Region-tagged via matchRegion; items that don't map to a tracked
 // region are dropped to keep the view focused (firms does the same). SSRF-guarded
 // and cached per (feedUrl, day) for reproducibility; one failing feed never aborts.
+const NEWS_CAP = 60; // most-recent region-relevant headlines kept per collection
 const feeds: GeoSource = {
   name: "feeds",
   available: () => feedsConnected() || !!process.env.RSS_FEEDS,
@@ -465,7 +466,10 @@ const feeds: GeoSource = {
         }
       } catch { /* failure isolation per feed */ }
     }));
-    return out.slice(0, Math.max(limit * 4, 200));
+    // News is high-volume; keep only the most-recent so it complements (not drowns)
+    // the conflict/humanitarian/disaster events in the situational picture.
+    out.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
+    return out.slice(0, Math.min(limit, NEWS_CAP));
   },
 };
 

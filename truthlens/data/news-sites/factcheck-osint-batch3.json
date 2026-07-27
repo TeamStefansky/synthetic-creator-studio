@@ -1,0 +1,147 @@
+[
+{
+"country":"Fact-checkers",
+"outlet":"Snopes",
+"url":"snopes.com"
+},
+{
+"country":"Fact-checkers",
+"outlet":"PolitiFact",
+"url":"politifact.com"
+},
+{
+"country":"Fact-checkers",
+"outlet":"FactCheck.org",
+"url":"factcheck.org"
+},
+{
+"country":"Fact-checkers",
+"outlet":"Full Fact",
+"url":"fullfact.org"
+},
+{
+"country":"Fact-checkers",
+"outlet":"Lead Stories",
+"url":"leadstories.com"
+},
+{
+"country":"Fact-checkers",
+"outlet":"Check Your Fact",
+"url":"checkyourfact.com"
+},
+{
+"country":"Fact-checkers",
+"outlet":"Africa Check",
+"url":"africacheck.org"
+},
+{
+"country":"Fact-checkers",
+"outlet":"Maldita",
+"url":"maldita.es"
+},
+{
+"country":"Fact-checkers",
+"outlet":"Correctiv",
+"url":"correctiv.org"
+},
+{
+"country":"Disinformation research",
+"outlet":"EU DisinfoLab",
+"url":"disinfo.eu"
+},
+{
+"country":"Disinformation research",
+"outlet":"EUvsDisinfo",
+"url":"euvsdisinfo.eu"
+},
+{
+"country":"Disinformation research",
+"outlet":"StopFake",
+"url":"stopfake.org"
+},
+{
+"country":"Disinformation research",
+"outlet":"Bellingcat",
+"url":"bellingcat.com"
+},
+{
+"country":"Disinformation research",
+"outlet":"The Bulletin",
+"url":"thebulletin.org"
+},
+{
+"country":"OSINT & conflict monitoring",
+"outlet":"ACLED",
+"url":"acleddata.com"
+},
+{
+"country":"OSINT & conflict monitoring",
+"outlet":"Institute for the Study of War",
+"url":"understandingwar.org"
+},
+{
+"country":"OSINT & conflict monitoring",
+"outlet":"Long War Journal",
+"url":"longwarjournal.org"
+},
+{
+"country":"OSINT & conflict monitoring",
+"outlet":"Critical Threats",
+"url":"criticalthreats.org"
+},
+{
+"country":"OSINT & conflict monitoring",
+"outlet":"International Crisis Group",
+"url":"crisisgroup.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"Brookings",
+"url":"brookings.edu"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"CSIS",
+"url":"csis.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"Council on Foreign Relations",
+"url":"cfr.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"Chatham House",
+"url":"chathamhouse.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"RAND",
+"url":"rand.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"Carnegie Endowment",
+"url":"carnegieendowment.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"Atlantic Council",
+"url":"atlanticcouncil.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"IISS",
+"url":"iiss.org"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"ECFR",
+"url":"ecfr.eu"
+},
+{
+"country":"Analysis & think tanks",
+"outlet":"Foreign Policy",
+"url":"foreignpolicy.com"
+}
+]
