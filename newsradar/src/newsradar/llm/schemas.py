@@ -87,3 +87,48 @@ class ReportOut(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     markdown: str = Field(description="The full report in Hebrew Markdown.")
+
+
+class TranslationItemOut(BaseModel):
+    """One document's translated fields (P6). Only requested fields are populated."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    doc_index: int = Field(ge=0, description="Index of the document within the batch.")
+    source_lang: str = Field(description="Detected source language (ISO 639-1).")
+    title: str | None = None
+    extract: str | None = None
+    body: str | None = None
+
+
+class TranslationBatchOut(BaseModel):
+    """The batch envelope returned by one translation Haiku call (P6)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    documents: list[TranslationItemOut] = Field(default_factory=list)
+
+
+class BlurbOut(BaseModel):
+    """A 1-2 sentence English blurb for one story (P6)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    item_index: int = Field(ge=0, description="Index of the item within the batch.")
+    blurb: str = Field(description="1-2 sentence English blurb.")
+
+
+class BlurbBatchOut(BaseModel):
+    """The batch envelope returned by one blurb Haiku call (P6)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    items: list[BlurbOut] = Field(default_factory=list)
+
+
+class DigestOut(BaseModel):
+    """Sonnet-written English headline-digest body (Markdown) — lists every headline."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    markdown: str = Field(description="The full headline digest in English Markdown.")
