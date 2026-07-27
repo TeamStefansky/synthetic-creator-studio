@@ -429,3 +429,95 @@ class InterestPreviewItemOut(BaseModel):
     source_country: str | None
     subject_country: str | None
     image_url: str | None
+
+
+# --------------------------------------------------------------------------------------
+# P6 — reader product: stories, editions, share links
+# --------------------------------------------------------------------------------------
+
+
+class CoverageItemOut(BaseModel):
+    """One outlet's coverage of an event-backed story (attribution, sorted by time)."""
+
+    source_name: str
+    url: str
+    published_at: dt.datetime | None
+    source_country: str | None
+
+
+class StoryOut(BaseModel):
+    """The single reader story payload. Built ONLY by ``site.serializers.to_story_out``.
+
+    ``body_en`` is present only for ``full_ok`` sources; ``extract_en`` is capped at
+    the source's content-rights length. ``source_name`` and ``url`` (the original
+    article) are always populated (the attribution gate).
+    """
+
+    id: uuid.UUID
+    story_type: str
+    headline_en: str
+    headline_original: str | None
+    source_lang: str | None
+    translation_status: str
+    extract_en: str | None
+    body_en: str | None = None
+    blurb: str | None
+    source_name: str
+    source_domain: str | None
+    source_country: str | None
+    favicon_url: str | None
+    image_url: str | None
+    image_alt: str | None
+    byline: str | None
+    published_at: dt.datetime | None
+    url: str
+    frameable: bool | None
+    reason: str
+    personal_score: float
+    coverage: list[CoverageItemOut] | None = None
+
+
+class EditionItemOut(BaseModel):
+    position: int
+    section: str
+    story: StoryOut
+
+
+class EditionOut(BaseModel):
+    id: uuid.UUID
+    generated_at: dt.datetime
+    lookback_hours: int
+    item_count: int
+    sections: list[str] = Field(default_factory=list)
+    items: list[EditionItemOut] = Field(default_factory=list)
+
+
+class EditionSummaryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    generated_at: dt.datetime
+    lookback_hours: int
+    item_count: int
+
+
+class ShareLinkOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    token: str
+    scope: str
+    target_id: uuid.UUID | None
+    label: str | None
+    expires_at: dt.datetime | None
+    revoked_at: dt.datetime | None
+    view_count: int
+    created_at: dt.datetime
+    url: str = ""
+
+
+class ShareLinkCreateIn(BaseModel):
+    scope: str = Field(pattern="^(site|edition|interest|digest)$")
+    target_id: uuid.UUID | None = None
+    label: str | None = None
+    expires_at: dt.datetime | None = None

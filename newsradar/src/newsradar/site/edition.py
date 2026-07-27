@@ -34,6 +34,7 @@ from newsradar.llm.client import LLMClient
 from newsradar.logging import get_logger
 from newsradar.site import weights as w
 from newsradar.site.ranking import StoryFeatures, personal_score
+from newsradar.site.stories import representative_ids
 from newsradar.translate.service import translate_documents
 
 log = get_logger(__name__)
@@ -397,6 +398,14 @@ async def build_edition(
         stories, interests_order=interests_order, target=target, max_per_source=max_per_source
     )
     placed = _place(selected, interest_names)
+
+    # Align each event story's representative with the serializer's choice so the
+    # translated headline shown to the reader is the one we actually translate.
+    event_ids = [s.event_id for s, _ in placed if s.event_id is not None]
+    display_reps = await representative_ids(session, event_ids)
+    for s, _ in placed:
+        if s.event_id is not None and s.event_id in display_reps:
+            s.representative_doc_id = display_reps[s.event_id]
 
     # Translation runs BEFORE the edition commits — never partially translated.
     rep_ids = [s.representative_doc_id for s, _ in placed]
