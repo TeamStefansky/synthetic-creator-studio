@@ -8,7 +8,7 @@
 // and favicons are hotlinked, never downloaded or re-hosted.
 
 import { useCallback, useEffect, useState } from "react";
-import { Newspaper, Search, Loader2, Languages, Rss } from "lucide-react";
+import { Newspaper, Search, Loader2, Languages, Rss, Star, Check, Plus } from "lucide-react";
 import Link from "next/link";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -128,11 +128,30 @@ function StoryCard({ story, lead }: { story: Story; lead?: boolean }) {
   );
 }
 
+// Interest topics — pick some to personalize the feed (MSN-style). Each maps to a
+// keyword bundle; the feed then shows stories matching ANY selected topic.
+const TOPICS: { key: string; label: string; kw: string[] }[] = [
+  { key: "israel_me", label: "Israel & Middle East", kw: ["israel", "gaza", "hamas", "hezbollah", "iran", "idf", "netanyahu", "west bank", "lebanon", "syria", "palestinian"] },
+  { key: "world", label: "World", kw: ["ukraine", "russia", "china", "europe", "united nations", "summit", "war", "election"] },
+  { key: "politics", label: "Politics", kw: ["election", "parliament", "president", "prime minister", "government", "policy", "vote", "congress"] },
+  { key: "security", label: "Security & Defense", kw: ["military", "attack", "missile", "drone", "terror", "defense", "strike", "weapons", "nato"] },
+  { key: "business", label: "Business & Economy", kw: ["economy", "market", "stocks", "inflation", "trade", "oil", "central bank", "gdp", "shekel"] },
+  { key: "tech", label: "Technology", kw: ["ai", "artificial intelligence", "technology", "startup", "cyber", "software", "chip", "google", "apple", "microsoft"] },
+  { key: "health", label: "Health", kw: ["health", "covid", "vaccine", "hospital", "disease", "medical", "virus", "outbreak"] },
+  { key: "science", label: "Science", kw: ["science", "space", "climate", "research", "study", "nasa", "physics"] },
+  { key: "sports", label: "Sports", kw: ["football", "soccer", "nba", "olympics", "match", "championship", "fifa", "tennis"] },
+];
+const topicKw = (keys: string[]) => [...new Set(keys.flatMap((k) => TOPICS.find((t) => t.key === k)?.kw || []))];
+// Combine manual keywords + selected-interest keywords into the API's keywords param.
+const combineKw = (manual: string, ints: string[]) =>
+  [...new Set([...(manual ? manual.split(",").map((s) => s.trim()).filter(Boolean) : []), ...topicKw(ints)])].join(",");
+
 export default function NewsRoomPage() {
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("all");
   const [keywords, setKeywords] = useState("");
   const [countries, setCountries] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
   const [data, setData] = useState<NewsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -151,20 +170,25 @@ export default function NewsRoomPage() {
     finally { setLoading(false); }
   }, []);
 
-  // Filters persist across reloads until the user clears them ("stays fixed").
+  // Interests + filters persist across reloads until the user changes them.
   useEffect(() => {
     let s: any = {};
     try { s = JSON.parse(localStorage.getItem("tl:newsroom:filters") || "{}"); } catch { /* ignore */ }
     const q0 = s.q || "", r0 = s.region || "all", k0 = s.keywords || "", c0 = s.countries || "";
-    setQ(q0); setRegion(r0); setKeywords(k0); setCountries(c0);
-    load(q0, r0, k0, c0);
+    const i0: string[] = Array.isArray(s.interests) ? s.interests : [];
+    setQ(q0); setRegion(r0); setKeywords(k0); setCountries(c0); setInterests(i0);
+    load(q0, r0, combineKw(k0, i0), c0);
   }, [load]);
-  const persist = (query: string, reg: string, kw: string, cn: string) => {
-    try { localStorage.setItem("tl:newsroom:filters", JSON.stringify({ q: query, region: reg, keywords: kw, countries: cn })); } catch { /* ignore */ }
+  const persist = (query: string, reg: string, kw: string, cn: string, ints: string[]) => {
+    try { localStorage.setItem("tl:newsroom:filters", JSON.stringify({ q: query, region: reg, keywords: kw, countries: cn, interests: ints })); } catch { /* ignore */ }
   };
-  const apply = () => { persist(q, region, keywords, countries); load(q, region, keywords, countries); };
-  const pickRegion = (r: string) => { setRegion(r); persist(q, r, keywords, countries); load(q, r, keywords, countries); };
-  const clearFilters = () => { setKeywords(""); setCountries(""); persist(q, region, "", ""); load(q, region, "", ""); };
+  const apply = () => { persist(q, region, keywords, countries, interests); load(q, region, combineKw(keywords, interests), countries); };
+  const pickRegion = (r: string) => { setRegion(r); persist(q, r, keywords, countries, interests); load(q, r, combineKw(keywords, interests), countries); };
+  const clearFilters = () => { setKeywords(""); setCountries(""); persist(q, region, "", "", interests); load(q, region, combineKw("", interests), countries); };
+  const toggleInterest = (key: string) => {
+    const next = interests.includes(key) ? interests.filter((k) => k !== key) : [...interests, key];
+    setInterests(next); persist(q, region, keywords, countries, next); load(q, region, combineKw(keywords, next), countries);
+  };
 
   const stories = data?.stories || [];
   const connectedFeeds = data?.sources?.find((s) => s.source === "rss");
@@ -181,6 +205,26 @@ export default function NewsRoomPage() {
           <Link href="/connections" className="text-brand-soft hover:underline">Connections feeds</Link>{" "}
           + built-in news APIs). Related articles are grouped into stories; every card links to the original.
         </p>
+      </div>
+
+      {/* Interests personalizer (MSN-style "customize your feed") */}
+      <div className="card">
+        <div className="mb-2 flex items-center gap-2">
+          <Star className="h-4 w-4 text-brand-soft" />
+          <span className="text-sm font-semibold text-ink">Your interests</span>
+          <span className="text-[11px] text-ink-muted">— pick topics to personalize your feed{interests.length ? ` · ${interests.length} selected` : " (showing everything)"}</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {TOPICS.map((t) => {
+            const on = interests.includes(t.key);
+            return (
+              <button key={t.key} onClick={() => toggleInterest(t.key)} data-active={on}
+                className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition data-[active=true]:border-brand data-[active=true]:bg-brand/15 data-[active=true]:text-white border-line text-ink-secondary hover:text-white">
+                {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />} {t.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="card space-y-3 sticky top-0 z-30 shadow-lg shadow-black/20">
