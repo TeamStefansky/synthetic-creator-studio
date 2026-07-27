@@ -20,6 +20,10 @@ from newsradar.connectors.base import RawDocument
 
 SUMMARY_MAX_CHARS = 400
 
+# P5 content-rights storage caps (see the ``## Sources & rights`` note in CLAUDE.md).
+LINK_ONLY_MAX_CHARS = 300
+EXTRACT_OK_MAX_CHARS = 400
+
 # Query-string parameters that never identify content — stripped from canonical URLs.
 _TRACKING_PARAMS = frozenset(
     {
@@ -184,6 +188,42 @@ class NormalizedDocument(BaseModel):
         title = self.title or ""
         body = self.body or self.summary or ""
         return f"{title}\n{body[:500]}"
+
+
+def _cap_extract(text: str | None, max_chars: int) -> str | None:
+    """Collapse whitespace and truncate ``text`` to ``max_chars`` (ellipsis-suffixed)."""
+
+    if not text:
+        return None
+    collapsed = _WS_RE.sub(" ", text).strip()
+    if not collapsed:
+        return None
+    if len(collapsed) <= max_chars:
+        return collapsed
+    return collapsed[: max_chars - 1].rstrip() + "…"
+
+
+def storage_for_rights(
+    normalized: NormalizedDocument, content_rights: str
+) -> tuple[str | None, str | None]:
+    """Return ``(body, summary)`` to persist under a source's ``content_rights``.
+
+    * ``full_ok`` — the full body (if any) plus its summary may be stored.
+    * ``extract_ok`` — ``body`` is ``NULL``; the summary is capped at 400 chars.
+    * ``link_only`` — ``body`` is ``NULL``; the summary is capped at 300 chars.
+
+    This is applied at persistence time only. Matching and near-duplicate SimHash
+    always operate on the full normalised text, so the gate never changes routing
+    or dedup — only what is written to ``documents.body`` / ``documents.summary``.
+    """
+
+    if content_rights == "full_ok":
+        return normalized.body, normalized.summary
+    source_text = normalized.summary or normalized.body
+    if content_rights == "extract_ok":
+        return None, _cap_extract(source_text, EXTRACT_OK_MAX_CHARS)
+    # Default and unknown values fall back to the safest tier.
+    return None, _cap_extract(source_text, LINK_ONLY_MAX_CHARS)
 
 
 def normalize_document(raw: RawDocument, *, allows_fulltext_storage: bool) -> NormalizedDocument:

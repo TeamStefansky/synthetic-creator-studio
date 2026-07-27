@@ -35,7 +35,11 @@ from newsradar.db.models import (
 from newsradar.db.session import get_sessionmaker
 from newsradar.logging import get_logger
 from newsradar.pipeline import dedup, matcher
-from newsradar.pipeline.normalize import NormalizedDocument, normalize_document
+from newsradar.pipeline.normalize import (
+    NormalizedDocument,
+    normalize_document,
+    storage_for_rights,
+)
 
 log = get_logger(__name__)
 
@@ -62,6 +66,7 @@ class RunResult:
 class _Plan:
     normalized: NormalizedDocument
     source_id: uuid.UUID
+    content_rights: str
     simhash_unsigned: int
     match: matcher.MatchResult
     dedup_existing: uuid.UUID | None = None  # canonical already in the DB
@@ -72,10 +77,14 @@ class _Plan:
 @dataclass
 class _SourceCache:
     session: AsyncSession
-    _cache: dict[str, tuple[uuid.UUID, bool]] = field(default_factory=dict)
+    _cache: dict[str, tuple[uuid.UUID, str]] = field(default_factory=dict)
 
-    async def resolve(self, domain: str, source_type: str) -> tuple[uuid.UUID, bool]:
-        """Return ``(source_id, allows_fulltext_storage)``, creating the source if needed."""
+    async def resolve(self, domain: str, source_type: str) -> tuple[uuid.UUID, str]:
+        """Return ``(source_id, content_rights)``, creating the source if needed.
+
+        A newly discovered source is ALWAYS ``link_only`` — rights are never
+        inferred from a feed; upgrading is a deliberate manual API action.
+        """
 
         domain = domain.lower()
         if domain in self._cache:
@@ -90,6 +99,7 @@ class _SourceCache:
                 tier=4,
                 credibility_score=0.5,
                 allows_fulltext_storage=False,
+                content_rights="link_only",
                 active=True,
             )
             .on_conflict_do_nothing(index_elements=["domain"])
@@ -97,10 +107,10 @@ class _SourceCache:
         await self.session.execute(stmt)
         row = (
             await self.session.execute(
-                select(Source.id, Source.allows_fulltext_storage).where(Source.domain == domain)
+                select(Source.id, Source.content_rights).where(Source.domain == domain)
             )
         ).one()
-        result = (row[0], bool(row[1]))
+        result = (row[0], str(row[1]))
         self._cache[domain] = result
         return result
 
@@ -169,8 +179,10 @@ async def _build_plans(
 
     for raw in ordered:
         try:
-            source_id, allows_fulltext = await sources.resolve(raw.source_domain, source_type)
-            norm = normalize_document(raw, allows_fulltext_storage=allows_fulltext)
+            source_id, content_rights = await sources.resolve(raw.source_domain, source_type)
+            # SimHash / matching always use the full normalised text; the
+            # content-rights cap is applied only to what is persisted.
+            norm = normalize_document(raw, allows_fulltext_storage=(content_rights == "full_ok"))
 
             if norm.url_hash in seen_hashes:
                 exact_dups += 1
@@ -183,6 +195,7 @@ async def _build_plans(
             plan = _Plan(
                 normalized=norm,
                 source_id=source_id,
+                content_rights=content_rights,
                 simhash_unsigned=sh,
                 match=match_result,
             )
@@ -208,6 +221,7 @@ async def _build_plans(
 
 def _document_row(plan: _Plan, dedup_of: uuid.UUID | None) -> dict[str, Any]:
     n = plan.normalized
+    body, summary = storage_for_rights(n, plan.content_rights)
     return {
         "source_id": plan.source_id,
         "external_id": n.external_id,
@@ -216,8 +230,8 @@ def _document_row(plan: _Plan, dedup_of: uuid.UUID | None) -> dict[str, Any]:
         "url_hash": n.url_hash,
         "simhash": dedup.to_signed64(plan.simhash_unsigned),
         "title": n.title,
-        "body": n.body,
-        "summary": n.summary,
+        "body": body,
+        "summary": summary,
         "lang": n.lang,
         "published_at": n.published_at,
         "fetched_at": dt.datetime.now(dt.UTC),
