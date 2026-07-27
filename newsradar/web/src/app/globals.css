@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Humanist serif for headlines, clean sans for chrome. Source Serif 4 would be
+     the ideal display face but external font fetching is blocked in this
+     environment, so we fall back to a high-quality serif stack. */
+  --font-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype",
+    Palatino, Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: theme("colors.paper");
+  color: theme("colors.ink.DEFAULT");
+  font-family: var(--font-sans);
+  font-feature-settings: "kern";
+  text-rendering: optimizeLegibility;
+}
+
+/* Editorial headline face */
+.font-headline {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+/* ~72ch reading measure for article body */
+.reading-column {
+  max-width: 72ch;
+  line-height: 1.7;
+}
+
+.reading-column p {
+  margin-bottom: 1rem;
+}
+
+/* Always-visible focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid theme("colors.accent.DEFAULT");
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Markdown (digest) styling */
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  margin: 1.4em 0 0.5em;
+  line-height: 1.2;
+}
+.markdown h1 {
+  font-size: 1.8rem;
+}
+.markdown h2 {
+  font-size: 1.4rem;
+}
+.markdown h3 {
+  font-size: 1.15rem;
+}
+.markdown p {
+  margin: 0.75em 0;
+  line-height: 1.7;
+}
+.markdown ul,
+.markdown ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+  list-style: revert;
+}
+.markdown a {
+  color: theme("colors.accent.DEFAULT");
+  text-decoration: underline;
+}
+.markdown hr {
+  border: 0;
+  border-top: 1px solid theme("colors.line");
+  margin: 1.5em 0;
+}
