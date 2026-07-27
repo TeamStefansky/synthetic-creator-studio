@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="tlmono" x1="27.48" y1="-2.86" x2="27.48" y2="23.34" gradientTransform="translate(0 31.34) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4755a5"/>
+      <stop offset="1" stop-color="#66cbe6"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="11" fill="#0b0c15"/>
+  <g transform="translate(7.4 9.3) scale(0.86)">
+    <path d="M24.93.5v7.06h-8.03v18.14h-8.37V7.56H.5V.5h24.43Z" fill="#fff" stroke="#fff" stroke-miterlimit="10"/>
+    <path d="M38.05,26.64v7.06h-21.15V8.5h8.36v18.14h12.79Z" fill="none" stroke="url(#tlmono)" stroke-miterlimit="10"/>
+  </g>
+</svg>

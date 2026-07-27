@@ -8,7 +8,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  Eye, FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
+  FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
   ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper,
 } from "lucide-react";
@@ -83,13 +83,11 @@ const groups: NavGroup[] = [
 
 function Wordmark() {
   return (
-    <Link href="/" className="group flex items-center gap-2.5 font-semibold">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand shadow-glow transition group-hover:scale-105">
-        <Eye className="h-5 w-5 animate-blink text-white [transform-origin:center]" />
-      </span>
-      <span className="text-[15px] tracking-tight text-white">
-        Truth<span className="text-brand-soft">Lens</span>
-      </span>
+    <Link href="/" className="group flex items-center gap-2.5" aria-label="TruthLens">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo-monogram.svg" alt="" className="h-8 w-auto transition group-hover:scale-105" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo-wordmark.svg" alt="TruthLens" className="h-4 w-auto" />
     </Link>
   );
 }

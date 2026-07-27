@@ -3,7 +3,7 @@
 // Keeps the frozen "decision-support, not a verdict" framing.
 
 import Link from "next/link";
-import { Eye, ArrowRight, ShieldCheck, Radar, Share2, Network, Globe2, GitCompareArrows } from "lucide-react";
+import { ArrowRight, ShieldCheck, Radar, Share2, Network, Globe2, GitCompareArrows } from "lucide-react";
 
 export const metadata = { title: "TruthLens - detect fake news & foreign-influence infrastructure" };
 
@@ -28,10 +28,10 @@ export default function WelcomePage({ searchParams }: { searchParams?: { next?: 
       {/* Top bar */}
       <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#22d3ee] shadow-[0_0_24px_rgba(124,58,237,0.5)]">
-            <Eye className="h-5 w-5 text-white" />
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight">Truth<span className="text-[#a78bfa]">Lens</span></span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-monogram.svg" alt="" className="h-8 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-4 w-auto" />
         </div>
         <Link href={loginHref} className="rounded-xl border border-[#7c3aed]/30 px-4 py-2 text-sm text-[#e8eaf2] transition hover:bg-white/5">
           Sign in

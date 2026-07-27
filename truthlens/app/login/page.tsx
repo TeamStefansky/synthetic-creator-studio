@@ -7,7 +7,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, Loader2, Lock, ArrowRight } from "lucide-react";
+import { Loader2, Lock, ArrowRight } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -45,11 +45,11 @@ function LoginForm() {
       <div aria-hidden className="pointer-events-none absolute -bottom-40 right-10 h-[420px] w-[420px] rounded-full bg-[#22d3ee]/10 blur-[120px]" />
 
       <div className="relative w-full max-w-sm">
-        <div className="mb-8 flex items-center justify-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#22d3ee] shadow-[0_0_30px_rgba(124,58,237,0.5)]">
-            <Eye className="h-5 w-5 text-white" />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">Truth<span className="text-[#a78bfa]">Lens</span></span>
+        <div className="mb-8 flex items-center justify-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-monogram.svg" alt="" className="h-10 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-5 w-auto" />
         </div>
 
         <div className="rounded-2xl border border-[#7c3aed]/20 bg-[#0e1020]/80 p-6 shadow-2xl backdrop-blur">
