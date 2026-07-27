@@ -41,18 +41,16 @@ function LoginForm() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07080f] px-4 text-[#e8eaf2]">
       {/* Ambient violet/cyan glow */}
-      <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[#7c3aed]/20 blur-[120px]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-40 right-10 h-[420px] w-[420px] rounded-full bg-[#22d3ee]/10 blur-[120px]" />
+      <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[#4755a5]/20 blur-[120px]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-40 right-10 h-[420px] w-[420px] rounded-full bg-[#66cbe6]/10 blur-[120px]" />
 
       <div className="relative w-full max-w-sm">
-        <div className="mb-8 flex items-center justify-center gap-3">
+        <div className="mb-8 flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-monogram.svg" alt="" className="h-10 w-auto" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-5 w-auto" />
+          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-7 w-auto" />
         </div>
 
-        <div className="rounded-2xl border border-[#7c3aed]/20 bg-[#0e1020]/80 p-6 shadow-2xl backdrop-blur">
+        <div className="rounded-2xl border border-[#4755a5]/20 bg-[#0e1020]/80 p-6 shadow-2xl backdrop-blur">
           <h1 className="text-xl font-semibold">Sign in</h1>
           <p className="mt-1 text-sm text-[#6b6e8a]">Enter the access password to open the platform.</p>
 
@@ -65,14 +63,14 @@ function LoginForm() {
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 autoFocus
                 placeholder="••••••••••"
-                className="w-full rounded-xl border border-[#7c3aed]/25 bg-[#161828] px-3 py-2.5 text-sm text-[#e8eaf2] outline-none transition focus:border-[#7c3aed] focus:ring-2 focus:ring-[#7c3aed]/30"
+                className="w-full rounded-xl border border-[#4755a5]/25 bg-[#161828] px-3 py-2.5 text-sm text-[#e8eaf2] outline-none transition focus:border-[#4755a5] focus:ring-2 focus:ring-[#4755a5]/30"
               />
             </label>
             {error && <p className="text-sm text-[#f87171]">{error}</p>}
             <button
               type="submit"
               disabled={loading || !password.trim()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-4 py-2.5 text-sm font-medium text-white shadow-[0_0_24px_rgba(124,58,237,0.35)] transition hover:brightness-110 disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4755a5] to-[#3c4890] px-4 py-2.5 text-sm font-medium text-white shadow-[0_0_24px_rgba(71,85,165,0.35)] transition hover:brightness-110 disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Enter <ArrowRight className="h-4 w-4" /></>}
             </button>

@@ -16,23 +16,24 @@
   --color-text-secondary: #a5a8c2;
   --color-text-muted: #8b8ea8; /* a11y: kept light enough for AA 4.5:1 on #07080f */
 
-  --color-border: rgba(124, 58, 237, 0.15);
-  --color-border-strong: rgba(124, 58, 237, 0.34);
+  --color-border: rgba(71, 85, 165, 0.16);
+  --color-border-strong: rgba(71, 85, 165, 0.36);
 
-  --color-primary: #7c3aed;
-  --color-primary-hover: #6d28d9;
-  --color-primary-active: #5b21b6;
+  /* Brand palette matched to the TruthLens logo gradient: indigo #4755a5 → cyan #66cbe6 */
+  --color-primary: #4755a5;
+  --color-primary-hover: #3c4890;
+  --color-primary-active: #333c78;
   --color-on-primary: #ffffff;
-  --color-primary-glow: rgba(124, 58, 237, 0.4);
-  --gradient-brand: linear-gradient(120deg, #7c3aed 0%, #8b5cf6 48%, #22d3ee 100%);
-  --gradient-soft: linear-gradient(120deg, rgba(124, 58, 237, 0.16), rgba(34, 211, 238, 0.16));
-  --grad-start: #7c3aed;
-  --grad-mid: #8b5cf6;
-  --grad-end: #22d3ee;
-  --grad-deep: #1e1b4b;
+  --color-primary-glow: rgba(71, 85, 165, 0.42);
+  --gradient-brand: linear-gradient(120deg, #4755a5 0%, #5691c9 52%, #66cbe6 100%);
+  --gradient-soft: linear-gradient(120deg, rgba(71, 85, 165, 0.16), rgba(102, 203, 230, 0.16));
+  --grad-start: #4755a5;
+  --grad-mid: #5691c9;
+  --grad-end: #66cbe6;
+  --grad-deep: #1b2350;
 
-  --color-warm: #22d3ee; /* re-skin: the second accent is now cyan, not orange */
-  --color-accent: #22d3ee;
+  --color-warm: #66cbe6; /* second accent — logo cyan */
+  --color-accent: #66cbe6;
   --color-badge: #f5d742;
 
   --font-display: "Bricolage Grotesque", "Space Grotesk", "Inter", system-ui, sans-serif;
@@ -62,7 +63,7 @@ body {
 /* Aurora canvas is flat near-black: one very subtle purple glow, nothing loud. */
 body {
   background-image:
-    radial-gradient(56rem 38rem at 50% -12%, rgba(124, 58, 237, 0.12), transparent 62%);
+    radial-gradient(56rem 38rem at 50% -12%, rgba(71, 85, 165, 0.14), transparent 62%);
   background-attachment: fixed;
 }
 

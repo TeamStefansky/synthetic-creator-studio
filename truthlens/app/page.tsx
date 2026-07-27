@@ -12,14 +12,10 @@ export default function HomePage() {
           aria-hidden
           className="pointer-events-none absolute inset-0 -z-10 bg-grid-faint [background-size:40px_40px] [mask-image:radial-gradient(40rem_24rem_at_50%_20%,black,transparent)]"
         />
-        <div className="mb-5 flex justify-center">
-          <span className="grid h-16 w-16 animate-float place-items-center rounded-2xl bg-gradient-brand shadow-glow">
-            <Eye className="h-8 w-8 text-white" />
-          </span>
+        <div className="mb-6 flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-10 w-auto animate-float sm:h-12" />
         </div>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
-          <span className="gradient-text">TruthLens</span>
-        </h1>
         <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-ink-secondary">
           Not sure if a website is trustworthy? Paste its address below. TruthLens
           checks the infrastructure behind it and gives you a plain

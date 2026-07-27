@@ -13,13 +13,13 @@ export const TOKENS = {
   textMuted: "#8B8EA8",
   border: "#20223A",
   borderStrong: "#2D2F4A",
-  primary: "#7C3AED",
-  warm: "#22D3EE",
+  primary: "#4755A5",
+  warm: "#66CBE6",
   badge: "#F5D742",
-  gradStart: "#7C3AED",
-  gradMid: "#8B5CF6",
-  gradEnd: "#22D3EE",
-  gradDeep: "#1E1B4B",
+  gradStart: "#4755A5",
+  gradMid: "#5691C9",
+  gradEnd: "#66CBE6",
+  gradDeep: "#1B2350",
 } as const;
 
 /** The signature gradient stops (violet -> light-violet -> cyan). */
@@ -36,9 +36,9 @@ export const STATUS = {
  * gradient rule: distinct, accessible hues on the near-black canvas, anchored in
  * the Aurora family. */
 export const CLUSTER_PALETTE = [
-  "#7C3AED", // primary violet
-  "#22D3EE", // cyan accent
-  "#A78BFA", // light violet
+  "#4755A5", // primary indigo (logo)
+  "#66CBE6", // cyan accent (logo)
+  "#8CA0E8", // light indigo
   "#F472B6", // pink
   "#34D399", // green
   "#38BDF8", // sky

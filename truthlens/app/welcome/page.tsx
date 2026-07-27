@@ -22,29 +22,27 @@ export default function WelcomePage({ searchParams }: { searchParams?: { next?: 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#07080f] text-[#e8eaf2]">
       {/* Ambient glow */}
-      <div aria-hidden className="pointer-events-none absolute -top-48 left-1/2 h-[640px] w-[640px] -translate-x-1/2 rounded-full bg-[#7c3aed]/20 blur-[140px]" />
-      <div aria-hidden className="pointer-events-none absolute top-1/3 -right-24 h-[420px] w-[420px] rounded-full bg-[#22d3ee]/10 blur-[130px]" />
+      <div aria-hidden className="pointer-events-none absolute -top-48 left-1/2 h-[640px] w-[640px] -translate-x-1/2 rounded-full bg-[#4755a5]/20 blur-[140px]" />
+      <div aria-hidden className="pointer-events-none absolute top-1/3 -right-24 h-[420px] w-[420px] rounded-full bg-[#66cbe6]/10 blur-[130px]" />
 
       {/* Top bar */}
       <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-monogram.svg" alt="" className="h-8 w-auto" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-4 w-auto" />
+          <img src="/logo-wordmark.svg" alt="TruthLens" className="h-5 w-auto" />
         </div>
-        <Link href={loginHref} className="rounded-xl border border-[#7c3aed]/30 px-4 py-2 text-sm text-[#e8eaf2] transition hover:bg-white/5">
+        <Link href={loginHref} className="rounded-xl border border-[#4755a5]/30 px-4 py-2 text-sm text-[#e8eaf2] transition hover:bg-white/5">
           Sign in
         </Link>
       </header>
 
       {/* Hero */}
       <section className="relative mx-auto max-w-3xl px-6 pb-8 pt-14 text-center sm:pt-24">
-        <span className="inline-flex items-center gap-2 rounded-full border border-[#7c3aed]/25 bg-[#7c3aed]/10 px-3 py-1 text-xs font-medium text-[#c4b5fd]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#22d3ee]" /> Defensive OSINT decision-support
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#4755a5]/25 bg-[#4755a5]/10 px-3 py-1 text-xs font-medium text-[#a9b6ec]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#66cbe6]" /> Defensive OSINT decision-support
         </span>
         <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-          Detect fake news &amp; <span className="bg-gradient-to-r from-[#a78bfa] via-[#7c3aed] to-[#22d3ee] bg-clip-text text-transparent">foreign influence</span>
+          Detect fake news &amp; <span className="bg-gradient-to-r from-[#8ca0e8] via-[#4755a5] to-[#66cbe6] bg-clip-text text-transparent">foreign influence</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-base text-[#a5a8c2] sm:text-lg">
           TruthLens connects the infrastructure behind a site to the narratives being pushed -
@@ -52,7 +50,7 @@ export default function WelcomePage({ searchParams }: { searchParams?: { next?: 
           Indicators, never a verdict.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
-          <Link href={loginHref} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_28px_rgba(124,58,237,0.4)] transition hover:brightness-110">
+          <Link href={loginHref} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#4755a5] to-[#3c4890] px-5 py-2.5 text-sm font-medium text-white shadow-[0_0_28px_rgba(71,85,165,0.4)] transition hover:brightness-110">
             Enter the platform <ArrowRight className="h-4 w-4" />
           </Link>
           <a href="#features" className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-[#a5a8c2] transition hover:bg-white/5">
@@ -65,8 +63,8 @@ export default function WelcomePage({ searchParams }: { searchParams?: { next?: 
       <section id="features" className="relative mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-2xl border border-[#7c3aed]/15 bg-[#0e1020]/70 p-5 backdrop-blur transition hover:border-[#7c3aed]/35">
-              <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#7c3aed]/20 bg-[#161828] text-[#a78bfa]">
+            <div key={title} className="rounded-2xl border border-[#4755a5]/15 bg-[#0e1020]/70 p-5 backdrop-blur transition hover:border-[#4755a5]/35">
+              <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#4755a5]/20 bg-[#161828] text-[#8ca0e8]">
                 <Icon className="h-5 w-5" />
               </span>
               <h3 className="mt-4 text-base font-semibold">{title}</h3>

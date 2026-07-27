@@ -26,19 +26,19 @@ const config: Config = {
           elev: "#161828",
           sunken: "#0b0d1a",
         },
-        // Brand / primary - electric violet (gradient anchor).
+        // Brand / primary - logo indigo (gradient anchor).
         brand: {
-          DEFAULT: "#7C3AED",
-          soft: "#A78BFA",
+          DEFAULT: "#4755A5",
+          soft: "#8CA0E8",
         },
-        // Second accent - cyan.
-        accent: { DEFAULT: "#22D3EE", soft: "#67E8F9" },
+        // Second accent - logo cyan.
+        accent: { DEFAULT: "#66CBE6", soft: "#8FDBEF" },
         // --- role tokens ---
         surface: { DEFAULT: "#0e1020", "2": "#161828", sunken: "#0b0d1a" },
-        primary: { DEFAULT: "#7C3AED", hover: "#6D28D9", active: "#5B21B6" },
+        primary: { DEFAULT: "#4755A5", hover: "#3C4890", active: "#333C78" },
         ink: { DEFAULT: "#E8EAF2", secondary: "#A5A8C2", muted: "#8B8EA8" },
-        line: { DEFAULT: "rgba(124,58,237,0.15)", strong: "rgba(124,58,237,0.34)" },
-        warm: "#22D3EE",
+        line: { DEFAULT: "rgba(71,85,165,0.16)", strong: "rgba(71,85,165,0.36)" },
+        warm: "#66CBE6",
         badge: "#F5D742",
         grad: { start: "#7C3AED", mid: "#8B5CF6", end: "#22D3EE", deep: "#1E1B4B" },
       },
@@ -68,15 +68,15 @@ const config: Config = {
       },
       boxShadow: {
         soft: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 8px 30px -12px rgba(0,0,0,0.6)",
-        // Soft glow under the gradient - Aurora primary purple.
-        glow: "0 0 0 1px rgba(124,58,237,0.25), 0 8px 40px -8px rgba(124,58,237,0.35)",
+        // Soft glow under the gradient - logo indigo.
+        glow: "0 0 0 1px rgba(71,85,165,0.28), 0 8px 40px -8px rgba(71,85,165,0.38)",
       },
       backgroundImage: {
         "grid-faint":
           "linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)",
         // The signature gradient, as a Tailwind utility (bg-gradient-brand).
-        "gradient-brand": "linear-gradient(120deg,#7C3AED 0%,#8B5CF6 48%,#22D3EE 100%)",
-        "gradient-soft": "linear-gradient(120deg,rgba(124,58,237,.16),rgba(34,211,238,.16))",
+        "gradient-brand": "linear-gradient(120deg,#4755A5 0%,#5691C9 52%,#66CBE6 100%)",
+        "gradient-soft": "linear-gradient(120deg,rgba(71,85,165,.16),rgba(102,203,230,.16))",
       },
       keyframes: {
         "fade-up": {
