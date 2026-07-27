@@ -78,6 +78,10 @@ class Settings(BaseSettings):
     # Bundled GeoNames cities extract (offline geo resolution).
     geonames_path: str = ""
 
+    # --- Reports ---
+    # Directory where rendered PDF report artifacts are written.
+    report_artifact_dir: str = "artifacts"
+
     # --- Observability ---
     log_level: str = "INFO"
 

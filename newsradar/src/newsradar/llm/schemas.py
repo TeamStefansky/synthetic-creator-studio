@@ -79,3 +79,11 @@ class EventSummaryOut(BaseModel):
 
     title: str = Field(max_length=90)
     summary: str = Field(description="3-5 sentences.")
+
+
+class ReportOut(BaseModel):
+    """Sonnet-written analyst report body (Hebrew Markdown)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    markdown: str = Field(description="The full report in Hebrew Markdown.")
