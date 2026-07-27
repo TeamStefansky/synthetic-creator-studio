@@ -50,6 +50,52 @@ def _entry_body_html(entry: Any) -> str | None:
     return str(summary) if summary else None
 
 
+def _as_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _entry_media(entry: Any) -> dict[str, Any] | None:
+    """Extract a presentation image from an RSS entry.
+
+    Reads ``media:content`` / ``media:thumbnail`` / ``enclosure`` in that order
+    and returns ``{image_url, image_width, image_height, image_alt}`` or ``None``.
+    Only the image URL is captured — images are never downloaded or re-hosted.
+    """
+
+    def _pick(items: Any) -> dict[str, Any] | None:
+        for item in items or []:
+            url = item.get("url") if isinstance(item, dict) else None
+            medium = (item.get("medium") or item.get("type") or "") if isinstance(item, dict) else ""
+            if url and (not medium or "image" in str(medium)):
+                return {
+                    "image_url": str(url),
+                    "image_width": _as_int(item.get("width")),
+                    "image_height": _as_int(item.get("height")),
+                    "image_alt": item.get("title") or item.get("alt") or None,
+                }
+        return None
+
+    found = _pick(getattr(entry, "media_content", None)) or _pick(
+        getattr(entry, "media_thumbnail", None)
+    )
+    if found:
+        return found
+    for enc in getattr(entry, "enclosures", None) or []:
+        href = enc.get("href") if isinstance(enc, dict) else None
+        etype = enc.get("type", "") if isinstance(enc, dict) else ""
+        if href and str(etype).startswith("image"):
+            return {
+                "image_url": str(href),
+                "image_width": None,
+                "image_height": None,
+                "image_alt": None,
+            }
+    return None
+
+
 def parse_feed(content: str | bytes, feed_meta: dict[str, Any]) -> list[RawDocument]:
     """Parse feed bytes into raw documents, tagging them with the feed's metadata."""
 
@@ -66,6 +112,15 @@ def parse_feed(content: str | bytes, feed_meta: dict[str, Any]) -> list[RawDocum
             getattr(entry, "published_parsed", None) or getattr(entry, "updated_parsed", None)
         )
         body_html = _entry_body_html(entry)
+        raw: dict[str, Any] = {
+            "connector": "rss",
+            "feed_domain": domain,
+            "country": feed_meta.get("country"),
+            "tier": feed_meta.get("tier"),
+        }
+        media = _entry_media(entry)
+        if media is not None:
+            raw["media"] = media
         docs.append(
             RawDocument(
                 source_domain=domain,
@@ -77,12 +132,7 @@ def parse_feed(content: str | bytes, feed_meta: dict[str, Any]) -> list[RawDocum
                 published_at=published,
                 author=getattr(entry, "author", None) or None,
                 media_type=MediaType.article,
-                raw={
-                    "connector": "rss",
-                    "feed_domain": domain,
-                    "country": feed_meta.get("country"),
-                    "tier": feed_meta.get("tier"),
-                },
+                raw=raw,
             )
         )
     return docs
