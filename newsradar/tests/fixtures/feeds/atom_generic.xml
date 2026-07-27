@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+  <title>Atom Blog</title>
+  <link href="https://atomblog.org/"/>
+  <updated>2026-07-20T12:00:00Z</updated>
+  <id>https://atomblog.org/</id>
+  <entry>
+    <title>Notes on building resilient feeds</title>
+    <link href="https://atomblog.org/posts/resilient-feeds"/>
+    <id>https://atomblog.org/posts/resilient-feeds</id>
+    <updated>2026-07-20T12:00:00Z</updated>
+    <summary>Conditional GET, ETags, and graceful backoff for pollers.</summary>
+  </entry>
+  <entry>
+    <title>A short history of syndication</title>
+    <link href="https://atomblog.org/posts/history-of-syndication"/>
+    <id>https://atomblog.org/posts/history-of-syndication</id>
+    <updated>2026-07-18T08:00:00Z</updated>
+    <summary>From RSS 0.9x to Atom 1.0 and JSON Feed.</summary>
+  </entry>
+</feed>

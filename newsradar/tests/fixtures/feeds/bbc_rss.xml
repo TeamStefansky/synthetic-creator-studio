@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>BBC News</title>
+    <link>https://www.bbc.co.uk/news</link>
+    <description>BBC News - Home</description>
+    <language>en-gb</language>
+    <item>
+      <title>Cabinet meets to discuss the budget</title>
+      <link>https://www.bbc.co.uk/news/uk-1</link>
+      <guid>https://www.bbc.co.uk/news/uk-1</guid>
+      <pubDate>Mon, 20 Jul 2026 07:00:00 GMT</pubDate>
+      <description>Ministers gather ahead of the autumn statement.</description>
+    </item>
+    <item>
+      <title>Rail operators announce timetable changes</title>
+      <link>https://www.bbc.co.uk/news/uk-2</link>
+      <guid>https://www.bbc.co.uk/news/uk-2</guid>
+      <pubDate>Sun, 19 Jul 2026 18:00:00 GMT</pubDate>
+      <description>Weekend engineering work affects several lines.</description>
+    </item>
+  </channel>
+</rss>

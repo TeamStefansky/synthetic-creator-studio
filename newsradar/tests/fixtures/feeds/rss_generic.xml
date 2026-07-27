@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>The Verge</title>
+    <link>https://www.theverge.com/</link>
+    <description>The Verge covers the intersection of technology, science, art, and culture.</description>
+    <language>en-US</language>
+    <item>
+      <title>A new chip promises faster on-device AI</title>
+      <link>https://www.theverge.com/2026/7/20/chip-ai</link>
+      <guid>https://www.theverge.com/2026/7/20/chip-ai</guid>
+      <pubDate>Mon, 20 Jul 2026 12:00:00 GMT</pubDate>
+      <description>The processor targets laptops and phones with a dedicated neural engine.</description>
+    </item>
+    <item>
+      <title>Regulators open a probe into streaming bundles</title>
+      <link>https://www.theverge.com/2026/7/19/streaming-probe</link>
+      <guid>https://www.theverge.com/2026/7/19/streaming-probe</guid>
+      <pubDate>Sun, 19 Jul 2026 09:30:00 GMT</pubDate>
+      <description>The inquiry focuses on how bundles are marketed to subscribers.</description>
+    </item>
+    <item>
+      <title>Hands on with the latest foldable</title>
+      <link>https://www.theverge.com/2026/7/18/foldable-hands-on</link>
+      <guid>https://www.theverge.com/2026/7/18/foldable-hands-on</guid>
+      <pubDate>Fri, 18 Jul 2026 15:45:00 GMT</pubDate>
+      <description>A thinner hinge and a brighter cover screen headline the refresh.</description>
+    </item>
+  </channel>
+</rss>

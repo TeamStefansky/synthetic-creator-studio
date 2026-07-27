@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>TechCrunch</title>
+    <link>https://techcrunch.com/</link>
+    <description>Startup and technology news</description>
+    <language>en</language>
+    <item>
+      <title>Seed round roundup for the week</title>
+      <link>https://techcrunch.com/2026/07/20/seed-roundup</link>
+      <guid>https://techcrunch.com/2026/07/20/seed-roundup</guid>
+      <pubDate>Mon, 20 Jul 2026 10:00:00 GMT</pubDate>
+      <description>A dozen early-stage companies announced financing this week.</description>
+    </item>
+    <item>
+      <title>An AI infrastructure startup exits stealth</title>
+      <link>https://techcrunch.com/2026/07/19/ai-infra-stealth</link>
+      <guid>https://techcrunch.com/2026/07/19/ai-infra-stealth</guid>
+      <pubDate>Sun, 19 Jul 2026 14:00:00 GMT</pubDate>
+      <description>The company sells GPU scheduling to mid-size labs.</description>
+    </item>
+  </channel>
+</rss>

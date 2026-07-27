@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Linkonly Blog</title>
+    <link>https://linkonly.blog/</link>
+    <description>Personal notes</description>
+    <language>en</language>
+    <item>
+      <title>Why I still hand-write my feed</title>
+      <link>https://linkonly.blog/2026/07/hand-written-feed</link>
+      <guid>https://linkonly.blog/2026/07/hand-written-feed</guid>
+      <pubDate>Mon, 20 Jul 2026 11:00:00 GMT</pubDate>
+      <description>A short defense of owning your syndication.</description>
+    </item>
+  </channel>
+</rss>

@@ -21,6 +21,7 @@ dependencies = [
     "trafilatura>=1.12",
     "tldextract>=5.1",
     "selectolax>=0.3.21",
+    "defusedxml>=0.7.1",
     "tenacity>=9.0",
     "py3langid>=0.3",
     "pyyaml>=6.0",
@@ -102,6 +103,7 @@ module = [
     "weasyprint.*",
     "tldextract.*",
     "selectolax.*",
+    "defusedxml.*",
 ]
 ignore_missing_imports = true
 
