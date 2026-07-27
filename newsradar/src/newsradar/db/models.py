@@ -362,6 +362,9 @@ class Event(Base):
     geo_centroid: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     heat_score: Mapped[float] = mapped_column(Float, nullable=False, server_default=text("0"))
     negativity_score: Mapped[float] = mapped_column(Float, nullable=False, server_default=text("0"))
+    # Summary generation bookkeeping (drives the >=50% regeneration rule).
+    summary_model: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary_doc_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[dt.datetime] = created_at_col()
     updated_at: Mapped[dt.datetime] = updated_at_col()
 
@@ -513,3 +516,27 @@ class IngestionRun(Base):
     finished_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     detail: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+
+# --------------------------------------------------------------------------------------
+# LLM cost accounting (P2)
+# --------------------------------------------------------------------------------------
+
+
+class LlmCall(Base):
+    """One structured LLM call, with per-call token accounting for the cost guard."""
+
+    __tablename__ = "llm_calls"
+    __table_args__ = (Index("ix_llm_calls_created_at", text("created_at DESC")),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    purpose: Mapped[str] = mapped_column(Text, nullable=False)
+    model: Mapped[str] = mapped_column(Text, nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ok: Mapped[bool] = mapped_column(nullable=False, server_default=text("true"))
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(
+        _tstz(), nullable=False, server_default=func.now()
+    )

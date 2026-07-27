@@ -57,6 +57,26 @@ class Settings(BaseSettings):
 
     # --- Embeddings ---
     embedding_model: str = "intfloat/multilingual-e5-large"
+    embedding_batch_size: int = 32
+
+    # --- LLM models & cost discipline ---
+    # Cheap tier for per-document entity/sentiment/stance classification.
+    haiku_model: str = "claude-haiku-4-5-20251001"
+    # Frontier tier — event summaries and report generation ONLY.
+    sonnet_model: str = "claude-sonnet-5"
+    llm_max_concurrency: int = 8
+    # Hard daily spend guard (USD). Enrichment degrades gracefully when exceeded.
+    llm_daily_budget_usd: float = 25.0
+
+    # --- Clustering (tunable without a code change) ---
+    cluster_sim_threshold: float = 0.82
+    cluster_decay_halflife_hours: float = 48.0
+    # Candidate lookup window and the max time gap for assignment.
+    cluster_candidate_window_hours: int = 72
+    cluster_assign_max_gap_hours: int = 48
+
+    # Bundled GeoNames cities extract (offline geo resolution).
+    geonames_path: str = ""
 
     # --- Observability ---
     log_level: str = "INFO"
