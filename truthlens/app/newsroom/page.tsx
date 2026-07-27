@@ -22,6 +22,7 @@ interface NewsResponse {
   query: string | null; region: string; count: number; storyCount: number;
   regions: { key: string; label: string }[];
   stories: Story[];
+  translation?: { available: boolean };
   sources: { source: string; connected: boolean; count?: number; reason?: string }[];
   error?: string;
 }
@@ -122,14 +123,19 @@ function StoryBlock({ story }: { story: Story }) {
 export default function NewsRoomPage() {
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("all");
+  const [keywords, setKeywords] = useState("");
+  const [countries, setCountries] = useState("");
   const [data, setData] = useState<NewsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  const load = useCallback(async (query: string, reg: string) => {
+  const load = useCallback(async (query: string, reg: string, kw: string, cn: string) => {
     setLoading(true); setErr("");
     try {
-      const r = await fetch(`/api/newsroom?q=${encodeURIComponent(query)}&region=${encodeURIComponent(reg)}`, { cache: "no-store" });
+      const params = new URLSearchParams({ q: query, region: reg });
+      if (kw.trim()) params.set("keywords", kw.trim());
+      if (cn.trim()) params.set("countries", cn.trim());
+      const r = await fetch(`/api/newsroom?${params}`, { cache: "no-store" });
       const j: NewsResponse = await r.json();
       if (!r.ok || j.error) throw new Error(j.error || "failed");
       setData(j);
@@ -137,7 +143,8 @@ export default function NewsRoomPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load("", "all"); }, [load]);
+  useEffect(() => { load("", "all", "", ""); }, [load]);
+  const apply = () => load(q, region, keywords, countries);
 
   const stories = data?.stories || [];
   const connectedFeeds = data?.sources?.find((s) => s.source === "rss");
@@ -157,7 +164,7 @@ export default function NewsRoomPage() {
       </div>
 
       <div className="card space-y-3">
-        <form onSubmit={(e) => { e.preventDefault(); load(q, region); }} className="flex gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); apply(); }} className="flex gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
             <input
@@ -170,14 +177,40 @@ export default function NewsRoomPage() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
           </button>
         </form>
-        <div className="flex flex-wrap gap-1.5">
+        {/* keyword + country filters */}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Keywords</span>
+            <input value={keywords} onChange={(e) => setKeywords(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") apply(); }}
+              placeholder="comma-separated — e.g. sanctions, ceasefire, election"
+              className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Countries</span>
+            <input value={countries} onChange={(e) => setCountries(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") apply(); }}
+              placeholder="comma-separated — e.g. Israel, Ukraine, Iran"
+              className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
+          </label>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
           {[{ key: "all", label: "All regions" }, ...(data?.regions || [])].map((r) => (
-            <button key={r.key} onClick={() => { setRegion(r.key); load(q, r.key); }} data-active={region === r.key}
+            <button key={r.key} onClick={() => { setRegion(r.key); load(q, r.key, keywords, countries); }} data-active={region === r.key}
               className="rounded-full border border-line px-3 py-1 text-xs data-[active=true]:bg-bg-elev data-[active=true]:text-white">
               {r.label}
             </button>
           ))}
+          {(keywords || countries) && (
+            <button onClick={() => { setKeywords(""); setCountries(""); load(q, region, "", ""); }}
+              className="rounded-full border border-line px-3 py-1 text-xs text-ink-muted hover:text-white">
+              Clear filters
+            </button>
+          )}
         </div>
+        {data?.translation && !data.translation.available && (
+          <p className="inline-flex items-center gap-1 text-xs text-yellow-200/80">
+            <Languages className="h-3.5 w-3.5" /> Translation is off (ANTHROPIC_API_KEY not configured) — headlines show in their original language.
+          </p>
+        )}
         {!q && connectedFeeds && !connectedFeeds.connected && (
           <p className="inline-flex items-center gap-1 text-xs text-yellow-200/80">
             <Rss className="h-3.5 w-3.5" /> No feeds connected yet — add news sites under{" "}
