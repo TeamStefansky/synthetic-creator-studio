@@ -6,7 +6,7 @@
 // runs once per feed per day and the result is cached (reproducible).
 
 import Anthropic from "@anthropic-ai/sdk";
-import { LLM_MODEL } from "@/lib/llm";
+import { LLM_MODEL, VISION_MODEL, isModelAccessError } from "@/lib/llm";
 import type { FeedItem } from "@/lib/feeds/fetch";
 
 export function translationAvailable(): boolean {
@@ -33,28 +33,36 @@ export async function translateToEnglish(texts: string[]): Promise<string[]> {
     '{"t":[{"i":<line number>,"en":"<english text>"}]}';
   const user = idx.map(([i, t]) => `${i}: ${t.slice(0, MAX_CHARS)}`).join("\n");
 
-  const out = [...texts];
-  try {
-    const client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: 12_000 });
-    const msg = await client.messages.create({
-      model: LLM_MODEL, max_tokens: 4000, system,
-      messages: [{ role: "user", content: user }],
-    });
-    const block = msg.content.find((b) => b.type === "text");
-    const raw = block && block.type === "text" ? block.text : "";
-    const s = raw.indexOf("{"), e = raw.lastIndexOf("}");
-    if (s < 0 || e <= s) return texts;
-    const json = JSON.parse(raw.slice(s, e + 1));
-    for (const row of json?.t || []) {
-      const i = Number(row?.i);
-      if (Number.isInteger(i) && i >= 0 && i < out.length && typeof row?.en === "string" && row.en.trim()) {
-        out[i] = row.en.trim();
+  const client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: 30_000 });
+  // Try the primary model, then fall back to the vision model on a model-ACCESS
+  // error (same pattern as Post Check) — so translation still works when the account
+  // can't reach the default LLM_MODEL. Any other failure fails open to the original.
+  const candidates = [...new Set([LLM_MODEL, VISION_MODEL])];
+  for (const model of candidates) {
+    try {
+      const msg = await client.messages.create({
+        model, max_tokens: 4000, system,
+        messages: [{ role: "user", content: user }],
+      });
+      const block = msg.content.find((b) => b.type === "text");
+      const raw = block && block.type === "text" ? block.text : "";
+      const s = raw.indexOf("{"), e = raw.lastIndexOf("}");
+      if (s < 0 || e <= s) return texts; // unparseable → originals
+      const json = JSON.parse(raw.slice(s, e + 1));
+      const out = [...texts];
+      for (const row of json?.t || []) {
+        const i = Number(row?.i);
+        if (Number.isInteger(i) && i >= 0 && i < out.length && typeof row?.en === "string" && row.en.trim()) {
+          out[i] = row.en.trim();
+        }
       }
+      return out;
+    } catch (err: any) {
+      if (isModelAccessError(String(err?.message || ""))) continue; // try the next model
+      return texts; // transient/other → fail open to the original language
     }
-    return out;
-  } catch {
-    return texts; // fail open to the original language
   }
+  return texts;
 }
 
 /** Translate a feed's item titles + summaries to English in one batched call. */
