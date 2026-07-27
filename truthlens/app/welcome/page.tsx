@@ -77,8 +77,6 @@ export default function WelcomePage({ searchParams }: { searchParams?: { next?: 
       </section>
 
       <footer className="relative mx-auto max-w-6xl px-6 pb-12 text-center text-xs text-[#6b6e8a]">
-        Authorized, public data only. Outputs are indicators with evidence and an alternative
-        explanation - a decision-support tool, not a verdict. No named-individual attribution.
       </footer>
     </div>
   );
