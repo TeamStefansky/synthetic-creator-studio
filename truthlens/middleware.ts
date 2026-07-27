@@ -10,7 +10,10 @@ import { AUTH_COOKIE, expectedToken } from "@/lib/auth";
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|api/auth|api/monitor|api/share|api/watch/scan|api/case/scan|embed).*)",
+    // Exclude Next internals, self-authenticating endpoints, AND any static asset
+    // file (a path ending in an extension) so public files like /logo-wordmark.svg
+    // load on the pre-auth /welcome and /login pages instead of being redirected.
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|api/auth|api/monitor|api/share|api/watch/scan|api/case/scan|embed|.*\\.[\\w]+$).*)",
   ],
 };
 
