@@ -28,7 +28,22 @@ class Settings(BaseSettings):
     perigon_api_key: str = ""
     telegram_api_id: str = ""
     telegram_api_hash: str = ""
+    telegram_session: str = ""
     youtube_api_key: str = ""
+    youtube_daily_quota_budget: int = 8000
+
+    # Descriptive User-Agent (contact URL) sent by every HTTP connector.
+    connector_user_agent: str = (
+        "NewsRadarBot/1.0 (+https://newsradar.example/bot; contact=abuse@newsradar.example)"
+    )
+
+    # Optional overrides for the connector config files. When unset the packaged
+    # defaults under ``<repo>/config/`` are used (resolved in ``connectors.config_files``).
+    feeds_path: str = ""
+    telegram_channels_path: str = ""
+
+    # Enable the paid Perigon connector even when other gates would skip it.
+    perigon_enabled: bool = True
 
     # --- Email delivery (SMTP) ---
     smtp_host: str = ""

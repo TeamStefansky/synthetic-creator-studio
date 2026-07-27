@@ -16,6 +16,13 @@ dependencies = [
     "redis>=5.0",
     "celery>=5.4",
     "structlog>=24.1",
+    "httpx>=0.27",
+    "feedparser>=6.0",
+    "trafilatura>=1.12",
+    "tenacity>=9.0",
+    "py3langid>=0.3",
+    "pyyaml>=6.0",
+    "telethon>=1.36",
 ]
 
 [dependency-groups]
@@ -60,7 +67,15 @@ module = "newsradar.*"
 strict = true
 
 [[tool.mypy.overrides]]
-module = ["celery.*", "pgvector.*"]
+module = [
+    "celery.*",
+    "pgvector.*",
+    "feedparser.*",
+    "trafilatura.*",
+    "py3langid.*",
+    "telethon.*",
+    "yaml.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
