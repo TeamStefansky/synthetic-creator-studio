@@ -69,6 +69,8 @@ ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "migrations/*" = ["E501"]
+# FastAPI's dependency-injection idiom relies on Depends()/Query() in defaults.
+"src/newsradar/api/**" = ["B008"]
 
 [tool.mypy]
 python_version = "3.12"

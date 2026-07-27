@@ -9,7 +9,11 @@ import redis.asyncio as aioredis
 from fastapi import FastAPI
 from sqlalchemy import text
 
+from newsradar.api.routers.alerts import router as alerts_router
 from newsradar.api.routers.connectors import router as connectors_router
+from newsradar.api.routers.events import router as events_router
+from newsradar.api.routers.reports import router as reports_router
+from newsradar.api.routers.watchlists import router as watchlists_router
 from newsradar.config import get_settings
 from newsradar.db.session import get_engine
 from newsradar.logging import configure_logging, get_logger
@@ -33,6 +37,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="NewsRadar API", version="0.1.0", lifespan=lifespan)
 app.include_router(connectors_router)
+app.include_router(watchlists_router)
+app.include_router(events_router)
+app.include_router(reports_router)
+app.include_router(alerts_router)
 
 
 async def _check_db() -> bool:
