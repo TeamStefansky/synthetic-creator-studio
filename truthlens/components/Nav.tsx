@@ -147,7 +147,7 @@ export default function Nav() {
     <>
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-4 border-r border-line bg-bg-base px-3 py-4 lg:flex">
-        <div className="px-1">
+        <div className="flex justify-center px-1 py-1">
           <Wordmark />
         </div>
         <NavItems />
