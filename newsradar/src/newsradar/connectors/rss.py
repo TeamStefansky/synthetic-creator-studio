@@ -67,8 +67,10 @@ def _entry_media(entry: Any) -> dict[str, Any] | None:
 
     def _pick(items: Any) -> dict[str, Any] | None:
         for item in items or []:
-            url = item.get("url") if isinstance(item, dict) else None
-            medium = (item.get("medium") or item.get("type") or "") if isinstance(item, dict) else ""
+            if not isinstance(item, dict):
+                continue
+            url = item.get("url")
+            medium = item.get("medium") or item.get("type") or ""
             if url and (not medium or "image" in str(medium)):
                 return {
                     "image_url": str(url),

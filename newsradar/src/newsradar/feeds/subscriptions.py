@@ -42,9 +42,7 @@ async def _get_or_create_source(session: AsyncSession, feed_url: str) -> Source:
         .on_conflict_do_nothing(index_elements=["domain"])
     )
     await session.execute(stmt)
-    return (
-        await session.execute(select(Source).where(Source.domain == domain))
-    ).scalar_one()
+    return (await session.execute(select(Source).where(Source.domain == domain))).scalar_one()
 
 
 async def create_subscription(
@@ -64,9 +62,7 @@ async def create_subscription(
     """
 
     existing = (
-        await session.execute(
-            select(FeedSubscription).where(FeedSubscription.feed_url == feed_url)
-        )
+        await session.execute(select(FeedSubscription).where(FeedSubscription.feed_url == feed_url))
     ).scalar_one_or_none()
     if existing is not None:
         return SubscriptionResult(subscription=existing, created=False, duplicate=True)

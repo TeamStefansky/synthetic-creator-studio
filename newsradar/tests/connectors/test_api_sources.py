@@ -66,9 +66,7 @@ async def test_load_scope_merges_enabled_rows(session: AsyncSession) -> None:
                 lang_filter=["fr"],
                 extra_params={"b": 2},
             ),
-            ApiSource(
-                provider="gdelt", name="disabled", enabled=False, country_filter=["ZZ"]
-            ),
+            ApiSource(provider="gdelt", name="disabled", enabled=False, country_filter=["ZZ"]),
             ApiSource(provider="perigon", name="other", enabled=True, country_filter=["US"]),
         ]
     )

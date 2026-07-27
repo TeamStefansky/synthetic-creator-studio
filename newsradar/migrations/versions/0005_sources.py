@@ -31,9 +31,7 @@ depends_on: str | Sequence[str] | None = None
 CONTENT_RIGHTS = postgresql.ENUM(
     "link_only", "extract_ok", "full_ok", name="content_rights", create_type=False
 )
-WATCHLIST_KIND = postgresql.ENUM(
-    "monitoring", "interest", name="watchlist_kind", create_type=False
-)
+WATCHLIST_KIND = postgresql.ENUM("monitoring", "interest", name="watchlist_kind", create_type=False)
 COUNTRY_MATCH_MODE = postgresql.ENUM(
     "source", "subject", "either", name="country_match_mode", create_type=False
 )
@@ -42,7 +40,12 @@ IMPORT_JOB_STATUS = postgresql.ENUM(
     "pending", "running", "done", "failed", name="import_job_status", create_type=False
 )
 IMPORT_RESULT_STATUS = postgresql.ENUM(
-    "added", "duplicate", "no_feed", "invalid", "error", name="import_result_status",
+    "added",
+    "duplicate",
+    "no_feed",
+    "invalid",
+    "error",
+    name="import_result_status",
     create_type=False,
 )
 
@@ -73,9 +76,7 @@ def upgrade() -> None:
     )
     op.add_column("sources", sa.Column("rights_note", sa.Text(), nullable=True))
     # Data migration: true -> full_ok, false -> link_only.
-    op.execute(
-        "UPDATE sources SET content_rights = 'full_ok' WHERE allows_fulltext_storage = true"
-    )
+    op.execute("UPDATE sources SET content_rights = 'full_ok' WHERE allows_fulltext_storage = true")
     op.execute(
         "UPDATE sources SET content_rights = 'link_only' WHERE allows_fulltext_storage = false"
     )
@@ -83,9 +84,7 @@ def upgrade() -> None:
     # --- watchlists: interest columns ---
     op.add_column(
         "watchlists",
-        sa.Column(
-            "kind", WATCHLIST_KIND, nullable=False, server_default=sa.text("'monitoring'")
-        ),
+        sa.Column("kind", WATCHLIST_KIND, nullable=False, server_default=sa.text("'monitoring'")),
     )
     op.add_column(
         "watchlists",
@@ -174,7 +173,9 @@ def upgrade() -> None:
         sa.Column("last_modified", sa.Text(), nullable=True),
         sa.Column("deactivated_reason", sa.Text(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"),
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
             nullable=False,
         ),
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="CASCADE"),
@@ -192,13 +193,13 @@ def upgrade() -> None:
             server_default=sa.text("gen_random_uuid()"),
             nullable=False,
         ),
-        sa.Column(
-            "status", IMPORT_JOB_STATUS, server_default=sa.text("'pending'"), nullable=False
-        ),
+        sa.Column("status", IMPORT_JOB_STATUS, server_default=sa.text("'pending'"), nullable=False),
         sa.Column("total", sa.Integer(), server_default=sa.text("0"), nullable=False),
         sa.Column("processed", sa.Integer(), server_default=sa.text("0"), nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"),
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
             nullable=False,
         ),
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
@@ -221,9 +222,7 @@ def upgrade() -> None:
         sa.Column("feed_url", sa.Text(), nullable=True),
         sa.Column("title", sa.Text(), nullable=True),
         sa.Column("error", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["job_id"], ["source_import_jobs.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["job_id"], ["source_import_jobs.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_source_import_results_job", "source_import_results", ["job_id"])
@@ -244,7 +243,9 @@ def upgrade() -> None:
         sa.Column("lang_filter", postgresql.ARRAY(sa.Text()), nullable=True),
         sa.Column("extra_params", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"),
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
