@@ -97,3 +97,20 @@ raw documents.
   near-duplicate collapse every metric in the system is wrong.
 - **Source diversity beats volume.** 50 documents from 3 outlets is noise; 50 from 40 outlets is a
   real event. Never rank events by raw document count alone.
+
+## Sources & rights (P5)
+- **content_rights** (`sources.content_rights`) gates persistence, enforced in `pipeline/normalize.py`
+  (`storage_for_rights`): `link_only` = title + ≤300-char extract, `body` NULL; `extract_ok` = title
+  + ≤400-char extract, `body` NULL; `full_ok` = full body may be stored.
+- **Default `link_only`, never infer.** Every discovered/batch-added source starts `link_only`.
+  Upgrading is a manual API action (`PATCH /sources/{id}/rights`) requiring a `rights_note`; upgrading
+  to `full_ok`/`extract_ok` without one → 422. The 0005 migration maps the legacy boolean
+  (`true→full_ok`, `false→link_only`), kept only for backward compatibility.
+- **No image re-hosting.** `document_media` stores the image *URL* only — never download, cache,
+  resize, or re-host; hotlink with attribution.
+- **Source country ≠ subject country.** `sources.country_code` = where the outlet is based;
+  `document_enrichment.geo.country_code` = what the story is about. Interests filter either via
+  `watchlists.country_match_mode` (`source|subject|either`) — a Reuters(GB) story about Brazil is
+  source=GB, subject=BR.
+- **Interest matching is hybrid; monitoring is not.** `kind='interest'` matches keyword OR semantic
+  similarity (`description_embedding`); `kind='monitoring'` is byte-for-byte unchanged (gated).
