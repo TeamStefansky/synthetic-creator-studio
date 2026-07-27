@@ -8,7 +8,7 @@
 // and favicons are hotlinked, never downloaded or re-hosted.
 
 import { useCallback, useEffect, useState } from "react";
-import { Newspaper, Search, Loader2, ExternalLink, Languages, Rss, Layers } from "lucide-react";
+import { Newspaper, Search, Loader2, Languages, Rss } from "lucide-react";
 import Link from "next/link";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -77,45 +77,53 @@ function SourceRow({ it }: { it: NewsItem }) {
   );
 }
 
-// One outlet's coverage of a story — matches the Google-News source card.
-function MemberCard({ it }: { it: NewsItem }) {
-  const inner = (
-    <div className="flex gap-3">
-      <div className="min-w-0 flex-1">
-        <SourceRow it={it} />
-        <h4 className="mt-1 text-[15px] font-semibold leading-snug text-ink line-clamp-3 group-hover:text-brand-soft" dir="auto">{it.title}</h4>
-        <div className="mt-1 flex items-center gap-1 text-[11px] text-ink-muted">
-          {it.country && <span>{it.country} · </span>}<span>{timeAgo(it.timestamp)}</span>
-        </div>
-      </div>
-      <Thumb item={it} className="h-16 w-24 shrink-0 rounded-lg" />
-    </div>
+// Small "also covered by" links under a story (the other outlets in the cluster).
+function CoverageLinks({ story, primary, max }: { story: Story; primary: NewsItem; max: number }) {
+  const others = story.items.filter((m) => m !== primary).slice(0, max);
+  if (!others.length) return null;
+  return (
+    <ul className="mt-2 space-y-1 border-l-2 border-white/10 pl-3">
+      {others.map((o, i) => (
+        <li key={`${o.url || o.title}-${i}`}>
+          <a href={o.url || "#"} target="_blank" rel="noopener noreferrer"
+            className="group flex items-start gap-1.5 text-xs text-ink-secondary hover:text-brand-soft">
+            {o.favicon && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={o.favicon} alt="" referrerPolicy="no-referrer" className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-sm" />
+            )}
+            <span className="line-clamp-2" dir="auto"><span className="text-ink-muted">{o.outlet}:</span> {o.title}</span>
+          </a>
+        </li>
+      ))}
+      <li className="pt-0.5 text-[10px] uppercase tracking-wide text-ink-muted">{story.sourceCount} sources</li>
+    </ul>
   );
-  return it.url
-    ? <a href={it.url} target="_blank" rel="noopener noreferrer" className="group block">{inner}</a>
-    : <div>{inner}</div>;
 }
 
-function StoryBlock({ story }: { story: Story }) {
-  const [open, setOpen] = useState(false);
-  const multi = story.items.length > 1;
-  const shown = open ? story.items : story.items.slice(0, 4);
-  return (
-    <section className="card">
-      <h3 className="font-display text-lg font-bold leading-tight text-ink" dir="auto">{story.title}</h3>
-      {multi && (
-        <div className="mt-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-ink-muted">
-          <Layers className="h-3 w-3" /> {story.sourceCount} source{story.sourceCount > 1 ? "s" : ""}
-        </div>
-      )}
-      <div className="mt-3 grid gap-x-6 gap-y-4 border-t border-white/5 pt-3 sm:grid-cols-2">
-        {shown.map((it, i) => <MemberCard key={`${it.url || it.title}-${i}`} it={it} />)}
+// A story as an image-forward news card (image on top, then headline) — news-site
+// hierarchy. `lead` renders the large hero treatment.
+function StoryCard({ story, lead }: { story: Story; lead?: boolean }) {
+  const primary = story.items.find((m) => m.title === story.title) || story.items[0];
+  const hero = story.items.find((m) => m.image) || primary;
+  const card = (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] transition group-hover:border-brand/40">
+      <Thumb item={hero} className="aspect-[16/9] w-full" />
+      <div className="p-3 sm:p-4">
+        <SourceRow it={primary} />
+        <h3 className={`mt-1.5 font-display font-bold leading-tight text-ink group-hover:text-brand-soft ${lead ? "text-2xl sm:text-3xl" : "text-lg"}`} dir="auto">
+          {story.title}
+        </h3>
+        {lead && primary.extract && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-secondary line-clamp-2" dir="auto">{primary.extract}</p>}
+        <div className="mt-2 text-[11px] text-ink-muted">{timeAgo(primary.timestamp)}{primary.country ? ` · ${primary.country}` : ""}</div>
       </div>
-      {story.items.length > 4 && (
-        <button onClick={() => setOpen((v) => !v)} className="btn-ghost mt-3 w-full justify-center text-xs">
-          {open ? "Show less" : `View full coverage (${story.items.length})`}
-        </button>
-      )}
+    </div>
+  );
+  return (
+    <section>
+      {primary.url
+        ? <a href={primary.url} target="_blank" rel="noopener noreferrer" className="group block">{card}</a>
+        : <div className="group">{card}</div>}
+      <CoverageLinks story={story} primary={primary} max={lead ? 4 : 2} />
     </section>
   );
 }
@@ -231,8 +239,13 @@ export default function NewsRoomPage() {
       )}
 
       {stories.length > 0 && (
-        <div className="space-y-4">
-          {stories.map((s, i) => <StoryBlock key={`${s.title}-${i}`} story={s} />)}
+        <div className="space-y-6">
+          <StoryCard story={stories[0]} lead />
+          {stories.length > 1 && (
+            <div className="grid gap-x-5 gap-y-6 border-t border-white/5 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+              {stories.slice(1).map((s, i) => <StoryCard key={`${s.title}-${i}`} story={s} />)}
+            </div>
+          )}
         </div>
       )}
 
