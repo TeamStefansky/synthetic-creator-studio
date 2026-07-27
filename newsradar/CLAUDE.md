@@ -114,3 +114,24 @@ raw documents.
   source=GB, subject=BR.
 - **Interest matching is hybrid; monitoring is not.** `kind='interest'` matches keyword OR semantic
   similarity (`description_embedding`); `kind='monitoring'` is byte-for-byte unchanged (gated).
+
+## Reader product (P6)
+- **Translation is cached by content hash, scoped to edition/digest items only** — never the corpus
+  (`translate/service.py`). English source → `model='passthrough'`, zero tokens; a failed call keeps
+  the original text with `model='failed'`. Body is translated ONLY for `full_ok` sources — the gate
+  lives in the service, not the caller. Reuses P2's `LLMClient`/`FakeLLMClient` (Haiku).
+- **Editions are immutable snapshots** (`site/edition.py`, table `editions`/`edition_items`), built
+  every `EDITION_INTERVAL_MINUTES`. A story is an `events` row (`source_count>=2`) else a standalone
+  document; members of a corroborated event are never emitted separately. Diversity: no repeated
+  event, no source > `EDITION_MAX_SOURCE_SHARE`, each interest ≥2 slots. Ranking (`site/ranking.py`
+  + `site/weights.py`) is deterministic (frozen clock → identical). Translation runs BEFORE the
+  edition row commits (never partially translated).
+- **`site/serializers.py::to_story_out` is the single serialization chokepoint** and the one place
+  content-rights are enforced: `body_en` only for `full_ok`, `extract_en` capped at the tier length
+  (300/400), and always a non-empty `source_name` + the original external `url` (attribution). Every
+  `/site/` and `/p/` route (incl. RSS/Atom/JSON feeds) goes through it.
+- **Digest** (`reports/digest_builder.py` no-LLM context → `reports/digest_renderer.py` one Sonnet
+  call) lists EVERY matching headline grouped by interest (never sampled), `report_type` on
+  `report_schedules`/`reports` (default `analyst`, unchanged); seeded `0 7 * * *` Asia/Jerusalem.
+- **Share tokens** are 256-bit (`secrets.token_urlsafe(32)`), revocable; the `/p` router is
+  rate-limited (429 on the 61st req/min/IP) and returns 410 for revoked/expired links.
