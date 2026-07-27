@@ -1,0 +1,11 @@
+{
+  "assessments": [
+    {
+      "pair_index": 0,
+      "stance": 1,
+      "confidence": 0.86,
+      "evidence_span": "residents praised the rapid, well-organized response that City Hall's emergency teams mounted",
+      "framing": "praised emergency response"
+    }
+  ]
+}
