@@ -117,6 +117,21 @@ class PerigonConnector(BaseConnector):
         if query.lang_filter:
             params["language"] = ",".join(query.lang_filter)
 
+        # Fold enabled api_sources (Perigon) country/lang/extra scope in; DB optional.
+        try:
+            from newsradar.connectors.api_sources import (
+                apply_scope_to_perigon_params,
+                load_api_source_scope,
+            )
+            from newsradar.db.session import get_sessionmaker
+
+            async with get_sessionmaker()() as session:
+                scope = await load_api_source_scope(session, "perigon")
+            if not scope.empty:
+                params = apply_scope_to_perigon_params(params, scope)
+        except Exception as exc:  # noqa: BLE001 - scope is optional
+            log.debug("connector.perigon.scope_unavailable", error=str(exc))
+
         await self._bucket.acquire()
 
         async def _do() -> dict[str, Any]:

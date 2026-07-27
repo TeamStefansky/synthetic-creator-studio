@@ -171,8 +171,26 @@ class GdeltConnector(BaseConnector):
             return first + second
         return docs
 
+    async def _scoped_query(self, query: WatchlistQuery) -> str:
+        """Fold enabled ``api_sources`` (GDELT) scope into the query; DB is optional."""
+
+        try:
+            from newsradar.connectors.api_sources import (
+                build_gdelt_query_with_scope,
+                load_api_source_scope,
+            )
+            from newsradar.db.session import get_sessionmaker
+
+            async with get_sessionmaker()() as session:
+                scope = await load_api_source_scope(session, "gdelt")
+            if not scope.empty:
+                return build_gdelt_query_with_scope(query, scope)
+        except Exception as exc:  # noqa: BLE001 - scope is optional; fall back to the base query
+            log.debug("connector.gdelt.scope_unavailable", error=str(exc))
+        return build_gdelt_query(query)
+
     async def fetch(self, query: WatchlistQuery, since: dt.datetime) -> AsyncIterator[RawDocument]:
-        query_str = build_gdelt_query(query)
+        query_str = await self._scoped_query(query)
         now = dt.datetime.now(dt.UTC)
         if since.tzinfo is None:
             since = since.replace(tzinfo=dt.UTC)
