@@ -1,0 +1,147 @@
+# NewsRadar RSS feed list.
+# Each entry: url, source_domain, country (ISO 3166-1 alpha-2), lang (ISO 639-1), tier (1-4).
+# Only outlets listed here are polled; there is no generic web crawler.
+
+# --- International wires / tier-1 English ---
+- {url: "https://feeds.reuters.com/reuters/topNews", source_domain: "reuters.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://feeds.reuters.com/reuters/worldNews", source_domain: "reuters.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://apnews.com/apf-topnews?output=rss", source_domain: "apnews.com", country: "US", lang: "en", tier: 1}
+- {url: "https://apnews.com/hub/world-news?output=rss", source_domain: "apnews.com", country: "US", lang: "en", tier: 1}
+- {url: "https://feeds.bbci.co.uk/news/rss.xml", source_domain: "bbc.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://feeds.bbci.co.uk/news/world/rss.xml", source_domain: "bbc.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://feeds.bbci.co.uk/news/technology/rss.xml", source_domain: "bbc.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", source_domain: "nytimes.com", country: "US", lang: "en", tier: 1}
+- {url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", source_domain: "nytimes.com", country: "US", lang: "en", tier: 1}
+- {url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml", source_domain: "nytimes.com", country: "US", lang: "en", tier: 1}
+- {url: "https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml", source_domain: "nytimes.com", country: "US", lang: "en", tier: 1}
+- {url: "https://www.theguardian.com/world/rss", source_domain: "theguardian.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://www.theguardian.com/uk/technology/rss", source_domain: "theguardian.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://www.theguardian.com/world/middleeast/rss", source_domain: "theguardian.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://feeds.washingtonpost.com/rss/world", source_domain: "washingtonpost.com", country: "US", lang: "en", tier: 1}
+- {url: "https://feeds.washingtonpost.com/rss/business/technology", source_domain: "washingtonpost.com", country: "US", lang: "en", tier: 1}
+- {url: "https://www.ft.com/rss/home", source_domain: "ft.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://www.ft.com/world?format=rss", source_domain: "ft.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://www.economist.com/international/rss.xml", source_domain: "economist.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://www.economist.com/science-and-technology/rss.xml", source_domain: "economist.com", country: "GB", lang: "en", tier: 1}
+- {url: "https://feeds.a.dj.com/rss/RSSWorldNews.xml", source_domain: "wsj.com", country: "US", lang: "en", tier: 1}
+- {url: "https://feeds.a.dj.com/rss/RSSWSJD.xml", source_domain: "wsj.com", country: "US", lang: "en", tier: 1}
+- {url: "https://feeds.bloomberg.com/politics/news.rss", source_domain: "bloomberg.com", country: "US", lang: "en", tier: 1}
+- {url: "https://feeds.bloomberg.com/technology/news.rss", source_domain: "bloomberg.com", country: "US", lang: "en", tier: 1}
+- {url: "https://feeds.bloomberg.com/markets/news.rss", source_domain: "bloomberg.com", country: "US", lang: "en", tier: 1}
+
+# --- Global tier-2 English ---
+- {url: "http://rss.cnn.com/rss/edition_world.rss", source_domain: "cnn.com", country: "US", lang: "en", tier: 2}
+- {url: "http://rss.cnn.com/rss/edition_technology.rss", source_domain: "cnn.com", country: "US", lang: "en", tier: 2}
+- {url: "http://rss.cnn.com/rss/edition_meast.rss", source_domain: "cnn.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.aljazeera.com/xml/rss/all.xml", source_domain: "aljazeera.com", country: "QA", lang: "en", tier: 2}
+- {url: "https://rss.dw.com/rdf/rss-en-all", source_domain: "dw.com", country: "DE", lang: "en", tier: 2}
+- {url: "https://rss.dw.com/xml/rss-en-world", source_domain: "dw.com", country: "DE", lang: "en", tier: 2}
+- {url: "https://www.france24.com/en/rss", source_domain: "france24.com", country: "FR", lang: "en", tier: 2}
+- {url: "https://www.politico.com/rss/politicopicks.xml", source_domain: "politico.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.axios.com/feeds/feed.rss", source_domain: "axios.com", country: "US", lang: "en", tier: 2}
+- {url: "https://feeds.npr.org/1001/rss.xml", source_domain: "npr.org", country: "US", lang: "en", tier: 2}
+- {url: "https://feeds.npr.org/1004/rss.xml", source_domain: "npr.org", country: "US", lang: "en", tier: 2}
+- {url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", source_domain: "cnbc.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.cnbc.com/id/19854910/device/rss/rss.html", source_domain: "cnbc.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.scmp.com/rss/91/feed", source_domain: "scmp.com", country: "HK", lang: "en", tier: 2}
+- {url: "https://www.thehindu.com/news/international/feeder/default.rss", source_domain: "thehindu.com", country: "IN", lang: "en", tier: 2}
+- {url: "https://english.kyodonews.net/rss/news.xml", source_domain: "kyodonews.net", country: "JP", lang: "en", tier: 2}
+- {url: "https://www.abc.net.au/news/feed/45910/rss.xml", source_domain: "abc.net.au", country: "AU", lang: "en", tier: 2}
+- {url: "https://www.cbc.ca/webfeed/rss/rss-world", source_domain: "cbc.ca", country: "CA", lang: "en", tier: 2}
+- {url: "https://www.theglobeandmail.com/feed/world/", source_domain: "theglobeandmail.com", country: "CA", lang: "en", tier: 2}
+- {url: "https://www.rte.ie/feeds/rss/?index=/news/", source_domain: "rte.ie", country: "IE", lang: "en", tier: 2}
+- {url: "https://www.independent.co.uk/news/world/rss", source_domain: "independent.co.uk", country: "GB", lang: "en", tier: 2}
+- {url: "https://www.telegraph.co.uk/news/rss.xml", source_domain: "telegraph.co.uk", country: "GB", lang: "en", tier: 2}
+- {url: "https://feeds.skynews.com/feeds/rss/world.xml", source_domain: "news.sky.com", country: "GB", lang: "en", tier: 2}
+- {url: "https://www.euronews.com/rss?level=theme&name=news", source_domain: "euronews.com", country: "FR", lang: "en", tier: 2}
+- {url: "https://apps.washingtonpost.com/g/rss/", source_domain: "washingtonpost.com", country: "US", lang: "en", tier: 2}
+
+# --- Tech press (English) ---
+- {url: "https://techcrunch.com/feed/", source_domain: "techcrunch.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.theverge.com/rss/index.xml", source_domain: "theverge.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.wired.com/feed/rss", source_domain: "wired.com", country: "US", lang: "en", tier: 2}
+- {url: "https://arstechnica.com/feed/", source_domain: "arstechnica.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.engadget.com/rss.xml", source_domain: "engadget.com", country: "US", lang: "en", tier: 3}
+- {url: "https://www.zdnet.com/news/rss.xml", source_domain: "zdnet.com", country: "US", lang: "en", tier: 3}
+- {url: "https://feeds.arstechnica.com/arstechnica/technology-lab", source_domain: "arstechnica.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.technologyreview.com/feed/", source_domain: "technologyreview.com", country: "US", lang: "en", tier: 2}
+- {url: "https://thehackernews.com/feeds/posts/default", source_domain: "thehackernews.com", country: "US", lang: "en", tier: 3}
+- {url: "https://krebsonsecurity.com/feed/", source_domain: "krebsonsecurity.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.bleepingcomputer.com/feed/", source_domain: "bleepingcomputer.com", country: "US", lang: "en", tier: 3}
+- {url: "https://www.darkreading.com/rss.xml", source_domain: "darkreading.com", country: "US", lang: "en", tier: 3}
+- {url: "https://www.securityweek.com/feed/", source_domain: "securityweek.com", country: "US", lang: "en", tier: 3}
+- {url: "https://arstechnica.com/security/feed/", source_domain: "arstechnica.com", country: "US", lang: "en", tier: 2}
+- {url: "https://www.technologyreview.com/topic/artificial-intelligence/feed", source_domain: "technologyreview.com", country: "US", lang: "en", tier: 2}
+
+# --- Arabic outlets ---
+- {url: "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9", source_domain: "aljazeera.net", country: "QA", lang: "ar", tier: 2}
+- {url: "https://www.alarabiya.net/feed/rss2/ar.xml", source_domain: "alarabiya.net", country: "AE", lang: "ar", tier: 2}
+- {url: "https://arabic.cnn.com/api/v1/rss/rss.xml", source_domain: "arabic.cnn.com", country: "US", lang: "ar", tier: 2}
+- {url: "https://www.bbc.com/arabic/index.xml", source_domain: "bbc.com", country: "GB", lang: "ar", tier: 1}
+- {url: "https://www.skynewsarabia.com/rss", source_domain: "skynewsarabia.com", country: "AE", lang: "ar", tier: 2}
+- {url: "https://www.aa.com.tr/ar/rss/default?cat=guncel", source_domain: "aa.com.tr", country: "TR", lang: "ar", tier: 2}
+- {url: "https://www.france24.com/ar/rss", source_domain: "france24.com", country: "FR", lang: "ar", tier: 2}
+- {url: "https://arabic.rt.com/rss/", source_domain: "arabic.rt.com", country: "RU", lang: "ar", tier: 3}
+- {url: "https://www.alhurra.com/api/v1/rss/rss.xml", source_domain: "alhurra.com", country: "US", lang: "ar", tier: 3}
+- {url: "https://www.youm7.com/rss/SectionRss?SectionID=65", source_domain: "youm7.com", country: "EG", lang: "ar", tier: 3}
+- {url: "https://www.almasryalyoum.com/rss/rssfeeds", source_domain: "almasryalyoum.com", country: "EG", lang: "ar", tier: 3}
+- {url: "https://www.asharqalawsat.com/feed", source_domain: "aawsat.com", country: "SA", lang: "ar", tier: 2}
+- {url: "https://www.aljazeera.net/rss/all.xml", source_domain: "aljazeera.net", country: "QA", lang: "ar", tier: 2}
+- {url: "https://www.almayadeen.net/rss/all.xml", source_domain: "almayadeen.net", country: "LB", lang: "ar", tier: 3}
+- {url: "https://arabi21.com/Rss/Rss.aspx", source_domain: "arabi21.com", country: "GB", lang: "ar", tier: 3}
+
+# --- Hebrew / Israeli outlets ---
+- {url: "https://www.ynet.co.il/Integration/StoryRss2.xml", source_domain: "ynet.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.ynet.co.il/Integration/StoryRss3082.xml", source_domain: "ynet.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.ynet.co.il/Integration/StoryRss544.xml", source_domain: "ynet.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.haaretz.co.il/srv/rss---feedly", source_domain: "haaretz.co.il", country: "IL", lang: "he", tier: 1}
+- {url: "https://www.haaretz.co.il/cmlink/1.1470869", source_domain: "haaretz.co.il", country: "IL", lang: "he", tier: 1}
+- {url: "https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=942", source_domain: "globes.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.globes.co.il/webservice/rss/rssfeeder.asmx/FeederNode?iID=1725", source_domain: "globes.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.calcalist.co.il/GeneralRSS/0,16335,L-3674,00.xml", source_domain: "calcalist.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.calcalist.co.il/GeneralRSS/0,16335,L-8,00.xml", source_domain: "calcalist.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://rss.walla.co.il/feed/1?type=main", source_domain: "walla.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://rss.walla.co.il/feed/22", source_domain: "walla.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.maariv.co.il/Rss/RssFeedsMivzakiChadashot", source_domain: "maariv.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.maariv.co.il/Rss/RssFeedsPolitiMedini", source_domain: "maariv.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.israelhayom.co.il/rss", source_domain: "israelhayom.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.srugim.co.il/feed", source_domain: "srugim.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.kan.org.il/rss/news.xml", source_domain: "kan.org.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.mako.co.il/RSSNews/rss_makonews.xml", source_domain: "mako.co.il", country: "IL", lang: "he", tier: 2}
+- {url: "https://www.now14.co.il/feed/", source_domain: "now14.co.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.the7eye.org.il/feed", source_domain: "the7eye.org.il", country: "IL", lang: "he", tier: 3}
+- {url: "https://www.themarker.com/srv/tm---rss", source_domain: "themarker.com", country: "IL", lang: "he", tier: 2}
+
+# --- Israeli outlets (English) ---
+- {url: "https://www.timesofisrael.com/feed/", source_domain: "timesofisrael.com", country: "IL", lang: "en", tier: 2}
+- {url: "https://www.timesofisrael.com/topic/technology/feed/", source_domain: "timesofisrael.com", country: "IL", lang: "en", tier: 2}
+- {url: "https://www.jpost.com/rss/rssfeedsheadlines.aspx", source_domain: "jpost.com", country: "IL", lang: "en", tier: 2}
+- {url: "https://www.jpost.com/rss/rssfeedsisraelnews.aspx", source_domain: "jpost.com", country: "IL", lang: "en", tier: 2}
+- {url: "https://www.haaretz.com/srv/htz---all-articles", source_domain: "haaretz.com", country: "IL", lang: "en", tier: 1}
+- {url: "https://www.ynetnews.com/Integration/StoryRss3082.xml", source_domain: "ynetnews.com", country: "IL", lang: "en", tier: 2}
+- {url: "https://www.i24news.tv/en/rss", source_domain: "i24news.tv", country: "IL", lang: "en", tier: 2}
+- {url: "https://www.israelnationalnews.com/rss.aspx", source_domain: "israelnationalnews.com", country: "IL", lang: "en", tier: 3}
+- {url: "https://www.calcalistech.com/ctechnews/rss/", source_domain: "calcalistech.com", country: "IL", lang: "en", tier: 2}
+- {url: "https://nocamels.com/feed/", source_domain: "nocamels.com", country: "IL", lang: "en", tier: 3}
+
+# --- Regional / other-language press ---
+- {url: "https://www.lemonde.fr/rss/une.xml", source_domain: "lemonde.fr", country: "FR", lang: "fr", tier: 1}
+- {url: "https://www.lemonde.fr/international/rss_full.xml", source_domain: "lemonde.fr", country: "FR", lang: "fr", tier: 1}
+- {url: "https://www.lefigaro.fr/rss/figaro_actualites.xml", source_domain: "lefigaro.fr", country: "FR", lang: "fr", tier: 2}
+- {url: "https://elpais.com/rss/elpais/portada.xml", source_domain: "elpais.com", country: "ES", lang: "es", tier: 1}
+- {url: "https://elpais.com/rss/internacional/portada.xml", source_domain: "elpais.com", country: "ES", lang: "es", tier: 1}
+- {url: "https://www.spiegel.de/international/index.rss", source_domain: "spiegel.de", country: "DE", lang: "en", tier: 1}
+- {url: "https://www.spiegel.de/schlagzeilen/tops/index.rss", source_domain: "spiegel.de", country: "DE", lang: "de", tier: 1}
+- {url: "https://www.faz.net/rss/aktuell/", source_domain: "faz.net", country: "DE", lang: "de", tier: 2}
+- {url: "https://www.corriere.it/rss/homepage.xml", source_domain: "corriere.it", country: "IT", lang: "it", tier: 2}
+- {url: "https://www.repubblica.it/rss/homepage/rss2.0.xml", source_domain: "repubblica.it", country: "IT", lang: "it", tier: 2}
+- {url: "https://feeds.folha.uol.com.br/mundo/rss091.xml", source_domain: "folha.uol.com.br", country: "BR", lang: "pt", tier: 2}
+- {url: "https://www3.nhk.or.jp/rss/news/cat0.xml", source_domain: "nhk.or.jp", country: "JP", lang: "ja", tier: 2}
+- {url: "https://feeds.feedburner.com/ndtvnews-world-news", source_domain: "ndtv.com", country: "IN", lang: "en", tier: 3}
+- {url: "https://www.hurriyetdailynews.com/rss", source_domain: "hurriyetdailynews.com", country: "TR", lang: "en", tier: 3}
+- {url: "https://www.dailysabah.com/rssFeed/homepage", source_domain: "dailysabah.com", country: "TR", lang: "en", tier: 3}
+- {url: "https://en.trend.az/feeds/index.rss", source_domain: "trend.az", country: "AZ", lang: "en", tier: 3}
+- {url: "https://www.themoscowtimes.com/rss/news", source_domain: "themoscowtimes.com", country: "RU", lang: "en", tier: 3}
+- {url: "https://www.dawn.com/feeds/home", source_domain: "dawn.com", country: "PK", lang: "en", tier: 3}
+- {url: "https://gulfnews.com/rss?generatorName=world", source_domain: "gulfnews.com", country: "AE", lang: "en", tier: 3}
+- {url: "https://www.arabnews.com/rss.xml", source_domain: "arabnews.com", country: "SA", lang: "en", tier: 2}
