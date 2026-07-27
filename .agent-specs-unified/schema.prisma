@@ -1,0 +1,589 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector, pgcrypto]
+}
+
+enum Classification {
+  INTERNAL
+  RESTRICTED
+  CONFIDENTIAL
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MemberStatus {
+  INVITED
+  ACTIVE
+  DEACTIVATED
+}
+
+enum WorkspaceRole {
+  MANAGER
+  ANALYST
+  VIEWER
+}
+
+enum SourceMode {
+  ALL
+  ONLY
+  EXCEPT
+}
+
+enum SourceRights {
+  HEADLINE_LINK
+  SHORT_EXTRACT
+  FULL_TEXT_LICENSED
+}
+
+enum SentimentLabel {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum MatchType {
+  TERM
+  SEMANTIC
+  ENTITY
+  MIXED
+}
+
+enum SentimentTargetType {
+  TOPIC
+  ENTITY
+}
+
+enum EditionStatus {
+  LIVE
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReportStatus {
+  DRAFT
+  RENDERING
+  READY
+  SENDING
+  SENT
+  FAILED
+}
+
+enum ApprovalStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum ScheduleFrequency {
+  DAILY
+  WEEKDAYS
+  WEEKLY
+}
+
+enum SelectionMode {
+  TOP_N_BY_HEAT
+  ALL_MATCHES
+  CURATION_WINDOW
+}
+
+enum EmptyPolicy {
+  SEND
+  SKIP
+  SEND_WITH_NOTE
+}
+
+enum OnApprovalTimeout {
+  SKIP
+  SEND_INTERNAL_ONLY
+}
+
+enum ScheduleStatus {
+  ACTIVE
+  PAUSED
+  SUSPENDED
+}
+
+enum ScheduleRunStatus {
+  PENDING
+  APPROVAL_WAITING
+  APPROVED
+  REJECTED
+  CURATING
+  RENDERING
+  SENT
+  SKIPPED
+  FAILED
+}
+
+model Organization {
+  id                               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                             String
+  logoUrl                          String?
+  defaultClassification            Classification  @default(INTERNAL)
+  verifiedDomains                  String[]        @default([])
+  approvalRequiresClassification   Classification?
+  approvalRequiresExternalRecipient Boolean        @default(false)
+  approvalRecipientThreshold       Int?
+  personalAnalyticsEnabled         Boolean         @default(false)
+  retentionDays                    Int             @default(90)
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime        @updatedAt
+
+  workspaces Workspace[]
+  members    Member[]
+  auditLogs  AuditLog[]
+}
+
+model Workspace {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId        String   @db.Uuid
+  name         String
+  description  String?
+  timezone     String
+  editionTimes String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  org              Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  members          WorkspaceMember[]
+  topics           Topic[]
+  editions         Edition[]
+  reportTemplates  ReportTemplate[]
+  reports          Report[]
+  reportSchedules  ReportSchedule[]
+
+  @@index([orgId])
+}
+
+model Member {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId         String       @db.Uuid
+  email         String
+  name          String
+  orgRole       OrgRole      @default(MEMBER)
+  status        MemberStatus @default(INVITED)
+  invitedById   String?      @db.Uuid
+  invitedAt     DateTime?
+  lastSeenAt    DateTime?
+  deactivatedAt DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  org              Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  workspaces       WorkspaceMember[]
+  topicsCreated    Topic[]           @relation("TopicCreator")
+  sentimentOverrides SentimentOverride[]
+  reportsCreated   Report[]          @relation("ReportCreator")
+  templatesCreated ReportTemplate[]  @relation("TemplateCreator")
+  schedulesOwned   ReportSchedule[]  @relation("ScheduleOwner")
+  auditLogs        AuditLog[]
+
+  @@unique([email])
+  @@index([orgId])
+}
+
+model WorkspaceMember {
+  workspaceId String        @db.Uuid
+  memberId    String        @db.Uuid
+  role        WorkspaceRole
+  grantedById String?       @db.Uuid
+  grantedAt   DateTime      @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  member    Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, memberId])
+  @@unique([workspaceId, memberId])
+}
+
+model Topic {
+  id                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId              String     @db.Uuid
+  name                     String
+  isActive                 Boolean    @default(true)
+  createdById              String?    @db.Uuid
+  mustTerms                String[]   @default([])
+  shouldTerms              String[]   @default([])
+  mustNotTerms             String[]   @default([])
+  entities                 String[]   @default([])
+  languages                String[]   @default([])
+  publishedInCountries     String[]   @default([])
+  aboutCountries           String[]   @default([])
+  precision                Float      @default(0.5)
+  sourceMode               SourceMode @default(ALL)
+  sourceIds                String[]   @default([])
+  embedding                Unsupported("vector(384)")?
+  sentimentAlertEnabled    Boolean    @default(false)
+  sentimentAlertThreshold  Float?
+  sentimentAlertOnShift    Boolean    @default(false)
+  excludeReportedSpeech    Boolean    @default(true)
+  excludeOpinion           Boolean    @default(true)
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy     Member?        @relation("TopicCreator", fields: [createdById], references: [id])
+  matches       TopicMatch[]
+  editionItems  EditionItem[]
+  metricSamples MetricSample[]
+
+  @@index([workspaceId])
+}
+
+model Source {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  domain           String
+  feedUrl          String?
+  country          String?
+  language         String?
+  tier             Int          @default(2)
+  faviconUrl       String?
+  isActive         Boolean      @default(true)
+  failureCount     Int          @default(0)
+  lastPolledAt     DateTime?
+  rights           SourceRights @default(HEADLINE_LINK)
+  rightsChangedById String?     @db.Uuid
+  rightsChangedAt  DateTime?
+  rightsNote       String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  documents Document[]
+
+  @@unique([domain])
+}
+
+model Document {
+  id                     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sourceId               String          @db.Uuid
+  url                    String
+  headline               String
+  headlineOriginal       String?
+  language               String
+  summary                String?
+  imageUrl               String?
+  publishedAt            DateTime
+  ingestedAt             DateTime        @default(now())
+  countriesMentioned     String[]        @default([])
+  entities               String[]        @default([])
+  clusterId              String?         @db.Uuid
+  isOpinion              Boolean         @default(false)
+  embedding              Unsupported("vector(384)")?
+  sentimentScore         Float?
+  sentimentConfidence    Float?
+  sentimentLabel         SentimentLabel?
+  sentimentModel         String?
+  sentimentModelVersion  String?
+  sentimentComputedAt    DateTime?
+
+  source             Source              @relation(fields: [sourceId], references: [id])
+  matches            TopicMatch[]
+  entitySentiments   EntitySentiment[]
+  sentimentOverrides SentimentOverride[]
+  editionItems       EditionItem[]
+  reportItems        ReportItem[]
+  evalItems          SentimentEvalItem[]
+
+  @@unique([url])
+  @@index([publishedAt(sort: Desc)])
+  @@index([clusterId])
+  @@index([sourceId])
+}
+
+model TopicMatch {
+  topicId    String    @db.Uuid
+  documentId String    @db.Uuid
+  score      Float
+  matchedOn  String[]  @default([])
+  matchType  MatchType
+
+  topic    Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, documentId])
+  @@index([topicId, score(sort: Desc)])
+}
+
+model EntitySentiment {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId       String               @db.Uuid
+  targetType       SentimentTargetType
+  targetId         String
+  score            Float
+  confidence       Float
+  label            SentimentLabel?
+  evidenceSpan     String?
+  evidenceOffset   Int?
+  isReportedSpeech Boolean              @default(false)
+  sentenceCount    Int                  @default(0)
+  scoreStdev       Float?
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, targetType, targetId])
+  @@index([targetId, score])
+}
+
+model SentimentOverride {
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId String               @db.Uuid
+  targetType SentimentTargetType
+  targetId   String?
+  score      Float
+  label      SentimentLabel
+  memberId   String               @db.Uuid
+  reason     String
+  createdAt  DateTime             @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  member   Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([documentId, targetType, targetId])
+}
+
+model Edition {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId String      @db.Uuid
+  issuedAt  DateTime
+  label     String
+  status    EditionStatus @default(LIVE)
+  itemCount Int           @default(0)
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  items     EditionItem[]
+  reports   Report[]
+
+  @@index([workspaceId, issuedAt(sort: Desc)])
+}
+
+model EditionItem {
+  editionId  String  @db.Uuid
+  documentId String  @db.Uuid
+  topicId    String  @db.Uuid
+  rank       Int
+  isLead     Boolean @default(false)
+
+  edition  Edition  @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  topic    Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([editionId, documentId, topicId])
+}
+
+model ReportTemplate {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId      String         @db.Uuid
+  name             String
+  title            String
+  subtitle         String?
+  classification   Classification @default(INTERNAL)
+  logoUrl          String?
+  includeDashboard Boolean        @default(true)
+  sectionOrder     Json
+  createdById      String?        @db.Uuid
+  createdAt        DateTime       @default(now())
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy Member?          @relation("TemplateCreator", fields: [createdById], references: [id])
+  reports   Report[]
+  schedules ReportSchedule[]
+}
+
+model Report {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId    String         @db.Uuid
+  editionId      String?        @db.Uuid
+  templateId     String?        @db.Uuid
+  title          String
+  subtitle       String?
+  classification Classification @default(INTERNAL)
+  recipientName  String?
+  logoUrl        String?
+  includeDashboard Boolean      @default(true)
+  createdById    String?        @db.Uuid
+  status         ReportStatus   @default(DRAFT)
+  approvalStatus ApprovalStatus @default(NOT_REQUIRED)
+  approvedById   String?        @db.Uuid
+  approvedAt     DateTime?
+  rejectionReason String?
+  scheduleRunId  String?        @db.Uuid
+  pdfPath        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  edition    Edition?        @relation(fields: [editionId], references: [id])
+  template   ReportTemplate? @relation(fields: [templateId], references: [id])
+  createdBy  Member?         @relation("ReportCreator", fields: [createdById], references: [id])
+  items      ReportItem[]
+  recipients Recipient[]
+  scheduleRun ScheduleRun?
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+}
+
+model ReportItem {
+  id                        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reportId                  String          @db.Uuid
+  documentId                String          @db.Uuid
+  order                     Int
+  angleLabel                String?
+  analysisPoints            String[]        @default([])
+  headlineSnapshot          String
+  summarySnapshot           String?
+  sourceNameSnapshot        String
+  publishedAtSnapshot       DateTime
+  sourceCountSnapshot       Int             @default(1)
+  rightsSnapshot            SourceRights
+  sentimentLabelSnapshot    SentimentLabel?
+  sentimentScoreSnapshot    Float?
+  sentimentEvidenceSnapshot String?
+  sentimentWasOverridden    Boolean         @default(false)
+
+  report   Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id])
+
+  @@index([reportId, order])
+}
+
+model Recipient {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reportId   String          @db.Uuid
+  email      String
+  isExternal Boolean         @default(false)
+  status     RecipientStatus @default(PENDING)
+  sentAt     DateTime?
+  error      String?
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+model ReportSchedule {
+  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId            String             @db.Uuid
+  templateId             String             @db.Uuid
+  name                   String
+  ownerId                String             @db.Uuid
+  frequency              ScheduleFrequency
+  timeOfDay              String
+  weekday                Int?
+  timezone               String
+  selectionMode          SelectionMode
+  topN                   Int?
+  curationWindowMinutes  Int?
+  emptyPolicy            EmptyPolicy        @default(SEND_WITH_NOTE)
+  approvalTimeoutMinutes Int                @default(60)
+  onApprovalTimeout      OnApprovalTimeout  @default(SKIP)
+  status                 ScheduleStatus     @default(ACTIVE)
+  consecutiveFailures    Int                @default(0)
+  nextRunAt              DateTime?
+  lastRunAt              DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  workspace  Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  template   ReportTemplate     @relation(fields: [templateId], references: [id])
+  owner      Member             @relation("ScheduleOwner", fields: [ownerId], references: [id])
+  recipients ScheduleRecipient[]
+  runs       ScheduleRun[]
+}
+
+model ScheduleRecipient {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId String  @db.Uuid
+  email      String
+  isExternal Boolean @default(false)
+
+  schedule ReportSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, email])
+}
+
+model ScheduleRun {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId      String            @db.Uuid
+  scheduledFor    DateTime
+  status          ScheduleRunStatus @default(PENDING)
+  reportId        String?           @unique @db.Uuid
+  approvedById    String?           @db.Uuid
+  approvedAt      DateTime?
+  rejectionReason String?
+  error           String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+
+  schedule ReportSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  report   Report?        @relation(fields: [reportId], references: [id])
+
+  @@unique([scheduleId, scheduledFor])
+}
+
+model MetricSample {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topicId              String   @db.Uuid
+  bucketStart          DateTime
+  bucketMinutes        Int
+  docCount             Int
+  sourceCount          Int
+  countryCount         Int
+  languageCount        Int
+  meanSentiment        Float?
+  negativeShare        Float?
+  sentimentSampleCount Int      @default(0)
+
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, bucketStart, bucketMinutes])
+  @@index([topicId, bucketStart(sort: Desc)])
+}
+
+model SentimentEvalItem {
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId String               @db.Uuid
+  targetType SentimentTargetType
+  targetId   String
+  language   String
+  labelA     SentimentLabel
+  labelB     SentimentLabel
+  finalLabel SentimentLabel
+  annotatorA String
+  annotatorB String
+  createdAt  DateTime             @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId      String   @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  org   Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  actor Member?      @relation(fields: [actorId], references: [id])
+
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+}
