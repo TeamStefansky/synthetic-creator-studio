@@ -1,0 +1,47 @@
+{
+  "articles": [
+    {
+      "url": "https://www.reuters.com/technology/israel-cyber-firm-raises-200m-2026-07-20/",
+      "url_mobile": "https://m.reuters.com/technology/israel-cyber-firm-raises-200m-2026-07-20/",
+      "title": "Israeli cybersecurity firm raises $200 million in new funding round",
+      "seendate": "20260720T101500Z",
+      "socialimage": "https://www.reuters.com/img/cyber.jpg",
+      "domain": "reuters.com",
+      "language": "English",
+      "sourcecountry": "United Kingdom"
+    },
+    {
+      "url": "https://apnews.com/article/israel-ai-defense-9f8a7b",
+      "title": "Israel unveils new AI-driven missile defense system",
+      "seendate": "20260720T113000Z",
+      "socialimage": "",
+      "domain": "apnews.com",
+      "language": "English",
+      "sourcecountry": "United States"
+    },
+    {
+      "url": "https://www.ynet.co.il/digital/technews/article/xyz123",
+      "title": "חברת סייבר ישראלית גייסה 200 מיליון דולר",
+      "seendate": "20260720T120000Z",
+      "socialimage": "",
+      "domain": "ynet.co.il",
+      "language": "Hebrew",
+      "sourcecountry": "Israel"
+    },
+    {
+      "url": "https://www.aljazeera.net/news/2026/7/20/cyber-israel",
+      "title": "شركة إسرائيلية للأمن السيبراني تجمع 200 مليون دولار",
+      "seendate": "20260720T121500Z",
+      "socialimage": "",
+      "domain": "aljazeera.net",
+      "language": "Arabic",
+      "sourcecountry": "Qatar"
+    },
+    {
+      "title": "This malformed record has no URL and must be skipped",
+      "seendate": "20260720T130000Z",
+      "domain": "example.com",
+      "language": "English"
+    }
+  ]
+}

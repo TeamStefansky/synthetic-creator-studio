@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "numResults": 2,
+  "articles": [
+    {
+      "articleId": "perigon-abc-123",
+      "url": "https://www.jpost.com/business/article-812345",
+      "title": "Check Point acquires cloud security startup",
+      "description": "The Israeli security giant expands its cloud portfolio with a new acquisition.",
+      "content": "Check Point Software Technologies announced on Monday it has acquired a cloud-security startup for an undisclosed sum, expanding its cloud portfolio.",
+      "pubDate": "2026-07-20T08:15:00Z",
+      "language": "en",
+      "source": {"domain": "jpost.com"},
+      "authorsByline": ["Jane Doe", "John Smith"],
+      "sentiment": {"positive": 0.62, "neutral": 0.30, "negative": 0.08},
+      "entities": [
+        {"data": "Check Point", "type": "ORG", "mentions": 3},
+        {"data": "Israel", "type": "GPE", "mentions": 1}
+      ],
+      "locations": [{"country": "Israel", "lat": 32.0853, "lon": 34.7818}],
+      "topics": [{"name": "Cybersecurity"}, {"name": "M&A"}],
+      "categories": [{"name": "Tech"}]
+    },
+    {
+      "articleId": "perigon-def-456",
+      "url": "https://www.calcalist.co.il/tech/article-99887",
+      "title": "בינה מלאכותית בשירות הביטחון",
+      "description": "כיצד מערכות בינה מלאכותית משנות את שדה הקרב.",
+      "content": "מערכות בינה מלאכותית הופכות למרכזיות במערך הביטחוני הישראלי.",
+      "pubDate": "2026-07-20T09:45:00Z",
+      "language": "he",
+      "source": {"domain": "calcalist.co.il"},
+      "authorsByline": "Reporter",
+      "sentiment": {"positive": 0.20, "neutral": 0.55, "negative": 0.25},
+      "entities": [{"data": "IDF", "type": "ORG", "mentions": 2}],
+      "locations": [],
+      "topics": [{"name": "AI"}],
+      "categories": [{"name": "Defense"}]
+    }
+  ]
+}

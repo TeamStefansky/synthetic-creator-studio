@@ -1,0 +1,21 @@
+{
+  "kind": "youtube#videoListResponse",
+  "items": [
+    {
+      "id": "vid_abc123",
+      "snippet": {
+        "defaultAudioLanguage": "en",
+        "tags": ["israel", "defense", "ai"]
+      },
+      "statistics": {"viewCount": "15234", "likeCount": "812", "commentCount": "97"}
+    },
+    {
+      "id": "vid_def456",
+      "snippet": {
+        "defaultAudioLanguage": "he",
+        "tags": ["סייבר", "ישראל"]
+      },
+      "statistics": {"viewCount": "4321", "likeCount": "230", "commentCount": "41"}
+    }
+  ]
+}

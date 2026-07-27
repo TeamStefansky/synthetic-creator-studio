@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Times of Israel — Technology</title>
+    <link>https://www.timesofisrael.com/</link>
+    <description>Technology coverage</description>
+    <language>en-us</language>
+    <item>
+      <title>Israeli startup launches quantum-safe encryption platform</title>
+      <link>https://www.timesofisrael.com/israeli-startup-quantum-safe-encryption/?utm_source=rss&amp;utm_medium=feed</link>
+      <guid isPermaLink="false">toi-0001</guid>
+      <dc:creator>Tech Desk</dc:creator>
+      <pubDate>Mon, 20 Jul 2026 09:30:00 +0000</pubDate>
+      <description>A Tel Aviv startup unveiled a platform to protect data against quantum attacks.</description>
+      <content:encoded><![CDATA[<p>A Tel Aviv startup unveiled a platform designed to protect enterprise data against future quantum-computing attacks. The company said its post-quantum cryptography stack is already in pilot with several banks.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Cybersecurity spending in Israel hits record high</title>
+      <link>https://www.timesofisrael.com/cybersecurity-spending-record/</link>
+      <guid isPermaLink="false">toi-0002</guid>
+      <dc:creator>Business Desk</dc:creator>
+      <pubDate>Mon, 20 Jul 2026 11:00:00 +0000</pubDate>
+      <description>National cybersecurity investment reached new records this quarter.</description>
+    </item>
+    <item>
+      <title>Old news item that predates the ingestion window</title>
+      <link>https://www.timesofisrael.com/old-item/</link>
+      <guid isPermaLink="false">toi-0000</guid>
+      <pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate>
+      <description>This item is older than the since cutoff used by the test.</description>
+    </item>
+  </channel>
+</rss>

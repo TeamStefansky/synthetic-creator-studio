@@ -1,0 +1,19 @@
+# NewsRadar public Telegram channel list (read-only, MTProto via Telethon).
+# Each entry: username (public @handle without the @), title, country, lang.
+# Only public channels; the connector never joins private channels or sends messages.
+
+- {username: "AlejazeeraChannel", title: "Al Jazeera", country: "QA", lang: "ar"}
+- {username: "AJABreaking", title: "Al Jazeera Breaking", country: "QA", lang: "ar"}
+- {username: "alarabiya_ar", title: "Al Arabiya", country: "AE", lang: "ar"}
+- {username: "sky_newsarabia", title: "Sky News Arabia", country: "AE", lang: "ar"}
+- {username: "amikorenn", title: "Amit Segal-style news", country: "IL", lang: "he"}
+- {username: "abualiexpress", title: "Abu Ali Express", country: "IL", lang: "he"}
+- {username: "newssil", title: "Israel News", country: "IL", lang: "he"}
+- {username: "kann_news", title: "Kan News", country: "IL", lang: "he"}
+- {username: "ynetalerts", title: "Ynet Alerts", country: "IL", lang: "he"}
+- {username: "channel13news", title: "Channel 13 News", country: "IL", lang: "he"}
+- {username: "reuters", title: "Reuters", country: "GB", lang: "en"}
+- {username: "bbcnews", title: "BBC News", country: "GB", lang: "en"}
+- {username: "cnnbrk", title: "CNN Breaking", country: "US", lang: "en"}
+- {username: "TheEconomist", title: "The Economist", country: "GB", lang: "en"}
+- {username: "disclosetv", title: "Disclose.tv", country: "US", lang: "en"}
