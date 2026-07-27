@@ -151,8 +151,20 @@ export default function NewsRoomPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load("", "all", "", ""); }, [load]);
-  const apply = () => load(q, region, keywords, countries);
+  // Filters persist across reloads until the user clears them ("stays fixed").
+  useEffect(() => {
+    let s: any = {};
+    try { s = JSON.parse(localStorage.getItem("tl:newsroom:filters") || "{}"); } catch { /* ignore */ }
+    const q0 = s.q || "", r0 = s.region || "all", k0 = s.keywords || "", c0 = s.countries || "";
+    setQ(q0); setRegion(r0); setKeywords(k0); setCountries(c0);
+    load(q0, r0, k0, c0);
+  }, [load]);
+  const persist = (query: string, reg: string, kw: string, cn: string) => {
+    try { localStorage.setItem("tl:newsroom:filters", JSON.stringify({ q: query, region: reg, keywords: kw, countries: cn })); } catch { /* ignore */ }
+  };
+  const apply = () => { persist(q, region, keywords, countries); load(q, region, keywords, countries); };
+  const pickRegion = (r: string) => { setRegion(r); persist(q, r, keywords, countries); load(q, r, keywords, countries); };
+  const clearFilters = () => { setKeywords(""); setCountries(""); persist(q, region, "", ""); load(q, region, "", ""); };
 
   const stories = data?.stories || [];
   const connectedFeeds = data?.sources?.find((s) => s.source === "rss");
@@ -171,7 +183,7 @@ export default function NewsRoomPage() {
         </p>
       </div>
 
-      <div className="card space-y-3">
+      <div className="card space-y-3 sticky top-0 z-30 shadow-lg shadow-black/20">
         <form onSubmit={(e) => { e.preventDefault(); apply(); }} className="flex gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
@@ -202,13 +214,13 @@ export default function NewsRoomPage() {
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {[{ key: "all", label: "All regions" }, ...(data?.regions || [])].map((r) => (
-            <button key={r.key} onClick={() => { setRegion(r.key); load(q, r.key, keywords, countries); }} data-active={region === r.key}
+            <button key={r.key} onClick={() => pickRegion(r.key)} data-active={region === r.key}
               className="rounded-full border border-line px-3 py-1 text-xs data-[active=true]:bg-bg-elev data-[active=true]:text-white">
               {r.label}
             </button>
           ))}
           {(keywords || countries) && (
-            <button onClick={() => { setKeywords(""); setCountries(""); load(q, region, "", ""); }}
+            <button onClick={clearFilters}
               className="rounded-full border border-line px-3 py-1 text-xs text-ink-muted hover:text-white">
               Clear filters
             </button>
