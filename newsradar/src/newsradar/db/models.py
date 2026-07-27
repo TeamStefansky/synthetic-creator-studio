@@ -487,6 +487,48 @@ class Report(Base):
 
 
 # --------------------------------------------------------------------------------------
+# Trends (P3) — a term/entity whose share of coverage is surging vs its own baseline
+# --------------------------------------------------------------------------------------
+
+
+class Trend(Base):
+    """A surging term or entity for a watchlist (distinct from an event).
+
+    A trend is detected when a term/entity's share of the watchlist's documents in
+    the current window is a multiple of its trailing-7-day share (with volume and
+    source-diversity floors). One row per ``(watchlist_id, term, term_kind)``;
+    ``first_detected_at`` is preserved across refreshes so "new trend" alerts can
+    fire exactly once.
+    """
+
+    __tablename__ = "trends"
+    __table_args__ = (
+        UniqueConstraint("watchlist_id", "term", "term_kind", name="uq_trends_wl_term_kind"),
+        Index("ix_trends_watchlist", "watchlist_id"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    watchlist_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("watchlists.id", ondelete="CASCADE"), nullable=False
+    )
+    term: Mapped[str] = mapped_column(Text, nullable=False)
+    term_kind: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'topic'"))
+    current_share: Mapped[float] = mapped_column(Float, nullable=False, server_default=text("0"))
+    baseline_share: Mapped[float] = mapped_column(Float, nullable=False, server_default=text("0"))
+    lift: Mapped[float] = mapped_column(Float, nullable=False, server_default=text("0"))
+    doc_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    source_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    representative_event_ids: Mapped[list[uuid.UUID] | None] = mapped_column(
+        ARRAY(UUID(as_uuid=True)), nullable=True
+    )
+    first_detected_at: Mapped[dt.datetime] = mapped_column(
+        _tstz(), nullable=False, server_default=func.now()
+    )
+    created_at: Mapped[dt.datetime] = created_at_col()
+    updated_at: Mapped[dt.datetime] = updated_at_col()
+
+
+# --------------------------------------------------------------------------------------
 # Ingestion bookkeeping (P1)
 # --------------------------------------------------------------------------------------
 
