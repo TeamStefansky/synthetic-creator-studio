@@ -26,6 +26,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
@@ -480,3 +481,35 @@ class Report(Base):
     )
 
     schedule: Mapped[ReportSchedule | None] = relationship(back_populates="reports")
+
+
+# --------------------------------------------------------------------------------------
+# Ingestion bookkeeping (P1)
+# --------------------------------------------------------------------------------------
+
+
+class IngestionRun(Base):
+    """One connector×watchlist ingestion run, with per-run counters for observability."""
+
+    __tablename__ = "ingestion_runs"
+    __table_args__ = (
+        Index("ix_ingestion_runs_started_at", text("started_at DESC")),
+        Index("ix_ingestion_runs_connector", "connector"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    connector: Mapped[str] = mapped_column(Text, nullable=False)
+    watchlist_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("watchlists.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'running'"))
+    fetched: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    inserted: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    duplicates: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    errors: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    started_at: Mapped[dt.datetime] = mapped_column(
+        _tstz(), nullable=False, server_default=func.now()
+    )
+    finished_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    detail: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
