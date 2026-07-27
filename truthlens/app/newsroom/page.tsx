@@ -1,13 +1,14 @@
 "use client";
 
-// NEWS ROOM — an English news feed built from the SAME sources TruthLens uses
-// (your Connections feeds + built-in news APIs, via /api/newsroom). Article-grade
-// cards: source logo + name, thumbnail, translated headline, time. Every card keeps
-// its outbound link to the ORIGINAL article and a capped extract — never a rehosted
-// body. Images and favicons are hotlinked, never downloaded or re-hosted.
+// NEWS ROOM — an English news feed, Google-News "Full Coverage" style: related
+// articles are clustered into STORIES, each shown as a headline plus the outlets
+// covering it. Built from the SAME sources TruthLens uses (Connections feeds +
+// built-in news APIs, via /api/newsroom). Headlines auto-translated; every card
+// keeps its source logo/name and an outbound link to the ORIGINAL article; images
+// and favicons are hotlinked, never downloaded or re-hosted.
 
 import { useCallback, useEffect, useState } from "react";
-import { Newspaper, Search, Loader2, ExternalLink, Languages, Rss } from "lucide-react";
+import { Newspaper, Search, Loader2, ExternalLink, Languages, Rss, Layers } from "lucide-react";
 import Link from "next/link";
 import Disclaimer from "@/components/Disclaimer";
 
@@ -16,10 +17,11 @@ interface NewsItem {
   lang?: string; timestamp?: string; title: string; extract?: string; region: string;
   image?: string; favicon?: string; domain?: string;
 }
+interface Story { title: string; region: string; sourceCount: number; items: NewsItem[] }
 interface NewsResponse {
-  query: string | null; region: string; count: number;
+  query: string | null; region: string; count: number; storyCount: number;
   regions: { key: string; label: string }[];
-  items: NewsItem[];
+  stories: Story[];
   sources: { source: string; connected: boolean; count?: number; reason?: string }[];
   error?: string;
 }
@@ -45,77 +47,75 @@ function Thumb({ item, className }: { item: NewsItem; className: string }) {
   const [failed, setFailed] = useState(false);
   if (item.image && !failed) {
     // eslint-disable-next-line @next/next/no-img-element
-    return (
-      <img src={item.image} alt="" loading="lazy" referrerPolicy="no-referrer"
-        onError={() => setFailed(true)} className={`${className} object-cover`} />
-    );
+    return <img src={item.image} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} className={`${className} object-cover`} />;
   }
   return (
     <div className={`${className} grid place-items-center bg-gradient-to-br from-white/[0.06] to-white/[0.01]`}>
-      {item.favicon ? (
+      {item.favicon
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.favicon} alt="" referrerPolicy="no-referrer" className="h-7 w-7 opacity-60" />
-      ) : (
-        <Newspaper className="h-7 w-7 text-ink-muted" />
-      )}
+        ? <img src={item.favicon} alt="" referrerPolicy="no-referrer" className="h-6 w-6 opacity-60" />
+        : <Newspaper className="h-6 w-6 text-ink-muted" />}
     </div>
   );
 }
 
-function SourceStrip({ it }: { it: NewsItem }) {
+function SourceRow({ it }: { it: NewsItem }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-ink-muted">
+    <div className="flex items-center gap-1.5 text-[11px] text-ink-secondary">
       {it.favicon && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={it.favicon} alt="" referrerPolicy="no-referrer" className="h-3.5 w-3.5 rounded-sm" />
+        <img src={it.favicon} alt="" referrerPolicy="no-referrer" className="h-4 w-4 rounded-sm" />
       )}
-      <span className="font-medium text-ink-secondary">{it.outlet}</span>
-      {it.country && <span>· {it.country}</span>}
-      {it.timestamp && <span>· {timeAgo(it.timestamp)}</span>}
+      <span className="font-medium">{it.outlet}</span>
       {it.lang && !it.lang.toLowerCase().startsWith("en") && (
-        <span className="inline-flex items-center gap-0.5 rounded border border-brand/30 px-1 text-brand-soft">
-          <Languages className="h-3 w-3" /> {langLabel(it.lang)}→EN
+        <span className="inline-flex items-center gap-0.5 rounded border border-brand/30 px-1 text-[10px] text-brand-soft">
+          <Languages className="h-2.5 w-2.5" /> {langLabel(it.lang)}→EN
         </span>
       )}
     </div>
   );
 }
 
-function Wrap({ it, children }: { it: NewsItem; children: React.ReactNode }) {
-  return it.url ? (
-    <a href={it.url} target="_blank" rel="noopener noreferrer" className="group block">{children}</a>
-  ) : (
-    <div>{children}</div>
-  );
-}
-
-function LeadCard({ it }: { it: NewsItem }) {
-  return (
-    <Wrap it={it}>
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] transition group-hover:border-brand/40">
-        <Thumb item={it} className="aspect-[16/7] w-full" />
-        <div className="p-4 sm:p-5">
-          <SourceStrip it={it} />
-          <h2 className="mt-1.5 font-display text-2xl font-bold leading-tight text-ink" dir="auto">{it.title}</h2>
-          {it.extract && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-secondary line-clamp-2" dir="auto">{it.extract}</p>}
-          {it.url && <span className="mt-2 inline-flex items-center gap-1 text-xs text-brand-soft">Read on {it.outlet} <ExternalLink className="h-3 w-3" /></span>}
+// One outlet's coverage of a story — matches the Google-News source card.
+function MemberCard({ it }: { it: NewsItem }) {
+  const inner = (
+    <div className="flex gap-3">
+      <div className="min-w-0 flex-1">
+        <SourceRow it={it} />
+        <h4 className="mt-1 text-[15px] font-semibold leading-snug text-ink line-clamp-3 group-hover:text-brand-soft" dir="auto">{it.title}</h4>
+        <div className="mt-1 flex items-center gap-1 text-[11px] text-ink-muted">
+          {it.country && <span>{it.country} · </span>}<span>{timeAgo(it.timestamp)}</span>
         </div>
       </div>
-    </Wrap>
+      <Thumb item={it} className="h-16 w-24 shrink-0 rounded-lg" />
+    </div>
   );
+  return it.url
+    ? <a href={it.url} target="_blank" rel="noopener noreferrer" className="group block">{inner}</a>
+    : <div>{inner}</div>;
 }
 
-function Card({ it }: { it: NewsItem }) {
+function StoryBlock({ story }: { story: Story }) {
+  const [open, setOpen] = useState(false);
+  const multi = story.items.length > 1;
+  const shown = open ? story.items : story.items.slice(0, 4);
   return (
-    <Wrap it={it}>
-      <div className="flex h-full gap-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-3 transition group-hover:border-brand/40 group-hover:bg-white/[0.04]">
-        <div className="min-w-0 flex-1">
-          <SourceStrip it={it} />
-          <h3 className="mt-1 font-display text-[15px] font-semibold leading-snug text-ink line-clamp-3" dir="auto">{it.title}</h3>
+    <section className="card">
+      <h3 className="font-display text-lg font-bold leading-tight text-ink" dir="auto">{story.title}</h3>
+      {multi && (
+        <div className="mt-1 flex items-center gap-1 text-[11px] uppercase tracking-wide text-ink-muted">
+          <Layers className="h-3 w-3" /> {story.sourceCount} source{story.sourceCount > 1 ? "s" : ""}
         </div>
-        <Thumb item={it} className="h-20 w-24 shrink-0 rounded-lg" />
+      )}
+      <div className="mt-3 grid gap-x-6 gap-y-4 border-t border-white/5 pt-3 sm:grid-cols-2">
+        {shown.map((it, i) => <MemberCard key={`${it.url || it.title}-${i}`} it={it} />)}
       </div>
-    </Wrap>
+      {story.items.length > 4 && (
+        <button onClick={() => setOpen((v) => !v)} className="btn-ghost mt-3 w-full justify-center text-xs">
+          {open ? "Show less" : `View full coverage (${story.items.length})`}
+        </button>
+      )}
+    </section>
   );
 }
 
@@ -139,8 +139,7 @@ export default function NewsRoomPage() {
 
   useEffect(() => { load("", "all"); }, [load]);
 
-  const items = data?.items || [];
-  const [lead, ...rest] = items;
+  const stories = data?.stories || [];
   const connectedFeeds = data?.sources?.find((s) => s.source === "rss");
 
   return (
@@ -153,7 +152,7 @@ export default function NewsRoomPage() {
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
           Your news, in English — from every source TruthLens is connected to (your{" "}
           <Link href="/connections" className="text-brand-soft hover:underline">Connections feeds</Link>{" "}
-          + the built-in news APIs). Headlines auto-translated; every story links to the original.
+          + built-in news APIs). Related articles are grouped into stories; every card links to the original.
         </p>
       </div>
 
@@ -190,7 +189,7 @@ export default function NewsRoomPage() {
       {err && <div className="card text-sm text-risk-high">{err}</div>}
       {loading && !data && <div className="card text-sm text-ink-secondary">Loading the news room…</div>}
 
-      {data && items.length === 0 && !loading && (
+      {data && stories.length === 0 && !loading && (
         <div className="card text-sm text-ink-secondary">
           {q ? "No stories matched that search across the connected sources." : (
             <>Your front page is empty. Add news sites under <Link href="/connections" className="text-brand-soft hover:underline">Connections</Link> and they’ll appear here, translated to English.</>
@@ -198,12 +197,9 @@ export default function NewsRoomPage() {
         </div>
       )}
 
-      {items.length > 0 && (
+      {stories.length > 0 && (
         <div className="space-y-4">
-          {lead && <LeadCard it={lead} />}
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {rest.map((it, i) => <Card key={`${it.url || it.title}-${i}`} it={it} />)}
-          </div>
+          {stories.map((s, i) => <StoryBlock key={`${s.title}-${i}`} story={s} />)}
         </div>
       )}
 
