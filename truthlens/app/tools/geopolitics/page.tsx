@@ -32,6 +32,7 @@ export default function GeopoliticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [region, setRegion] = useState<string>("all");
+  const [kind, setKind] = useState<string>("all");
 
   useEffect(() => {
     (async () => {
@@ -49,9 +50,19 @@ export default function GeopoliticsPage() {
     })();
   }, []);
 
-  const events = useMemo(
+  const regionEvents = useMemo(
     () => (result?.events || []).filter((e) => region === "all" || e.region === region),
     [result, region],
+  );
+  // Event-kind chips (built from what's actually present, in a stable order).
+  const eventKinds = useMemo(() => {
+    const order = ["conflict", "humanitarian", "disaster", "news", "fire", "spaceweather", "aviation"];
+    const present = new Set<string>(regionEvents.map((e) => e.kind));
+    return order.filter((k) => present.has(k));
+  }, [regionEvents]);
+  const events = useMemo(
+    () => regionEvents.filter((e) => kind === "all" || e.kind === kind),
+    [regionEvents, kind],
   );
   const forecasts = useMemo(
     () => (result?.forecasts || []).filter((e) => region === "all" || e.region === region),
@@ -87,7 +98,7 @@ export default function GeopoliticsPage() {
               <div className="text-lg font-bold">{result.total} signals</div>
               <div className="flex flex-wrap gap-1.5">
                 {[{ key: "all", label: "All regions" }, ...result.byRegion].map((r: any) => (
-                  <button key={r.key} onClick={() => setRegion(r.key)}
+                  <button key={r.key} onClick={() => { setRegion(r.key); setKind("all"); }}
                     data-active={region === r.key}
                     className="pill-seg rounded-full border border-line px-3 py-1 text-xs data-[active=true]:bg-bg-elev data-[active=true]:text-white">
                     {r.label}{typeof r.count === "number" ? ` · ${r.count}` : ""}
@@ -169,7 +180,18 @@ export default function GeopoliticsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {/* events */}
             <div className="card">
-              <div className="label-muted mb-2 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Events (conflict · humanitarian · disaster · news · fire · space weather · aviation)</div>
+              <div className="label-muted mb-2 flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> Events</div>
+              {eventKinds.length > 1 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {["all", ...eventKinds].map((k) => (
+                    <button key={k} onClick={() => setKind(k)} data-active={kind === k}
+                      className="rounded-full border border-line px-2.5 py-0.5 text-[11px] data-[active=true]:bg-bg-elev data-[active=true]:text-white"
+                      style={kind === k && k !== "all" ? { borderColor: KIND_COLOR[k], color: KIND_COLOR[k] } : undefined}>
+                      {k === "all" ? "All" : KIND_LABEL[k] || k}
+                    </button>
+                  ))}
+                </div>
+              )}
               {events.length === 0 ? (
                 <p className="text-sm text-ink-secondary">No events in this region.</p>
               ) : (
