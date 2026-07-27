@@ -133,6 +133,38 @@ class ImportResultStatus(enum.StrEnum):
     error = "error"
 
 
+class TranslationField(enum.StrEnum):
+    """Which field of a document a translation row carries (P6)."""
+
+    # ``title`` shadows ``str.title``; the member is intentional (DB value "title").
+    title = "title"  # type: ignore[assignment]
+    extract = "extract"
+    body = "body"
+
+
+class StoryType(enum.StrEnum):
+    """A reader story is either a corroborated event or a standalone document (P6)."""
+
+    event = "event"
+    document = "document"
+
+
+class ShareScope(enum.StrEnum):
+    """What a share link exposes (P6)."""
+
+    site = "site"
+    edition = "edition"
+    interest = "interest"
+    digest = "digest"
+
+
+class ReportType(enum.StrEnum):
+    """Analyst monitoring report vs. the reader's headline digest (P6)."""
+
+    analyst = "analyst"
+    headline_digest = "headline_digest"
+
+
 def _tstz() -> DateTime:
     """Timezone-aware timestamp column type (``TIMESTAMPTZ``)."""
 
@@ -531,6 +563,12 @@ class ReportSchedule(Base):
     format: Mapped[ReportFormat] = mapped_column(
         _pg_enum(ReportFormat, "report_format"), nullable=False
     )
+    # P6: analyst monitoring report (default, unchanged) vs. reader headline digest.
+    report_type: Mapped[ReportType] = mapped_column(
+        _pg_enum(ReportType, "report_type"),
+        nullable=False,
+        server_default=text("'analyst'"),
+    )
     lookback_hours: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("24"))
     active: Mapped[bool] = mapped_column(nullable=False, server_default=text("true"))
     last_run_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
@@ -549,6 +587,12 @@ class Report(Base):
     period_start: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
     period_end: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
     generated_at: Mapped[dt.datetime] = created_at_col()
+    # P6: mirrors the schedule's report_type so a stored report knows its kind.
+    report_type: Mapped[ReportType] = mapped_column(
+        _pg_enum(ReportType, "report_type"),
+        nullable=False,
+        server_default=text("'analyst'"),
+    )
     markdown: Mapped[str | None] = mapped_column(Text, nullable=True)
     html: Mapped[str | None] = mapped_column(Text, nullable=True)
     artifact_path: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -793,4 +837,121 @@ class ApiSource(Base):
     country_filter: Mapped[list[str] | None] = mapped_column(ARRAY(CHAR(2)), nullable=True)
     lang_filter: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     extra_params: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[dt.datetime] = created_at_col()
+
+
+# --------------------------------------------------------------------------------------
+# Reader layer (P6): translations, editions, share links
+# --------------------------------------------------------------------------------------
+
+
+class Translation(Base):
+    """A cached translation of one document field into a target language.
+
+    The cache is keyed by ``content_hash`` (sha256 of the *source* text) rather
+    than by document id, so re-ingesting the same article never costs a second
+    translation. English-source fields are copied through with
+    ``model='passthrough'`` (zero tokens); a failed translation keeps the original
+    text with ``model='failed'`` so a headline is never blank.
+    """
+
+    __tablename__ = "translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "document_id", "target_lang", "field", name="uq_translations_doc_lang_field"
+        ),
+        Index("ix_translations_hash_field", "content_hash", "field", "target_lang"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), nullable=False
+    )
+    target_lang: Mapped[str] = mapped_column(String(8), nullable=False)
+    field: Mapped[TranslationField] = mapped_column(
+        _pg_enum(TranslationField, "translation_field"), nullable=False
+    )
+    source_lang: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    model: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str] = mapped_column(CHAR(64), nullable=False)
+    created_at: Mapped[dt.datetime] = created_at_col()
+
+
+class Edition(Base):
+    """An immutable, ranked, source-diverse front-page snapshot.
+
+    Editions are never mutated after creation; ``current`` is the most recent.
+    ``config_snapshot`` records the exact tunables the build used, so a snapshot
+    is fully reproducible and auditable.
+    """
+
+    __tablename__ = "editions"
+    __table_args__ = (Index("ix_editions_generated_at", text("generated_at DESC")),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    generated_at: Mapped[dt.datetime] = mapped_column(
+        _tstz(), nullable=False, server_default=func.now()
+    )
+    lookback_hours: Mapped[int] = mapped_column(Integer, nullable=False)
+    item_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    config_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+    items: Mapped[list[EditionItem]] = relationship(
+        back_populates="edition", cascade="all, delete-orphan"
+    )
+
+
+class EditionItem(Base):
+    """One placed story within an edition (immutable once its edition commits)."""
+
+    __tablename__ = "edition_items"
+    __table_args__ = (
+        CheckConstraint(
+            "(event_id IS NOT NULL)::int + (document_id IS NOT NULL)::int = 1",
+            name="ck_edition_items_one_target",
+        ),
+        Index("ix_edition_items_edition", "edition_id"),
+    )
+
+    edition_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("editions.id", ondelete="CASCADE"), primary_key=True
+    )
+    position: Mapped[int] = mapped_column(Integer, primary_key=True)
+    section: Mapped[str] = mapped_column(Text, nullable=False)
+    story_type: Mapped[StoryType] = mapped_column(
+        _pg_enum(StoryType, "story_type"), nullable=False
+    )
+    event_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE"), nullable=True
+    )
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), nullable=True
+    )
+    personal_score: Mapped[float] = mapped_column(Float, nullable=False, server_default=text("0"))
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    blurb: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    edition: Mapped[Edition] = relationship(back_populates="items")
+
+
+class ShareLink(Base):
+    """An unauthenticated, unguessable, revocable public access token (P6).
+
+    ``token`` is 256-bit (``secrets.token_urlsafe(32)`` → 43 url-safe chars).
+    A revoked (``revoked_at``) or expired (``expires_at``) link returns 410.
+    """
+
+    __tablename__ = "share_links"
+    __table_args__ = (Index("ix_share_links_token", "token"),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    token: Mapped[str] = mapped_column(CHAR(43), unique=True, nullable=False)
+    scope: Mapped[ShareScope] = mapped_column(_pg_enum(ShareScope, "share_scope"), nullable=False)
+    target_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    label: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+    revoked_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+    view_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    last_viewed_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
     created_at: Mapped[dt.datetime] = created_at_col()
