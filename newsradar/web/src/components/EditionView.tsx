@@ -21,7 +21,7 @@ export function EditionView({ sections, readOnly }: Props) {
     readOnly ? undefined : `${storyHref(it.story)}#coverage`;
 
   return (
-    <div className="space-y-14" onClick={() => void 0}>
+    <div className="space-y-14">
       {sections.map((section) => {
         const [lead, ...rest] = section.items;
         if (!lead) return null;

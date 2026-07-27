@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/client";
 import type { Page, ReportDetailOut, ReportSummaryOut } from "@/lib/api/types";
@@ -20,7 +20,10 @@ export default function DigestPage() {
       apiFetch<Page<ReportSummaryOut>>("/reports", { query: { limit: 50, offset: 0 } }),
   });
 
-  const digests = (list.data?.items ?? []).filter((r) => r.report_type === "headline_digest");
+  const digests = useMemo(
+    () => (list.data?.items ?? []).filter((r) => r.report_type === "headline_digest"),
+    [list.data],
+  );
 
   useEffect(() => {
     if (!selectedId && digests.length) setSelectedId(digests[0]!.id);
