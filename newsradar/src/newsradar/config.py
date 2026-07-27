@@ -82,6 +82,16 @@ class Settings(BaseSettings):
     # Directory where rendered PDF report artifacts are written.
     report_artifact_dir: str = "artifacts"
 
+    # --- Reader product (P6): editions, translation, digest, public sharing ---
+    edition_interval_minutes: int = 30
+    edition_size: int = 60
+    edition_lookback_hours: int = 36
+    edition_recency_halflife_hours: float = 8.0
+    edition_max_source_share: float = 0.30
+    reader_target_lang: str = "en"
+    digest_hour: int = 7
+    public_rate_limit_per_min: int = 60
+
     # --- Observability ---
     log_level: str = "INFO"
 
