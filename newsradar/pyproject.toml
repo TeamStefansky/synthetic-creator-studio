@@ -83,6 +83,10 @@ module = [
     "py3langid.*",
     "telethon.*",
     "yaml.*",
+    "sentence_transformers.*",
+    "torch.*",
+    "sklearn.*",
+    "hdbscan.*",
 ]
 ignore_missing_imports = true
 
