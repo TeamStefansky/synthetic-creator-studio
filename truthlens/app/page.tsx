@@ -30,17 +30,7 @@ export default function HomePage() {
           <UrlInput />
         </div>
 
-        {/* How to read the score - the band legend that otherwise only lived on /about */}
-        <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/[0.08] p-4 text-left shadow-soft">
-          <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-secondary">How to read the score</div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-risk-legit" /><span className="text-ink-secondary"><span className="font-semibold text-risk-legit">0–35</span> Likely legitimate</span></div>
-            <div className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-risk-unknown" /><span className="text-ink-secondary"><span className="font-semibold text-risk-unknown">36–65</span> Unknown</span></div>
-            <div className="flex items-center gap-2 text-xs"><span className="h-2 w-2 rounded-full bg-risk-high" /><span className="text-ink-secondary"><span className="font-semibold text-risk-high">66–100</span> High risk</span></div>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-4 max-w-xl">
+        <div className="mx-auto mt-6 max-w-xl">
           <Disclaimer variant="inline" />
         </div>
       </section>
