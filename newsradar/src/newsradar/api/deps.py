@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+import uuid
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from newsradar.db.session import get_sessionmaker
+from newsradar.feeds.http import Fetcher, HttpFetcher
 from newsradar.llm.client import LLMClient, default_llm_client
+from newsradar.pipeline.embed import Embedder, default_embedder
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
@@ -28,6 +31,37 @@ def get_report_llm() -> LLMClient:
     """
 
     return default_llm_client()
+
+
+def get_embedder() -> Embedder:
+    """Return the embedder used to embed interest descriptions.
+
+    A dependency seam so tests inject the deterministic ``HashingEmbedder``
+    (the real ``multilingual-e5-large`` model cannot download in CI).
+    """
+
+    return default_embedder()
+
+
+def get_fetcher() -> Fetcher:
+    """Return the HTTP fetcher for feed discovery (overridden with a recorded one in tests)."""
+
+    return HttpFetcher()
+
+
+def get_batch_dispatch() -> Callable[[uuid.UUID, list[str]], Awaitable[None]]:
+    """Return the batch-import dispatcher.
+
+    Production enqueues the Celery task (returns immediately); tests override this
+    to run the batch inline against recorded fixtures.
+    """
+
+    async def _dispatch(job_id: uuid.UUID, lines: list[str]) -> None:
+        from newsradar.tasks.sources import import_sources
+
+        import_sources.delay(str(job_id), lines)
+
+    return _dispatch
 
 
 @dataclass(frozen=True)

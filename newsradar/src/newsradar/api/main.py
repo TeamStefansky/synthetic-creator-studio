@@ -12,7 +12,9 @@ from sqlalchemy import text
 from newsradar.api.routers.alerts import router as alerts_router
 from newsradar.api.routers.connectors import router as connectors_router
 from newsradar.api.routers.events import router as events_router
+from newsradar.api.routers.interests import router as interests_router
 from newsradar.api.routers.reports import router as reports_router
+from newsradar.api.routers.sources import router as sources_router
 from newsradar.api.routers.watchlists import router as watchlists_router
 from newsradar.config import get_settings
 from newsradar.db.session import get_engine
@@ -41,6 +43,8 @@ app.include_router(watchlists_router)
 app.include_router(events_router)
 app.include_router(reports_router)
 app.include_router(alerts_router)
+app.include_router(sources_router)
+app.include_router(interests_router)
 
 
 async def _check_db() -> bool:
