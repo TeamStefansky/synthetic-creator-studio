@@ -145,3 +145,30 @@ async def has_tier1_source(session: AsyncSession, event_id: uuid.UUID) -> bool:
     """Whether the event currently has at least one tier-1 source (for tier1_pickup)."""
 
     return await tier1_share(session, event_id) > 0.0
+
+
+_HAS_TIER1_ASOF_SQL = text(
+    """
+    SELECT EXISTS (
+        SELECT 1
+        FROM event_documents ed
+        JOIN documents d ON d.id = ed.document_id AND d.dedup_of IS NULL
+        JOIN sources s ON s.id = d.source_id
+        WHERE ed.event_id = :event_id
+          AND s.tier = 1
+          AND coalesce(d.published_at, d.fetched_at) <= CAST(:asof AS timestamptz)
+    ) AS has_t1
+    """
+)
+
+
+async def has_tier1_source_asof(
+    session: AsyncSession, event_id: uuid.UUID, asof: dt.datetime
+) -> bool:
+    """Whether the event had a tier-1 source as of ``asof`` (for tier1_pickup crossing)."""
+
+    return bool(
+        (
+            await session.execute(_HAS_TIER1_ASOF_SQL, {"event_id": event_id, "asof": asof})
+        ).scalar_one()
+    )
