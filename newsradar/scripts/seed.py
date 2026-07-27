@@ -20,10 +20,12 @@ from newsradar.db.models import (
     Source,
     Watchlist,
     WatchlistEntity,
+    WatchlistKind,
     WatchlistTerm,
 )
 from newsradar.db.session import get_engine, get_sessionmaker
 from newsradar.logging import configure_logging, get_logger
+from newsradar.reports.digest_service import ensure_digest_schedule
 
 log = get_logger("newsradar.seed")
 
@@ -176,6 +178,25 @@ async def _seed_watchlist(session: AsyncSession) -> None:
         await session.execute(pg_insert(WatchlistEntity).values(new_entities))
 
 
+async def _seed_digest_schedule(session: AsyncSession) -> None:
+    """Ensure a default reader interest exists and seed the 07:00 digest schedule."""
+
+    interest = (
+        await session.execute(
+            select(Watchlist).where(Watchlist.kind == WatchlistKind.interest).limit(1)
+        )
+    ).scalar_one_or_none()
+    if interest is None:
+        interest = Watchlist(
+            name="World news (default interest)",
+            description="Default reader interest seeded for the headline digest.",
+            kind=WatchlistKind.interest,
+        )
+        session.add(interest)
+        await session.commit()
+    await ensure_digest_schedule(session, watchlist_id=interest.id)
+
+
 async def main() -> None:
     configure_logging()
     factory = get_sessionmaker()
@@ -183,6 +204,7 @@ async def main() -> None:
         await _seed_sources(session)
         await _seed_watchlist(session)
         await session.commit()
+        await _seed_digest_schedule(session)
 
         source_count = (await session.execute(select(Source.id))).scalars().all()
         term_count = (await session.execute(select(WatchlistTerm.id))).scalars().all()

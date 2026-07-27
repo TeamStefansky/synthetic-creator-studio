@@ -16,10 +16,11 @@ import argparse
 import asyncio
 import uuid
 
-from newsradar.db.models import Report
+from newsradar.db.models import Report, ReportType
 from newsradar.db.session import get_sessionmaker
 from newsradar.reports.audit import extract_markdown_numbers, unmatched_numbers
 from newsradar.reports.builder import build_report_context
+from newsradar.reports.digest_builder import build_digest_context
 
 
 async def _audit(report_id: uuid.UUID) -> int:
@@ -37,16 +38,23 @@ async def _audit(report_id: uuid.UUID) -> int:
             return 1
 
         lookback = int((report.period_end - report.period_start).total_seconds() // 3600) or 24
-        context = await build_report_context(
-            session,
-            watchlist_id=report.watchlist_id,
-            lookback_hours=lookback,
-            sections=[],
-            now=report.period_end,
-        )
+        if report.report_type == ReportType.headline_digest:
+            numeric_values = (
+                await build_digest_context(session, lookback_hours=lookback, now=report.period_end)
+            ).numeric_values()
+        else:
+            numeric_values = (
+                await build_report_context(
+                    session,
+                    watchlist_id=report.watchlist_id,
+                    lookback_hours=lookback,
+                    sections=[],
+                    now=report.period_end,
+                )
+            ).numeric_values()
 
     figures = extract_markdown_numbers(report.markdown)
-    unmatched = unmatched_numbers(report.markdown, context.numeric_values())
+    unmatched = unmatched_numbers(report.markdown, numeric_values)
     print(f"report {report_id}: {len(figures)} figures checked, {len(unmatched)} unaccounted for")
     if unmatched:
         print("UNACCOUNTED FIGURES (possible hallucinations):", sorted(unmatched))

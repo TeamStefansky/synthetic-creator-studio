@@ -17,9 +17,10 @@ from celery.schedules import schedule
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from newsradar.db.models import ReportSchedule
+from newsradar.db.models import ReportSchedule, ReportType
 from newsradar.llm.client import LLMClient, default_llm_client
 from newsradar.logging import get_logger
+from newsradar.reports.digest_service import generate_and_store_digest
 from newsradar.reports.scheduling import next_due
 from newsradar.reports.service import generate_and_store_report
 from newsradar.tasks.celery_app import celery_app
@@ -61,24 +62,39 @@ async def run_due_schedules(
         if due_at is None:
             continue
         try:
-            run = await generate_and_store_report(
-                session,
-                llm,
-                watchlist_id=sched.watchlist_id,
-                lookback_hours=sched.lookback_hours,
-                sections=list(sched.sections or DEFAULT_SECTIONS),
-                schedule_id=sched.id,
-                recipients=sched.recipients,
-                now=now,
-                deliver=deliver,
-                render_pdf=render_pdf,
-            )
+            if sched.report_type == ReportType.headline_digest:
+                digest = await generate_and_store_digest(
+                    session,
+                    llm,
+                    lookback_hours=sched.lookback_hours,
+                    schedule_id=sched.id,
+                    recipients=sched.recipients,
+                    watchlist_id=sched.watchlist_id,
+                    now=now,
+                    deliver=deliver,
+                    render_pdf=render_pdf,
+                )
+                report_id = digest.report_id
+            else:
+                run = await generate_and_store_report(
+                    session,
+                    llm,
+                    watchlist_id=sched.watchlist_id,
+                    lookback_hours=sched.lookback_hours,
+                    sections=list(sched.sections or DEFAULT_SECTIONS),
+                    schedule_id=sched.id,
+                    recipients=sched.recipients,
+                    now=now,
+                    deliver=deliver,
+                    render_pdf=render_pdf,
+                )
+                report_id = run.report_id
         except Exception as exc:  # noqa: BLE001 - one bad schedule must not stall others
             log.warning("report.schedule_failed", schedule_id=str(sched.id), error=str(exc))
             continue
         sched.last_run_at = now
         await session.commit()
-        generated.append(str(run.report_id))
+        generated.append(str(report_id))
 
     return generated
 

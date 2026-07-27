@@ -141,6 +141,7 @@ class ReportSummaryOut(BaseModel):
     id: uuid.UUID
     watchlist_id: uuid.UUID
     schedule_id: uuid.UUID | None
+    report_type: str = "analyst"
     period_start: dt.datetime | None
     period_end: dt.datetime | None
     generated_at: dt.datetime
@@ -158,7 +159,10 @@ class ReportDetailOut(ReportSummaryOut):
 
 
 class GenerateReportIn(BaseModel):
-    watchlist_id: uuid.UUID
+    # watchlist_id is required for analyst reports; optional for a headline_digest
+    # (which spans all interests and anchors to the first interest).
+    watchlist_id: uuid.UUID | None = None
+    report_type: str = Field(default="analyst", pattern="^(analyst|headline_digest)$")
     lookback_hours: int = Field(default=24, ge=1, le=720)
     sections: list[str] = Field(
         default_factory=lambda: ["overview", "hot_events", "trends", "negative_coverage", "geo"]
@@ -173,6 +177,7 @@ class ReportScheduleIn(BaseModel):
     sections: list[str] | None = None
     recipients: dict[str, object] | None = None
     format: str = "markdown"
+    report_type: str = Field(default="analyst", pattern="^(analyst|headline_digest)$")
     lookback_hours: int = Field(default=24, ge=1, le=720)
     active: bool = True
 
@@ -199,6 +204,7 @@ class ReportScheduleOut(BaseModel):
     sections: list[str] | None
     recipients: dict[str, object] | None
     format: str
+    report_type: str = "analyst"
     lookback_hours: int
     active: bool
     last_run_at: dt.datetime | None

@@ -18,7 +18,7 @@ from newsradar.api.schemas import (
     ReportSchedulePatch,
     ReportSummaryOut,
 )
-from newsradar.db.models import Report, ReportFormat, ReportSchedule
+from newsradar.db.models import Report, ReportFormat, ReportSchedule, ReportType
 from newsradar.llm.client import LLMClient
 from newsradar.reports.service import generate_and_store_report
 
@@ -89,7 +89,27 @@ async def generate_report(
     session: AsyncSession = Depends(get_session),
     llm: LLMClient = Depends(get_report_llm),
 ) -> ReportSummaryOut:
-    """Generate a report ad hoc (synchronous) and return its summary."""
+    """Generate a report ad hoc (synchronous) and return its summary.
+
+    ``report_type='headline_digest'`` builds the reader digest (all interests);
+    the default ``analyst`` path is unchanged and requires ``watchlist_id``.
+    """
+
+    if body.report_type == "headline_digest":
+        from newsradar.reports.digest_service import generate_and_store_digest
+
+        try:
+            digest = await generate_and_store_digest(
+                session, llm, lookback_hours=body.lookback_hours, deliver=False
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        report = await session.get(Report, digest.report_id)
+        assert report is not None
+        return _summary(report)
+
+    if body.watchlist_id is None:
+        raise HTTPException(status_code=422, detail="watchlist_id is required for analyst reports")
 
     run = await generate_and_store_report(
         session,
@@ -150,6 +170,7 @@ async def create_schedule(
         sections=body.sections,
         recipients=body.recipients,
         format=ReportFormat(body.format),
+        report_type=ReportType(body.report_type),
         lookback_hours=body.lookback_hours,
         active=body.active,
     )
