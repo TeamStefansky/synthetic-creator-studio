@@ -85,7 +85,7 @@ function Wordmark() {
   return (
     <Link href="/" className="group flex items-center" aria-label="TruthLens">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-wordmark.svg" alt="TruthLens" className="h-5 w-auto transition group-hover:opacity-90" />
+      <img src="/logo-monogram.svg" alt="TruthLens" className="h-9 w-auto transition group-hover:scale-105" />
     </Link>
   );
 }
