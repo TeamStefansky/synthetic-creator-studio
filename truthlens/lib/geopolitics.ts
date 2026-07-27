@@ -13,6 +13,7 @@ import { getJson, getText } from "@/lib/http";
 import type { SourceStatus } from "./narrative/types";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { safeFetchText, parseFeed, type FeedItem } from "@/lib/feeds/fetch";
+import { translateFeedItems } from "@/lib/translate";
 import {
   listFeeds, feedsConnected, normalizeFeedUrl,
   FEED_FETCH_BUDGET, MAX_ITEMS_PER_FEED, FEED_CACHE_TTL_MS,
@@ -451,7 +452,9 @@ const feeds: GeoSource = {
         let items = await cacheGet<FeedItem[]>(ck, FEED_CACHE_TTL_MS);
         if (!items) {
           const res = await safeFetchText(feed.url, { etag: feed.etag, lastModified: feed.lastModified });
-          items = res.notModified ? [] : parseFeed(res.text).items.slice(0, MAX_ITEMS_PER_FEED);
+          // Translate to English so a mixed-language source set is readable (once per
+          // feed per day; cached with the items; fails open to the original language).
+          items = res.notModified ? [] : await translateFeedItems(parseFeed(res.text).items.slice(0, MAX_ITEMS_PER_FEED));
           await cacheSet(ck, items);
         }
         const host = feed.url.split("/")[2] || feed.url;

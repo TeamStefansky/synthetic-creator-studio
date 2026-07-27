@@ -9,6 +9,7 @@ import { getJson, getText } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import type { Mention, SourceStatus } from "./types";
 import { safeFetchText, parseFeed, type FeedItem } from "@/lib/feeds/fetch";
+import { translateFeedItems } from "@/lib/translate";
 import {
   listFeeds, recordFeedStatuses, normalizeFeedUrl, feedsConnected,
   FEED_FETCH_BUDGET, MAX_ITEMS_PER_FEED, FEED_CACHE_TTL_MS, type FeedStatus,
@@ -163,7 +164,13 @@ const rss: NarrativeSource = {
         if (!items) {
           const res = await safeFetchText(feed.url, { etag: feed.etag, lastModified: feed.lastModified });
           if (res.notModified) { items = []; }
-          else { const parsed = parseFeed(res.text); items = parsed.items.slice(0, MAX_ITEMS_PER_FEED); etag = res.etag; lastModified = res.lastModified; }
+          else {
+            const parsed = parseFeed(res.text);
+            // Translate headlines/summaries to English so a mixed-language source set
+            // is readable (once per feed per day; cached with the items; fails open).
+            items = await translateFeedItems(parsed.items.slice(0, MAX_ITEMS_PER_FEED));
+            etag = res.etag; lastModified = res.lastModified;
+          }
           await cacheSet(ck, items);
         }
         const host = feed.url.split("/")[2] || feed.url;
