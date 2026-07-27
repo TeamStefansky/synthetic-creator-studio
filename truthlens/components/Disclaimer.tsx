@@ -11,8 +11,7 @@ export default function Disclaimer({
       <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm text-yellow-200/90">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
-          Decision-support tool - <strong>not a verdict</strong>. We surface
-          verifiable infrastructure facts and compute a risk score from
+          We surface verifiable infrastructure facts and compute a risk score from
           observable signals. &ldquo;Unknown&rdquo; is a valid, common result.
         </span>
       </div>
