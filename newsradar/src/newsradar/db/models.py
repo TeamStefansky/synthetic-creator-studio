@@ -90,6 +90,49 @@ class ReportFormat(enum.StrEnum):
     pdf = "pdf"
 
 
+class ContentRights(enum.StrEnum):
+    """What a source's licensing lets us persist. Default is always the safest tier."""
+
+    link_only = "link_only"  # title + <=300 char extract; body stays NULL
+    extract_ok = "extract_ok"  # title + <=400 char extract; body stays NULL
+    full_ok = "full_ok"  # full body may be stored
+
+
+class WatchlistKind(enum.StrEnum):
+    """A watchlist is either an internal monitoring list or a personal interest."""
+
+    monitoring = "monitoring"
+    interest = "interest"
+
+
+class CountryMatchMode(enum.StrEnum):
+    """Which country question an interest asks (source-based, subject-based, or either)."""
+
+    source = "source"  # where the outlet is based (sources.country_code)
+    subject = "subject"  # what the story is about (document_enrichment.geo.country_code)
+    either = "either"
+
+
+class ApiProvider(enum.StrEnum):
+    gdelt = "gdelt"
+    perigon = "perigon"
+
+
+class ImportJobStatus(enum.StrEnum):
+    pending = "pending"
+    running = "running"
+    done = "done"
+    failed = "failed"
+
+
+class ImportResultStatus(enum.StrEnum):
+    added = "added"
+    duplicate = "duplicate"
+    no_feed = "no_feed"
+    invalid = "invalid"
+    error = "error"
+
+
 def _tstz() -> DateTime:
     """Timezone-aware timestamp column type (``TIMESTAMPTZ``)."""
 
@@ -133,15 +176,26 @@ class Source(Base):
     credibility_score: Mapped[float] = mapped_column(
         Float, nullable=False, server_default=text("0.5")
     )
+    # Legacy boolean gate (P1). Retained for backward compatibility; the
+    # authoritative licensing gate is ``content_rights`` from P5 onward.
     allows_fulltext_storage: Mapped[bool] = mapped_column(
         nullable=False, server_default=text("false")
     )
+    # P5 licensing gate. Default is always the safest tier; upgrading is a
+    # deliberate manual API action (never inferred from a feed).
+    content_rights: Mapped[ContentRights] = mapped_column(
+        _pg_enum(ContentRights, "content_rights"),
+        nullable=False,
+        server_default=text("'link_only'"),
+    )
+    rights_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     active: Mapped[bool] = mapped_column(nullable=False, server_default=text("true"))
     meta: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[dt.datetime] = created_at_col()
     updated_at: Mapped[dt.datetime] = updated_at_col()
 
     documents: Mapped[list[Document]] = relationship(back_populates="source")
+    feed_subscriptions: Mapped[list[FeedSubscription]] = relationship(back_populates="source")
 
 
 class Watchlist(Base):
@@ -152,6 +206,28 @@ class Watchlist(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     lang_filter: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     country_filter: Mapped[list[str] | None] = mapped_column(ARRAY(CHAR(2)), nullable=True)
+    # P5: a watchlist is either an internal monitoring list or a personal interest.
+    kind: Mapped[WatchlistKind] = mapped_column(
+        _pg_enum(WatchlistKind, "watchlist_kind"),
+        nullable=False,
+        server_default=text("'monitoring'"),
+    )
+    # P5 interest targeting. ``source_country`` = where the outlet is based
+    # (``sources.country_code``); ``subject_country`` = what the story is about
+    # (``document_enrichment.geo.country_code``). These are DIFFERENT questions.
+    source_country_filter: Mapped[list[str] | None] = mapped_column(ARRAY(CHAR(2)), nullable=True)
+    subject_country_filter: Mapped[list[str] | None] = mapped_column(ARRAY(CHAR(2)), nullable=True)
+    country_match_mode: Mapped[CountryMatchMode] = mapped_column(
+        _pg_enum(CountryMatchMode, "country_match_mode"),
+        nullable=False,
+        server_default=text("'either'"),
+    )
+    # P5 hybrid matching: embedding of ``"query: " + description`` and the
+    # minimum cosine similarity for a semantic-only interest match.
+    description_embedding: Mapped[Any | None] = mapped_column(Vector(1024), nullable=True)
+    min_semantic_similarity: Mapped[float] = mapped_column(
+        Float, nullable=False, server_default=text("0.78")
+    )
     active: Mapped[bool] = mapped_column(nullable=False, server_default=text("true"))
     created_at: Mapped[dt.datetime] = created_at_col()
     updated_at: Mapped[dt.datetime] = updated_at_col()
@@ -582,3 +658,139 @@ class LlmCall(Base):
     created_at: Mapped[dt.datetime] = mapped_column(
         _tstz(), nullable=False, server_default=func.now()
     )
+
+
+# --------------------------------------------------------------------------------------
+# Sources layer (P5): presentation metadata, feed subscriptions, batch import, API sources
+# --------------------------------------------------------------------------------------
+
+
+class DocumentMedia(Base):
+    """Presentation metadata for a document so P7 can render article-grade cards.
+
+    Only the image *URL* is stored — images are never downloaded, cached, resized
+    or re-hosted (hotlinking with attribution is the legally safe posture).
+    """
+
+    __tablename__ = "document_media"
+
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True
+    )
+    image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    image_height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    image_alt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    og_title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    og_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    og_site_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    favicon_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    byline: Mapped[str | None] = mapped_column(Text, nullable=True)
+    frameable: Mapped[bool | None] = mapped_column(nullable=True)
+    fetched_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+
+
+class DomainFrameability(Base):
+    """Per-domain cache of whether the domain permits us to iframe its pages.
+
+    Re-checked monthly; ``frameable`` is NULL when it could not be determined.
+    """
+
+    __tablename__ = "domain_frameability"
+
+    domain: Mapped[str] = mapped_column(Text, primary_key=True)
+    frameable: Mapped[bool | None] = mapped_column(nullable=True)
+    checked_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+
+
+class FeedSubscription(Base):
+    """One subscribed RSS/Atom feed, polled alongside ``config/feeds.yaml``."""
+
+    __tablename__ = "feed_subscriptions"
+    __table_args__ = (Index("ix_feed_subscriptions_source", "source_id"),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    source_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("sources.id", ondelete="CASCADE"), nullable=False
+    )
+    feed_url: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    country_code: Mapped[str | None] = mapped_column(CHAR(2), nullable=True)
+    lang: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    poll_interval_seconds: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("600")
+    )
+    active: Mapped[bool] = mapped_column(nullable=False, server_default=text("true"))
+    last_polled_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+    last_ok_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+    consecutive_failures: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0")
+    )
+    etag: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_modified: Mapped[str | None] = mapped_column(Text, nullable=True)
+    deactivated_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[dt.datetime] = created_at_col()
+
+    source: Mapped[Source] = relationship(back_populates="feed_subscriptions")
+
+
+class SourceImportJob(Base):
+    """A batch source-onboarding job (up to 500 pasted lines / an OPML upload)."""
+
+    __tablename__ = "source_import_jobs"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    status: Mapped[ImportJobStatus] = mapped_column(
+        _pg_enum(ImportJobStatus, "import_job_status"),
+        nullable=False,
+        server_default=text("'pending'"),
+    )
+    total: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    processed: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    created_at: Mapped[dt.datetime] = created_at_col()
+    finished_at: Mapped[dt.datetime | None] = mapped_column(_tstz(), nullable=True)
+
+    results: Mapped[list[SourceImportResult]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
+    )
+
+
+class SourceImportResult(Base):
+    """The per-line outcome of a batch source-onboarding job."""
+
+    __tablename__ = "source_import_results"
+    __table_args__ = (Index("ix_source_import_results_job", "job_id"),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    job_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("source_import_jobs.id", ondelete="CASCADE"), nullable=False
+    )
+    input_line: Mapped[str] = mapped_column(Text, nullable=False)
+    normalized_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[ImportResultStatus] = mapped_column(
+        _pg_enum(ImportResultStatus, "import_result_status"), nullable=False
+    )
+    feed_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    title: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    job: Mapped[SourceImportJob] = relationship(back_populates="results")
+
+
+class ApiSource(Base):
+    """A global-provider (GDELT/Perigon) query scope, so the user can pull from a
+    provider scoped to chosen countries without subscribing to individual outlets."""
+
+    __tablename__ = "api_sources"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    provider: Mapped[ApiProvider] = mapped_column(
+        _pg_enum(ApiProvider, "api_provider"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    enabled: Mapped[bool] = mapped_column(nullable=False, server_default=text("true"))
+    country_filter: Mapped[list[str] | None] = mapped_column(ARRAY(CHAR(2)), nullable=True)
+    lang_filter: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    extra_params: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[dt.datetime] = created_at_col()
