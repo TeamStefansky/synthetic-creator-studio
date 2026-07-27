@@ -97,11 +97,19 @@ class RssConnector(BaseConnector):
     required_env = ()
 
     def __init__(
-        self, settings: Settings | None = None, feeds: list[dict[str, Any]] | None = None
+        self,
+        settings: Settings | None = None,
+        feeds: list[dict[str, Any]] | None = None,
+        *,
+        poll_subscriptions: bool = True,
     ) -> None:
         self._settings = settings or get_settings()
         self._feeds = feeds if feeds is not None else load_yaml_list(feeds_path(self._settings))
         self._bucket = TokenBucket(rate=5.0, capacity=10.0)
+        # Poll DB-backed feed_subscriptions (P5) in addition to config/feeds.yaml.
+        # Disabled when a static feed list is injected (tests) so behaviour is
+        # unchanged for the config-file path.
+        self._poll_subscriptions = poll_subscriptions and feeds is None
 
     def _selected_feeds(self, query: WatchlistQuery) -> Iterable[dict[str, Any]]:
         for feed in self._feeds:
@@ -140,6 +148,38 @@ class RssConnector(BaseConnector):
                 if doc.published_at is not None and doc.published_at < since:
                     continue
                 yield doc
+
+        # P5: also poll DB-backed feed subscriptions (conditional GET + failure tracking).
+        if self._poll_subscriptions:
+            async for doc in self._fetch_subscriptions(query, since):
+                yield doc
+
+    async def _fetch_subscriptions(
+        self, query: WatchlistQuery, since: dt.datetime
+    ) -> AsyncIterator[RawDocument]:
+        # Imported lazily to keep the connector import-light and DB-free until used.
+        from newsradar.db.session import get_sessionmaker
+        from newsradar.feeds.http import HttpFetcher
+        from newsradar.feeds.polling import poll_subscriptions
+
+        factory = get_sessionmaker()
+        fetcher = HttpFetcher(self._settings)
+        try:
+            async with factory() as session:
+                docs = await poll_subscriptions(
+                    session,
+                    fetcher,
+                    since,
+                    lang_filter=query.lang_filter,
+                    country_filter=query.country_filter,
+                )
+        except Exception as exc:  # noqa: BLE001 - subscription polling must not abort the run
+            log.warning("connector.rss.subscriptions_failed", error=str(exc))
+            return
+        finally:
+            await fetcher.aclose()
+        for doc in docs:
+            yield doc
 
     async def health_check(self) -> HealthStatus:
         if not self._feeds:
