@@ -919,9 +919,7 @@ class EditionItem(Base):
     )
     position: Mapped[int] = mapped_column(Integer, primary_key=True)
     section: Mapped[str] = mapped_column(Text, nullable=False)
-    story_type: Mapped[StoryType] = mapped_column(
-        _pg_enum(StoryType, "story_type"), nullable=False
-    )
+    story_type: Mapped[StoryType] = mapped_column(_pg_enum(StoryType, "story_type"), nullable=False)
     event_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("events.id", ondelete="CASCADE"), nullable=True
     )
