@@ -215,6 +215,35 @@ async def story_from_edition_item(
     )
 
 
+async def edition_stories(
+    session: AsyncSession,
+    edition: Edition,
+    *,
+    section: str | None = None,
+    target_lang: str = "en",
+) -> list[StoryOut]:
+    """Flat list of an edition's stories (optionally one section) for feeds/scopes."""
+
+    conditions = [EditionItem.edition_id == edition.id]
+    if section is not None:
+        conditions.append(EditionItem.section == section)
+    items = (
+        (
+            await session.execute(
+                select(EditionItem).where(*conditions).order_by(EditionItem.position)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    stories: list[StoryOut] = []
+    for item in items:
+        story = await story_from_edition_item(session, item, target_lang=target_lang)
+        if story is not None:
+            stories.append(story)
+    return stories
+
+
 async def serialize_edition(
     session: AsyncSession, edition: Edition, *, target_lang: str = "en"
 ) -> EditionOut:
