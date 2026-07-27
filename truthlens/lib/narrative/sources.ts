@@ -183,7 +183,7 @@ const rss: NarrativeSource = {
             source: "rss", id: it.guid || it.link || it.title,
             text: `${it.title}. ${it.summary || ""}`.trim().replace(/\.$/, ""),
             url: it.link, account: feed.title || host, accountId: host,
-            lang: it.lang, timestamp: it.timestamp,
+            lang: it.lang, timestamp: it.timestamp, image: it.image,
           });
         }
         statuses.push({ url: feed.url, status: items.length ? "ok" : "empty", itemCount: kept, etag, lastModified });

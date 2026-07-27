@@ -13,6 +13,7 @@ export interface Mention {
   lang?: string;
   country?: string; // source country when the source reports it (e.g. GDELT)
   accountCreatedAt?: string; // ISO - when the source/enrichment exposes it (e.g. Bluesky)
+  image?: string; // article image URL when the source provides one - hotlinked, never re-hosted
   engagement?: number;
 }
 

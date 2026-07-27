@@ -50,6 +50,18 @@ describe("parseFeed", () => {
     expect(f.items[0].summary).toBe("Hello & world");
     expect(f.items[0].timestamp).toMatch(/^2026-07-01T/);
   });
+  it("extracts an item image from media:content / enclosure / img", () => {
+    const xml = `<?xml version="1.0"?><rss version="2.0"><channel><title>Pix</title>
+      <item><title>Media content</title><link>https://ex.com/a</link><media:content url="https://cdn.ex.com/a.jpg" medium="image"/></item>
+      <item><title>Enclosure</title><link>https://ex.com/b</link><enclosure url="https://cdn.ex.com/b.png" type="image/png"/></item>
+      <item><title>Img in body</title><link>https://ex.com/c</link><description><![CDATA[<p><img src="https://cdn.ex.com/c.webp"/> hi</p>]]></description></item>
+      <item><title>No image</title><link>https://ex.com/d</link></item></channel></rss>`;
+    const f = parseFeed(xml);
+    expect(f.items[0].image).toBe("https://cdn.ex.com/a.jpg");
+    expect(f.items[1].image).toBe("https://cdn.ex.com/b.png");
+    expect(f.items[2].image).toBe("https://cdn.ex.com/c.webp");
+    expect(f.items[3].image).toBeUndefined();
+  });
   it("parses Atom", () => {
     const xml = `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Atom Feed</title><link href="https://a.com"/>
       <entry><title>Entry one</title><link href="https://a.com/1"/><id>u1</id><summary>Sum one</summary><updated>2026-07-02T10:00:00Z</updated></entry></feed>`;

@@ -14,7 +14,7 @@ export const MAX_BYTES = 2_000_000;   // 2 MB cap per feed
 export const FETCH_TIMEOUT_MS = 12_000;
 export const PREVIEW_ITEMS = 5;
 
-export interface FeedItem { title: string; link?: string; guid?: string; summary?: string; timestamp?: string; lang?: string }
+export interface FeedItem { title: string; link?: string; guid?: string; summary?: string; timestamp?: string; lang?: string; image?: string }
 export interface ParsedFeed { title?: string; siteUrl?: string; items: FeedItem[]; kind: "rss" | "atom" }
 
 // ---- SSRF guard --------------------------------------------------------------
@@ -248,6 +248,23 @@ function toIso(v?: string): string | undefined {
   return isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
+/** The first plausible article image URL declared in a feed item — media:content /
+ * media:thumbnail, an image <enclosure>, an Atom enclosure link, or an <img> in the
+ * HTML body. URL only; the image is hotlinked at render, never downloaded/re-hosted. */
+function extractImage(block: string): string | undefined {
+  const pick = (re: RegExp): string | undefined => {
+    const m = block.match(re);
+    return m && /^https?:\/\//i.test(m[1]) ? m[1] : undefined;
+  };
+  return (
+    pick(/<media:(?:content|thumbnail)\b[^>]*\burl=["']([^"']+)["']/i) ||
+    pick(/<enclosure\b[^>]*\btype=["']image\/[^"']*["'][^>]*\burl=["']([^"']+)["']/i) ||
+    pick(/<enclosure\b[^>]*\burl=["']([^"']+\.(?:jpe?g|png|webp|gif)[^"']*)["']/i) ||
+    pick(/<link\b[^>]*\brel=["']enclosure["'][^>]*\bhref=["']([^"']+\.(?:jpe?g|png|webp|gif)[^"']*)["']/i) ||
+    pick(/<img\b[^>]*\bsrc=["']([^"']+)["']/i)
+  );
+}
+
 /** Parse an RSS 2.0 or Atom document. Throws when it is neither (so an invalid
  * feed is rejected and never saved). Titles/summaries are sanitized. */
 export function parseFeed(xml: string): ParsedFeed {
@@ -267,6 +284,7 @@ export function parseFeed(xml: string): ParsedFeed {
         guid: sanitizeText(tag(block, "id"), 300) || undefined,
         summary: sanitizeText(tag(block, "summary") || tag(block, "content"), 500) || undefined,
         timestamp: toIso(tag(block, "updated") || tag(block, "published")),
+        image: extractImage(block),
       });
     }
     return { title, siteUrl, items, kind: "atom" };
@@ -285,6 +303,7 @@ export function parseFeed(xml: string): ParsedFeed {
       guid: sanitizeText(tag(block, "guid"), 300) || undefined,
       summary: sanitizeText(tag(block, "description"), 500) || undefined,
       timestamp: toIso(tag(block, "pubDate") || tag(block, "dc:date")),
+      image: extractImage(block),
     });
   }
   if (!items.length && !title) throw new Error("This URL does not look like an RSS or Atom feed.");

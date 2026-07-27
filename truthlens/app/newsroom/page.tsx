@@ -1,9 +1,10 @@
 "use client";
 
-// NEWS ROOM — an English-language reading surface built from the SAME sources the
-// rest of TruthLens uses (your Connections feeds + every built-in news source, via
-// /api/newsroom). Every headline is translated to English; every card keeps its
-// source attribution and a link to the ORIGINAL article (never a rehosted body).
+// NEWS ROOM — an English news feed built from the SAME sources TruthLens uses
+// (your Connections feeds + built-in news APIs, via /api/newsroom). Article-grade
+// cards: source logo + name, thumbnail, translated headline, time. Every card keeps
+// its outbound link to the ORIGINAL article and a capped extract — never a rehosted
+// body. Images and favicons are hotlinked, never downloaded or re-hosted.
 
 import { useCallback, useEffect, useState } from "react";
 import { Newspaper, Search, Loader2, ExternalLink, Languages, Rss } from "lucide-react";
@@ -13,6 +14,7 @@ import Disclaimer from "@/components/Disclaimer";
 interface NewsItem {
   source: string; outlet: string; url?: string; country?: string;
   lang?: string; timestamp?: string; title: string; extract?: string; region: string;
+  image?: string; favicon?: string; domain?: string;
 }
 interface NewsResponse {
   query: string | null; region: string; count: number;
@@ -39,42 +41,81 @@ const timeAgo = (ts?: string) => {
   return `${Math.round(h / 24)}d ago`;
 };
 
+function Thumb({ item, className }: { item: NewsItem; className: string }) {
+  const [failed, setFailed] = useState(false);
+  if (item.image && !failed) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img src={item.image} alt="" loading="lazy" referrerPolicy="no-referrer"
+        onError={() => setFailed(true)} className={`${className} object-cover`} />
+    );
+  }
+  return (
+    <div className={`${className} grid place-items-center bg-gradient-to-br from-white/[0.06] to-white/[0.01]`}>
+      {item.favicon ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.favicon} alt="" referrerPolicy="no-referrer" className="h-7 w-7 opacity-60" />
+      ) : (
+        <Newspaper className="h-7 w-7 text-ink-muted" />
+      )}
+    </div>
+  );
+}
+
 function SourceStrip({ it }: { it: NewsItem }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-ink-muted">
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-ink-muted">
+      {it.favicon && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={it.favicon} alt="" referrerPolicy="no-referrer" className="h-3.5 w-3.5 rounded-sm" />
+      )}
       <span className="font-medium text-ink-secondary">{it.outlet}</span>
       {it.country && <span>· {it.country}</span>}
       {it.timestamp && <span>· {timeAgo(it.timestamp)}</span>}
       {it.lang && !it.lang.toLowerCase().startsWith("en") && (
-        <span className="inline-flex items-center gap-1 rounded border border-brand/30 px-1 text-brand-soft">
-          <Languages className="h-3 w-3" /> Translated from {langLabel(it.lang)}
+        <span className="inline-flex items-center gap-0.5 rounded border border-brand/30 px-1 text-brand-soft">
+          <Languages className="h-3 w-3" /> {langLabel(it.lang)}→EN
         </span>
       )}
     </div>
   );
 }
 
-function Card({ it, lead }: { it: NewsItem; lead?: boolean }) {
-  const Body = (
-    <>
-      <SourceStrip it={it} />
-      <h3 className={`mt-1 font-display font-semibold text-ink ${lead ? "text-xl" : "text-[15px]"}`} dir="auto">
-        {it.title}
-      </h3>
-      {it.extract && <p className="mt-1 text-sm leading-relaxed text-ink-secondary line-clamp-3" dir="auto">{it.extract}</p>}
-      {it.url && (
-        <span className="mt-2 inline-flex items-center gap-1 text-xs text-brand-soft">
-          Read on {it.outlet} <ExternalLink className="h-3 w-3" />
-        </span>
-      )}
-    </>
-  );
+function Wrap({ it, children }: { it: NewsItem; children: React.ReactNode }) {
   return it.url ? (
-    <a href={it.url} target="_blank" rel="noopener noreferrer" className="block rounded-xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-brand/40 hover:bg-white/[0.04]">
-      {Body}
-    </a>
+    <a href={it.url} target="_blank" rel="noopener noreferrer" className="group block">{children}</a>
   ) : (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">{Body}</div>
+    <div>{children}</div>
+  );
+}
+
+function LeadCard({ it }: { it: NewsItem }) {
+  return (
+    <Wrap it={it}>
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] transition group-hover:border-brand/40">
+        <Thumb item={it} className="aspect-[16/7] w-full" />
+        <div className="p-4 sm:p-5">
+          <SourceStrip it={it} />
+          <h2 className="mt-1.5 font-display text-2xl font-bold leading-tight text-ink" dir="auto">{it.title}</h2>
+          {it.extract && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink-secondary line-clamp-2" dir="auto">{it.extract}</p>}
+          {it.url && <span className="mt-2 inline-flex items-center gap-1 text-xs text-brand-soft">Read on {it.outlet} <ExternalLink className="h-3 w-3" /></span>}
+        </div>
+      </div>
+    </Wrap>
+  );
+}
+
+function Card({ it }: { it: NewsItem }) {
+  return (
+    <Wrap it={it}>
+      <div className="flex h-full gap-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-3 transition group-hover:border-brand/40 group-hover:bg-white/[0.04]">
+        <div className="min-w-0 flex-1">
+          <SourceStrip it={it} />
+          <h3 className="mt-1 font-display text-[15px] font-semibold leading-snug text-ink line-clamp-3" dir="auto">{it.title}</h3>
+        </div>
+        <Thumb item={it} className="h-20 w-24 shrink-0 rounded-lg" />
+      </div>
+    </Wrap>
   );
 }
 
@@ -103,21 +144,19 @@ export default function NewsRoomPage() {
   const connectedFeeds = data?.sources?.find((s) => s.source === "rss");
 
   return (
-    <div className="animate-fade-up space-y-6" dir="ltr">
+    <div className="animate-fade-up space-y-5" dir="ltr">
       <div>
         <div className="flex items-center gap-2">
           <Newspaper className="h-6 w-6 text-brand-soft" />
           <h1 className="font-display text-2xl font-bold">News <span className="gradient-text">Room</span></h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          Your news, in English — assembled from every source TruthLens is connected to (your{" "}
+          Your news, in English — from every source TruthLens is connected to (your{" "}
           <Link href="/connections" className="text-brand-soft hover:underline">Connections feeds</Link>{" "}
-          and the built-in news APIs). Headlines are translated automatically; every story links to the original.
-          Search to pull a topic from all sources, or browse your feeds below.
+          + the built-in news APIs). Headlines auto-translated; every story links to the original.
         </p>
       </div>
 
-      {/* search + region */}
       <div className="card space-y-3">
         <form onSubmit={(e) => { e.preventDefault(); load(q, region); }} className="flex gap-2">
           <div className="relative flex-1">
@@ -161,8 +200,8 @@ export default function NewsRoomPage() {
 
       {items.length > 0 && (
         <div className="space-y-4">
-          {lead && <Card it={lead} lead />}
-          <div className="grid gap-3 sm:grid-cols-2">
+          {lead && <LeadCard it={lead} />}
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {rest.map((it, i) => <Card key={`${it.url || it.title}-${i}`} it={it} />)}
           </div>
         </div>
