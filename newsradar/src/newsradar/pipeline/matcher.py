@@ -311,3 +311,90 @@ def compile_terms(terms: Sequence[QueryTerm]) -> CompiledMatcher:
     """Alias for :func:`compile_watchlist` (accepts any sequence)."""
 
     return compile_watchlist(terms)
+
+
+# --------------------------------------------------------------------------------------
+# Interest (hybrid keyword + semantic) matching — kind='interest' ONLY.
+#
+# Monitoring (kind='monitoring') matching is CompiledMatcher.match above and is
+# never touched by anything below this line.
+# --------------------------------------------------------------------------------------
+
+SEMANTIC_SENTINEL = "__semantic__"
+
+
+def cosine_similarity(a: Sequence[float] | None, b: Sequence[float] | None) -> float | None:
+    """Cosine similarity of two vectors. Both are assumed L2-normalised (dot product).
+
+    Returns ``None`` when either vector is missing, so a missing embedding never
+    counts as a (false) semantic match.
+    """
+
+    if a is None or b is None:
+        return None
+    return float(sum(x * y for x, y in zip(a, b, strict=False)))
+
+
+def country_allows(
+    mode: str,
+    *,
+    source_country: str | None,
+    subject_country: str | None,
+    source_filter: list[str] | None,
+    subject_filter: list[str] | None,
+) -> bool:
+    """Apply an interest's country filter under ``country_match_mode``.
+
+    ``source_country`` is where the outlet is based (``sources.country_code``);
+    ``subject_country`` is what the story is about
+    (``document_enrichment.geo.country_code``) — DIFFERENT questions. A ``None``
+    filter is unconstrained (always passes); a set filter requires the relevant
+    country to be present.
+    """
+
+    source_pass = source_filter is None or (
+        source_country is not None and source_country in source_filter
+    )
+    subject_pass = subject_filter is None or (
+        subject_country is not None and subject_country in subject_filter
+    )
+    if mode == "source":
+        return source_pass
+    if mode == "subject":
+        return subject_pass
+    return source_pass or subject_pass  # 'either'
+
+
+def interest_match(
+    compiled: CompiledMatcher,
+    text: str,
+    lang: str | None,
+    *,
+    doc_embedding: Sequence[float] | None,
+    description_embedding: Sequence[float] | None,
+    min_similarity: float,
+) -> MatchResult:
+    """Hybrid match for an interest: keyword/boolean OR semantic similarity.
+
+    A document matches if the keyword matcher fires OR cosine similarity to the
+    interest's ``description_embedding`` is >= ``min_similarity``. The path is
+    recorded in ``matched_terms`` (with the :data:`SEMANTIC_SENTINEL` for a
+    semantic hit) and reflected in ``score`` so that keyword hits outrank
+    semantic-only ones. Country filtering is applied separately by the router.
+    """
+
+    keyword = compiled.match(text, lang)
+    similarity = cosine_similarity(doc_embedding, description_embedding)
+    semantic = similarity is not None and similarity >= min_similarity
+
+    if not keyword.matched and not semantic:
+        return MatchResult(matched=False, matched_terms=[], score=0.0)
+
+    matched_terms = list(keyword.matched_terms)
+    if semantic:
+        matched_terms.append(SEMANTIC_SENTINEL)
+
+    # Keyword hits always outrank semantic-only (score >= 1.0 > any similarity).
+    score = 1.0 + keyword.score if keyword.matched else float(similarity or 0.0)
+
+    return MatchResult(matched=True, matched_terms=matched_terms, score=score)

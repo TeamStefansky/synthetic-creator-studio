@@ -60,6 +60,14 @@ class Embedder(Protocol):
         """Embed a batch of passages; returns one unit vector per input."""
         ...
 
+    def embed_queries(self, texts: Sequence[str]) -> list[list[float]]:
+        """Embed a batch of *queries* (e5 ``query: `` role); returns one unit vector each.
+
+        Interest descriptions are embedded as queries and compared against
+        document (passage) embeddings by cosine similarity.
+        """
+        ...
+
 
 class HashingEmbedder:
     """Deterministic hashing (bag-of-tokens) embedder — no model download.
@@ -87,6 +95,11 @@ class HashingEmbedder:
             return []
         matrix = np.vstack([self._vector(t) for t in texts])
         return cast("list[list[float]]", _l2_normalize(matrix).tolist())
+
+    def embed_queries(self, texts: Sequence[str]) -> list[list[float]]:
+        # Bag-of-tokens is role-agnostic, so queries and passages share vector
+        # space directly — a faithful, deterministic stand-in for e5 in tests.
+        return self.embed_passages(texts)
 
 
 class SentenceTransformerEmbedder:
@@ -124,6 +137,20 @@ class SentenceTransformerEmbedder:
             return []
         model = self._load()
         prefixed = [f"passage: {t}" for t in texts]
+        vectors = model.encode(  # type: ignore[attr-defined]
+            prefixed,
+            batch_size=self._batch_size,
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+            show_progress_bar=False,
+        )
+        return [list(map(float, row)) for row in vectors]
+
+    def embed_queries(self, texts: Sequence[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        model = self._load()
+        prefixed = [f"query: {t}" for t in texts]
         vectors = model.encode(  # type: ignore[attr-defined]
             prefixed,
             batch_size=self._batch_size,
