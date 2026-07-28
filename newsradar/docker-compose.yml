@@ -1,5 +1,14 @@
 name: newsradar
 
+# Default `docker compose up -d` brings up ONLY postgres + redis (the local-dev
+# workflow the README documents: run the API/worker on the host via uv).
+#
+# The full containerized stack (api + worker + beat + web) lives behind the
+# `full` profile so it never surprises the lightweight dev flow:
+#     docker compose --profile full up -d --build
+# It uses EMBEDDING_PROVIDER=hashing by default (no torch); set your secrets in
+# a local .env (see .env.example) — compose reads it automatically.
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -21,6 +30,7 @@ services:
   redis:
     image: redis:7
     container_name: newsradar-redis
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
     ports:
       - "6380:6379"
     healthcheck:
@@ -28,6 +38,91 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # --- Full containerized stack (profile: full) ---
+  api:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: newsradar-backend:local
+    container_name: newsradar-api
+    # Run migrations, then serve. Idempotent across restarts.
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn newsradar.api.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://newsradar:newsradar@postgres:5432/newsradar
+      REDIS_URL: redis://redis:6379/0
+      EMBEDDING_PROVIDER: hashing
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    profiles: ["full"]
+    image: newsradar-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: newsradar-worker
+    command: ["celery", "-A", "newsradar.tasks.celery_app", "worker", "-l", "info", "--concurrency", "4"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://newsradar:newsradar@postgres:5432/newsradar
+      REDIS_URL: redis://redis:6379/0
+      EMBEDDING_PROVIDER: hashing
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      api:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    profiles: ["full"]
+    image: newsradar-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: newsradar-beat
+    command: ["celery", "-A", "newsradar.tasks.celery_app", "beat", "-l", "info"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://newsradar:newsradar@postgres:5432/newsradar
+      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    container_name: newsradar-web
+    environment:
+      API_BASE: http://api:8000
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_started
 
 volumes:
   newsradar_pgdata:

@@ -1,0 +1,180 @@
+# NewsRadar — Render Blueprint (Infrastructure as Code).
+#
+# Provisions the full stack: managed Postgres 16 (pgvector), a Redis instance
+# (Celery broker + result backend), the FastAPI API, a Celery worker, a Celery
+# beat scheduler, and the Next.js reader/dashboard. Apply with Render's
+# "New > Blueprint" pointed at this repo, then fill the secret env vars marked
+# `sync: false` in the dashboard.
+#
+# NOTE ON ROOT DIRECTORY: this file lives in `newsradar/`. When the repo root is
+# the monorepo root, set each service's Root Directory to `newsradar` in the
+# dashboard, or move/symlink this file to the repo root. Docker build contexts
+# below are written relative to `newsradar/`.
+#
+# The API/worker/beat share ONE Docker image (built once, three start commands).
+# Embeddings: the default image is lean and runs EMBEDDING_PROVIDER=hashing (no
+# torch). To use the real multilingual-e5-large model, rebuild with the
+# INSTALL_EMBEDDINGS=1 build arg AND set EMBEDDING_PROVIDER=sentence-transformer
+# on a plan with enough RAM (Standard+); see DEPLOY.md.
+
+databases:
+  - name: newsradar-db
+    databaseName: newsradar
+    user: newsradar
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+
+services:
+  # --- Redis: Celery broker + result backend ---
+  # noeviction so queued tasks are never dropped under memory pressure.
+  - type: redis
+    name: newsradar-redis
+    plan: starter
+    maxmemoryPolicy: noeviction
+    ipAllowList: [] # internal-only; reachable by other services in the blueprint
+
+  # --- FastAPI API ---
+  - type: web
+    name: newsradar-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: standard
+    healthCheckPath: /health
+    # Run migrations once per deploy, before traffic shifts to the new version.
+    preDeployCommand: "alembic upgrade head"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: newsradar-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: newsradar-redis
+          property: connectionString
+      - key: EMBEDDING_PROVIDER
+        value: hashing
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PERIGON_API_KEY
+        sync: false
+      - key: PERIGON_ENABLED
+        value: "false"
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_SESSION
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: CONNECTOR_USER_AGENT
+        value: "NewsRadarBot/1.0 (+https://newsradar.example/bot; contact=abuse@newsradar.example)"
+      - key: LOG_LEVEL
+        value: INFO
+
+  # --- Celery worker (ingest, enrich, cluster, reports, editions) ---
+  - type: worker
+    name: newsradar-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: standard
+    dockerCommand: "celery -A newsradar.tasks.celery_app worker -l info --concurrency 4"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: newsradar-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: newsradar-redis
+          property: connectionString
+      - key: EMBEDDING_PROVIDER
+        value: hashing
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PERIGON_API_KEY
+        sync: false
+      - key: PERIGON_ENABLED
+        value: "false"
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: TELEGRAM_SESSION
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: CONNECTOR_USER_AGENT
+        value: "NewsRadarBot/1.0 (+https://newsradar.example/bot; contact=abuse@newsradar.example)"
+      - key: LOG_LEVEL
+        value: INFO
+
+  # --- Celery beat (periodic schedule: ingest cadence, editions, digest) ---
+  - type: worker
+    name: newsradar-beat
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    dockerCommand: "celery -A newsradar.tasks.celery_app beat -l info"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: newsradar-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: newsradar-redis
+          property: connectionString
+      - key: LOG_LEVEL
+        value: INFO
+
+  # --- Next.js reader/dashboard ---
+  - type: web
+    name: newsradar-web
+    runtime: docker
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      # Both point at the API's PUBLIC https URL (e.g. https://newsradar-api.onrender.com).
+      # Set them in the dashboard AFTER the API service is created — a scheme-less
+      # internal host:port reference would break fetch(), so we don't auto-wire it.
+      # Server Components read API_BASE; the browser bundle reads NEXT_PUBLIC_API_BASE.
+      - key: API_BASE
+        sync: false
+      - key: NEXT_PUBLIC_API_BASE
+        sync: false
+    buildFilter:
+      paths:
+        - web/**

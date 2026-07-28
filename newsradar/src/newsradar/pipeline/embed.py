@@ -224,6 +224,17 @@ async def embed_documents(
 
 
 def default_embedder() -> Embedder:
-    """Build the production embedder from settings."""
+    """Build the production embedder from settings.
 
+    Honors ``EMBEDDING_PROVIDER``: the default ``"sentence-transformer"`` loads the
+    real multilingual-e5-large model; ``"hashing"`` returns the deterministic,
+    torch-free :class:`HashingEmbedder` (same 1024 dims → schema-compatible) so a
+    constrained host can run the full pipeline without the heavy ML stack. The
+    hashing provider trades semantic quality for zero model download — a real
+    deterministic embedder, never a faked one.
+    """
+
+    provider = get_settings().embedding_provider.strip().lower()
+    if provider in {"hashing", "hash"}:
+        return HashingEmbedder()
     return SentenceTransformerEmbedder()

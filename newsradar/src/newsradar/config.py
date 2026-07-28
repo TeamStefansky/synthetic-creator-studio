@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -58,6 +59,13 @@ class Settings(BaseSettings):
     # --- Embeddings ---
     embedding_model: str = "intfloat/multilingual-e5-large"
     embedding_batch_size: int = 32
+    # Which embedder the production factory (``pipeline.embed.default_embedder``)
+    # returns. "sentence-transformer" is the real multilingual-e5-large model
+    # (requires the ``embeddings`` extra + torch). "hashing" is the deterministic,
+    # dependency-free HashingEmbedder — same 1024 dims, so it is schema-compatible —
+    # for constrained hosts that cannot run torch. Lower semantic quality; documented
+    # in DEPLOY.md. NOT a fake: it is a real, deterministic bag-of-tokens embedder.
+    embedding_provider: str = "sentence-transformer"
 
     # --- LLM models & cost discipline ---
     # Cheap tier for per-document entity/sentiment/stance classification.
@@ -94,6 +102,28 @@ class Settings(BaseSettings):
 
     # --- Observability ---
     log_level: str = "INFO"
+
+    @field_validator("database_url")
+    @classmethod
+    def _force_asyncpg_driver(cls, v: str) -> str:
+        """Normalize the SQLAlchemy driver so any host's URL works.
+
+        The app and Alembic both use the async ``asyncpg`` driver, but managed
+        hosts (Render, Heroku, Railway) hand out ``postgres://`` /
+        ``postgresql://`` connection strings. Rewrite the scheme to
+        ``postgresql+asyncpg://`` unless a driver is already specified. Leaves an
+        already-qualified URL (``postgresql+asyncpg://``, or an explicit sync
+        ``postgresql+psycopg://``) untouched.
+        """
+
+        if not v:
+            return v
+        scheme, sep, rest = v.partition("://")
+        if not sep:
+            return v
+        if scheme in {"postgres", "postgresql"}:
+            return f"postgresql+asyncpg://{rest}"
+        return v
 
 
 @lru_cache(maxsize=1)
