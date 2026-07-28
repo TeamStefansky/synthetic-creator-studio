@@ -628,6 +628,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/site/story/event/{event_id}/full-coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Full Coverage
+         * @description Google-News "Full Coverage" for an event: coverage grouped into angles
+         *     (embedding sub-clusters) plus by-country and entity-targeted stance facets.
+         *     404 when the event is missing or has fewer than two distinct outlets.
+         */
+        get: operations["get_full_coverage_site_story_event__event_id__full_coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/site/refresh": {
         parameters: {
             query?: never;
@@ -1058,6 +1080,33 @@ export interface components {
             doc_count: number;
         };
         /**
+         * CountryCoverageOut
+         * @description Outlet count for one source country (where the outlet is based).
+         */
+        CountryCoverageOut: {
+            /** Country */
+            country: string | null;
+            /** Count */
+            count: number;
+        };
+        /**
+         * CoverageAngleOut
+         * @description One angle (framing sub-cluster) of an event's coverage — the Google-News
+         *     "Full Coverage" grouping. Outlets in an angle framed the story similarly
+         *     (grouped by document-embedding similarity). ``label`` is the angle's
+         *     representative headline (translated when available); attribution-only, no body.
+         */
+        CoverageAngleOut: {
+            /** Label */
+            label: string;
+            /** Outlets */
+            outlets: components["schemas"]["CoverageItemOut"][];
+            /** Size */
+            size: number;
+            /** Earliest */
+            earliest: string | null;
+        };
+        /**
          * CoverageItemOut
          * @description One outlet's coverage of an event-backed story (attribution, sorted by time).
          */
@@ -1308,6 +1357,26 @@ export interface components {
             poll_interval_seconds?: number | null;
             /** Active */
             active?: boolean | null;
+        };
+        /**
+         * FullCoverageOut
+         * @description Full-coverage breakdown for an event-backed story (P8): coverage grouped
+         *     into angles plus by-country and entity-targeted stance facets. Every outlet
+         *     carries attribution (name + original url); no body text is included.
+         */
+        FullCoverageOut: {
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Total Outlets */
+            total_outlets: number;
+            /** Angles */
+            angles: components["schemas"]["CoverageAngleOut"][];
+            /** By Country */
+            by_country: components["schemas"]["CountryCoverageOut"][];
+            stance: components["schemas"]["StanceSummaryOut"];
         };
         /** GenerateReportIn */
         GenerateReportIn: {
@@ -1925,6 +1994,24 @@ export interface components {
             evidence_span: string | null;
             /** Framing */
             framing: string | null;
+        };
+        /**
+         * StanceSummaryOut
+         * @description Entity-targeted stance breakdown across the event's coverage. Counts are of
+         *     documents; ``unassessed`` = documents with no stance row (honest — never
+         *     inferred). ``assessed`` is False when the whole event has no stance data.
+         */
+        StanceSummaryOut: {
+            /** Supportive */
+            supportive: number;
+            /** Critical */
+            critical: number;
+            /** Neutral */
+            neutral: number;
+            /** Unassessed */
+            unassessed: number;
+            /** Assessed */
+            assessed: boolean;
         };
         /**
          * StoryOut
@@ -3380,6 +3467,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_full_coverage_site_story_event__event_id__full_coverage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FullCoverageOut"];
                 };
             };
             /** @description Validation Error */

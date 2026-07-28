@@ -135,3 +135,21 @@ raw documents.
   `report_schedules`/`reports` (default `analyst`, unchanged); seeded `0 7 * * *` Asia/Jerusalem.
 - **Share tokens** are 256-bit (`secrets.token_urlsafe(32)`), revocable; the `/p` router is
   rate-limited (429 on the 61st req/min/IP) and returns 410 for revoked/expired links.
+
+## Full Coverage (P8)
+- **`site/coverage.py::build_full_coverage`** is the Google-News "Full Coverage" builder for an
+  event story: it groups the event's deduplicated documents into **angles** (framing sub-clusters)
+  and adds a **by-country** facet and an **entity-targeted stance** summary. Endpoint:
+  `GET /site/story/event/{id}/full-coverage`; 404 for a missing or single-source event.
+- **Angles are deterministic and LLM-free.** Grouping is connected-components over the cosine
+  similarity graph of the embeddings already computed in the pipeline (threshold
+  `COVERAGE_ANGLE_SIM_THRESHOLD`, default 0.90) — identical input → identical angles. Angle labels
+  are the representative document's **translated headline** (fallback: original title), never a
+  generated phrase. Reuses embeddings; **no new LLM cost** (respects the cost-discipline hard rule).
+- **Rights + attribution.** Full Coverage lists outlet name + original url only (no body). Labels
+  are headlines (titles are shown at every content-rights tier), so it does not bypass the
+  `to_story_out` body gate.
+- **Stance is honest, never inferred.** Counts come only from stored `stance_assessments` (mean per
+  document across the watchlist's entities); a document with no stance row is `unassessed`, and the
+  whole facet reports `assessed=False` when the event has no stance data. The reader UI shows the
+  stance bar only when assessed, otherwise a "not assessed" note.

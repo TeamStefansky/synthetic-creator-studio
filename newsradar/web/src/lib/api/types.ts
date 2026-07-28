@@ -8,6 +8,10 @@ type S = components["schemas"];
 
 export type StoryOut = S["StoryOut"];
 export type CoverageItemOut = S["CoverageItemOut"];
+export type FullCoverageOut = S["FullCoverageOut"];
+export type CoverageAngleOut = S["CoverageAngleOut"];
+export type CountryCoverageOut = S["CountryCoverageOut"];
+export type StanceSummaryOut = S["StanceSummaryOut"];
 export type EditionOut = S["EditionOut"];
 export type EditionItemOut = S["EditionItemOut"];
 export type EditionSummaryOut = S["EditionSummaryOut"];

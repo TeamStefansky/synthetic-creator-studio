@@ -18,6 +18,7 @@ from newsradar.api.deps import Pagination, get_report_llm, get_session, paginati
 from newsradar.api.schemas import (
     EditionOut,
     EditionSummaryOut,
+    FullCoverageOut,
     Page,
     ShareLinkCreateIn,
     ShareLinkOut,
@@ -26,6 +27,7 @@ from newsradar.api.schemas import (
 from newsradar.config import get_settings
 from newsradar.db.models import Edition, ShareLink, ShareScope
 from newsradar.llm.client import LLMClient
+from newsradar.site.coverage import build_full_coverage
 from newsradar.site.edition import build_edition, current_edition
 from newsradar.site.feeds import render_atom, render_json_feed, render_rss
 from newsradar.site.serializers import edition_stories, serialize_edition, to_story_out
@@ -109,6 +111,23 @@ async def get_story(
     if story is None:
         raise HTTPException(status_code=404, detail="story not found")
     return story
+
+
+@router.get("/site/story/event/{event_id}/full-coverage", response_model=FullCoverageOut)
+async def get_full_coverage(
+    event_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),
+) -> FullCoverageOut:
+    """Google-News "Full Coverage" for an event: coverage grouped into angles
+    (embedding sub-clusters) plus by-country and entity-targeted stance facets.
+    404 when the event is missing or has fewer than two distinct outlets."""
+
+    coverage = await build_full_coverage(session, event_id, target_lang=_lang())
+    if coverage is None:
+        raise HTTPException(
+            status_code=404, detail="no full coverage — event missing or single-source"
+        )
+    return coverage
 
 
 @router.post("/site/refresh", response_model=EditionSummaryOut, status_code=201)

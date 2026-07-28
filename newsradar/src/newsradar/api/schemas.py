@@ -451,6 +451,52 @@ class CoverageItemOut(BaseModel):
     source_country: str | None
 
 
+class CoverageAngleOut(BaseModel):
+    """One angle (framing sub-cluster) of an event's coverage — the Google-News
+    "Full Coverage" grouping. Outlets in an angle framed the story similarly
+    (grouped by document-embedding similarity). ``label`` is the angle's
+    representative headline (translated when available); attribution-only, no body.
+    """
+
+    label: str
+    outlets: list[CoverageItemOut]
+    size: int
+    earliest: dt.datetime | None
+
+
+class CountryCoverageOut(BaseModel):
+    """Outlet count for one source country (where the outlet is based)."""
+
+    country: str | None
+    count: int
+
+
+class StanceSummaryOut(BaseModel):
+    """Entity-targeted stance breakdown across the event's coverage. Counts are of
+    documents; ``unassessed`` = documents with no stance row (honest — never
+    inferred). ``assessed`` is False when the whole event has no stance data.
+    """
+
+    supportive: int
+    critical: int
+    neutral: int
+    unassessed: int
+    assessed: bool
+
+
+class FullCoverageOut(BaseModel):
+    """Full-coverage breakdown for an event-backed story (P8): coverage grouped
+    into angles plus by-country and entity-targeted stance facets. Every outlet
+    carries attribution (name + original url); no body text is included.
+    """
+
+    event_id: uuid.UUID
+    total_outlets: int
+    angles: list[CoverageAngleOut]
+    by_country: list[CountryCoverageOut]
+    stance: StanceSummaryOut
+
+
 class StoryOut(BaseModel):
     """The single reader story payload. Built ONLY by ``site.serializers.to_story_out``.
 

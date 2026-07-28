@@ -39,6 +39,18 @@ export const t = {
     backToFront: "Back to front page",
     byline: (name: string) => `By ${name}`,
     fullText: "Full article",
+    fullCoverage: "Full coverage",
+    fullCoverageIntro:
+      "How different outlets framed this story, grouped by angle. Attribution only — open any outlet to read it there.",
+    angleOutlets: (n: number) => `${n} ${n === 1 ? "outlet" : "outlets"}`,
+    byCountry: "Where it was covered",
+    stanceHeading: "Coverage toward the monitored entity",
+    stanceSupportive: "Supportive",
+    stanceCritical: "Critical",
+    stanceNeutral: "Neutral",
+    stanceUnassessed: "Not assessed",
+    stanceNotAssessed:
+      "Stance toward the monitored entity has not been assessed for this coverage.",
   },
   translation: {
     tag: (lang: string) => `Translated from ${lang}`,

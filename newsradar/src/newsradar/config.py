@@ -100,6 +100,14 @@ class Settings(BaseSettings):
     digest_hour: int = 7
     public_rate_limit_per_min: int = 60
 
+    # --- Full Coverage (P8): angle sub-clustering within one event ---
+    # Documents of one event whose embeddings are within this cosine similarity
+    # are grouped into the same "angle" (framing). Higher than the event-merge
+    # threshold because we are splitting an already-coherent event into finer
+    # framings; deterministic (connected components), so identical input → identical
+    # angles.
+    coverage_angle_sim_threshold: float = 0.90
+
     # --- Observability ---
     log_level: str = "INFO"
 
