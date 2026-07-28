@@ -3,11 +3,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { ShieldAlert, ShieldCheck, Server, HelpCircle, ArrowRight, Network as NetIcon } from "lucide-react";
 import type { OriginExposureReport, OriginExposureBand } from "@/lib/origin-exposure";
-import type { OperatorNetwork } from "@/lib/types";
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import NetworkGraph from "@/components/NetworkGraph";
 import { flagEmoji, countryName } from "@/lib/countries";
+import { buildOriginExposureNetwork } from "@/lib/origin-map";
 import { recordSearch } from "@/lib/clues/record";
 
 // "🇮🇱 Tel Aviv, Israel" for a record's geo (blank when unknown).
@@ -76,37 +76,9 @@ export default function OriginExposurePage() {
 
   // Origin network: domain -> subdomains -> exposed/historical IPs (with geo on
   // the IP label). Shared IPs connect multiple subdomains automatically. Rendered
-  // as the OSINT-style force-directed graph.
-  const originNetwork = useMemo<OperatorNetwork>(() => {
-    const nodes = new Map<string, OperatorNetwork["nodes"][number]>();
-    const edges: OperatorNetwork["edges"] = [];
-    const seen = new Set<string>();
-    const addEdge = (source: string, target: string, reason: string) => {
-      const k = `${source}|${target}|${reason}`;
-      if (source === target || seen.has(k)) return;
-      seen.add(k); edges.push({ source, target, reason });
-    };
-    if (!result) return { nodes: [], edges: [] };
-    const dom = result.domain;
-    nodes.set(dom, { id: dom, label: dom, kind: "target" });
-    const ipLabel = (ip: string, country?: string, city?: string) => {
-      const loc = [city, country && (countryName(country) || country)].filter(Boolean).join(", ");
-      return loc ? `${ip}  ${flagEmoji(country)} ${loc}` : ip;
-    };
-    for (const r of result.exposed) {
-      const nameId = r.name && r.name !== dom ? r.name : dom;
-      if (nameId !== dom) { nodes.set(nameId, { id: nameId, label: r.name, kind: "domain" }); addEdge(dom, nameId, "subdomain"); }
-      const ipId = `ip:${r.ip}`;
-      nodes.set(ipId, { id: ipId, label: ipLabel(r.ip, r.country, r.city), kind: "ip", flaggedFake: true });
-      addEdge(nameId, ipId, r.source || "resolves outside CDN");
-    }
-    for (const h of result.historical.candidates) {
-      const ipId = `ip:${h.ip}`;
-      if (!nodes.has(ipId)) nodes.set(ipId, { id: ipId, label: ipLabel(h.ip, h.country, h.city), kind: "ip" });
-      addEdge(dom, ipId, "historical origin");
-    }
-    return { nodes: [...nodes.values()], edges };
-  }, [result]);
+  // as the OSINT-style force-directed graph. ONE builder (lib/origin-map) is shared
+  // with the Origin Map page so both stay in lock-step.
+  const originNetwork = useMemo(() => buildOriginExposureNetwork(result), [result]);
 
   return (
     <div className="space-y-6">

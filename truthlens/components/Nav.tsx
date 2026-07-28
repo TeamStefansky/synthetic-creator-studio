@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper,
+  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper, MapPin,
 } from "lucide-react";
 
 // Six mission hubs. The flat tool list is grouped into the areas of the mission:
@@ -29,7 +29,8 @@ const groups: NavGroup[] = [
       { href: "/tools/post", label: "Post Check", icon: ShieldQuestion, match: (p) => p.startsWith("/tools/post") },
       { href: "/tools/logs", label: "Log Analyzer", icon: ScrollText, match: (p) => p.startsWith("/tools/logs") },
       { href: "/tools/email", label: "Email Tracer", icon: Mail, match: (p) => p.startsWith("/tools/email") },
-      { href: "/tools/origin", label: "Origin Exposure", icon: Server, match: (p) => p.startsWith("/tools/origin") },
+      { href: "/tools/origin", label: "Origin Exposure", icon: Server, match: (p) => p === "/tools/origin" || p.startsWith("/tools/origin/") },
+      { href: "/tools/origin-map", label: "Origin Map", icon: MapPin, match: (p) => p.startsWith("/tools/origin-map") },
     ],
   },
   {
