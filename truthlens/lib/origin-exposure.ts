@@ -19,8 +19,12 @@ import { cacheGet, cacheSet } from "./cache";
 
 const TTL = 24 * 60 * 60 * 1000; // per-day reproducibility
 const PUBLIC_RESOLVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"];
-const MAX_NAMES = 140; // cap total names probed (politeness + bounded runtime)
-const CONCURRENCY = 10;
+const MAX_NAMES = 90; // cap total names probed (politeness + bounded runtime)
+const CONCURRENCY = 16;
+// Hard internal wall-clock budget. The platform kills the function at 60s with a
+// 504 (nothing cached); we stop optional enrichment well before that and RETURN
+// (and cache) whatever we have, marked partial — a bounded result beats a crash.
+const DEADLINE_MS = 42000;
 
 const CF_IPS_V4_URL = "https://www.cloudflare.com/ips-v4";
 const CF_IPS_V6_URL = "https://www.cloudflare.com/ips-v6";
@@ -88,6 +92,10 @@ export type OriginExposureBand =
 export interface OriginExposureReport {
   available: boolean;
   domain: string;
+  /** True when the wall-clock budget was hit and optional enrichment (RDAP/geo/
+   * historical) was skipped — the core exposure finding is complete, provider/geo
+   * labels may be missing. Honestly labeled, never silently dropped. */
+  partial?: boolean;
   /** Whether the apex/www appears to sit behind the CDN at all. */
   cdnFronted: boolean;
   cdn: string; // "Cloudflare" | "none detected"
@@ -204,7 +212,7 @@ async function loadCloudflareRanges(): Promise<Cidr[]> {
 
 async function crtshNames(domain: string): Promise<string[]> {
   const url = `https://crt.sh/?q=%25.${encodeURIComponent(domain)}&output=json`;
-  const data = await getJson<any[]>(url, { timeoutMs: 14000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
+  const data = await getJson<any[]>(url, { timeoutMs: 10000, headers: { "User-Agent": "TruthLens/0.1 (origin-exposure audit)" } });
   if (!Array.isArray(data)) return [];
   const names = new Set<string>();
   for (const entry of data) {
@@ -220,7 +228,7 @@ async function crtshNames(domain: string): Promise<string[]> {
 }
 
 function makeResolver(): Resolver {
-  const r = new Resolver({ timeout: 4000, tries: 1 });
+  const r = new Resolver({ timeout: 3000, tries: 1 });
   r.setServers(PUBLIC_RESOLVERS);
   return r;
 }
@@ -287,7 +295,7 @@ async function providerForIp(ip: string): Promise<{ provider?: string; org?: str
   const hit = await cacheGet<{ provider?: string; org?: string }>(ck, 7 * TTL);
   if (hit) return hit;
   const data = await getJson<any>(`https://rdap.org/ip/${encodeURIComponent(ip)}`, {
-    timeoutMs: 10000, headers: { Accept: "application/rdap+json" },
+    timeoutMs: 6000, headers: { Accept: "application/rdap+json" },
   });
   if (!data) return null;
   const names: string[] = [];
@@ -430,6 +438,10 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   const cached = await cacheGet<OriginExposureReport>(ck, TTL);
   if (cached) return cached;
 
+  const startedAt = Date.now();
+  const overBudget = () => Date.now() - startedAt > DEADLINE_MS;
+  let partial = false;
+
   const cfRanges = await loadCloudflareRanges();
   const resolver = makeResolver();
 
@@ -515,13 +527,18 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   // Enrich unique exposed IPs with public RDAP provider/ASN owner + IP-geo
   // (country/city), fetched in parallel per IP (bounded).
   const providerByIp = new Map<string, { provider?: string; org?: string; country?: string; city?: string }>();
-  await mapLimit(uniqueExposedIps.slice(0, 25), 5, async (ip) => {
-    const [p, geo] = await Promise.all([
-      providerForIp(ip).catch(() => null),
-      enrichIp(ip).catch(() => null),
-    ]);
-    if (p || geo) providerByIp.set(ip, { provider: p?.provider ?? geo?.asnOrg, org: p?.org, country: geo?.country, city: geo?.city });
-  });
+  if (overBudget()) {
+    partial = true; // core finding stands; skip optional provider/geo labels
+  } else {
+    await mapLimit(uniqueExposedIps.slice(0, 12), 6, async (ip) => {
+      if (overBudget()) { partial = true; return; }
+      const [p, geo] = await Promise.all([
+        providerForIp(ip).catch(() => null),
+        enrichIp(ip).catch(() => null),
+      ]);
+      if (p || geo) providerByIp.set(ip, { provider: p?.provider ?? geo?.asnOrg, org: p?.org, country: geo?.country, city: geo?.city });
+    });
+  }
   for (const rec of exposed) {
     const p = providerByIp.get(rec.ip);
     if (p) { rec.provider = p.provider; rec.org = p.org; rec.country = p.country; rec.city = p.city; }
@@ -538,18 +555,24 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     if (!c.sources.includes(src)) c.sources.push(src);
     candMap.set(rec.ip, c);
   }
-  for (const h of historical.candidates) {
+  // Enrich historical candidates in PARALLEL (was sequential — the main timeout on
+  // large footprints) and only while within budget; over budget, they still appear
+  // as candidates, just without provider/geo labels.
+  await mapLimit(historical.candidates.slice(0, 20), 6, async (h) => {
     let p = providerByIp.get(h.ip);
     if (!p) {
-      const [pr, geo] = await Promise.all([providerForIp(h.ip).catch(() => null), enrichIp(h.ip).catch(() => null)]);
-      p = { provider: pr?.provider ?? geo?.asnOrg, org: pr?.org, country: geo?.country, city: geo?.city };
+      if (overBudget()) { partial = true; p = {}; }
+      else {
+        const [pr, geo] = await Promise.all([providerForIp(h.ip).catch(() => null), enrichIp(h.ip).catch(() => null)]);
+        p = { provider: pr?.provider ?? geo?.asnOrg, org: pr?.org, country: geo?.country, city: geo?.city };
+      }
     }
     // annotate the historical row so the Historical DNS table can show location
     h.country = p.country; h.city = p.city; h.provider = p.provider;
     const c = candMap.get(h.ip) || { ip: h.ip, version: h.ip.includes(":") ? "v6" : "v4", provider: p.provider, org: p.org, country: p.country, city: p.city, sources: [] };
     if (!c.sources.includes("historical DNS")) c.sources.push("historical DNS");
     candMap.set(h.ip, c);
-  }
+  });
   const candidates = [...candMap.values()].slice(0, 100);
 
   // Dominant provider label among candidates.
@@ -567,6 +590,7 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   const report: OriginExposureReport = {
     available: true,
     domain,
+    partial,
     cdnFronted,
     cdn: cdnFronted ? "Cloudflare" : "none detected",
     namesChecked: names.length,
@@ -584,7 +608,9 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     alternative:
       "A non-Cloudflare IP is not proof of the live origin: it is often a third-party mail, analytics, or SaaS host, a parked or legacy record, or a subdomain intentionally served outside the CDN. Confirm ownership before acting.",
     recommendations: band === "possible_exposure" ? RECOMMENDATIONS : RECOMMENDATIONS.slice(0, 3),
-    note: "Passive audit of PUBLIC records (Certificate Transparency + DNS + RDAP) for a domain you are authorized to inspect. Indicators for hardening, not a verdict; this tool never probes or connects to the origin, so candidates are for the owner to verify, not confirmed origins.",
+    note: (partial
+      ? "Partial result: this domain has a large certificate/DNS footprint, so provider/geo enrichment was stopped at the time budget — the exposure finding and candidate IPs are complete, some provider/location labels may be missing. "
+      : "") + "Passive audit of PUBLIC records (Certificate Transparency + DNS + RDAP) for a domain you are authorized to inspect. Indicators for hardening, not a verdict; this tool never probes or connects to the origin, so candidates are for the owner to verify, not confirmed origins.",
     collectedAt: now(),
   };
 
