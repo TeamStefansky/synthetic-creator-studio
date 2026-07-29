@@ -226,3 +226,33 @@ describe("buildNetworkMap - clusters, core/bridge, overlays (P2)", () => {
     expect(c.languages).toEqual(["en", "ru"]);
   });
 });
+
+// P5: graph.ts enrichment — modularity Q of the partition + Brandes betweenness.
+describe("buildNetworkMap - quantitative graph enrichment (P5)", () => {
+  it("attaches modularity Q + betweenness on two clear coordinated clusters", () => {
+    const A = "identical push text from cluster alpha about the relief funds scandal";
+    const B = "a totally separate identical message from cluster beta on another topic";
+    const mentions: Mention[] = [];
+    ["a1", "a2", "a3", "a4"].forEach((h, i) => mentions.push(mk(h, A, T0 + i * MIN)));
+    ["b1", "b2", "b3", "b4"].forEach((h, i) => mentions.push(mk(h, B, T0 + i * MIN)));
+    const g = buildNetworkMap({ mentions });
+    expect(g.insufficient).toBe(false);
+    expect(typeof g.modularity).toBe("number");
+    expect(g.partitionEstablished).toBe(true); // two separated cliques → Q above floor
+    expect(g.betweennessCapped).toBe(false);
+    // core nodes carry a computed (numeric) betweenness
+    expect(g.core.length).toBeGreaterThan(0);
+    expect(typeof g.core[0].betweenness).toBe("number");
+    // enrichment never introduces a person/actor field
+    const json = JSON.stringify(g).toLowerCase();
+    expect(json).not.toContain('"actor"');
+  });
+
+  it("is deterministic across runs (rule 8)", () => {
+    const A = "identical push text alpha", B = "identical push text beta";
+    const mentions: Mention[] = [];
+    ["a1", "a2", "a3"].forEach((h, i) => mentions.push(mk(h, A, T0 + i * MIN)));
+    ["b1", "b2", "b3"].forEach((h, i) => mentions.push(mk(h, B, T0 + i * MIN)));
+    expect(buildNetworkMap({ mentions }).modularity).toBe(buildNetworkMap({ mentions }).modularity);
+  });
+});
