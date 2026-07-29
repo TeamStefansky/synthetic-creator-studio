@@ -262,6 +262,44 @@ const newsapi: NarrativeSource = {
   },
 };
 
+// Webz.io — licensed news/web-content API (official endpoint, keyed). Broad global
+// + multilingual recall for News Room, SIGNAL Grid and Brand Watch. Token comes
+// ONLY from WEBZ_API_TOKEN (never hardcoded); without it the source reports
+// connected:false and renders as "source not connected".
+const webz: NarrativeSource = {
+  name: "webz",
+  available: () => !!process.env.WEBZ_API_TOKEN,
+  reason: "Set WEBZ_API_TOKEN (webz.io News API).",
+  async search(q) {
+    const token = process.env.WEBZ_API_TOKEN!;
+    const query = q && q.trim() ? q : "*";
+    const url =
+      `https://api.webz.io/api/news?token=${token}` +
+      `&q=${encodeURIComponent(query)}&sort=crawled&format=json` +
+      `&includeSyndicated=false&allowNewsHistory=false`;
+    const data = await getJson<any>(url, { timeoutMs: 15000, headers: { Accept: "application/json" } });
+    return (data?.posts || []).map((p: any): Mention => {
+      let domain: string | undefined = p?.thread?.site;
+      if (!domain && p?.url) {
+        try { domain = new URL(p.url).hostname.replace(/^www\./, ""); } catch { /* leave undefined */ }
+      }
+      const excerpt = (p?.text || "").replace(/\s+/g, " ").trim().slice(0, 300);
+      return {
+        source: "webz",
+        id: p?.uuid || p?.url,
+        text: `${p?.title || ""}. ${excerpt}`.trim().replace(/\.$/, ""),
+        url: p?.url,
+        account: p?.thread?.site_full || domain || p?.author || "webz",
+        accountId: domain ? `webz:${domain}` : "webz",
+        timestamp: p?.published,
+        lang: p?.language || undefined,
+        country: p?.thread?.country || undefined,
+        image: p?.thread?.main_image || undefined,
+      };
+    });
+  },
+};
+
 // ---- Catalog additions (operator API catalog): video + news breadth ----------
 
 const youtube: NarrativeSource = {
@@ -322,7 +360,7 @@ const mediastack: NarrativeSource = {
 
 export const SOURCES: NarrativeSource[] = [
   x, gdelt, bluesky, hackernews, reddit, rss, guardian, nyt, gnews, newsapi,
-  youtube, newsdata, mediastack,
+  youtube, newsdata, mediastack, webz,
 ];
 
 /** Run every source in parallel, isolating failures. */
