@@ -11,6 +11,8 @@
 import type { Mention, ArchiveLink } from "@/lib/narrative/types";
 import { clusterNearDuplicates } from "@/lib/similarity";
 import { documentedOverlap } from "@/lib/io-reference";
+import { poissonTail } from "@/lib/analysis/stats";
+import { burstiness } from "@/lib/analysis/dynamics";
 import { assessAccount } from "@/lib/authenticity";
 import type { AuthenticityAssessment, AccountProfile } from "@/lib/authenticity";
 import {
@@ -26,6 +28,12 @@ export interface CibSignal {
   evidence: string[];
   /** an innocent explanation for the same observation */
   alternative: string;
+  /** Quantitative-analysis enrichment (P5, additive): the principled test behind
+   * the signal, its p-value, and a one-line estimate. The `confidence` band is
+   * unchanged — these annotate it with uncertainty, they do not replace it. */
+  method?: string;
+  pValue?: number;
+  estimate?: string;
 }
 
 export interface CibCluster { text: string; accounts: number; size: number; sources: string[]; }
@@ -41,10 +49,17 @@ export interface CibReport {
   attribution: string; // always the UNDETERMINED statement
   nextSteps: string[];
   generatedAt: string;
+  /** Version of the quantitative-analysis enrichment applied to the signals (P5). */
+  analysisVersion?: string;
   archives?: ArchiveLink[]; // preserved copies of the top evidence URLs
   /** Per-amplifying-account authenticity assessments (additive; probabilistic -    * score + confidence + evidence, never a binary fake/real label). */
   authenticity?: { account: string; assessment: AuthenticityAssessment }[];
 }
+
+// Bumped when the analysis enrichment behind a signal changes (scoring rubrics are
+// versioned). v1 = P5 pilot: the Temporal-synchronization signal now carries a
+// Poisson-tail significance + burstiness alongside its unchanged confidence band.
+export const CIB_ANALYSIS_VERSION = "cib-analysis-v1";
 
 // Exported so Social Analyze shares the SAME frozen framing - one source of truth.
 export const ATTRIBUTION =
@@ -86,6 +101,33 @@ export function analyzeCib(
   const { bursts, biggest: biggestBurst } = detectBursts(timed);
   const hourBand = hourBandConcentration(timed.map((x) => x.t));
 
+  // --- P5 quantitative enrichment of the timing signal (additive; band unchanged) ---
+  // The biggest burst is a COUNT in a fixed window, so its surprise is a Poisson
+  // upper-tail probability against the base posting rate — NOT a Gaussian z on raw
+  // counts, which overstates significance at low counts (the exact bug P5 fixes).
+  let burstStat: { pValue: number; expected: number; note: string } | null = null;
+  let burstShape: { B: number; note: string } | null = null;
+  if (timed.length >= 4) {
+    const times = timed.map((x) => x.t).sort((a, b) => a - b);
+    const spanMin = (times[times.length - 1] - times[0]) / 60000;
+    if (spanMin > 0 && biggestBurst > 0) {
+      const lambda = timed.length * (BURST_WINDOW_MIN / spanMin); // expected posts per window
+      const pt = poissonTail(biggestBurst, lambda);
+      burstStat = {
+        pValue: pt.pValue,
+        expected: lambda,
+        note: `Poisson tail: P(≥${biggestBurst} posts in a ${BURST_WINDOW_MIN}-min window | base rate ≈ ${lambda.toFixed(2)}/window) = ${pt.pValue.toExponential(2)}.`,
+      };
+    }
+    const b = burstiness(times.map((t) => t / 60000));
+    if (!b.insufficient) {
+      burstShape = {
+        B: b.burstiness,
+        note: `Inter-event burstiness B = ${b.burstiness.toFixed(2)} (−1 machine-regular … 0 Poisson … +1 human-bursty), CV = ${b.cv.toFixed(2)}.`,
+      };
+    }
+  }
+
   // --- Account-creation clustering (when the source exposes creation dates) ---
   const creationByAccount = new Map<string, string>();
   for (const m of mentions) {
@@ -110,9 +152,22 @@ export function analyzeCib(
     name: "Temporal synchronization",
     confidence: timed.length >= 4 ? (bursts ? "Medium" : "Low") : "Not collected",
     evidence: timed.length >= 4
-      ? (bursts ? [`${bursts} synchronized burst(s) within ${BURST_WINDOW_MIN} min (largest: ${biggestBurst} posts from ≥2 accounts).`] : ["No synchronized bursts detected."])
+      ? [
+          ...(bursts
+            ? [`${bursts} synchronized burst(s) within ${BURST_WINDOW_MIN} min (largest: ${biggestBurst} posts from ≥2 accounts).`]
+            : ["No synchronized bursts detected."]),
+          ...(burstStat ? [burstStat.note] : []),
+          ...(burstShape ? [burstShape.note] : []),
+        ]
       : ["Not enough timestamped items to assess timing."],
     alternative: "A real event breaking at a moment in time naturally produces a burst of independent posts.",
+    ...(burstStat
+      ? {
+          method: "Poisson upper-tail test on the largest-burst count vs the base posting rate (not a Gaussian z on raw counts); inter-event burstiness (Goh–Barabási B).",
+          pValue: burstStat.pValue,
+          estimate: burstShape ? `B=${burstShape.B.toFixed(2)}` : undefined,
+        }
+      : {}),
   });
   // Posting-hour concentration - only meaningful when SUSTAINED across days
   // (a one-day breaking-news spike must NOT trip this above Low).
@@ -212,6 +267,7 @@ export function analyzeCib(
   return {
     entity, likelihood, totalItems: total, accounts, signals, clusters,
     collectionGaps, attribution: ATTRIBUTION, nextSteps: NEXT_STEPS, generatedAt,
+    analysisVersion: CIB_ANALYSIS_VERSION,
     ...(authenticity.length ? { authenticity } : {}),
   };
 }
