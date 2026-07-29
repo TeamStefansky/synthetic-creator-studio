@@ -27,7 +27,7 @@ import { crossLookup } from "@/lib/bridge";
 import type { Report, Maybe } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 function ok<T>(value: T): Maybe<T> {
   return { status: "ok", value };

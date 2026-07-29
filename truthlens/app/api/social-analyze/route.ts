@@ -8,7 +8,7 @@ import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { SocialAnalyzeReport } from "@/lib/social-analyze/orchestrate";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const CACHE_MS = 5 * 60_000;
 

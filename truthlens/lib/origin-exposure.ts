@@ -21,10 +21,12 @@ const TTL = 24 * 60 * 60 * 1000; // per-day reproducibility
 const PUBLIC_RESOLVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"];
 const MAX_NAMES = 90; // cap total names probed (politeness + bounded runtime)
 const CONCURRENCY = 16;
-// Hard internal wall-clock budget. The platform kills the function at 60s with a
-// 504 (nothing cached); we stop optional enrichment well before that and RETURN
-// (and cache) whatever we have, marked partial — a bounded result beats a crash.
-const DEADLINE_MS = 42000;
+// Hard internal wall-clock budget, kept safely below the route's maxDuration (180s
+// on Vercel Pro). Optional enrichment stops here and we RETURN (and cache) a
+// complete core finding, marked partial — a bounded result always beats a 504.
+// Most domains finish in well under 30s; this ceiling only bites on extreme
+// certificate/DNS footprints.
+const DEADLINE_MS = 160000;
 
 const CF_IPS_V4_URL = "https://www.cloudflare.com/ips-v4";
 const CF_IPS_V6_URL = "https://www.cloudflare.com/ips-v6";

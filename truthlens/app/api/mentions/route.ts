@@ -17,7 +17,7 @@ import { clusterNarratives, type NarrativesResult } from "@/lib/signal-narrative
 import { cacheGet, cacheSet } from "@/lib/cache";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const CACHE_MS = 90_000;
 // Same mention set -> same labels; cache longer so repeat views within a

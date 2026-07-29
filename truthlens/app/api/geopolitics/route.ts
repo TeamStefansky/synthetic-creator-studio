@@ -9,7 +9,7 @@ import { aggregateGeopolitics } from "@/lib/geopolitics-agg";
 import { cacheGet, cacheSet } from "@/lib/cache";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const CACHE_MS = 5 * 60_000; // situational feeds update on the order of minutes
 

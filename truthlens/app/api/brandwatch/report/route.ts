@@ -9,7 +9,7 @@ import { extractNarratives } from "@/lib/narrative/clusters";
 import type { Mention } from "@/lib/narrative/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const esc = (s: any) =>
   String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

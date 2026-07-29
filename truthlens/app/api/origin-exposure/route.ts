@@ -7,7 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auditOriginExposure } from "@/lib/origin-exposure";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Vercel Pro allows up to 300s; 180s gives heavy-footprint domains room to fully
+// enrich instead of returning partial. The lib's internal budget stays below this.
+export const maxDuration = 180;
 
 export async function POST(req: NextRequest) {
   let domain: string;

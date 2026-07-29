@@ -16,7 +16,7 @@ import { kvGetJson, kvSetJson, storeAvailable } from "@/lib/store";
 import type { Mention, ThreatResult, NarrativeExtraction, ForeignEnrichment, MirroringResult } from "@/lib/narrative/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const CACHE_MS = 90_000; // short cache so auto-refresh doesn't hammer sources
 
