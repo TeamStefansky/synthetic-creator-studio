@@ -9,6 +9,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { LLM_MODEL } from "./llm";
 import { getJson } from "./http";
 import type { PropagationResult, PropagationHit } from "./types";
+import { timelineDynamics } from "@/lib/analysis/integrate";
 
 function domainOf(url: string): string {
   try {
@@ -106,6 +107,14 @@ export async function tracePropagation(
   const overlap = hits.filter((h) => siblingSet.has(h.domain)).length;
   const coordinatedAmplification = overlap >= 2 || hits.length >= 8;
 
+  // P5 (additive): model the republication timeline as dynamics (growth fit +
+  // change-point). `Insufficient` when too few dated hits — never a trend from a
+  // handful of points. The existing fields are unchanged.
+  const datedMs = hits
+    .map((h) => (h.publishedAt ? Date.parse(h.publishedAt) : NaN))
+    .filter((t) => !isNaN(t));
+  const analysis = timelineDynamics(datedMs);
+
   return {
     available: hasSearch,
     quote,
@@ -116,5 +125,6 @@ export async function tracePropagation(
     note: hasSearch
       ? `Found ${hits.length} page(s) republishing this text across the open web.`
       : "Open-web propagation search needs ANTHROPIC_API_KEY (web_search). Showing limited results.",
+    analysis,
   };
 }

@@ -125,6 +125,10 @@ export interface ThreatResult {
   earliest?: Mention;
   /** Preserved copies of the top evidence URLs (deep scans). */
   archives?: ArchiveLink[];
+  /** Quantitative-analysis enrichment (P5, additive): a calibrated Bayesian
+   * posterior over the indicators + a sensitivity flag; the headline score/status
+   * above is unchanged. */
+  analysis?: import("@/lib/analysis/integrate").QuantAnalysis;
   /** narrative -> infra bridge (deep scans): the operator network + documented
    * reputation of the hosting operators behind this narrative's amplifiers. */
   operatorNetwork?: import("@/lib/types").OperatorNetwork;

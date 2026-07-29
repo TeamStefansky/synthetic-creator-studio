@@ -471,6 +471,8 @@ export interface PropagationResult {
   earliestDate?: string;
   coordinatedAmplification: boolean;
   note: string;
+  /** Quantitative-analysis enrichment (P5, additive): modeled spread dynamics. */
+  analysis?: import("@/lib/analysis/integrate").QuantAnalysis;
 }
 
 // --- Coordination / bot-farm ---------------------------------------------
@@ -482,6 +484,8 @@ export interface CoordinationResult {
   score: number; // 0-100 internal
   signals: { label: string; weight: number; detail: string }[];
   note: string;
+  /** Quantitative-analysis enrichment (P5, additive): which signal is load-bearing. */
+  analysis?: import("@/lib/analysis/integrate").QuantAnalysis;
 }
 
 // --- Deep OSINT dossier (on-demand; Claude + web_search) ------------------

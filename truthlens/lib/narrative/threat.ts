@@ -5,6 +5,7 @@
 import { RUBRIC_VERSION, SENTIMENT_LEXICON_VERSION, sentimentScore } from "./sentiment";
 import { clusterNearDuplicates } from "@/lib/similarity";
 import { documentedOverlap } from "@/lib/io-reference";
+import { bayesianCalibration } from "@/lib/analysis/integrate";
 import type {
   Indicator, Level, Mention, SourceStatus, ThreatResult, ThreatStatus,
   ForeignEnrichment, MirroringResult,
@@ -278,10 +279,20 @@ export function computeThreat(
     ? timed.reduce((a, b) => (Date.parse(a.timestamp!) <= Date.parse(b.timestamp!) ? a : b))
     : undefined;
 
+  // P5 (additive): a calibrated Bayesian view of the SAME indicators — posterior,
+  // information, and which indicator is load-bearing — alongside the unchanged
+  // weighted score/status. Content-derived signals share a dependence group so they
+  // aren't counted as independent confirmations.
+  const analysis = bayesianCalibration(
+    indicators,
+    WEIGHTS,
+    { copypasta: "content", concentration: "content" },
+  );
+
   return {
     ...base, score, status,
     indicators: indicators.sort((a, b) => (b.score * b.confidence) - (a.score * a.confidence)),
-    evidence, trend, earliest,
+    evidence, trend, earliest, analysis,
   };
 }
 

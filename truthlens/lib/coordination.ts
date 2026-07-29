@@ -10,6 +10,7 @@ import type {
   LogAnalysisResult,
   PropagationResult,
 } from "./types";
+import { weightedScoreSensitivity, INTEGRATE_VERSION, type QuantAnalysis } from "@/lib/analysis/integrate";
 
 export interface CoordinationInput {
   network?: OperatorNetwork;
@@ -54,10 +55,20 @@ export function assessCoordination(input: CoordinationInput): CoordinationResult
   if (score >= 50) level = "High";
   else if (score >= 25) level = "Medium";
 
+  // P5 (additive): which single signal is load-bearing, and whether removing it
+  // would drop the level — a fragile verdict surfaced. Uses this scorer's OWN
+  // weights + thresholds (Medium ≥ 25, High ≥ 50); the level/score are unchanged.
+  const analysis: QuantAnalysis = {
+    method: "Sensitivity on the weighted signals: the signal whose removal drops the score most, and whether that crosses a level threshold.",
+    version: INTEGRATE_VERSION,
+    sensitivity: weightedScoreSensitivity(signals, [25, 50]),
+  };
+
   return {
     level,
     score,
     signals,
     note: "Coordination likelihood is an indicator built from observable signals - not proof of a single operator.",
+    analysis,
   };
 }
