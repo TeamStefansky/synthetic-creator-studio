@@ -40,13 +40,14 @@ export function prevalenceBand(count: number | null): PrevalenceBand {
   return "ubiquitous";
 }
 
-/** Which reverse-lookup providers have a key configured (else "not connected"). */
+/** Which reverse-lookup providers have a key configured (else "not connected").
+ * Lists ONLY providers that measurePrevalence() actually queries, so a configured
+ * key always means a real query — never a "connected" label with no fetch behind it. */
 export function prevalenceProvidersConnected(): string[] {
   const out: string[] = [];
-  if (process.env.BUILTWITH_API_KEY) out.push("BuiltWith");
-  if (process.env.DNSLYTICS_API_KEY) out.push("DNSlytics");
-  if (process.env.PUBLICWWW_API_KEY) out.push("PublicWWW");
   if (process.env.SPYONWEB_API_KEY) out.push("SpyOnWeb");
+  if (process.env.PUBLICWWW_API_KEY) out.push("PublicWWW");
+  if (process.env.DNSLYTICS_API_KEY) out.push("DNSlytics");
   return out;
 }
 
@@ -117,6 +118,29 @@ async function fromPublicWWW(value: string): Promise<PrevalenceResult | null> {
   };
 }
 
+async function fromDnslytics(id: string): Promise<PrevalenceResult | null> {
+  const key = process.env.DNSLYTICS_API_KEY;
+  if (!key) return null;
+  // Reverse Analytics/AdSense: domains sharing a Google id. Response shapes vary by
+  // plan; read the common ones defensively and fall back to null on anything else.
+  const url = `https://api.dnslytics.net/v1/reverseanalytics/${encodeURIComponent(id)}?apikey=${key}`;
+  const j = await getJson<any>(url, { timeoutMs: 9000 });
+  const count: number | null =
+    typeof j?.total === "number" ? j.total
+    : Array.isArray(j?.data) ? j.data.length
+    : Array.isArray(j?.domains) ? j.domains.length
+    : null;
+  if (count == null) return null;
+  return {
+    connected: true,
+    count,
+    band: prevalenceBand(count),
+    provider: "DNSlytics",
+    url: `https://dnslytics.com/reverse-analytics/${encodeURIComponent(id)}`,
+    note: `DNSlytics reverse-analytics matched ${count} domain(s).`,
+  };
+}
+
 /**
  * Measure worldwide prevalence for one artifact. Tries each connected provider in
  * turn; returns the first real answer, else an honest "not connected" result.
@@ -126,7 +150,7 @@ export async function measurePrevalence(kind: string, value: string): Promise<Pr
   if (!isReverseLookupable(kind)) return notConnected();
   if (prevalenceProvidersConnected().length === 0) return notConnected();
   try {
-    const r = (await fromSpyOnWeb(value)) || (await fromPublicWWW(value));
+    const r = (await fromSpyOnWeb(value)) || (await fromPublicWWW(value)) || (await fromDnslytics(value));
     return r || notConnected();
   } catch {
     return notConnected();
