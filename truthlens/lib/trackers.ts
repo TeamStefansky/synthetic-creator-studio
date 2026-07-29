@@ -11,6 +11,37 @@ export function extractGaIds(html: string): string[] {
   return [...new Set(html.match(re) || [])];
 }
 
+export type GaFamily = "ga4" | "universal" | "gtag" | "unknown";
+export interface GaIdInfo {
+  family: GaFamily;
+  /** True for Universal Analytics (UA-), which Google shut down on 1 Jul 2023. */
+  deprecated: boolean;
+  note: string;
+}
+
+/**
+ * Classify a Google id by family and recency. Universal Analytics (UA-) was shut
+ * down by Google on 1 July 2023, so a *live* UA tag is a recency signal in its own
+ * right: it points to a long-unmaintained site or a stale value carried across a
+ * template — and it carries LESS corroborating weight than a current GA4 (G-) or
+ * Google Tag (GT-) overlap. This is a fact about the id format, not a clock read.
+ */
+export function classifyGaId(id: string): GaIdInfo {
+  if (/^UA-\d{4,}-\d+$/.test(id)) {
+    return {
+      family: "universal",
+      deprecated: true,
+      note:
+        "Universal Analytics (UA-) was shut down by Google on 1 July 2023. A live UA tag " +
+        "indicates a long-unmaintained site or a stale, carried-over value — it corroborates " +
+        "a link less than a current GA4 (G-) or Tag Manager (GTM-) overlap would.",
+    };
+  }
+  if (/^G-[A-Z0-9]{6,}$/.test(id)) return { family: "ga4", deprecated: false, note: "GA4 measurement id (current)." };
+  if (/^GT-[A-Z0-9]{6,}$/.test(id)) return { family: "gtag", deprecated: false, note: "Google Tag id (current)." };
+  return { family: "unknown", deprecated: false, note: "" };
+}
+
 /** Google AdSense publisher ids (ca-pub-…). */
 export function extractAdsenseIds(html: string): string[] {
   const re = /\bca-pub-\d{10,}\b/g;

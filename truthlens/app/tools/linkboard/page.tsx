@@ -12,6 +12,7 @@ import Disclaimer from "@/components/Disclaimer";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import ToolIntro from "@/components/ToolIntro";
 import CrossLinksCard from "@/components/CrossLinksCard";
+import CorroborationCard from "@/components/CorroborationCard";
 import type { BoardResult, PairEdge } from "@/lib/board/types";
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
 import { buildSearchNetwork, type SearchNetwork } from "@/lib/clues/network";
@@ -304,6 +305,8 @@ export default function LinkBoardPage() {
 
           {/* infra -> narrative bridge: documented lists & monitored narratives */}
           {result.crossLinks && <CrossLinksCard cross={result.crossLinks} />}
+
+          {result.corroboration && <CorroborationCard c={result.corroboration} />}
 
           {/* hosting-operator reputation - who is the shared host, documented + cited */}
           {result.operatorReputation && (result.operatorReputation.flags.length > 0 || result.operatorReputation.coHostedCount > 0) && (

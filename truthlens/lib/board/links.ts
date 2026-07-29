@@ -22,6 +22,7 @@ import { extractRichTrackers } from "@/lib/trackers";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { fetchOpenPageRankBulk } from "@/lib/authority";
 import { calibrateOverlap, buildPairEdge, BOARD_RUBRIC_VERSION } from "./calibrate";
+import { buildCorroboration } from "./corroborate";
 import type { Artifact, Fingerprint, BoardResult, OverlapItem, PairEdge, SourceStatus } from "./types";
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
 
@@ -353,5 +354,11 @@ export async function runBoard(domains: string[]): Promise<BoardResult> {
     const crossDomains = [...uniq, ...new Set(fps.flatMap((f) => f.neighbors || []))];
     result.crossLinks = await crossLookup(crossDomains);
   } catch { /* bridge is optional enrichment */ }
+  // Evidence corroboration overlay: measured worldwide prevalence + id recency +
+  // an analytic null baseline + an honest "what wasn't scanned" list. Additive and
+  // down-only — it never rewrites a calibrated tier.
+  try {
+    result.corroboration = await buildCorroboration(result);
+  } catch { /* corroboration is optional enrichment */ }
   return result;
 }

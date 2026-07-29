@@ -113,6 +113,45 @@ export interface PairEdge {
 
 export interface SourceStatus { source: string; ok: boolean; note?: string }
 
+// --- Evidence corroboration overlay (layer 07) -------------------------------
+// An ADDITIVE overlay on the calibrated edges: it never rewrites a base tier, it
+// only adds measured context (worldwide prevalence, id recency, an analytic null
+// baseline) and, where warranted, a DOWN-ONLY effective strength. Its own version
+// stamp keeps historical overlays interpretable independently of the base rubric.
+export interface ArtifactCorroboration {
+  kind: BoardArtifactKind;
+  value: string;
+  display: string;
+  baseStrength: ConfidenceLevel;      // strength the base rubric assigned this overlap
+  effectiveStrength: ConfidenceLevel; // after corroboration (never raised, only capped)
+  prevalence: import("./prevalence").PrevalenceResult;
+  deprecated?: string;                // e.g. UA- recency note (present if applicable)
+  baseRateByChance: number;           // P(two unrelated sites share this) from the rubric
+  notes: string[];                    // human-readable reasons for any adjustment
+}
+
+export interface Corroboration {
+  version: string;
+  prevalenceConnected: boolean;
+  providers: string[];                // connected reverse-lookup providers (may be empty)
+  artifacts: ArtifactCorroboration[]; // one per distinctive shared id across the board
+  // The explicit null model, stated up front (frozen: confidence needs an alternative).
+  nullHypothesis: { ifLinked: string; ifUnrelated: string };
+  // Analytic control: the probability the observed distinctive overlaps co-occur by
+  // chance, from the rubric's per-artifact base rates (a reproducible stand-in for a
+  // live known-unrelated control group, which can be added when providers connect).
+  control: {
+    distinctiveOverlapCount: number;
+    probabilityByChance: number | null;
+    significance: string;
+    note: string;
+  };
+  // What this scan did NOT look at — where the strongest "link" evidence usually
+  // lives — surfaced honestly rather than left implied (frozen rule 7).
+  notScanned: { area: string; why: string; where: string }[];
+  summary: string;
+}
+
 // Reuse the proven operator-network graph shape (lib/network.ts / NetworkGraph).
 export interface BoardNetwork {
   nodes: { id: string; label: string; kind: "target" | "domain" | "ip" | "ga" | "adsense" | "account"; flaggedFake?: boolean }[];
@@ -134,4 +173,7 @@ export interface BoardResult {
   /** infra -> narrative bridge: compared domains that match a documented list or
    * amplify a monitored narrative (leads with an innocent alternative). */
   crossLinks?: import("@/lib/bridge").CrossLookupResult;
+  /** Evidence corroboration overlay: measured worldwide prevalence, id recency,
+   * an analytic null baseline, and an honest "what wasn't scanned" list. */
+  corroboration?: Corroboration;
 }
