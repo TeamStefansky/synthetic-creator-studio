@@ -25,6 +25,8 @@ export interface QuantAnalysis {
   version: string;
   posterior?: number; // calibrated P(hypothesis) from Bayesian combination
   band?: string; // Insufficient | Low | Moderate | High
+  /** IC/Graphika estimative-language word for the posterior (e.g. "Likely"). */
+  estimative?: string;
   information?: number; // total evidence information (nats)
   sensitivity?: { mostInfluential: string | null; delta: number; flips: boolean };
   dynamics?: {
@@ -73,6 +75,7 @@ export function bayesianCalibration(
     version: INTEGRATE_VERSION,
     posterior: r.posterior,
     band: r.band,
+    estimative: r.estimative?.word,
     information: r.information,
     sensitivity: { mostInfluential: r.sensitivity.mostInfluential, delta: r.sensitivity.delta, flips: r.sensitivity.flipsBand },
   };

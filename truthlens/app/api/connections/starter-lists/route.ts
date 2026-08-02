@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import europeBatch1 from "@/data/news-sites/europe-batch1.json";
 import worldBatch2 from "@/data/news-sites/world-batch2.json";
 import factcheckBatch3 from "@/data/news-sites/factcheck-osint-batch3.json";
+import altBatch4 from "@/data/news-sites/alt-independent-batch4.json";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ const LISTS: StarterList[] = [
   { id: "europe-batch1", title: "Europe — top outlets by country", entries: europeBatch1 as Entry[] },
   { id: "world-batch2", title: "World — Americas, Middle East, Asia, Africa, Oceania", entries: worldBatch2 as Entry[] },
   { id: "factcheck-osint-batch3", title: "Fact-checkers, OSINT & analysis", entries: factcheckBatch3 as Entry[] },
+  { id: "alt-independent-batch4", title: "Independent & alt-media (monitoring, via RSS — not an endorsement)", entries: altBatch4 as Entry[] },
 ];
 
 function countryCounts(entries: Entry[]): { country: string; count: number }[] {

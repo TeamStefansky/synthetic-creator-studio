@@ -1,0 +1,18 @@
+[
+  { "country": "Independent / alt-media", "outlet": "The Intercept", "url": "theintercept.com" },
+  { "country": "Independent / alt-media", "outlet": "Consortium News", "url": "consortiumnews.com" },
+  { "country": "Independent / alt-media", "outlet": "MintPress News", "url": "mintpressnews.com" },
+  { "country": "Independent / alt-media", "outlet": "The Grayzone", "url": "thegrayzone.com" },
+  { "country": "Independent / alt-media", "outlet": "ZeroHedge", "url": "zerohedge.com" },
+  { "country": "Independent / alt-media", "outlet": "Breitbart", "url": "breitbart.com" },
+  { "country": "Independent / alt-media", "outlet": "The Gateway Pundit", "url": "thegatewaypundit.com" },
+  { "country": "Independent / alt-media", "outlet": "The Free Press", "url": "thefp.com" },
+  { "country": "Independent / alt-media", "outlet": "Racket News (Substack)", "url": "racket.news" },
+  { "country": "Independent / alt-media", "outlet": "Public (Substack)", "url": "public.substack.com" },
+  { "country": "Independent / alt-media", "outlet": "Zeteo (Substack)", "url": "zeteo.com" },
+  { "country": "Independent / alt-media", "outlet": "Seymour Hersh (Substack)", "url": "seymourhersh.substack.com" },
+  { "country": "Platforms (video/RSS)", "outlet": "Rumble", "url": "rumble.com" },
+  { "country": "Platforms (video/RSS)", "outlet": "BitChute", "url": "bitchute.com" },
+  { "country": "Platforms (video/RSS)", "outlet": "Odysee", "url": "odysee.com" },
+  { "country": "Platforms (video/RSS)", "outlet": "Substack (Reader)", "url": "substack.com" }
+]

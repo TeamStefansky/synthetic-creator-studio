@@ -107,3 +107,30 @@ describe("calibration harness", () => {
     expect(hi.observed).toBe(1);
   });
 });
+
+import { estimativeLanguage, ESTIMATIVE_SCALE } from "@/lib/analysis/evidence";
+
+describe("estimative-language scale (ICD-203 / Graphika)", () => {
+  it("maps probabilities to the standard likelihood words", () => {
+    expect(estimativeLanguage(0.02).word).toBe("Almost No Chance");
+    expect(estimativeLanguage(0.1).word).toBe("Very Unlikely");
+    expect(estimativeLanguage(0.3).word).toBe("Unlikely");
+    expect(estimativeLanguage(0.5).word).toBe("Roughly Even Chance");
+    expect(estimativeLanguage(0.7).word).toBe("Likely");
+    expect(estimativeLanguage(0.9).word).toBe("Very Likely");
+    expect(estimativeLanguage(0.98).word).toBe("Almost Certain");
+    expect(estimativeLanguage(0.999).word).toBe("Almost Certain");
+  });
+  it("the scale is contiguous and ordered", () => {
+    for (let i = 1; i < ESTIMATIVE_SCALE.length; i++) {
+      expect(ESTIMATIVE_SCALE[i].low).toBeGreaterThanOrEqual(ESTIMATIVE_SCALE[i - 1].low);
+    }
+  });
+  it("combineEvidence attaches an estimative word for a real posterior, none when Insufficient", () => {
+    const strong = combineEvidence([{ id: "a", lr: 6 }, { id: "b", lr: 5 }], 0.5);
+    expect(strong.estimative?.word).toBeTruthy();
+    const thin = combineEvidence([{ id: "a", lr: 1.02 }], 0.5);
+    expect(thin.insufficient).toBe(true);
+    expect(thin.estimative).toBeUndefined();
+  });
+});

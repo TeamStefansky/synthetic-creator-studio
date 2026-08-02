@@ -62,10 +62,38 @@ export interface EvidenceResult {
   information: number; // total |contribution| in nats
   band: EvidenceBand;
   insufficient: boolean;
+  /** IC/Graphika estimative-language word for the posterior (omitted when
+   * Insufficient — an unknown likelihood gets no probability word). */
+  estimative?: Estimative;
   updates: EvidenceUpdate[];
   sensitivity: Sensitivity;
   method: string;
   version: string;
+}
+
+// IC estimative-probability scale (ODNI ICD-203; matches Graphika's likelihood
+// legend). Maps a calibrated posterior to the standard probability word so an
+// assessment reads in the same vocabulary a professional intelligence report uses —
+// tied to a real probability range, not a vibe.
+export interface Estimative {
+  word: string;
+  low: number;
+  high: number;
+}
+export const ESTIMATIVE_SCALE: Estimative[] = [
+  { word: "Almost No Chance", low: 0.01, high: 0.05 },
+  { word: "Very Unlikely", low: 0.05, high: 0.2 },
+  { word: "Unlikely", low: 0.2, high: 0.45 },
+  { word: "Roughly Even Chance", low: 0.45, high: 0.55 },
+  { word: "Likely", low: 0.55, high: 0.8 },
+  { word: "Very Likely", low: 0.8, high: 0.95 },
+  { word: "Almost Certain", low: 0.95, high: 0.99 },
+];
+
+/** Map a probability (0–1) to its estimative-language word + range. */
+export function estimativeLanguage(p: number): Estimative {
+  for (const b of ESTIMATIVE_SCALE) if (p < b.high) return b;
+  return ESTIMATIVE_SCALE[ESTIMATIVE_SCALE.length - 1];
 }
 
 function sigmoid(x: number): number {
@@ -167,6 +195,7 @@ export function combineEvidence(items: EvidenceItem[], prior = 0.5): EvidenceRes
     information: base.information,
     band,
     insufficient: band === "Insufficient",
+    estimative: band === "Insufficient" ? undefined : estimativeLanguage(base.posterior),
     updates,
     sensitivity: { mostInfluential, delta: maxDelta, flipsBand: flips },
     method: "bayesian-log-odds",
