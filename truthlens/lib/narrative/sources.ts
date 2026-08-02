@@ -5,7 +5,7 @@
 //
 // All sources here query PUBLIC data via official public endpoints.
 
-import { getJson, getText } from "@/lib/http";
+import { getJson, getText, fetchWithTimeout } from "@/lib/http";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import type { Mention, SourceStatus } from "./types";
 import { safeFetchText, parseFeed, type FeedItem } from "@/lib/feeds/fetch";
@@ -29,6 +29,76 @@ interface NarrativeSource {
 }
 
 const UA = "TruthLens/0.1 (brand narrative monitoring)";
+
+// ---- Reddit official-API layer (OAuth app-only; keyless fallback) ------------
+// Reddit throttles unauthenticated server IPs, so scheduled monitoring needs the
+// official OAuth app-only ("client_credentials") flow. With REDDIT_CLIENT_ID +
+// REDDIT_CLIENT_SECRET set we mint an app token and hit oauth.reddit.com; without
+// them we fall back to the public www.reddit.com JSON (best-effort). Official
+// endpoints only — no scraping.
+const SUBREDDIT_RE = /\b(?:subreddit:|r\/)([a-z0-9_]{2,21})\b/i;
+
+export function redditOauthConnected(): boolean {
+  return !!(process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET);
+}
+function redditUA(): string {
+  return process.env.REDDIT_USER_AGENT || UA;
+}
+let _redditToken: { token: string; exp: number } | null = null;
+async function redditToken(): Promise<string | null> {
+  if (!redditOauthConnected()) return null;
+  const now = Date.now();
+  if (_redditToken && _redditToken.exp > now + 30_000) return _redditToken.token;
+  try {
+    const basic = Buffer.from(`${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`).toString("base64");
+    const res = await fetchWithTimeout("https://www.reddit.com/api/v1/access_token", {
+      method: "POST",
+      timeoutMs: 10000,
+      headers: {
+        Authorization: `Basic ${basic}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": redditUA(),
+      },
+      body: "grant_type=client_credentials",
+    });
+    if (!res.ok) return null;
+    const j = await res.json().catch(() => null);
+    if (!j?.access_token) return null;
+    _redditToken = { token: j.access_token, exp: now + (j.expires_in || 3600) * 1000 };
+    return _redditToken.token;
+  } catch {
+    return null;
+  }
+}
+async function redditGet(path: string): Promise<any> {
+  const token = await redditToken();
+  const base = token ? "https://oauth.reddit.com" : "https://www.reddit.com";
+  const headers: Record<string, string> = { "User-Agent": redditUA() };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return getJson<any>(base + path, { timeoutMs: 15000, headers });
+}
+/** Split a Reddit query into an optional subreddit scope + the residual terms.
+ * "r/geopolitics sanctions" → { sub:"geopolitics", rest:"sanctions" }; a bare
+ * "r/worldnews" → { sub:"worldnews", rest:"" } (monitor that community's new feed). */
+export function parseSubredditQuery(q: string): { sub?: string; rest: string } {
+  const m = q.match(SUBREDDIT_RE);
+  return { sub: m?.[1]?.toLowerCase(), rest: q.replace(SUBREDDIT_RE, "").trim() };
+}
+function redditChild(c: any): Mention | null {
+  const d = c?.data || {};
+  const id = d.name || d.id;
+  if (!id) return null;
+  return {
+    source: "reddit",
+    id,
+    text: `${d.title || ""}. ${d.selftext || ""}`.trim().replace(/\.$/, ""),
+    url: d.permalink ? `https://www.reddit.com${d.permalink}` : d.url,
+    account: d.author,
+    accountId: d.author,
+    timestamp: d.created_utc ? new Date(d.created_utc * 1000).toISOString() : undefined,
+    engagement: (d.ups || 0) + (d.num_comments || 0),
+  };
+}
 
 // ---- Free, keyless public sources --------------------------------------------
 
@@ -116,21 +186,33 @@ const hackernews: NarrativeSource = {
 
 const reddit: NarrativeSource = {
   name: "reddit",
-  available: () => true, // best-effort keyless; Reddit may throttle server IPs
+  available: () => true, // keyless fallback always works; OAuth just makes it reliable
+  reason: redditOauthConnected()
+    ? undefined
+    : "Keyless public JSON (server IPs may be rate-limited). Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET for reliable OAuth monitoring.",
+  // Query syntax: a bare term does a global search; `r/<sub>` or `subreddit:<sub>`
+  // scopes to (or monitors the new feed of) that community — e.g. a watch term
+  // "r/geopolitics" tracks that subreddit's new posts, "r/geopolitics sanctions"
+  // searches within it. Reliable server-side when OAuth is connected.
   async search(q) {
-    const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(q)}&sort=new&limit=50&raw_json=1`;
-    const data = await getJson<any>(url, { timeoutMs: 15000, headers: { "User-Agent": UA } });
-    return (data?.data?.children || []).map((c: any): Mention => {
-      const d = c.data || {};
-      return {
-        source: "reddit", id: d.name || d.id,
-        text: `${d.title || ""}. ${d.selftext || ""}`.trim().replace(/\.$/, ""),
-        url: d.permalink ? `https://www.reddit.com${d.permalink}` : d.url,
-        account: d.author, accountId: d.author,
-        timestamp: d.created_utc ? new Date(d.created_utc * 1000).toISOString() : undefined,
-        engagement: (d.ups || 0) + (d.num_comments || 0),
-      };
-    });
+    const out: Mention[] = [];
+    const seen = new Set<string>();
+    const add = (children: any[] | undefined) => {
+      for (const c of children || []) {
+        const m = redditChild(c);
+        if (m && !seen.has(m.id)) { seen.add(m.id); out.push(m); }
+      }
+    };
+    const { sub, rest } = parseSubredditQuery(q);
+    if (sub) {
+      const path = rest
+        ? `/r/${sub}/search.json?restrict_sr=1&q=${encodeURIComponent(rest)}&sort=new&limit=50&raw_json=1`
+        : `/r/${sub}/new.json?limit=50&raw_json=1`;
+      add((await redditGet(path))?.data?.children);
+    } else if ((rest || q).trim()) {
+      add((await redditGet(`/search.json?q=${encodeURIComponent(rest || q)}&sort=new&limit=50&raw_json=1`))?.data?.children);
+    }
+    return out;
   },
 };
 
