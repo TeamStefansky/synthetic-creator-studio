@@ -27,7 +27,12 @@ type Assessment = {
   note?: string;
 };
 
-async function extractFrames(file: File, count = 6): Promise<{ frames: { data: string; mediaType: string }[]; personaSample: number[] }> {
+const SAMPLE_SIDE = 32; // 32×32 grayscale → server-side DCT perceptual hash (v2)
+
+async function extractFrames(
+  file: File,
+  count = 6,
+): Promise<{ frames: { data: string; mediaType: string }[]; personaSample: number[]; frameSamples: number[][] }> {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");
   video.muted = true;
@@ -43,7 +48,21 @@ async function extractFrames(file: File, count = 6): Promise<{ frames: { data: s
   canvas.width = w;
   canvas.height = Math.max(1, Math.round((video.videoHeight || 288) * scale));
   const ctx = canvas.getContext("2d")!;
+  // Small canvas for grayscale samples (persona fingerprint + per-frame stability).
+  const small = document.createElement("canvas");
+  small.width = SAMPLE_SIDE; small.height = SAMPLE_SIDE;
+  const sctx = small.getContext("2d", { willReadFrequently: true })!;
+  const graySample = (): number[] => {
+    sctx.drawImage(video, 0, 0, SAMPLE_SIDE, SAMPLE_SIDE);
+    const px = sctx.getImageData(0, 0, SAMPLE_SIDE, SAMPLE_SIDE).data;
+    const g: number[] = [];
+    for (let i = 0; i < SAMPLE_SIDE * SAMPLE_SIDE; i++) {
+      g.push(Math.round(0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]));
+    }
+    return g;
+  };
   const frames: { data: string; mediaType: string }[] = [];
+  const frameSamples: number[][] = [];
   const times = dur ? Array.from({ length: count }, (_, i) => (dur * (i + 0.5)) / count) : [0];
   for (const t of times) {
     await new Promise<void>((res) => {
@@ -52,20 +71,13 @@ async function extractFrames(file: File, count = 6): Promise<{ frames: { data: s
     });
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     frames.push({ data: canvas.toDataURL("image/jpeg", 0.7).split(",")[1], mediaType: "image/jpeg" });
+    frameSamples.push(graySample());
   }
-  // persona sample: 8x8 grayscale of the middle frame
-  const mid = document.createElement("canvas");
-  mid.width = 8; mid.height = 8;
-  const mctx = mid.getContext("2d")!;
-  mctx.drawImage(video, 0, 0, 8, 8);
-  const px = mctx.getImageData(0, 0, 8, 8).data;
-  const personaSample: number[] = [];
-  for (let i = 0; i < 64; i++) {
-    const r = px[i * 4], g = px[i * 4 + 1], b = px[i * 4 + 2];
-    personaSample.push(Math.round(0.299 * r + 0.587 * g + 0.114 * b));
-  }
+  // Persona sample: the middle frame's grayscale (crop/compression-robust DCT
+  // hash is computed server-side — one tested hashing path).
+  const personaSample = frameSamples[Math.floor(frameSamples.length / 2)] ?? [];
   URL.revokeObjectURL(url);
-  return { frames, personaSample };
+  return { frames, personaSample, frameSamples };
 }
 
 export default function MediaCheckPage() {
@@ -78,11 +90,11 @@ export default function MediaCheckPage() {
   const run = async (file: File) => {
     setLoading(true); setError(""); setResult(null); setFileName(file.name);
     try {
-      const { frames, personaSample } = await extractFrames(file, 6);
+      const { frames, personaSample, frameSamples } = await extractFrames(file, 6);
       const r = await fetch("/api/media-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ frames, personaSample, mediaType: "video" }),
+        body: JSON.stringify({ frames, personaSample, frameSamples, mediaType: "video" }),
       });
       const txt = await r.text();
       let data: any;

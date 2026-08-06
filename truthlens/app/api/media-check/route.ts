@@ -21,8 +21,16 @@ export async function POST(req: NextRequest) {
           .slice(0, 8)
       : [];
     const personaSample = Array.isArray(body?.personaSample) ? body.personaSample.map(Number) : undefined;
+    // Per-keyframe grayscale samples for the deterministic stability check
+    // (8×8 or 32×32 each; capped; malformed rows dropped, never guessed).
+    const frameSamples = Array.isArray(body?.frameSamples)
+      ? body.frameSamples
+          .filter((s: any) => Array.isArray(s) && (s.length === 64 || s.length === 1024))
+          .slice(0, 8)
+          .map((s: any[]) => s.map(Number))
+      : undefined;
     const mediaType = ["video", "audio", "image"].includes(body?.mediaType) ? body.mediaType : "video";
-    const result = await analyzeMediaFrames({ frames, mediaType, personaSample });
+    const result = await analyzeMediaFrames({ frames, mediaType, personaSample, frameSamples });
     return NextResponse.json(result, { headers: NO_STORE });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Media analysis failed" }, { status: 500, headers: NO_STORE });

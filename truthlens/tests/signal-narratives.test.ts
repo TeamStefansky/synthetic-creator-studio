@@ -53,7 +53,7 @@ describe("parseNarrativeThreads", () => {
   });
 });
 
-describe("clusterNarratives (no key / thin data)", () => {
+describe("clusterNarratives (deterministic core, no key / thin data)", () => {
   const OLD = process.env.ANTHROPIC_API_KEY;
   afterEach(() => {
     if (OLD === undefined) delete process.env.ANTHROPIC_API_KEY;
@@ -62,12 +62,47 @@ describe("clusterNarratives (no key / thin data)", () => {
 
   const m = (id: string, text: string): Mention => ({ source: "gdelt", id, text });
 
-  it("reports an honest not-connected state without a key", async () => {
+  it("clusters WITHOUT a key (deterministic) and says labels are keyword-derived", async () => {
     delete process.env.ANTHROPIC_API_KEY;
-    const r = await clusterNarratives("Acme", [m("1", "a"), m("2", "b"), m("3", "c")]);
+    const r = await clusterNarratives("Acme", [
+      m("1", "Acme pricing increase angers subscribers with new fees"),
+      m("2", "Subscribers protest the Acme pricing increase and new fees"),
+      m("3", "Acme launches solar charging station in Lisbon"),
+      m("4", "New Acme solar charging station opens for Lisbon drivers"),
+    ]);
+    expect(r.available).toBe(true); // real computation, no model needed
+    expect(r.labelMode).toBe("keywords");
+    expect(r.reason).toMatch(/keyword-derived/i);
+    expect(r.threads.length).toBeGreaterThanOrEqual(2);
+    // pricing posts together, solar posts together
+    const grouped = r.threads.map((t) => [...t.mentions].sort());
+    expect(grouped).toContainEqual([0, 1]);
+    expect(grouped).toContainEqual([2, 3]);
+  });
+
+  it("is reproducible: identical input → identical clusters (rule 8)", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    const input = [
+      m("1", "shipment delays hit Acme warehouse customers again"),
+      m("2", "Acme warehouse shipment delays frustrate customers"),
+      m("3", "Acme wins design award for the new controller"),
+      m("4", "design award goes to Acme controller team"),
+    ];
+    const a = await clusterNarratives("Acme", input);
+    const b = await clusterNarratives("Acme", input);
+    expect(a.threads.map((t) => t.mentions)).toEqual(b.threads.map((t) => t.mentions));
+    expect(a.threads.map((t) => t.name)).toEqual(b.threads.map((t) => t.name));
+  });
+
+  it("returns honest unavailable when no recurring structure exists (never force-fit)", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    const r = await clusterNarratives("Acme", [
+      m("1", "quarterly earnings beat expectations today"),
+      m("2", "hiking trails reopen after winter storm damage"),
+      m("3", "chess tournament finals stream announced"),
+    ]);
     expect(r.available).toBe(false);
-    expect(r.reason).toMatch(/ANTHROPIC_API_KEY/);
-    expect(r.threads).toEqual([]);
+    expect(r.reason).toMatch(/No recurring storyline/i);
   });
 
   it("reports unavailable when there is too little text to cluster", async () => {

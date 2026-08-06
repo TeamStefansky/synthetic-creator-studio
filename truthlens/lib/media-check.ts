@@ -15,7 +15,7 @@
 
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
 
-export const MEDIA_CHECK_VERSION = "media-check-v1";
+export const MEDIA_CHECK_VERSION = "media-check-v2";
 
 // Minimum analyzed frames before an aggregate is trustworthy — fewer → Insufficient
 // (a one-frame "verdict" is fabricated precision).
@@ -75,6 +75,81 @@ export function perceptualHash(gray: number[]): string {
   return hex;
 }
 
+// ---------------------------------------------------------------------------
+// DCT perceptual hash (pHash-style) — v2 fingerprint
+// ---------------------------------------------------------------------------
+
+/** Side of the grayscale sample the DCT hash expects (32×32 = 1024 values). */
+export const DCT_SAMPLE_SIDE = 32;
+
+/**
+ * DCT-based perceptual hash over a 32×32 grayscale sample (1024 values, 0–255):
+ * 2D DCT-II → keep the 8×8 low-frequency block → threshold the 63 AC
+ * coefficients on their median (DC bit is 0). 16-hex / 64-bit output,
+ * comparable with hammingHex/clusterPersonas exactly like the v1 aHash.
+ *
+ * Why it beats the aHash: the low-frequency spectrum survives crops, scaling,
+ * re-encoding and brightness/contrast changes that flip many aHash bits —
+ * uniform brightness shifts move only the DC term and contrast scaling
+ * preserves every median comparison, so the hash is invariant to both by
+ * construction. Returns "" for a malformed sample.
+ */
+export function dctHash(gray: number[]): string {
+  const N = DCT_SAMPLE_SIDE;
+  if (!Array.isArray(gray) || gray.length !== N * N || gray.some((v) => !isFinite(v))) return "";
+  // Precompute the cosine basis for the 8 low frequencies (cos((2x+1)uπ/2N)).
+  const K = 8;
+  const cos: number[][] = [];
+  for (let u = 0; u < K; u++) {
+    cos[u] = [];
+    for (let x = 0; x < N; x++) cos[u][x] = Math.cos(((2 * x + 1) * u * Math.PI) / (2 * N));
+  }
+  // Separable 2D DCT-II restricted to the top-left K×K block.
+  // rows: R[u][y] = Σ_x g(x,y)·cos_u(x)   then F[u][v] = Σ_y R[u][y]·cos_v(y)
+  const coef: number[] = new Array(K * K).fill(0);
+  for (let u = 0; u < K; u++) {
+    const row: number[] = new Array(N).fill(0);
+    for (let y = 0; y < N; y++) {
+      let s = 0;
+      for (let x = 0; x < N; x++) s += gray[y * N + x] * cos[u][x];
+      row[y] = s;
+    }
+    for (let v = 0; v < K; v++) {
+      let s = 0;
+      for (let y = 0; y < N; y++) s += row[y] * cos[v][y];
+      coef[u * K + v] = s;
+    }
+  }
+  // Median of the 63 AC coefficients (DC excluded — it is pure brightness).
+  const ac = coef.slice(1).slice().sort((a, b) => a - b);
+  const median = (ac[30] + ac[31]) / 2; // 63 values → average the middle pair
+  // Comparison epsilon scaled to the spectrum: floating-point noise around
+  // near-zero coefficients must never flip a bit (it would silently break the
+  // brightness/contrast invariance the hash is chosen for). Real structure
+  // separates from the median by orders of magnitude more than this.
+  const eps = 1e-6 * (1 + Math.abs(ac[62]) + Math.abs(ac[0]));
+  let hex = "";
+  for (let nibble = 0; nibble < 16; nibble++) {
+    let v = 0;
+    for (let bit = 0; bit < 4; bit++) {
+      const i = nibble * 4 + bit;
+      v = (v << 1) | (i === 0 ? 0 : coef[i] > median + eps ? 1 : 0);
+    }
+    hex += v.toString(16);
+  }
+  return hex;
+}
+
+/** One dispatcher for both fingerprint generations: a 1024-value (32×32)
+ * sample → DCT hash (v2); a 64-value (8×8) sample → average hash (v1, kept so
+ * previously stored fingerprints stay comparable). Anything else → "". */
+export function fingerprintOf(sample: number[]): string {
+  if (!Array.isArray(sample)) return "";
+  if (sample.length === DCT_SAMPLE_SIDE * DCT_SAMPLE_SIDE) return dctHash(sample);
+  if (sample.length === 64) return perceptualHash(sample);
+  return "";
+}
+
 const HEX_BITS: Record<string, number> = {
   "0": 0, "1": 1, "2": 1, "3": 2, "4": 1, "5": 2, "6": 2, "7": 3,
   "8": 1, "9": 2, a: 2, b: 3, c: 2, d: 3, e: 3, f: 4,
@@ -127,6 +202,63 @@ export function clusterPersonas(items: PersonaItem[], threshold = PERSONA_HAMMIN
     members: idxs.map((i) => valid[i].id),
     representative: valid[idxs[0]].fingerprint,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Temporal consistency (frame-to-frame fingerprint stability)
+// ---------------------------------------------------------------------------
+
+/** A shot whose consecutive-frame hash distances have a median at or below
+ * this is treated as CONTINUOUS (same scene) — the baseline a spike needs. */
+export const TEMPORAL_STABLE_MEDIAN = 12;
+/** A consecutive-frame distance at or above this, inside a continuous shot,
+ * is a spike — the "face flickers between frames" swap signature. */
+export const TEMPORAL_SPIKE_DISTANCE = 20;
+/** Fewer frames than this → null (no aggregate from too little data). */
+export const TEMPORAL_MIN_FRAMES = 3;
+
+export interface TemporalConsistency {
+  /** Hamming distances between consecutive frame fingerprints. */
+  distances: number[];
+  median: number;
+  /** Distances ≥ TEMPORAL_SPIKE_DISTANCE while the shot is otherwise stable. */
+  spikes: number;
+  /** True when an otherwise-continuous shot contains isolated jumps. */
+  unstable: boolean;
+  /** Honest description INCLUDING the innocent alternative (hard scene cuts). */
+  note: string;
+}
+
+/**
+ * Frame-to-frame stability of perceptual fingerprints. A genuine continuous
+ * shot drifts smoothly (small distances); a face-swap that momentarily fails
+ * produces isolated large jumps inside an otherwise stable sequence. A video
+ * with a HIGH median is simply an edit with scene cuts — that is NOT flagged
+ * (the spike only means something against a stable baseline). Deterministic,
+ * pure; never a verdict on its own.
+ */
+export function temporalConsistency(hashes: string[]): TemporalConsistency | null {
+  const valid = hashes.filter((h) => h && h.length === 16);
+  if (valid.length < TEMPORAL_MIN_FRAMES) return null;
+  const distances: number[] = [];
+  for (let i = 1; i < valid.length; i++) distances.push(hammingHex(valid[i - 1], valid[i]));
+  const sorted = [...distances].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  const stable = median <= TEMPORAL_STABLE_MEDIAN;
+  const spikes = stable ? distances.filter((d) => d >= TEMPORAL_SPIKE_DISTANCE).length : 0;
+  const unstable = stable && spikes >= 1;
+  return {
+    distances,
+    median,
+    spikes,
+    unstable,
+    note: unstable
+      ? `Frame fingerprints jump ${spikes} time(s) inside an otherwise stable shot (median distance ${median}) — a pattern face-swap flicker produces. Could also be a hard scene cut or a flash/transition.`
+      : stable
+        ? `Frame fingerprints are stable (median distance ${median}) — consistent with a continuous, unspliced shot.`
+        : `Frame fingerprints vary throughout (median distance ${median}) — an edited/multi-scene video; per-frame comparison is uninformative here.`,
+  };
 }
 
 // ---------------------------------------------------------------------------

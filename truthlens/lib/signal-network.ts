@@ -17,6 +17,9 @@
 import type { MapMention, MentionSourceType } from "./mentions-map";
 import type { NarrativeThread } from "./signal-narratives";
 import { outletId, outletName } from "./signal";
+import { clusterNearDuplicates } from "./similarity";
+import { coOccurrenceEdges } from "./analysis/graph";
+import { benjaminiHochberg } from "./analysis/stats";
 
 export interface NetworkNode {
   id: string;
@@ -33,11 +36,20 @@ export interface NetworkNode {
 }
 
 export interface NetworkEdge {
-  /** Node ids. Co-membership in a narrative - a co-behavior signal, not an
-   * observed interaction (CLAUDE.md: inferred edges are never typed observed). */
+  /** Node ids. Both kinds are INFERRED co-behavior signals, never an observed
+   * interaction (CLAUDE.md: inferred edges are never typed observed). */
   a: string;
   b: string;
   community: number;
+  /** "community" = co-membership in a narrative (layout aid).
+   *  "coshare"   = statistically VALIDATED co-sharing: the two accounts carried
+   *  near-duplicate content more often than the hypergeometric null explains,
+   *  after Benjamini-Hochberg FDR control. Still inferred - never observed. */
+  kind?: "community" | "coshare";
+  /** BH-adjusted q-value (coshare edges only). */
+  q?: number;
+  /** Shared near-duplicate content items (coshare edges only). */
+  overlap?: number;
 }
 
 export interface SourceNetwork {
@@ -47,6 +59,66 @@ export interface SourceNetwork {
 }
 
 const MAX_EDGES_PER_COMMUNITY = 60; // keep the layout legible on big scans
+
+// ---------------------------------------------------------------------------
+// Statistically validated co-sharing (bipartite null model + FDR)
+// ---------------------------------------------------------------------------
+
+/** BH-adjusted q-value ceiling for a validated co-share edge. */
+export const COSHARE_FDR_Q = 0.1;
+/** Two accounts must share at least this many distinct content items - one
+ * shared item is never evidence of anything. */
+export const COSHARE_MIN_OVERLAP = 2;
+/** Below this many distinct content items the null model has no room to work
+ * and every overlap looks "significant" - report nothing instead (rule 4). */
+export const COSHARE_MIN_UNIVERSE = 6;
+
+export interface CoshareEdge {
+  a: string; // node ids (outletId)
+  b: string;
+  overlap: number; // shared near-duplicate content items
+  q: number; // BH-adjusted significance
+}
+
+/**
+ * Validated co-share edges: project the account × content bipartite graph and
+ * keep ONLY pairs whose overlap beats the hypergeometric null (chance, given
+ * how much each account posts) after Benjamini-Hochberg FDR correction.
+ * "Content item" = a near-duplicate text cluster (lib/similarity - unicode-safe),
+ * so re-worded copies of one message count as the same item.
+ * Deterministic; pure. An edge here is STILL inferred co-behavior - the claim
+ * is only "more shared content than chance explains", never "they interacted"
+ * and never who is behind the accounts.
+ */
+export function validatedCoshareEdges(mentions: MapMention[]): CoshareEdge[] {
+  // 1. Content items: near-duplicate clusters over the collected texts.
+  const withText = mentions
+    .map((m, idx) => ({ idx, text: (m.text || "").trim(), account: (m.account || "").trim(), m }))
+    .filter((r) => r.text && r.account);
+  if (withText.length < 3) return [];
+  const dupClusters = clusterNearDuplicates(withText, (r) => r.text);
+
+  // 2. Bipartite memberships: account -> distinct content items it carried.
+  const memberships: Record<string, string[]> = {};
+  dupClusters.forEach((cluster, itemIdx) => {
+    const item = `item:${itemIdx}`;
+    for (const r of cluster) {
+      const id = outletId(r.m.source, r.account);
+      (memberships[id] ??= []).push(item);
+    }
+  });
+  for (const id of Object.keys(memberships)) memberships[id] = [...new Set(memberships[id])];
+  if (dupClusters.length < COSHARE_MIN_UNIVERSE) return [];
+
+  // 3. One-mode projection vs the hypergeometric null, then FDR control.
+  const raw = coOccurrenceEdges(memberships, 1).filter((e) => e.overlap >= COSHARE_MIN_OVERLAP);
+  if (!raw.length) return [];
+  const qs = benjaminiHochberg(raw.map((e) => e.pValue));
+  return raw
+    .map((e, i) => ({ a: e.a, b: e.b, overlap: e.overlap, q: qs[i] }))
+    .filter((e) => e.q <= COSHARE_FDR_Q)
+    .sort((x, y) => x.q - y.q || y.overlap - x.overlap);
+}
 
 /** Which narrative thread owns a given mention index (-1 if none). */
 function threadOfMention(threads: NarrativeThread[], idx: number): number {
@@ -107,12 +179,36 @@ export function buildSourceNetwork(mentions: MapMention[], threads: NarrativeThr
     let made = 0;
     // Star from the top account + a light ring, kept under the cap.
     for (let i = 1; i < sorted.length && made < MAX_EDGES_PER_COMMUNITY; i++) {
-      edges.push({ a: sorted[0].id, b: sorted[i].id, community });
+      edges.push({ a: sorted[0].id, b: sorted[i].id, community, kind: "community" });
       made++;
       if (i > 1 && made < MAX_EDGES_PER_COMMUNITY) {
-        edges.push({ a: sorted[i - 1].id, b: sorted[i].id, community });
+        edges.push({ a: sorted[i - 1].id, b: sorted[i].id, community, kind: "community" });
         made++;
       }
+    }
+  }
+
+  // Statistically validated co-share edges (bipartite null + FDR). When a pair
+  // already has a decorative community edge, the validated edge UPGRADES it
+  // (same pair never drawn twice); otherwise it is added - possibly across
+  // communities, which is exactly the interesting case.
+  const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+  const byPair = new Map<string, NetworkEdge>();
+  for (const e of edges) byPair.set(pairKey(e.a, e.b), e);
+  for (const v of validatedCoshareEdges(mentions)) {
+    const na = nodes.get(v.a);
+    const nb = nodes.get(v.b);
+    if (!na || !nb) continue;
+    const community = na.community === nb.community ? na.community : na.community >= 0 ? na.community : nb.community;
+    const existing = byPair.get(pairKey(v.a, v.b));
+    if (existing) {
+      existing.kind = "coshare";
+      existing.q = v.q;
+      existing.overlap = v.overlap;
+    } else {
+      const e: NetworkEdge = { a: v.a, b: v.b, community, kind: "coshare", q: v.q, overlap: v.overlap };
+      edges.push(e);
+      byPair.set(pairKey(v.a, v.b), e);
     }
   }
 

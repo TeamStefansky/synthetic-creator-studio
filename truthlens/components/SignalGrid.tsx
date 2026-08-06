@@ -299,7 +299,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
     });
     const byId = new Map(nodes.map((n) => [n.id, n]));
     const edges = network.edges
-      .map((e) => ({ s: byId.get(e.a)!, t: byId.get(e.b)!, community: e.community }))
+      .map((e) => ({ s: byId.get(e.a)!, t: byId.get(e.b)!, community: e.community, kind: e.kind, q: e.q, overlap: e.overlap }))
       .filter((e) => e.s && e.t);
     const PAD = 40;
     for (let tick = 0; tick < 300; tick++) {
@@ -753,11 +753,19 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                   const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y, d = Math.hypot(dx, dy) || 1;
                   const off = Math.min(26, d * 0.12);
                   const on = narrSel < 0 || (e.s.community === narrSel && e.t.community === narrSel);
+                  // Validated co-share edges (beat the chance null after FDR) are
+                  // denser + brighter - still dashed: inferred, never observed.
+                  const validated = e.kind === "coshare";
                   return (
                     <path key={i} className="sg-nedge"
                       d={`M ${e.s.x.toFixed(1)} ${e.s.y.toFixed(1)} Q ${(mx - (dy / d) * off).toFixed(1)} ${(my + (dx / d) * off).toFixed(1)} ${e.t.x.toFixed(1)} ${e.t.y.toFixed(1)}`}
-                      stroke={NARR_COLORS[e.community % NARR_COLORS.length]}
-                      strokeWidth={0.7} strokeDasharray="3 3" opacity={on ? 0.25 : 0.05} fill="none" />
+                      stroke={e.community >= 0 ? NARR_COLORS[e.community % NARR_COLORS.length] : "#A98BF0"}
+                      strokeWidth={validated ? 1.3 : 0.7} strokeDasharray={validated ? "1.5 2.5" : "3 3"}
+                      opacity={on ? (validated ? 0.6 : 0.25) : 0.05} fill="none">
+                      {validated && (
+                        <title>{`Validated co-sharing: ${e.overlap} near-duplicate items, q=${(e.q ?? 0).toFixed(3)} (inferred co-behavior, not an observed interaction)`}</title>
+                      )}
+                    </path>
                   );
                 })}
                 {netLayout.nodes.map((n) => {

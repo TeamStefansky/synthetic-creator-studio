@@ -16,11 +16,13 @@ export * from "./stats";
 export * from "./graph";
 export * from "./dynamics";
 export * from "./evidence";
+export * from "./conformal";
 
 import { STATS_VERSION } from "./stats";
 import { GRAPH_VERSION } from "./graph";
 import { DYNAMICS_VERSION } from "./dynamics";
 import { EVIDENCE_VERSION } from "./evidence";
+import { CONFORMAL_VERSION } from "./conformal";
 
 /** One place listing every method-module version, for the report's analysis appendix. */
 export const ANALYSIS_VERSIONS = {
@@ -28,4 +30,5 @@ export const ANALYSIS_VERSIONS = {
   graph: GRAPH_VERSION,
   dynamics: DYNAMICS_VERSION,
   evidence: EVIDENCE_VERSION,
+  conformal: CONFORMAL_VERSION,
 } as const;

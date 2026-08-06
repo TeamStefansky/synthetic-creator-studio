@@ -13,7 +13,15 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { LLM_MODEL, VISION_MODEL, isModelAccessError } from "./llm";
-import { buildAssessment, perceptualHash, MEDIA_CHECK_VERSION, type FrameScore, type MediaAssessment } from "./media-check";
+import {
+  buildAssessment,
+  fingerprintOf,
+  temporalConsistency,
+  MEDIA_CHECK_VERSION,
+  type FrameScore,
+  type MediaAssessment,
+  type TemporalConsistency,
+} from "./media-check";
 
 const MAX_FRAMES = 6;
 
@@ -24,9 +32,13 @@ export interface MediaFrame {
 export interface MediaCheckInput {
   frames: MediaFrame[];
   mediaType?: "video" | "audio" | "image";
-  /** 64-value 8×8 grayscale sample of the dominant face/frame (browser-computed)
-   * → server hashes it into the persona fingerprint (one tested hashing path). */
+  /** Grayscale sample of the dominant frame (browser-computed): 1024 values
+   * (32×32 → DCT pHash, v2) or 64 values (8×8 → aHash, v1 back-compat).
+   * The server hashes it into the persona fingerprint (one tested path). */
   personaSample?: number[];
+  /** Optional per-keyframe grayscale samples (same shapes) — enables the
+   * deterministic frame-to-frame stability check (swap-flicker signature). */
+  frameSamples?: number[][];
 }
 
 const NOT_CONNECTED: MediaAssessment = {
@@ -50,10 +62,20 @@ const SYSTEM = `You are a media-forensics analyst examining still frames sampled
 export async function analyzeMediaFrames(input: MediaCheckInput): Promise<MediaAssessment> {
   const key = process.env.ANTHROPIC_API_KEY;
   const frames = (input.frames || []).slice(0, MAX_FRAMES);
-  const fp = input.personaSample ? perceptualHash(input.personaSample) : undefined;
+  const fp = input.personaSample ? fingerprintOf(input.personaSample) : undefined;
+  // Deterministic frame-to-frame stability (runs with or without a key — it is
+  // pure computation on the browser-extracted samples, never model output).
+  const temporal: TemporalConsistency | null = input.frameSamples?.length
+    ? temporalConsistency(input.frameSamples.map(fingerprintOf))
+    : null;
 
   if (!key || frames.length === 0) {
-    return { ...NOT_CONNECTED, personaFingerprint: fp || undefined, mediaType: input.mediaType ?? "video" };
+    return {
+      ...NOT_CONNECTED,
+      personaFingerprint: fp || undefined,
+      mediaType: input.mediaType ?? "video",
+      evidence: temporal ? [`Deterministic check: ${temporal.note}`] : [],
+    };
   }
 
   const client = new Anthropic({ apiKey: key });
@@ -109,6 +131,9 @@ export async function analyzeMediaFrames(input: MediaCheckInput): Promise<MediaA
     : [];
   const pubFig = typeof parsed.publicFigure === "string" && parsed.publicFigure.trim() ? parsed.publicFigure.trim().slice(0, 160) : undefined;
   const evidence = typeof parsed.notes === "string" && parsed.notes.trim() ? [parsed.notes.trim().slice(0, 300)] : [];
+  // Surface the deterministic stability finding as EVIDENCE with its innocent
+  // alternative baked in — it contextualizes the model's scores, never inflates them.
+  if (temporal) evidence.push(`Deterministic check: ${temporal.note}`);
 
   return buildAssessment(perFrame, {
     mediaType: input.mediaType ?? "video",
