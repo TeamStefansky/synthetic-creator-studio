@@ -6,6 +6,7 @@
 import { usePathname } from "next/navigation";
 import Nav from "@/components/Nav";
 import AlertsBell from "@/components/AlertsBell";
+import JobsTray from "@/components/JobsTray";
 
 const BARE = ["/login", "/welcome"];
 
@@ -24,6 +25,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <AlertsBell />
+      <JobsTray />
     </>
   );
 }

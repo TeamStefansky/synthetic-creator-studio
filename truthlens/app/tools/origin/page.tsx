@@ -9,6 +9,8 @@ import NetworkGraph from "@/components/NetworkGraph";
 import { flagEmoji, countryName } from "@/lib/countries";
 import { buildOriginExposureNetwork } from "@/lib/origin-map";
 import { recordSearch } from "@/lib/clues/record";
+import { startJob } from "@/lib/jobs/store";
+import { useJob } from "@/lib/jobs/useJobs";
 
 // "🇮🇱 Tel Aviv, Israel" for a record's geo (blank when unknown).
 function locLabel(country?: string, city?: string): string {
@@ -27,42 +29,44 @@ const BAND_UI: Record<OriginExposureBand, { label: string; cls: string; Icon: an
 
 export default function OriginExposurePage() {
   const [domain, setDomain] = useState("");
-  const [result, setResult] = useState<OriginExposureReport | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  // The audit runs as a BACKGROUND JOB — it keeps running if you switch tools,
+  // and the latest audit's result is shown here when you return (plus the tray).
+  const job = useJob(jobId, "origin");
+  const loading = job?.status === "running";
+  const result = (job?.status === "done" ? job.result : null) as OriginExposureReport | null;
+  const jobError = job?.status === "error" ? job.error : "";
 
-  const audit = async (value?: string) => {
-    const d = value ?? domain;
-    setLoading(true);
+  const audit = (value?: string) => {
+    const d = (value ?? domain).trim();
+    if (d.length < 2) { setError("Enter a domain (≥ 2 characters)."); return; }
     setError("");
-    setResult(null);
-    try {
-      const r = await fetch("/api/origin-exposure", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain: d }),
-      });
-      // Parse text-first: a platform timeout/crash returns a NON-JSON page, so
-      // r.json() would throw the opaque "Unexpected token 'A'..." error. Surface
-      // a readable message instead.
-      const txt = await r.text();
-      let data: any;
-      try { data = JSON.parse(txt); }
-      catch {
-        throw new Error(
-          r.status === 504 || /timeout|invocation/i.test(txt)
-            ? "The audit took too long for this domain (large certificate/DNS footprint). Please try again — partial results are cached."
-            : txt.slice(0, 160) || `Audit failed (${r.status})`,
-        );
-      }
-      if (!r.ok) throw new Error(data.error || "Audit failed");
-      setResult(data);
-      recordSearch("origin", d, `${d} — origin exposure`, data); // feed cross-search network
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    const id = startJob({
+      tool: "origin", href: "/tools/origin", input: d, label: `Origin Exposure · ${d}`,
+      run: async () => {
+        const r = await fetch("/api/origin-exposure", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domain: d }),
+        });
+        // Parse text-first: a platform timeout/crash returns a NON-JSON page, so
+        // r.json() would throw the opaque "Unexpected token 'A'..." error.
+        const txt = await r.text();
+        let data: any;
+        try { data = JSON.parse(txt); }
+        catch {
+          throw new Error(
+            r.status === 504 || /timeout|invocation/i.test(txt)
+              ? "The audit took too long for this domain (large certificate/DNS footprint). Please try again — partial results are cached."
+              : txt.slice(0, 160) || `Audit failed (${r.status})`,
+          );
+        }
+        if (!r.ok) throw new Error(data.error || "Audit failed");
+        recordSearch("origin", d, `${d} — origin exposure`, data); // feed cross-search network
+        return data;
+      },
+    });
+    setJobId(id);
   };
 
   // Prefill + auto-run from ?domain= (used by Case Board "Next: Origin Exposure").
@@ -109,7 +113,8 @@ export default function OriginExposurePage() {
             {loading ? "Auditing…" : <>Run audit <ArrowRight className="h-4 w-4" /></>}
           </button>
         </form>
-        {error && <p className="mt-2 text-sm text-risk-high">{error}</p>}
+        {(error || jobError) && <p className="mt-2 text-sm text-risk-high">{error || jobError}</p>}
+        {loading && <p className="mt-2 text-sm text-ink-secondary">Auditing in the background — you can switch tools; the result will be waiting here and in the scans tray.</p>}
         <p className="mt-2 text-xs text-ink-secondary">
           Only run this on assets you own or are authorized to test. This is a defensive posture
           check; results are cached per day for reproducibility.

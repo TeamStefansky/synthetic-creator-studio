@@ -8,10 +8,12 @@
 // measured against.
 
 import { useState } from "react";
-import { RadarIcon, Loader2, TrendingUp, RotateCcw } from "lucide-react";
+import { Radar as RadarIcon, Loader2, TrendingUp, RotateCcw } from "lucide-react";
 import ToolIntro from "@/components/ToolIntro";
 import ConfidenceBadge, { type ConfidenceLevel } from "@/components/ConfidenceBadge";
 import Disclaimer from "@/components/Disclaimer";
+import { startFetchJob } from "@/lib/jobs/store";
+import { useJob } from "@/lib/jobs/useJobs";
 
 type Indicator = { key: string; label: string; contribution: number; detail: string };
 type Forecast = {
@@ -32,24 +34,28 @@ const BAND_UI: Record<string, { cls: string; ring: string; label: string }> = {
 
 export default function RadarPage() {
   const [entity, setEntity] = useState("");
-  const [data, setData] = useState<{ forecast: Forecast; sources: any; entity: string } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  // The forecast runs as a BACKGROUND JOB: it keeps running if you leave the
+  // page, and the latest radar job's result is shown when you return.
+  const job = useJob(jobId, "radar");
+  const loading = job?.status === "running";
+  const data = job?.status === "done" ? (job.result as { forecast: Forecast; sources: any; entity: string }) : null;
 
-  const run = async () => {
-    if (entity.trim().length < 2) { setError("Enter a term (≥ 2 characters)."); return; }
-    setLoading(true); setError(""); setData(null);
-    try {
-      const r = await fetch(`/api/radar?entity=${encodeURIComponent(entity.trim())}`);
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || "Forecast failed");
-      setData(j);
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
+  const run = () => {
+    const term = entity.trim();
+    if (term.length < 2) { setError("Enter a term (≥ 2 characters)."); return; }
+    setError("");
+    const id = startFetchJob({
+      tool: "radar", href: "/tools/radar", input: term, label: `Radar · ${term}`,
+      url: `/api/radar?entity=${encodeURIComponent(term)}`,
+    });
+    setJobId(id);
   };
 
   const f = data?.forecast;
   const band = f ? BAND_UI[f.band] : null;
+  const jobError = job?.status === "error" ? job.error : "";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -78,7 +84,8 @@ export default function RadarPage() {
         </button>
       </div>
 
-      {error && <div className="card border-risk-high/30 text-sm text-risk-high">{error}</div>}
+      {(error || jobError) && <div className="card border-risk-high/30 text-sm text-risk-high">{error || jobError}</div>}
+      {loading && <div className="card flex items-center gap-2 text-sm text-ink-secondary"><Loader2 className="h-4 w-4 animate-spin" /> Forecasting in the background — you can switch tools; the result will be waiting here and in the scans tray.</div>}
 
       {f && !f.available && (
         <div className="card text-sm text-ink-secondary">{f.reason || "No forecast available."}</div>
