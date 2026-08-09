@@ -14,6 +14,7 @@
 //   - gaps (what was NOT scanned) are stated, never silently dropped.
 
 import { extractEntities, type Entity, type EntityKind } from "@/lib/clues/extract";
+import { buildHostConduct, type HostConductProfile } from "@/lib/host-conduct";
 import { CASEBOOK_VERSION } from "./types";
 
 export type Band = "High" | "Medium" | "Low" | "Background";
@@ -74,6 +75,10 @@ export interface CaseDossier {
   subjects: DossierSubject[];
   evidence: EvidenceRow[];
   infrastructure: InfraFact[];
+  /** Documented, cited conduct of the hosts behind the infrastructure (court
+   * records, watchdog designations). High confidence — public record. Separated
+   * from any client claim. Empty when no host in the case is on file. */
+  hostConduct: HostConductProfile[];
   conclusionLevel: ConclusionLevel;
   conclusionConfidence: Band | "Unknown";
   bluf: string;
@@ -209,6 +214,23 @@ export function buildDossier(
     }
   }
 
+  // ---- Host conduct: documented, cited conduct of the hosts on file ------
+  // For each distinct host operator/ASN in the infrastructure, pull its
+  // public-record conduct. This is the "simple research following the
+  // connections" done automatically — High confidence, cited, and kept SEPARATE
+  // from any claim about a client that merely shares the infrastructure.
+  const hostConduct: HostConductProfile[] = [];
+  const hcSeen = new Set<string>();
+  for (const f of infra) {
+    const p = f.label === "Autonomous System"
+      ? buildHostConduct({ asn: f.value })
+      : buildHostConduct({ org: f.value, hostName: f.value });
+    if (p.matched && p.org && !hcSeen.has(p.org)) {
+      hcSeen.add(p.org);
+      hostConduct.push(p);
+    }
+  }
+
   // ---- Conclusion (capped at Association) --------------------------------
   const top = evidence[0];
   let conclusionLevel: ConclusionLevel;
@@ -237,7 +259,7 @@ export function buildDossier(
   gaps.push("Infrastructure association is not shared ownership; treat every link as a lead to verify, not a conclusion.");
 
   // ---- Deterministic BLUF (LLM may replace the wording later) ------------
-  const bluf = buildBluf({ name, subject, checks, subjects, evidence, top, conclusionLevel });
+  const bluf = buildBluf({ name, subject, checks, subjects, evidence, top, conclusionLevel, hostConduct });
 
   return {
     version: CASEBOOK_VERSION,
@@ -250,6 +272,7 @@ export function buildDossier(
     subjects,
     evidence,
     infrastructure: infra,
+    hostConduct,
     conclusionLevel,
     conclusionConfidence,
     bluf,
@@ -261,11 +284,19 @@ export function buildDossier(
 function buildBluf(a: {
   name: string; subject: string; checks: DossierCheck[]; subjects: DossierSubject[];
   evidence: EvidenceRow[]; top?: EvidenceRow; conclusionLevel: ConclusionLevel;
+  hostConduct: HostConductProfile[];
 }): string {
   if (a.checks.length < 2) {
     return `This case contains ${a.checks.length} search${a.checks.length === 1 ? "" : "es"}. Add at least two searches to establish links between assets. Unknown is a valid result.`;
   }
   const parts: string[] = [];
+  // A documented, high-severity host on file is a load-bearing, citable finding —
+  // lead with it (it is public record about the host, not a claim about a client).
+  const severeHost = a.hostConduct.find((h) => h.topSeverity === "high");
+  if (severeHost) {
+    const f = severeHost.findings.find((x) => x.severity === "high");
+    parts.push(`The infrastructure in this case runs through ${severeHost.org}, a host with documented public-record conduct: ${f?.label.toLowerCase()} (${(f?.sources || []).slice(0, 2).join("; ")}). ${severeHost.clientCaveat}`);
+  }
   if (a.top) {
     const strength = a.top.confidence === "High" ? "one high-confidence link" : "the strongest observed link";
     parts.push(`TruthLens identified ${strength} across the ${a.checks.length} searches in this case: a shared ${a.top.label.toLowerCase()} (${a.top.value}), present in ${a.top.searches.length} of them.`);

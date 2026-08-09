@@ -16,6 +16,7 @@ import { Resolver } from "dns/promises";
 import { getText, getJson } from "./http";
 import { enrichIp } from "./ip";
 import { cacheGet, cacheSet } from "./cache";
+import { buildHostConduct, type HostConductProfile } from "./host-conduct";
 
 const TTL = 24 * 60 * 60 * 1000; // per-day reproducibility
 const PUBLIC_RESOLVERS = ["1.1.1.1", "8.8.8.8", "9.9.9.9"];
@@ -123,6 +124,10 @@ export interface OriginExposureReport {
   alternative: string;
   recommendations: string[];
   note: string;
+  /** Documented public-record conduct of the host behind the candidates (court
+   * records, watchdog designations), when the operator/ASN is on file. High
+   * confidence; separated from any claim about the audited domain. */
+  hostConduct?: HostConductProfile;
   collectedAt: string;
 }
 
@@ -582,6 +587,18 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
   for (const c of candidates) if (c.provider) provCounts.set(c.provider, (provCounts.get(c.provider) || 0) + 1);
   const provider = [...provCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
+  // Documented host conduct: match the network operator(s) behind the candidates
+  // against the public-record reference. High confidence, cited; kept separate
+  // from any claim about the audited domain (sharing a host ≠ shared operation).
+  const hostNeedles = new Set<string>();
+  if (provider) hostNeedles.add(provider);
+  for (const c of candidates) { if (c.org) hostNeedles.add(c.org); if (c.provider) hostNeedles.add(c.provider); }
+  let hostConduct: HostConductProfile | undefined;
+  for (const needle of hostNeedles) {
+    const hc = buildHostConduct({ org: needle, hostName: needle });
+    if (hc.matched) { hostConduct = hc; break; }
+  }
+
   // Confidence in the EXPOSURE ASSESSMENT (not that a bypass works).
   const confidenceScore =
     band === "no_exposure_observed" ? 90 :
@@ -610,6 +627,7 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     alternative:
       "A non-Cloudflare IP is not proof of the live origin: it is often a third-party mail, analytics, or SaaS host, a parked or legacy record, or a subdomain intentionally served outside the CDN. Confirm ownership before acting.",
     recommendations: band === "possible_exposure" ? RECOMMENDATIONS : RECOMMENDATIONS.slice(0, 3),
+    hostConduct,
     note: (partial
       ? "Partial result: this domain has a large certificate/DNS footprint, so provider/geo enrichment was stopped at the time budget — the exposure finding and candidate IPs are complete, some provider/location labels may be missing. "
       : "") + "Passive audit of PUBLIC records (Certificate Transparency + DNS + RDAP) for a domain you are authorized to inspect. Indicators for hardening, not a verdict; this tool never probes or connects to the origin, so candidates are for the owner to verify, not confirmed origins.",

@@ -239,6 +239,35 @@ export default function OriginExposurePage() {
             </div>
           )}
 
+          {result.hostConduct?.matched && (
+            <div className="card border-risk-high/30">
+              <div className="label-muted mb-1 text-risk-high">Host conduct — documented public record</div>
+              <div className="mb-2 text-sm font-medium text-ink">{result.hostConduct.org}{result.hostConduct.country ? ` · ${result.hostConduct.country}` : ""} <span className="ml-1 rounded bg-risk-high/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-risk-high">High · public record</span></div>
+              {result.hostConduct.summary && <p className="mb-2 text-[13px] text-ink-secondary">{result.hostConduct.summary}</p>}
+              <ul className="space-y-2">
+                {result.hostConduct.findings.map((f, i) => (
+                  <li key={i} className="rounded-lg border border-line bg-bg-elev p-3">
+                    <div className="flex items-center gap-2">
+                      {f.severity === "high" && <span className="rounded bg-risk-high/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-risk-high">Severe</span>}
+                      <span className="text-sm font-medium text-ink">{f.label}</span>
+                    </div>
+                    <p className="mt-1 text-[13px] text-ink-secondary">{f.detail}</p>
+                    <div className="mt-1 text-[11px] text-ink-muted">Sources: {f.sources.join(" · ")}</div>
+                  </li>
+                ))}
+              </ul>
+              {result.hostConduct.coHostedExtremist.length > 0 && (
+                <div className="mt-3 rounded-lg border border-risk-high/25 bg-risk-high/5 p-3">
+                  <div className="label-muted mb-1 text-risk-high">Severe context flag — co-hosted domains</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.hostConduct.coHostedExtremist.map((d, i) => <code key={i} className="rounded border border-risk-high/30 px-1.5 py-0.5 font-mono text-[12px] text-risk-high">{d.domain}</code>)}
+                  </div>
+                </div>
+              )}
+              <p className="mt-2 text-[11px] text-ink-secondary">{result.hostConduct.clientCaveat}</p>
+            </div>
+          )}
+
           <p className="text-xs text-ink-secondary">{result.note}</p>
         </div>
       )}

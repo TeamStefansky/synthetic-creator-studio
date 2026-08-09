@@ -87,6 +87,27 @@ describe("buildDossier", () => {
     expect(d.disclaimer).toMatch(/not a verdict/i);
   });
 
+  it("surfaces documented host conduct (1984/AS44925) at High, cited, in the BLUF", () => {
+    const origin: DossierCheck = {
+      id: "o", type: "origin", input: "shovrimshtika.org", headline: "origin",
+      createdAt: AT, result: { asn: "AS44925", asnOrg: "THE-1984-AS" },
+    };
+    const d = buildDossier({ caseId: "c1", name: "x", checks: [siteA, siteB, origin], generatedAt: AT });
+    expect(d.hostConduct.length).toBeGreaterThan(0);
+    const h = d.hostConduct[0];
+    expect(h.org).toBe("1984 ehf");
+    expect(h.confidence).toBe("High");
+    expect(h.topSeverity).toBe("high");
+    // the load-bearing, citable finding leads the bottom line, WITH the client caveat
+    expect(d.bluf).toMatch(/1984 ehf/);
+    expect(d.bluf).toMatch(/not proof that any particular client/i);
+  });
+
+  it("does not attach host conduct when no host on file is in the case", () => {
+    const d = buildDossier({ caseId: "c1", name: "x", checks: [siteA, siteB], generatedAt: AT });
+    expect(d.hostConduct).toEqual([]);
+  });
+
   it("is deterministic (same input → identical dossier)", () => {
     const a = buildDossier({ caseId: "c1", name: "x", checks: [siteA, siteB], generatedAt: AT });
     const b = buildDossier({ caseId: "c1", name: "x", checks: [siteA, siteB], generatedAt: AT });

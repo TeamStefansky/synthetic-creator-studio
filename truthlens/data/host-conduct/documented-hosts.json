@@ -1,0 +1,34 @@
+{
+  "_comment": "Operator-maintained, ORGANIZATION-level, CITED records of documented host/ASN conduct (court records, watchdog designations, a host's own stated policy). Each finding is public record with a source. These are facts about a HOST's conduct — never a claim about a client sharing that infrastructure, and never a person. An empty file means 'cannot assess' → Unknown, never 'clean'. Severity: high | medium | context.",
+  "version": "host-conduct-seed-v1",
+  "entries": [
+    {
+      "org": "1984 ehf",
+      "asns": ["AS44925"],
+      "aliases": ["1984", "1984 hosting", "the-1984-as", "virtualroad", "qurium"],
+      "country": "IS",
+      "summary": "Icelandic host built on a declared no-takedown / maximal-free-expression policy; alongside many legitimate privacy and activism clients, its infrastructure has hosted documented extremist and antisemitic content the host publicly refused to remove.",
+      "findings": [
+        {
+          "label": "Defended a documented antisemitic 'target list' in court",
+          "detail": "Hosted 'The Mapping Project' (mapliberation.org), which plotted addresses of Jewish and pro-Israel institutions and figures with a call to 'dismantle & disrupt' them. The ADL described it as a target list against the Jewish community and demanded removal in June 2022; 1984 refused and defended the site up to the Icelandic Court of Appeals (ruling December 2023), even dedicating an official subdomain to the affair.",
+          "severity": "high",
+          "sources": [
+            "Anti-Defamation League (ADL) statement on The Mapping Project, 2022",
+            "Icelandic Court of Appeals (Landsréttur) ruling, December 2023",
+            "litigation.1984.hosting"
+          ]
+        },
+        {
+          "label": "Stated no-takedown policy for contested content",
+          "detail": "The host markets an explicit policy of not complying with removal demands even for severely contested content, placing it outside US/EU takedown norms.",
+          "severity": "context",
+          "sources": ["1984 ehf published policy / marketing materials"]
+        }
+      ],
+      "flaggedCoHostedDomains": [
+        { "domain": "hitler.nu", "note": "Domain name of an extremist character surfaced on the host's IP ranges. A domain NAME is an indicator, not proof of current content." }
+      ]
+    }
+  ]
+}

@@ -125,6 +125,44 @@ export default function CaseReport({ report }: { report: CaseDossier }) {
         </section>
       )}
 
+      {/* Host conduct — documented, cited public-record conduct of the hosts */}
+      {report.hostConduct.length > 0 && (
+        <section>
+          <h2 className="mb-1 font-display text-lg font-bold text-ink">Host conduct — documented public record</h2>
+          <p className="mb-3 text-[12px] text-ink-muted">Documented conduct of the hosting infrastructure in this case (court records, watchdog designations). High confidence — public record.</p>
+          {report.hostConduct.map((h) => (
+            <div key={h.org} className="mb-3 rounded-xl border border-risk-high/30 bg-bg-card p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-medium text-ink">{h.org}{h.country ? ` · ${h.country}` : ""}</span>
+                <ConfidenceBadge level="High" />
+              </div>
+              {h.summary && <p className="mt-1 text-[13px] text-ink-secondary">{h.summary}</p>}
+              <ul className="mt-3 space-y-2">
+                {h.findings.map((f, i) => (
+                  <li key={i} className="rounded-lg border border-line bg-bg-elev p-3">
+                    <div className="flex items-center gap-2">
+                      {f.severity === "high" && <span className="rounded bg-risk-high/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-risk-high">Severe</span>}
+                      <span className="text-sm font-medium text-ink">{f.label}</span>
+                    </div>
+                    <p className="mt-1 text-[13px] text-ink-secondary">{f.detail}</p>
+                    <div className="mt-1 text-[11px] text-ink-muted">Sources: {f.sources.join(" · ")}</div>
+                  </li>
+                ))}
+              </ul>
+              {h.coHostedExtremist.length > 0 && (
+                <div className="mt-3 rounded-lg border border-risk-high/25 bg-risk-high/5 p-3">
+                  <div className="label-muted mb-1 text-risk-high">Severe context flag — co-hosted domains</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {h.coHostedExtremist.map((d, i) => <code key={i} className="rounded border border-risk-high/30 px-1.5 py-0.5 font-mono text-[12px] text-risk-high">{d.domain}</code>)}
+                  </div>
+                  <p className="mt-2 text-[11px] text-ink-secondary">{h.clientCaveat}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* Gaps */}
       <section className="rounded-2xl border border-line bg-bg-card p-6">
         <div className="label-muted mb-2">Open gaps &amp; caveats</div>
