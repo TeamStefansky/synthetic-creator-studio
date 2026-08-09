@@ -7,6 +7,7 @@
 import { genId, saveLocal, type CheckRecord } from "@/lib/check/history";
 import { extractEntities } from "./extract";
 import { linkAndRecord } from "./index";
+import { linkCheckToActiveCase } from "@/lib/casebook/store";
 
 export function recordSearch(type: string, input: string, headline: string, result: any, level?: string): void {
   if (typeof window === "undefined") return;
@@ -26,4 +27,8 @@ export function recordSearch(type: string, input: string, headline: string, resu
 
   const entities = extractEntities(type, input, result);
   if (entities.length) { try { linkAndRecord(rec.id, entities); } catch { /* ignore */ } }
+
+  // If a case (profile) is active, link this search to it — like saving into
+  // the currently-selected Chrome profile.
+  try { linkCheckToActiveCase(rec.id); } catch { /* ignore */ }
 }

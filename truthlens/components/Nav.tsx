@@ -10,8 +10,9 @@ import { useState } from "react";
 import {
   FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper, MapPin, Clapperboard,
+  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper, MapPin, Clapperboard, FolderKanban,
 } from "lucide-react";
+import CaseSwitcher from "./CaseSwitcher";
 
 // Six mission hubs. The flat tool list is grouped into the areas of the mission:
 // analyze an asset, monitor narratives, investigate connections, look up entities,
@@ -47,6 +48,7 @@ const groups: NavGroup[] = [
   {
     group: "Investigate",
     items: [
+      { href: "/casebook", label: "Cases", icon: FolderKanban, match: (p) => p.startsWith("/casebook") },
       { href: "/tools/linkboard", label: "Link Board", icon: Share2, match: (p) => p.startsWith("/tools/linkboard") },
       { href: "/tools/relboard", label: "Relationship Board", icon: Network, match: (p) => p.startsWith("/tools/relboard") },
       { href: "/case", label: "Case Synthesis", icon: ScrollText, match: (p) => p.startsWith("/case") },
@@ -148,10 +150,11 @@ export default function Nav() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-4 border-r border-line bg-bg-base px-3 py-4 lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-[232px] shrink-0 flex-col gap-3 border-r border-line bg-bg-base px-3 py-4 lg:flex">
         <div className="px-2 py-1">
           <Wordmark />
         </div>
+        <div className="no-print"><CaseSwitcher /></div>
         <NavItems />
       </aside>
 
@@ -182,6 +185,7 @@ export default function Nav() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+            <CaseSwitcher />
             <NavItems onNavigate={() => setOpen(false)} />
           </aside>
         </div>

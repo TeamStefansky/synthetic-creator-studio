@@ -1,0 +1,139 @@
+"use client";
+
+// Case summary report — renders the assembled report (lib/casebook/dossier) in
+// the TruthLens report style: BLUF, subject profiles, the cross-search evidence
+// chain (confidence + alternative on every row), infrastructure, gaps, and the
+// standing disclaimer. Print-to-PDF uses the app's existing print CSS.
+
+import ConfidenceBadge, { type ConfidenceLevel } from "@/components/ConfidenceBadge";
+import type { CaseDossier, Band } from "@/lib/casebook/dossier";
+import { fmtDate } from "@/lib/ui";
+
+const BAND_TO_LEVEL: Record<Band, ConfidenceLevel> = {
+  High: "High", Medium: "Medium", Low: "Low", Background: "Unknown",
+};
+
+const CONCLUSION_TONE: Record<string, string> = {
+  Association: "text-risk-unknown",
+  "Weak association": "text-ink-secondary",
+  "No link established": "text-risk-legit",
+  "Insufficient data": "text-ink-secondary",
+};
+
+export default function CaseReport({ report }: { report: CaseDossier }) {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="rounded-2xl border border-line bg-bg-card p-6">
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-ink-muted">
+          <span className="gradient-text font-bold">TruthLens</span>
+          <span>Defensive OSINT · Decision-support</span>
+        </div>
+        <h1 className="mt-4 font-display text-2xl font-bold text-ink">{report.title}</h1>
+        {report.subject && <p className="mt-2 max-w-2xl text-sm text-ink-secondary">{report.subject}</p>}
+        <div className="mt-4 flex flex-wrap gap-2 text-[12px]">
+          <span className="rounded-full border border-line px-2.5 py-1 text-ink-secondary">Generated: {fmtDate(report.generatedAt)}</span>
+          <span className="rounded-full border border-line px-2.5 py-1 text-ink-secondary">{report.searchCount} searches</span>
+          {report.toolsUsed.length > 0 && <span className="rounded-full border border-line px-2.5 py-1 text-ink-secondary">Modules: {report.toolsUsed.join(" · ")}</span>}
+          <span className={`rounded-full border border-line px-2.5 py-1 font-medium ${CONCLUSION_TONE[report.conclusionLevel] || "text-ink"}`}>
+            Conclusion: {report.conclusionLevel}
+          </span>
+        </div>
+      </div>
+
+      {/* BLUF */}
+      <div className="rounded-2xl border border-risk-unknown/25 bg-bg-card p-6">
+        <div className="label-muted mb-2 text-risk-unknown">◆ Bottom line</div>
+        <p className="text-sm leading-relaxed text-ink-soft">{report.bluf}</p>
+      </div>
+
+      {/* Subjects */}
+      {report.subjects.length > 0 && (
+        <section>
+          <h2 className="mb-3 font-display text-lg font-bold text-ink">The assets in this case</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {report.subjects.map((s) => (
+              <div key={s.checkId} className="rounded-xl border border-line bg-bg-card p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate font-medium text-ink">{s.domain}</span>
+                  {s.risk != null && (
+                    <span className="shrink-0 text-lg font-bold text-ink">{s.risk}<span className="text-xs text-ink-muted">/100</span></span>
+                  )}
+                </div>
+                <div className="mt-1 truncate text-[12px] text-ink-muted">{s.headline}</div>
+                {(s.confidence || s.facts.length > 0) && (
+                  <ul className="mt-2 space-y-1 text-[12px] text-ink-secondary">
+                    {s.confidence && <li>Confidence: {s.confidence}</li>}
+                    {s.facts.map((f, i) => <li key={i}>{f}</li>)}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Evidence chain */}
+      <section>
+        <h2 className="mb-1 font-display text-lg font-bold text-ink">The links the system found</h2>
+        <p className="mb-3 text-[12px] text-ink-muted">Entities shared across two or more searches in this case. Strongest first. Every link carries its alternative explanation — association is not shared ownership.</p>
+        {report.evidence.length === 0 ? (
+          <div className="rounded-xl border border-line bg-bg-card p-4 text-sm text-ink-secondary">
+            No distinctive entity is shared across the searches in this case. That is a valid result — “no link” is an answer.
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-line">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-[11px] uppercase tracking-wider text-ink-muted">
+                  <th className="p-3 font-medium">Link</th>
+                  <th className="p-3 font-medium">Evidence</th>
+                  <th className="p-3 font-medium">Confidence</th>
+                  <th className="p-3 font-medium">Could also be explained by</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.evidence.map((e) => (
+                  <tr key={e.key} className="border-b border-line/60 align-top">
+                    <td className="p-3">
+                      <div className="text-ink">{e.label}</div>
+                      <code className="font-mono text-[12px] text-brand-soft">{e.value}</code>
+                    </td>
+                    <td className="p-3 text-ink-secondary">{e.evidence}</td>
+                    <td className="p-3"><ConfidenceBadge level={BAND_TO_LEVEL[e.confidence]} /></td>
+                    <td className="p-3 text-[12px] text-ink-secondary">{e.alternative}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Infrastructure */}
+      {report.infrastructure.length > 0 && (
+        <section>
+          <h2 className="mb-3 font-display text-lg font-bold text-ink">Infrastructure observed</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {report.infrastructure.map((f, i) => (
+              <div key={i} className="flex items-center justify-between rounded-xl border border-line bg-bg-card px-4 py-2.5 text-sm">
+                <span className="text-ink-secondary">{f.label}</span>
+                <span className="flex items-center gap-2"><code className="font-mono text-ink">{f.value}</code><span className="text-[11px] text-ink-muted">{f.source}</span></span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Gaps */}
+      <section className="rounded-2xl border border-line bg-bg-card p-6">
+        <div className="label-muted mb-2">Open gaps &amp; caveats</div>
+        <ul className="list-disc space-y-1 pl-5 text-[13px] text-ink-secondary">
+          {report.gaps.map((g, i) => <li key={i}>{g}</li>)}
+        </ul>
+      </section>
+
+      <p className="text-[11px] leading-relaxed text-ink-muted">{report.disclaimer}</p>
+    </div>
+  );
+}
