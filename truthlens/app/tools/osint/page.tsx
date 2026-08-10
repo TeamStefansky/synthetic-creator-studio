@@ -19,6 +19,7 @@ import { getActiveCase, listCasebooks } from "@/lib/casebook/store";
 
 export default function OsintPage() {
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<"query" | "brief">("query");
   const [jobId, setJobId] = useState<string | null>(null);
   const [rawView, setRawView] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +30,15 @@ export default function OsintPage() {
 
   const run = () => {
     const q = query.trim();
+    if (mode === "brief") {
+      if (q.length < 10) { setError("Paste a brief (the tool extracts selectors from it)."); return; }
+      setError("");
+      const id = startFetchJob({
+        tool: "osint", href: "/tools/osint", input: q.slice(0, 60), label: "OSINT · brief",
+        url: "/api/osint-research", init: { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ brief: q }) },
+      });
+      setJobId(id); return;
+    }
     if (q.length < 3) { setError("Enter a query (≥ 3 characters)."); return; }
     setError("");
     const id = startFetchJob({
@@ -66,16 +76,34 @@ export default function OsintPage() {
         </p>
       </div>
 
-      <div className="no-print card flex flex-col gap-2 sm:flex-row">
-        <input
-          value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") run(); }}
-          placeholder="e.g. techforpalestine.org · AS44925 · ca-pub-5378976189690174 · Portal Kombat"
-          className="min-w-0 flex-1 rounded-xl border border-line bg-bg-elev px-3 py-2 text-sm text-ink outline-none focus:border-brand-soft"
-        />
-        <button onClick={run} disabled={loading || query.trim().length < 3} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-medium text-white shadow-glow transition hover:brightness-110 disabled:opacity-50">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" />}
-          {loading ? "Researching…" : "Research"}
-        </button>
+      <div className="no-print card space-y-2">
+        <div className="flex gap-2">
+          <button onClick={() => setMode("query")} className={`rounded-lg px-3 py-1 text-xs ${mode === "query" ? "bg-bg-elev text-white" : "text-ink-secondary hover:text-white"}`}>Single query</button>
+          <button onClick={() => setMode("brief")} className={`rounded-lg px-3 py-1 text-xs ${mode === "brief" ? "bg-bg-elev text-white" : "text-ink-secondary hover:text-white"}`}>Brief (paste a full tasking)</button>
+        </div>
+        {mode === "query" ? (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") run(); }}
+              placeholder="e.g. techforpalestine.org · AS44925 · ca-pub-5378976189690174 · Portal Kombat"
+              className="min-w-0 flex-1 rounded-xl border border-line bg-bg-elev px-3 py-2 text-sm text-ink outline-none focus:border-brand-soft"
+            />
+            <button onClick={run} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-medium text-white shadow-glow transition hover:brightness-110 disabled:opacity-50">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" />}{loading ? "Researching…" : "Research"}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <textarea
+              value={query} onChange={(e) => setQuery(e.target.value)} rows={7}
+              placeholder="Paste a full investigation brief. The tool extracts every selector (AdSense pub-ids, ASNs, GA/GTM ids, domains), runs each pivot, and merges one report."
+              className="w-full rounded-xl border border-line bg-bg-elev px-3 py-2 text-sm text-ink outline-none focus:border-brand-soft"
+            />
+            <button onClick={run} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5 text-sm font-medium text-white shadow-glow transition hover:brightness-110 disabled:opacity-50">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" />}{loading ? "Researching…" : "Research the brief"}
+            </button>
+          </div>
+        )}
       </div>
 
       {(error || jobError) && <div className="no-print card border-risk-high/30 text-sm text-risk-high">{error || jobError}</div>}

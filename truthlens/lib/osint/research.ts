@@ -22,6 +22,7 @@ import { forecastNarrativeRisk, type RadarForecast } from "@/lib/forecast/radar"
 import { narrateResearch } from "./narrate";
 import { resolveDomainInfra, lookupDomainRdap, gdeltArticles, type DomainInfra, type DomainRdap, type NewsArticle } from "./collect";
 import { buildAnnex, type ReportAnnex } from "./annex";
+import { extractSelectors, briefTitle, type Selectors } from "./brief";
 
 export const OSINT_RESEARCH_VERSION = "osint-research-v1";
 
@@ -289,4 +290,62 @@ export async function runResearch(query: string, now: { date: string; runId: str
   const input = assembleReportInput(findings, now.date, now.runId, narrative);
   const annex = buildAnnex(findings, rules);
   return { findings, report: compileReport(input), annex };
+}
+
+/**
+ * Brief mode - paste a full investigation brief; extract every hard selector
+ * (AdSense/GA/ASN/domains), run each through its collector, and merge ONE report.
+ * Domains are capped to bound wall-clock; everything degrades honestly.
+ */
+export async function runBriefResearch(brief: string, now: { date: string; runId: string }): Promise<{ findings: ResearchFindings; report: CompiledReport; annex: ReportAnnex; selectors: Selectors }> {
+  const sel = extractSelectors(brief);
+  const rules = getResolvedRules();
+  const log: string[] = [`Brief: extracted ${sel.adsense.length} AdSense, ${sel.ga.length} GA, ${sel.asn.length} ASN, ${sel.domains.length} domain(s).`];
+
+  // Watchlist: first match across any selector.
+  let watchlist: ResolvedRule | null = null;
+  for (const a of sel.adsense) { if ((watchlist = matchWatchlist("adsense_id", a, rules))) break; }
+  if (!watchlist) for (const a of sel.asn) { if ((watchlist = matchWatchlist("asn", a, rules))) break; }
+  if (!watchlist) for (const d of sel.domains) { if ((watchlist = matchWatchlist("domain", d, rules))) break; }
+  if (watchlist) log.push(`Watchlist match: ${watchlist.cluster}.`);
+
+  // Reverse-lookup pivots on every tracker selector (parallel).
+  const pivots = (await Promise.all([
+    ...sel.adsense.map((a) => runPivot("adsense_id", a)),
+    ...sel.ga.map((g) => runPivot("ga_id", g)),
+  ])).filter(Boolean);
+
+  // Per-domain infra + host-conduct + crt.sh (capped to 4 to bound time).
+  let infra: any, rdap: any, hostConduct: any;
+  const crtMembers: string[] = [];
+  for (const d of sel.domains.slice(0, 4)) {
+    const di = await resolveDomainInfra(d);
+    if (!infra && di.ip) infra = di;
+    if (di.asn && !hostConduct) { const hc = buildHostConduct({ asn: di.asn, org: di.org, hostName: di.org }); if (hc.matched) hostConduct = hc; }
+    const crt = (await runPivot("domain", d)).results.find((r) => r.tool === "crtsh.certs");
+    if (crt) crtMembers.push(...crt.members);
+  }
+  // ASN selectors → documented host conduct.
+  for (const a of sel.asn) { if (!hostConduct) { const hc = buildHostConduct({ asn: a }); if (hc.matched) { hostConduct = hc; log.push(`host-conduct: documented (${hc.org}).`); } } }
+  if (sel.domains[0]) rdap = await lookupDomainRdap(sel.domains[0]);
+  const articles = await gdeltArticles(briefTitle(brief));
+  log.push(`Pivots: ${pivots.length}; crt.sh hosts: ${crtMembers.length}; news: ${articles.length}.`);
+
+  const toolsLive = new Set<string>(["crtsh.certs"]);
+  const toolsNotConfigured = new Set<string>();
+  for (const p of pivots) { p.connectedTools.forEach((t) => toolsLive.add(t)); p.notConnectedTools.forEach((t) => toolsNotConfigured.add(t)); }
+  if (articles.length || true) toolsLive.add("early-warning-radar");
+
+  const findings: ResearchFindings = {
+    kind: "freetext", value: briefTitle(brief), watchlist,
+    crtsh: crtMembers.length ? { tool: "crtsh.certs", connected: true, members: dedupeDomains(crtMembers), count: crtMembers.length, note: `crt.sh: ${crtMembers.length} host(s) across brief domains.` } : undefined,
+    trackers: { gaIds: sel.ga, adsenseIds: sel.adsense },
+    pivots, hostConduct, infra, rdap, articles,
+    toolsLive: [...toolsLive], toolsNotConfigured: [...toolsNotConfigured], log,
+  };
+  const confidence = deriveConfidence(findings);
+  const narrative = await narrateResearch(findings, confidence);
+  const input = assembleReportInput(findings, now.date, now.runId, narrative);
+  const annex = buildAnnex(findings, rules);
+  return { findings, report: compileReport(input), annex, selectors: sel };
 }
