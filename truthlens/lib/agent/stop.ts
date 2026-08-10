@@ -1,5 +1,5 @@
 // Stopping rule (layer 05 · P3). The agent stops when any condition fires and the
-// report names WHICH. Diminishing diagnosticity is the principled, common stop —
+// report names WHICH. Diminishing diagnosticity is the principled, common stop -
 // an agent that always finds something is worthless. All thresholds are named.
 
 import { overBudget, type Spend } from "./budget";

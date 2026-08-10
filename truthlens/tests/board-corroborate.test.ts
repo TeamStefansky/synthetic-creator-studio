@@ -39,7 +39,7 @@ describe("applyCorroboration (down-only)", () => {
   it("collapses a ubiquitous id to Low", () => {
     expect(applyCorroboration("High", prev("ubiquitous", 500), false).effective).toBe("Low");
   });
-  it("caps an unmeasured (not connected) id at Medium — cannot claim High without prevalence", () => {
+  it("caps an unmeasured (not connected) id at Medium - cannot claim High without prevalence", () => {
     const r = applyCorroboration("High", prev("unknown", null), false);
     expect(r.effective).toBe("Medium");
     expect(r.notes.join(" ")).toMatch(/not measured/i);

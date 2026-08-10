@@ -1,5 +1,5 @@
 // Case shape hash (layer 04 · P1). The first and cheapest monitoring gate. It
-// hashes CONCLUSIONS ONLY — cluster membership + bounded confidence, articulation
+// hashes CONCLUSIONS ONLY - cluster membership + bounded confidence, articulation
 // edges, established path directions, the order-not-established pair set, the
 // hypothesis ranking + verdict, the rung, and coverage status. It EXCLUDES
 // collection timestamps, collector versions, re-observations, and evidence

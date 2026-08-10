@@ -1,12 +1,12 @@
 "use client";
 
-// WorldMapCanvas — a small, reusable equirectangular world map. It renders the
+// WorldMapCanvas - a small, reusable equirectangular world map. It renders the
 // COUNTRIES border set on a canvas (with graticule + pan/zoom) and plots caller-
 // supplied markers on an SVG overlay. The projection math is the same approach
 // used by SignalGrid (baseXY/project); this component isolates just the map so
 // pages that need a geographic view don't each re-implement pan/zoom.
 //
-// Data only — it never invents a marker. Callers pass real, geolocated points.
+// Data only - it never invents a marker. Callers pass real, geolocated points.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { COUNTRIES } from "@/lib/geo-borders";
@@ -101,7 +101,7 @@ export default function WorldMapCanvas({
     return () => ro.disconnect();
   }, []);
 
-  // Canvas paint — graticule + country borders (rAF-throttled).
+  // Canvas paint - graticule + country borders (rAF-throttled).
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || dims.vw === 0) return;

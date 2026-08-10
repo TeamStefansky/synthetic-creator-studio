@@ -44,7 +44,7 @@ describe("shipped reference: cited state-media seed; campaign/FARA neutral-empty
   it("state-media matches a seeded outlet and its subdomains, with a citation", () => {
     const rt = stateMediaMatch("rt.com");
     expect(rt).not.toBeNull();
-    expect(rt!.source).toMatch(/^https?:\/\//); // auditable — every seed entry is cited
+    expect(rt!.source).toMatch(/^https?:\/\//); // auditable - every seed entry is cited
     expect(stateMediaMatch("actualidad.rt.com")).not.toBeNull(); // subdomain match
     expect(stateMediaMatch("example.com")).toBeNull(); // unrelated domain: no match
   });

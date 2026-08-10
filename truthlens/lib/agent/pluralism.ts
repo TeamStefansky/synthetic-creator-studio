@@ -1,6 +1,6 @@
 // Structured pluralism (layer 06 · P6). Team A / Team B: two independent analyses
 // of the same ledger with different starting assumptions, neither able to see the
-// other's interim reasoning (the section-C firewall) — the PRODUCT is the
+// other's interim reasoning (the section-C firewall) - the PRODUCT is the
 // comparison, not a merged answer. Multiple-scenarios generation when evidence
 // underdetermines. Argument mapping: a judgment whose warrant is unstated is
 // flagged rather than published silently.
@@ -20,10 +20,10 @@ export function teamAB(a: TeamResult, b: TeamResult): TeamABResult {
   const convergent = a.verdict === b.verdict;
   return {
     convergent,
-    divergence: convergent ? "" : `Team A: ${a.verdict} — Team B: ${b.verdict}`,
+    divergence: convergent ? "" : `Team A: ${a.verdict} - Team B: ${b.verdict}`,
     product: convergent
-      ? `Convergent (${a.verdict}) — earns confidence.`
-      : `Divergent — the real uncertainty is localized here, not resolved: ${a.verdict} vs ${b.verdict}.`,
+      ? `Convergent (${a.verdict}) - earns confidence.`
+      : `Divergent - the real uncertainty is localized here, not resolved: ${a.verdict} vs ${b.verdict}.`,
   };
 }
 
@@ -35,7 +35,7 @@ export interface ArgumentMap {
   unstatedWarrant: boolean;
 }
 
-/** A map with an empty warrant box is flagged — the error prose hides, a map shows. */
+/** A map with an empty warrant box is flagged - the error prose hides, a map shows. */
 export function checkArgumentMap(m: Omit<ArgumentMap, "unstatedWarrant">): ArgumentMap {
   return { ...m, unstatedWarrant: !m.warrant || !m.warrant.trim() };
 }

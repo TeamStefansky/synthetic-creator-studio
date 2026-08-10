@@ -1,4 +1,4 @@
-// GET /api/v1/host-conduct?asn=AS44925 (or ?org=… / ?host=…) — programmatic
+// GET /api/v1/host-conduct?asn=AS44925 (or ?org=… / ?host=…) - programmatic
 // lookup of documented, cited public-record conduct for a host/ASN/operator.
 // Key-authed. Unknown (not 'clean') when the reference has no record.
 

@@ -1,4 +1,4 @@
-// lib/analysis/graph.ts — network algorithms (the "algorithmist").
+// lib/analysis/graph.ts - network algorithms (the "algorithmist").
 //
 // Upgrades the influence map's graph reasoning from ad-hoc ranking to computed,
 // reproducible claims, each with a quality/significance figure:
@@ -8,8 +8,8 @@
 //   - "acting in lockstep" is correlation vs a permutation null, not eyeballing.
 //
 // Pure, deterministic (fixed node ordering; a seeded PRNG for permutation nulls, so
-// identical input → identical numbers — rule 8). No dependencies. Nodes are
-// accounts/domains/infra — never people; this module ranks structure, it never
+// identical input → identical numbers - rule 8). No dependencies. Nodes are
+// accounts/domains/infra - never people; this module ranks structure, it never
 // attributes.
 
 import { gammaln } from "./stats";
@@ -30,7 +30,7 @@ export interface Graph {
   edges: Edge[];
 }
 
-// Deterministic seeded PRNG (mulberry32) for permutation nulls — reproducible.
+// Deterministic seeded PRNG (mulberry32) for permutation nulls - reproducible.
 export function mulberry32(seed: number): () => number {
   let t = seed >>> 0;
   return function () {
@@ -107,7 +107,7 @@ export interface Partition {
 }
 
 /**
- * Louvain community detection — single-level local moving (Blondel et al.). Nodes
+ * Louvain community detection - single-level local moving (Blondel et al.). Nodes
  * are visited in fixed order, so the result is deterministic. Returns the modularity
  * Q; a partition below MODULARITY_FLOOR is flagged `established: false` (no real
  * structure) instead of being presented as communities.
@@ -175,7 +175,7 @@ export function louvain(g: Graph): Partition {
 // Centrality
 // ---------------------------------------------------------------------------
 
-/** Exact betweenness centrality — Brandes' algorithm (unweighted, undirected). */
+/** Exact betweenness centrality - Brandes' algorithm (unweighted, undirected). */
 export function betweenness(g: Graph): Record<string, number> {
   const adj = buildAdj(g);
   const N = adj.nodes.length;
@@ -254,7 +254,7 @@ function logChoose(n: number, k: number): number {
  * Hypergeometric upper-tail P(overlap >= k): given two accounts touching a=|A| and
  * b=|B| items out of a universe of N, the probability their overlap is at least k by
  * chance. This is the mathematically correct null for "these two accounts co-occur
- * more than coincidence" — an edge is asserted only when this p-value is small.
+ * more than coincidence" - an edge is asserted only when this p-value is small.
  */
 export function hypergeomTail(k: number, a: number, b: number, N: number): number {
   if (k <= 0) return 1;

@@ -39,7 +39,7 @@ describe("review consolidation (04·P5)", () => {
   });
 });
 
-describe("candidate queue — no automatic expansion (04·P5 ethics)", () => {
+describe("candidate queue - no automatic expansion (04·P5 ethics)", () => {
   it("a discovered entity enters the queue only and never the case until accepted", () => {
     const original = ["a.com", "b.com"];
     let queue: Candidate[] = [];

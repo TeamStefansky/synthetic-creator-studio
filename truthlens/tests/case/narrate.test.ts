@@ -25,7 +25,7 @@ describe("lexicon rung ladder (P6)", () => {
   });
 });
 
-describe("reconstruction validator — adversarial fixture (P6)", () => {
+describe("reconstruction validator - adversarial fixture (P6)", () => {
   const adversarial: RawStatement[] = [
     { text: "a.com shares y", label: "INFERENCE", evidenceIds: [], rung: "association" },                                   // 1 uncited
     { text: "John Smith operated the account", label: "INFERENCE", evidenceIds: ["ev1"], rung: "attribution" },             // 2 names a person

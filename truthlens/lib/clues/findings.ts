@@ -205,7 +205,7 @@ export function findingsToMarkdown(r: FindingsReport): string {
   }
   L.push(`## Leads`);
   r.findings.forEach((f, i) => {
-    L.push(`### ${i + 1}. ${f.entityLabel}: ${f.value} — ${f.band}`);
+    L.push(`### ${i + 1}. ${f.entityLabel}: ${f.value} - ${f.band}`);
     L.push(`- Links: ${f.searches.map((s) => s.label).join(" ↔ ")}`);
     L.push(`- Evidence: ${f.evidence}`);
     L.push(`- Could also be: ${f.alternative}`);

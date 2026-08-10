@@ -1,11 +1,11 @@
-// Media Check — server-side vision analysis of extracted video frames.
+// Media Check - server-side vision analysis of extracted video frames.
 //
 // Frames are extracted in the BROWSER (<video>+<canvas>) from media the user is
-// authorized to inspect and posted here as base64 — no server ffmpeg, no platform
+// authorized to inspect and posted here as base64 - no server ffmpeg, no platform
 // download/scrape. This runs ONE multi-image vision call (all frames at once) with
 // the same model + graceful fallback as Post Check, then aggregates via the tested
 // media-check core. Without ANTHROPIC_API_KEY it returns a visible "not connected"
-// state — never a faked score.
+// state - never a faked score.
 //
 // Frozen rules: output is a BAND with confidence + an innocent alternative, never a
 // verdict; public-figure likeness is HEDGED and public-figures-only; a private
@@ -36,7 +36,7 @@ export interface MediaCheckInput {
    * (32×32 → DCT pHash, v2) or 64 values (8×8 → aHash, v1 back-compat).
    * The server hashes it into the persona fingerprint (one tested path). */
   personaSample?: number[];
-  /** Optional per-keyframe grayscale samples (same shapes) — enables the
+  /** Optional per-keyframe grayscale samples (same shapes) - enables the
    * deterministic frame-to-frame stability check (swap-flicker signature). */
   frameSamples?: number[][];
 }
@@ -56,14 +56,14 @@ const NOT_CONNECTED: MediaAssessment = {
   note: "Media analysis needs ANTHROPIC_API_KEY (vision). Frame extraction runs in your browser; the key powers the AI/deepfake assessment.",
 };
 
-const SYSTEM = `You are a media-forensics analyst examining still frames sampled from a video the user is authorized to inspect. For EACH frame estimate how likely it is AI-generated/synthetic and, separately, how likely it is a face-swap/impersonation deepfake, from concrete visual artifacts (warped hands/teeth/ears, inconsistent lighting/shadows, unstable backgrounds, blurred face boundaries, impossible text/logos). You MAY note if a frame appears to depict a widely-recognizable PUBLIC figure (celebrity, politician, official, well-known journalist/academic) — hedged ("appears to depict …"); NEVER identify a private or non-public individual (describe them generically as "a person"). Output ONE JSON object only, no prose.`;
+const SYSTEM = `You are a media-forensics analyst examining still frames sampled from a video the user is authorized to inspect. For EACH frame estimate how likely it is AI-generated/synthetic and, separately, how likely it is a face-swap/impersonation deepfake, from concrete visual artifacts (warped hands/teeth/ears, inconsistent lighting/shadows, unstable backgrounds, blurred face boundaries, impossible text/logos). You MAY note if a frame appears to depict a widely-recognizable PUBLIC figure (celebrity, politician, official, well-known journalist/academic) - hedged ("appears to depict …"); NEVER identify a private or non-public individual (describe them generically as "a person"). Output ONE JSON object only, no prose.`;
 
 /** Analyze extracted frames; returns a full MediaAssessment (or a not-connected one). */
 export async function analyzeMediaFrames(input: MediaCheckInput): Promise<MediaAssessment> {
   const key = process.env.ANTHROPIC_API_KEY;
   const frames = (input.frames || []).slice(0, MAX_FRAMES);
   const fp = input.personaSample ? fingerprintOf(input.personaSample) : undefined;
-  // Deterministic frame-to-frame stability (runs with or without a key — it is
+  // Deterministic frame-to-frame stability (runs with or without a key - it is
   // pure computation on the browser-extracted samples, never model output).
   const temporal: TemporalConsistency | null = input.frameSamples?.length
     ? temporalConsistency(input.frameSamples.map(fingerprintOf))
@@ -111,7 +111,7 @@ export async function analyzeMediaFrames(input: MediaCheckInput): Promise<MediaA
       break;
     } catch (e: any) {
       if (i < candidates.length - 1 && isModelAccessError(String(e?.message || ""))) continue;
-      return { ...NOT_CONNECTED, personaFingerprint: fp, mediaType: input.mediaType ?? "video", note: "Vision analysis failed — check the ANTHROPIC_API_KEY value / model access." };
+      return { ...NOT_CONNECTED, personaFingerprint: fp, mediaType: input.mediaType ?? "video", note: "Vision analysis failed - check the ANTHROPIC_API_KEY value / model access." };
     }
   }
 
@@ -125,14 +125,14 @@ export async function analyzeMediaFrames(input: MediaCheckInput): Promise<MediaA
       }))
     : [];
   // If the model didn't return per-frame rows, treat each submitted frame as unscored
-  // rather than fabricating — buildAssessment will mark Insufficient.
+  // rather than fabricating - buildAssessment will mark Insufficient.
   const techniques = Array.isArray(parsed.manipulationTechniques)
     ? parsed.manipulationTechniques.map(String).slice(0, 8)
     : [];
   const pubFig = typeof parsed.publicFigure === "string" && parsed.publicFigure.trim() ? parsed.publicFigure.trim().slice(0, 160) : undefined;
   const evidence = typeof parsed.notes === "string" && parsed.notes.trim() ? [parsed.notes.trim().slice(0, 300)] : [];
   // Surface the deterministic stability finding as EVIDENCE with its innocent
-  // alternative baked in — it contextualizes the model's scores, never inflates them.
+  // alternative baked in - it contextualizes the model's scores, never inflates them.
   if (temporal) evidence.push(`Deterministic check: ${temporal.note}`);
 
   return buildAssessment(perFrame, {

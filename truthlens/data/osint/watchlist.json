@@ -1,5 +1,5 @@
 {
-  "_comment": "Operator-curated monitor rules for documented disinformation clusters, installed from config/watchlist.yaml. ATTRIBUTION IS ORGANIZATION / CAMPAIGN LEVEL ONLY, each with its cited public reporting — never a private individual (frozen rule 1). All checks are passive/open-source; nothing transacts or logs in. A rule whose required tool is not configured runs its free-source checks and reports degraded coverage (rule 7). A tripwire with no hit is a CLEAN NEGATIVE, never 'insufficient' dressed as 'clean' (rule 4).",
+  "_comment": "Operator-curated monitor rules for documented disinformation clusters, installed from config/watchlist.yaml. ATTRIBUTION IS ORGANIZATION / CAMPAIGN LEVEL ONLY, each with its cited public reporting - never a private individual (frozen rule 1). All checks are passive/open-source; nothing transacts or logs in. A rule whose required tool is not configured runs its free-source checks and reports degraded coverage (rule 7). A tripwire with no hit is a CLEAN NEGATIVE, never 'insufficient' dressed as 'clean' (rule 4).",
   "version": 1,
   "defaults": {
     "schedule": "0 */6 * * *",
@@ -39,7 +39,7 @@
     {
       "id": "paperwall-adsense-pivot",
       "cluster": "PAPERWALL / Haimai (GLASSBRIDGE)",
-      "attribution": "Shenzhen Haimai Yunxiang Media — commercial fake-local-news network",
+      "attribution": "Shenzhen Haimai Yunxiang Media - commercial fake-local-news network",
       "reporting": ["Citizen Lab", "Google / Mandiant"],
       "confidence": "high",
       "tools": ["reversetracker.by_adsense", "securitytrails.subdomains", "crtsh.certs"],
@@ -55,14 +55,14 @@
     {
       "id": "io-apt-coresidence-tripwire",
       "cluster": "cross-cutting",
-      "attribution": "Tripwire — tests whether tracked IO infrastructure ever co-resides with named APT hosting",
+      "attribution": "Tripwire - tests whether tracked IO infrastructure ever co-resides with named APT hosting",
       "reporting": ["Recorded Future (IOC corpus)"],
       "confidence": "low",
       "tools": ["securitytrails.passive_dns_history", "domaintools.reverse_ip", "recordedfuture.ioc_context"],
       "match": {
         "coresidence_check_against_apts": ["Silk Typhoon", "APT41", "APT29", "Sandworm"]
       },
-      "notes": "Passive-DNS co-tenancy check. A hit would be significant and rare — current OSINT baseline is a CLEAN NEGATIVE. Requires SecurityTrails/DomainTools + an APT IOC corpus; degrades to 'insufficient data' when those keys are absent."
+      "notes": "Passive-DNS co-tenancy check. A hit would be significant and rare - current OSINT baseline is a CLEAN NEGATIVE. Requires SecurityTrails/DomainTools + an APT IOC corpus; degrades to 'insufficient data' when those keys are absent."
     }
   ]
 }

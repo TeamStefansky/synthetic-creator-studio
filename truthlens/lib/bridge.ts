@@ -77,7 +77,7 @@ export async function deepenAmplifiers(intel: DomainIntel[]): Promise<AmplifierO
 // infra -> narrative. Given the domains an infra tool surfaced (a Site Report's
 // target + siblings, or a Link Board's set), report which of them (a) match a
 // documented io-reference list and (b) amplify a monitored narrative. Each hit
-// is a LEAD with an innocent alternative — co-hosting/syndication is context.
+// is a LEAD with an innocent alternative - co-hosting/syndication is context.
 // ---------------------------------------------------------------------------
 
 export type CrossHitKind = "state_media" | "documented_campaign" | "foreign_agent" | "narrative_amplifier";
@@ -100,7 +100,7 @@ export interface CrossLookupResult {
 }
 
 const CO_HOSTING_ALT = "A documented-list match on a domain is org-level context; confirm the entry still refers to this domain before acting.";
-const AMPLIFY_ALT = "Amplifying a monitored narrative can be ordinary coverage, syndication, or criticism — it is a lead to review, not proof of coordination.";
+const AMPLIFY_ALT = "Amplifying a monitored narrative can be ordinary coverage, syndication, or criticism - it is a lead to review, not proof of coordination.";
 
 /** infra -> narrative cross-lookup. Pure io-reference matches + one KV read. */
 export async function crossLookup(domains: string[]): Promise<CrossLookupResult> {

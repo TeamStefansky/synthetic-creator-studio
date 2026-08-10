@@ -3,18 +3,18 @@
 // cannot be reduced by the main line; it has the authority to force `undetermined`
 // (a veto the narrator cannot overrule or soften); it runs on every report
 // including halted/partial/no-progress; its output is stored verbatim. The
-// conception monitor watches the one failure that matters most — a leading
+// conception monitor watches the one failure that matters most - a leading
 // hypothesis that has stopped accumulating contradictions.
 
 import type { AdversaryResult } from "./adversary";
 
 export const DISSENT_VERSION = "dissent-v1";
-// Reserved — a collection overrun or any run configuration cannot shrink it.
+// Reserved - a collection overrun or any run configuration cannot shrink it.
 export const DISSENT_RESERVED_BUDGET = { llmTokens: 20_000 } as const;
 export const CONCEPTION_FLOOR = 0.1;
 
 export interface DissentResult {
-  text: string;            // stored verbatim, rendered in full — truncation is a defect
+  text: string;            // stored verbatim, rendered in full - truncation is a defect
   forcesUndetermined: boolean;
 }
 
@@ -27,7 +27,7 @@ export function runStandingDissent(adv: AdversaryResult): DissentResult {
   return { text: adv.reasons.join("\n"), forcesUndetermined: adv.verdict === "undetermined" };
 }
 
-/** The veto. The narrator cannot overrule it — undetermined wins if dissent forces it. */
+/** The veto. The narrator cannot overrule it - undetermined wins if dissent forces it. */
 export function applyDissentVeto(narratorVerdict: "leading_holds" | "undetermined", dissent: DissentResult): "leading_holds" | "undetermined" {
   return dissent.forcesUndetermined ? "undetermined" : narratorVerdict;
 }
@@ -47,7 +47,7 @@ export interface ConceptionResult {
 
 /**
  * Warn when the inconsistent-evidence ratio collapses toward zero while collection
- * volume holds steady — the leading hypothesis has become a filter, not a truth.
+ * volume holds steady - the leading hypothesis has become a filter, not a truth.
  */
 export function conceptionMonitor(ratios: number[], volumes: number[]): ConceptionResult {
   const collapsing = ratios.length >= 3 && ratios[ratios.length - 1] < CONCEPTION_FLOOR && ratios[0] > ratios[ratios.length - 1];
@@ -57,7 +57,7 @@ export function conceptionMonitor(ratios: number[], volumes: number[]): Concepti
   return {
     warn,
     forceRegenerate: warn,
-    reason: warn ? "the leading hypothesis has stopped accumulating contradictions while collection held steady — this is a warning about the analysis, not the subject; hypotheses regenerated and ACH re-run from scratch" : "",
+    reason: warn ? "the leading hypothesis has stopped accumulating contradictions while collection held steady - this is a warning about the analysis, not the subject; hypotheses regenerated and ACH re-run from scratch" : "",
     ratios,
   };
 }

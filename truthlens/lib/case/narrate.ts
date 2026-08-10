@@ -2,7 +2,7 @@
 // ONLY structured JSON (each item carrying its evidence id) and returns statements
 // shaped { text, label, evidenceIds[], likelihood, confidence, rung }. Before any
 // storage or display, the validator in code DROPS every statement that violates a
-// rule, logs the reason, and surfaces the drop count — the filtering is never
+// rule, logs the reason, and surfaces the drop count - the filtering is never
 // hidden. If more than half the statements are removed, no reconstruction is
 // published: a shredded narrative is a signal, not something to paper over.
 //
@@ -27,7 +27,7 @@ export interface RawStatement {
   rung: Rung;
   assertsOrdering?: { from: string; to: string };
   // Layer 06: a statement citing centrality must carry its collection boundary
-  // (seed set + hop depth) — a sampled network's centrality is often an artifact
+  // (seed set + hop depth) - a sampled network's centrality is often an artifact
   // of the sampling.
   centralityBoundary?: string;
 }
@@ -93,7 +93,7 @@ export function validateStatements(statements: RawStatement[], ctx: ValidationCt
     shredRatio,
     suppressed,
     message: suppressed
-      ? "the evidence does not support a connected account — showing the ledger and timeline only"
+      ? "the evidence does not support a connected account - showing the ledger and timeline only"
       : dropped.length
         ? `${dropped.length} of ${total} generated statements were removed for lacking evidence or exceeding their rung`
         : "all generated statements passed validation",

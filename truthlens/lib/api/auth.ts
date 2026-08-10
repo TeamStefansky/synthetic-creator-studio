@@ -1,7 +1,7 @@
-// Programmatic API auth — key-based, for the /api/v1 surface (separate from the
+// Programmatic API auth - key-based, for the /api/v1 surface (separate from the
 // cookie gate that protects the human UI). Keys live ONLY in env
 // (TRUTHLENS_API_KEYS, comma-separated); nothing is hard-coded. When no keys are
-// configured the API is DISABLED and says so honestly (rule 7) — it is never
+// configured the API is DISABLED and says so honestly (rule 7) - it is never
 // silently open. Rate limiting is best-effort via KV; without KV it is skipped
 // and disclosed, never faked.
 
@@ -76,7 +76,7 @@ function rateLimit(): number {
 export async function authenticateApi(req: Request, nowMinute: number): Promise<ApiAuthResult> {
   const keys = parseApiKeys(process.env.TRUTHLENS_API_KEYS);
   if (keys.length === 0) {
-    return { ok: false, status: 503, error: "API not enabled — no TRUTHLENS_API_KEYS configured on this deployment." };
+    return { ok: false, status: 503, error: "API not enabled - no TRUTHLENS_API_KEYS configured on this deployment." };
   }
   const presented = extractKey(req.headers);
   if (!presented) return { ok: false, status: 401, error: "Missing API key. Send 'Authorization: Bearer <key>' or 'x-api-key: <key>'." };

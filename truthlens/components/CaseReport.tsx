@@ -1,6 +1,6 @@
 "use client";
 
-// Case summary report — renders the assembled report (lib/casebook/dossier) in
+// Case summary report - renders the assembled report (lib/casebook/dossier) in
 // the TruthLens report style: BLUF, subject profiles, the cross-search evidence
 // chain (confidence + alternative on every row), infrastructure, gaps, and the
 // standing disclaimer. Print-to-PDF uses the app's existing print CSS.
@@ -76,10 +76,10 @@ export default function CaseReport({ report }: { report: CaseDossier }) {
       {/* Evidence chain */}
       <section>
         <h2 className="mb-1 font-display text-lg font-bold text-ink">The links the system found</h2>
-        <p className="mb-3 text-[12px] text-ink-muted">Entities shared across two or more searches in this case. Strongest first. Every link carries its alternative explanation — association is not shared ownership.</p>
+        <p className="mb-3 text-[12px] text-ink-muted">Entities shared across two or more searches in this case. Strongest first. Every link carries its alternative explanation - association is not shared ownership.</p>
         {report.evidence.length === 0 ? (
           <div className="rounded-xl border border-line bg-bg-card p-4 text-sm text-ink-secondary">
-            No distinctive entity is shared across the searches in this case. That is a valid result — “no link” is an answer.
+            No distinctive entity is shared across the searches in this case. That is a valid result - “no link” is an answer.
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-line">
@@ -125,11 +125,11 @@ export default function CaseReport({ report }: { report: CaseDossier }) {
         </section>
       )}
 
-      {/* Host conduct — documented, cited public-record conduct of the hosts */}
+      {/* Host conduct - documented, cited public-record conduct of the hosts */}
       {report.hostConduct.length > 0 && (
         <section>
-          <h2 className="mb-1 font-display text-lg font-bold text-ink">Host conduct — documented public record</h2>
-          <p className="mb-3 text-[12px] text-ink-muted">Documented conduct of the hosting infrastructure in this case (court records, watchdog designations). High confidence — public record.</p>
+          <h2 className="mb-1 font-display text-lg font-bold text-ink">Host conduct - documented public record</h2>
+          <p className="mb-3 text-[12px] text-ink-muted">Documented conduct of the hosting infrastructure in this case (court records, watchdog designations). High confidence - public record.</p>
           {report.hostConduct.map((h) => (
             <div key={h.org} className="mb-3 rounded-xl border border-risk-high/30 bg-bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -151,7 +151,7 @@ export default function CaseReport({ report }: { report: CaseDossier }) {
               </ul>
               {h.coHostedExtremist.length > 0 && (
                 <div className="mt-3 rounded-lg border border-risk-high/25 bg-risk-high/5 p-3">
-                  <div className="label-muted mb-1 text-risk-high">Severe context flag — co-hosted domains</div>
+                  <div className="label-muted mb-1 text-risk-high">Severe context flag - co-hosted domains</div>
                   <div className="flex flex-wrap gap-1.5">
                     {h.coHostedExtremist.map((d, i) => <code key={i} className="rounded border border-risk-high/30 px-1.5 py-0.5 font-mono text-[12px] text-risk-high">{d.domain}</code>)}
                   </div>

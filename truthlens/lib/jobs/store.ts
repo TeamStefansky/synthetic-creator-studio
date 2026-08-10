@@ -1,10 +1,10 @@
 "use client";
 
-// Background-jobs store — a MODULE SINGLETON that lives above the page tree, so a
+// Background-jobs store - a MODULE SINGLETON that lives above the page tree, so a
 // scan started in one tool keeps running when the user navigates to another
 // (client-side navigation unmounts the page, but this module persists). Finished
 // results are mirrored to localStorage so they survive a full reload too; a job
-// still "running" at reload is dropped (a dead fetch can't be resumed — we never
+// still "running" at reload is dropped (a dead fetch can't be resumed - we never
 // fake a running state). React binds via useSyncExternalStore.
 
 import {
@@ -37,7 +37,7 @@ function hydrate() {
 
 function persist() {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(KEY, JSON.stringify(persistable(jobs))); } catch { /* quota — best effort */ }
+  try { localStorage.setItem(KEY, JSON.stringify(persistable(jobs))); } catch { /* quota - best effort */ }
 }
 
 function emit() {

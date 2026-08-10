@@ -28,7 +28,7 @@ describe("collection doctrine PIR->EEI->task (06·P3)", () => {
     expect(plan.accepted.map((t) => t.id)).toEqual(["high", "low"]);
   });
 
-  it("the matrix doubles as the gaps register — every unfilled cell is a known gap", () => {
+  it("the matrix doubles as the gaps register - every unfilled cell is a known gap", () => {
     const tasks: DoctrineTask[] = [{ id: "t1", eeiId: "eei1", source: "page", description: "GA id", diagnosticity: 0.9 }];
     const plan = buildCollectionPlan(pirs, eeis, tasks);
     // eei2 has no planned task => a known gap

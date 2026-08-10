@@ -1,7 +1,7 @@
 // Review state, candidate queue, and digest (layer 04 · P5). The primary diff
 // renders against the LAST REVIEWED snapshot (not the previous run), consolidating
 // every intervening run into one list. New entities go to a candidate queue and
-// never enter the case until an analyst explicitly accepts them — automatic
+// never enter the case until an analyst explicitly accepts them - automatic
 // expansion is how a two-entity board becomes a dragnet. Nothing is auto-closed.
 
 import type { MonitorDiffItem } from "./diff";
@@ -12,7 +12,7 @@ export const MAX_SNAPSHOTS_PER_CASE = 200; // retention cap (named); documented 
 
 export interface ReviewState {
   caseId: string;
-  scope: string;              // per user/workspace — never crosses scope
+  scope: string;              // per user/workspace - never crosses scope
   lastReviewedAt?: string;
   lastReviewedShapeHash?: string;
 }
@@ -60,7 +60,7 @@ export function caseEntities(original: string[], queue: Candidate[]): string[] {
   return [...original, ...queue.filter((c) => c.accepted).map((c) => c.entity)];
 }
 
-/** Explicit acceptance — the only path a candidate enters the case. */
+/** Explicit acceptance - the only path a candidate enters the case. */
 export function acceptCandidate(queue: Candidate[], entity: string): Candidate[] {
   return queue.map((c) => (c.entity === entity ? { ...c, accepted: true } : c));
 }

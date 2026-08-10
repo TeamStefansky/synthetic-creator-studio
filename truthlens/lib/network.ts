@@ -1,7 +1,7 @@
 // The operator network graph: link a domain to sibling domains that share the same
 // IP, GA ID, AdSense ID, SSL SAN, or reverse-IP neighbour. ONE builder
 // (buildOperatorGraph) merges N domains' infrastructure into a single node/edge
-// set — shared ids become shared nodes, which IS the network. Site Report calls it
+// set - shared ids become shared nodes, which IS the network. Site Report calls it
 // with one domain; the Link Board calls it (via buildLinkNetwork) with many.
 
 import { fakeDomains } from "./reputation";
@@ -45,7 +45,7 @@ export interface OperatorGraphResult {
  * Shared operator-graph builder. Merges one or more domains' infrastructure into a
  * single deduped node/edge set. `flagFake`, when provided, marks known-fake
  * domain/target nodes (Site Report supplies it; the Link Board does not, keeping
- * its current behaviour). No network calls — pure over the projected inputs.
+ * its current behaviour). No network calls - pure over the projected inputs.
  */
 export function buildOperatorGraph(
   inputs: NodeGraphInput[],

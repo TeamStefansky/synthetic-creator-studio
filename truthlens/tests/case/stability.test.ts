@@ -4,7 +4,7 @@ import {
   isDismissed, type Dismissal,
 } from "../../lib/case/stability";
 
-describe("stability gating — anti-flapping (04·P2)", () => {
+describe("stability gating - anti-flapping (04·P2)", () => {
   it("a flapping edge (appear/disappear x2) alerts at most once and is marked unstable", () => {
     const flap = [true, false, true, false]; // appeared, gone, back, gone
     expect(oscillationCount(flap)).toBe(3);

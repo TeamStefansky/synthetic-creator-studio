@@ -1,5 +1,5 @@
 // Measured error rate (layer 06 · P2). A standing fixture suite of known-negative
-// sets (entities certain to be unrelated — the HARD cases: shared mass hosting,
+// sets (entities certain to be unrelated - the HARD cases: shared mass hosting,
 // registrar, CMS, country, news cycle) and known-positive sets. The method is run
 // against them and publishes its measured false-positive rate. A change that
 // pushes FPR above the ceiling fails the build. The known-negative set is the
@@ -21,7 +21,7 @@ export interface MethodFixture {
   note: string;
 }
 
-// KNOWN-NEGATIVE — unrelated entities that share only class characteristics. If
+// KNOWN-NEGATIVE - unrelated entities that share only class characteristics. If
 // the method clusters any of these, that is a false positive.
 export const KNOWN_NEGATIVE: MethodFixture[] = [
   { id: "neg-masshost", kind: "negative", entities: ["a.com", "b.com"], edges: [{ a: "a.com", b: "b.com", strength: "Medium", characteristic: "class", evidenceId: "ip" }], note: "shared mass-hosting IP only" },
@@ -34,7 +34,7 @@ export const KNOWN_NEGATIVE: MethodFixture[] = [
   { id: "neg-mixed", kind: "negative", entities: ["o.com", "p.com"], edges: [{ a: "o.com", b: "p.com", strength: "Medium", characteristic: "class", evidenceId: "asn" }, { a: "o.com", b: "p.com", strength: "Low", characteristic: "class", evidenceId: "cms" }], note: "several class features, nothing individual" },
 ];
 
-// KNOWN-POSITIVE — entities with a genuine individual characteristic in common.
+// KNOWN-POSITIVE - entities with a genuine individual characteristic in common.
 export const KNOWN_POSITIVE: MethodFixture[] = [
   { id: "pos-ga", kind: "positive", entities: ["q.com", "r.com"], edges: [{ a: "q.com", b: "r.com", strength: "High", characteristic: "individual", evidenceId: "ga" }], note: "shared self-hosted analytics id" },
   { id: "pos-san", kind: "positive", entities: ["s.com", "t.com"], edges: [{ a: "s.com", b: "t.com", strength: "High", characteristic: "individual", evidenceId: "san" }], note: "shared non-wildcard certificate SAN" },

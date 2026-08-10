@@ -7,7 +7,7 @@
 //
 // Frozen-rule compliant: organizations only (never a person); every flag carries
 // confidence + evidence + an innocent alternative + a citation; an unavailable
-// source shows honestly as "not connected"; neutral — it surfaces documented
+// source shows honestly as "not connected"; neutral - it surfaces documented
 // facts for ANY operator, in any direction. A co-hosted match is CONTEXT, not
 // guilt: shared/CDN hosting places unrelated sites together.
 
@@ -19,7 +19,7 @@ import { lookupPublicOfficers, type PublicRecordsResult } from "@/lib/public-rec
 export const OPERATOR_REPUTATION_VERSION = "operator-reputation-v2";
 
 // A sanctions/watchlist name-match must clear a strong score before it is shown at
-// all — a weak fuzzy match on an org string is exactly how a garbage "hit" (an
+// all - a weak fuzzy match on an org string is exactly how a garbage "hit" (an
 // unrelated person's name) leaks in. Confidence is derived from the score, never
 // asserted. Screening runs on the REAL operator, never on a mega-provider/CDN
 // frontend (screening "Google LLC" or "Cloudflare, Inc." is meaningless).
@@ -32,7 +32,7 @@ export function sanctionConfidence(score: number | null, schema: string): FlagCo
   const isPerson = /person/i.test(schema);
   if (isPerson && score < SANCTIONS_PERSON_MIN) return null;
   if (score < SANCTIONS_SURFACE_MIN) return null;
-  if (isPerson) return "Medium"; // an org-name matching a person is capped — never High
+  if (isPerson) return "Medium"; // an org-name matching a person is capped - never High
   return score >= SANCTIONS_HIGH ? "High" : "Medium";
 }
 
@@ -82,7 +82,7 @@ function refFlags(domain: string, onOwnInfra: boolean): OperatorFlag[] {
   const out: OperatorFlag[] = [];
   const alt = onOwnInfra
     ? "A documented-list match on the operator's own infrastructure is suggestive but still org-level; confirm the entry refers to this operator."
-    : "Shared/CDN hosting places unrelated sites together — a co-hosted match is context about the neighbourhood, not evidence about this site.";
+    : "Shared/CDN hosting places unrelated sites together - a co-hosted match is context about the neighbourhood, not evidence about this site.";
   const c = campaignMatch(domain);
   if (c) out.push({ kind: "documented_campaign", subject: domain, detail: `documented influence campaign${c.campaign ? `: ${c.campaign}` : ""}${c.disclosedBy ? ` (disclosed by ${c.disclosedBy})` : ""}`, citation: c.report, confidence: onOwnInfra ? "Medium" : "Low", onOwnInfra, alternative: alt });
   const sm = stateMediaMatch(domain);
@@ -99,7 +99,7 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
   )];
   // The REAL operator(s): raw asnOrg strings that survive the mega-provider filter
   // (normalizeNetOrg returns null for Google/Cloudflare/etc.). Sanctions + officer
-  // lookups run on these — never on the CDN frontend. Display prefers a real one.
+  // lookups run on these - never on the CDN frontend. Display prefers a real one.
   const realAsnOrgs = [...new Set((input.asnOrgs || []).filter((s): s is string => !!s && !!normalizeNetOrg(s)))];
   const asnOrg = realAsnOrgs[0] || (input.asnOrgs || []).find((s) => !!s) || undefined;
 
@@ -110,7 +110,7 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
   for (const d of nsDomains) flags.push(...refFlags(d, true));
   for (const d of coHosted.slice(0, 50)) flags.push(...refFlags(d, false));
 
-  // Sanctions screening on the REAL operator org(s) — key-gated -> honest
+  // Sanctions screening on the REAL operator org(s) - key-gated -> honest
   // not-connected. Only strong matches surface; weak fuzzy matches (the source of
   // garbage "hits" like an unrelated person's name) are dropped, never shown.
   let sanctions: OperatorReputation["sanctions"] = { connected: false, hits: 0 };
@@ -125,7 +125,7 @@ export async function assessOperatorReputation(input: OperatorReputationInput): 
           ?? (h.score == null && captionMatches(target, h.caption) ? "Medium" : null);
         if (!conf) continue; // weak/irrelevant match: not shown
         surfaced++;
-        flags.push({ kind: "sanctions", subject: target, detail: `possible public sanctions/watchlist match: ${h.caption} (${h.schema}${h.score != null ? `, score ${h.score.toFixed(2)}` : ""}; ${h.datasets.slice(0, 3).join(", ")})`, citation: h.url, confidence: conf, onOwnInfra: true, alternative: "A name match is not proof of identity — the designated entity may be a different party with a similar name; confirm against the cited source before acting." });
+        flags.push({ kind: "sanctions", subject: target, detail: `possible public sanctions/watchlist match: ${h.caption} (${h.schema}${h.score != null ? `, score ${h.score.toFixed(2)}` : ""}; ${h.datasets.slice(0, 3).join(", ")})`, citation: h.url, confidence: conf, onOwnInfra: true, alternative: "A name match is not proof of identity - the designated entity may be a different party with a similar name; confirm against the cited source before acting." });
       }
     } catch { /* leave not-connected */ }
   }

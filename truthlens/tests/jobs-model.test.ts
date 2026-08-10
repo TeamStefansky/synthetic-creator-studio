@@ -1,7 +1,7 @@
 // Background-jobs model. Gates: pruning keeps ALL running jobs but bounds
 // finished ones; upsert replaces by id; patch is a no-op on a missing id;
 // latestForTool picks the newest; only finished jobs are persistable (a dead
-// running fetch is never rehydrated — rule 7).
+// running fetch is never rehydrated - rule 7).
 
 import { describe, it, expect } from "vitest";
 import {

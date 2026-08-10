@@ -30,7 +30,7 @@ describe("investigator run loop (05·P3)", () => {
     expect(r.record.status).toBe("complete");
     expect(r.record.stopCondition).toBe("diminishing_diagnosticity");
     expect(r.caseFile.clusters.filter((c) => c.members.length > 1)).toHaveLength(0);
-    expect(r.caseFile.bottomLine.likelihood).toBe("n/a"); // "no case established" — a successful run
+    expect(r.caseFile.bottomLine.likelihood).toBe("n/a"); // "no case established" - a successful run
   });
 
   it("hypotheses are formed BEFORE the first collection (journal order)", () => {

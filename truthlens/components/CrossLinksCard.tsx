@@ -1,6 +1,6 @@
 // infra -> narrative bridge card. Shows which of a site's / board's domains match a
 // documented io-reference list (state media, documented campaign, foreign-agent) or
-// amplify a monitored narrative. Every hit is a LEAD with an innocent alternative —
+// amplify a monitored narrative. Every hit is a LEAD with an innocent alternative -
 // co-hosting/syndication is context, never proof. Organizations/domains only.
 
 import { GitCompareArrows, ArrowUpRight } from "lucide-react";
@@ -28,8 +28,8 @@ export default function CrossLinksCard({ cross, title = "Cross-links: documented
       </div>
       <p className="mb-3 text-sm text-ink-secondary">
         Domains connected to this case that also appear on a documented public list or
-        amplify a narrative under monitoring. Each is a lead to review — not proof.
-        {!cross.registryConnected && " (Narrative-amplifier registry not connected — showing documented-list matches only.)"}
+        amplify a narrative under monitoring. Each is a lead to review - not proof.
+        {!cross.registryConnected && " (Narrative-amplifier registry not connected - showing documented-list matches only.)"}
       </p>
       <ul className="space-y-2">
         {cross.hits.map((h, i) => (
@@ -37,7 +37,7 @@ export default function CrossLinksCard({ cross, title = "Cross-links: documented
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="rounded bg-white/5 px-1.5 py-0.5 text-[11px] uppercase tracking-wide">{KIND_LABEL[h.kind]}</span>
               <span className="text-ink">{h.domain}</span>
-              <span className="text-ink-secondary">— {h.detail}</span>
+              <span className="text-ink-secondary">- {h.detail}</span>
               <span className="text-[11px] text-ink-muted">· {h.confidence}</span>
               {h.citation && <a href={h.citation} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs text-brand-soft hover:underline">source <ArrowUpRight className="h-3 w-3" /></a>}
             </div>

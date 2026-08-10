@@ -26,7 +26,7 @@ export function budgetExhausted(spent: RunSpend, budget = RUN_BUDGET): boolean {
 /**
  * Coverage of a run. Partial if the budget was exhausted, a collector failed, or
  * not every planned entity was collected. Partial coverage disables retraction
- * (see diff.ts) — absence produced by our own budget is not evidence of absence.
+ * (see diff.ts) - absence produced by our own budget is not evidence of absence.
  */
 export function coverageOf(opts: { spent: RunSpend; budget?: typeof RUN_BUDGET; collectorFailed?: boolean; entitiesPlanned: number; entitiesCollected: number }): "full" | "partial" {
   if (opts.collectorFailed) return "partial";

@@ -3,7 +3,7 @@
 // rejected by the planner (curiosity exhausts budgets). The collection matrix
 // (PIR x EEI x source x status) is persisted and doubles as the gaps register:
 // every unfilled cell is a KNOWN gap. Expected-diagnosticity ranking now operates
-// WITHIN this structure — tasks ranked inside their EEI, EEIs inside their PIR.
+// WITHIN this structure - tasks ranked inside their EEI, EEIs inside their PIR.
 
 export const COLLECTION_DOCTRINE_VERSION = "collection-doctrine-v1";
 
@@ -29,7 +29,7 @@ export interface CollectionPlan {
   accepted: (DoctrineTask & { pirId: string })[]; // ranked within EEI within PIR
   rejected: { task: DoctrineTask; reason: string }[];
   matrix: MatrixCell[];
-  gaps: MatrixCell[];     // the unfilled cells — a known gap, not false confidence
+  gaps: MatrixCell[];     // the unfilled cells - a known gap, not false confidence
 }
 
 export function buildCollectionPlan(pirs: PIR[], eeis: EEI[], tasks: DoctrineTask[]): CollectionPlan {
@@ -41,7 +41,7 @@ export function buildCollectionPlan(pirs: PIR[], eeis: EEI[], tasks: DoctrineTas
   for (const t of tasks) {
     const eei = eeiById.get(t.eeiId);
     if (!eei || !pirById.has(eei.pirId)) {
-      rejected.push({ task: t, reason: `task does not trace to a PIR (eei=${t.eeiId}) — rejected as untraceable curiosity` });
+      rejected.push({ task: t, reason: `task does not trace to a PIR (eei=${t.eeiId}) - rejected as untraceable curiosity` });
       continue;
     }
     accepted.push({ ...t, pirId: eei.pirId });

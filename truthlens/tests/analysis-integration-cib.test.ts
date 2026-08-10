@@ -15,7 +15,7 @@ function mk(text: string, account: string, minute: number, source = "bluesky"): 
 
 // P5 pilot: the Temporal-synchronization signal is enriched with a principled
 // Poisson-tail significance + burstiness, WITHOUT changing its confidence band.
-describe("P5 integration pilot — cib temporal signal", () => {
+describe("P5 integration pilot - cib temporal signal", () => {
   const burstMentions: Mention[] = [
     mk("boycott example now", "a1", 0),
     mk("boycott example now", "a2", 0),

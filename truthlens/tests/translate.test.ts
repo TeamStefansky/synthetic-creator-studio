@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { translateToEnglish, translateFeedItems, translationAvailable } from "../lib/translate";
 
 // Honesty gate (CLAUDE.md rule 7): with no ANTHROPIC_API_KEY the translator must
-// return the ORIGINAL text unchanged — never a fabricated/placeholder translation.
-describe("translate — fail-open without a key", () => {
+// return the ORIGINAL text unchanged - never a fabricated/placeholder translation.
+describe("translate - fail-open without a key", () => {
   const saved = process.env.ANTHROPIC_API_KEY;
   beforeEach(() => { delete process.env.ANTHROPIC_API_KEY; });
   afterEach(() => { if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved; });

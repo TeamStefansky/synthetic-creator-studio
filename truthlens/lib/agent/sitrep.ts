@@ -1,10 +1,10 @@
-// The situation report (layer 05 · P5). Generated to an exact structure — every
+// The situation report (layer 05 · P5). Generated to an exact structure - every
 // section required; an empty one renders "none established" rather than being
 // omitted (a missing section reads as an absent problem). Deterministic: the
 // reconstruction is built in code from the case as labeled, cited statements, so
 // it works without the model; the LLM narrator (when a key is set) only enriches
 // prose and passes the same validator. NOT PURSUED surfaces the agent's silent
-// decisions — its most consequential ones.
+// decisions - its most consequential ones.
 
 import type { CaseFile } from "../case/synthesize";
 import type { AdversaryResult } from "./adversary";
@@ -47,7 +47,7 @@ export function buildSitrep(input: SitrepInput): Sitrep {
   S["STATUS"] = `${record.status} · coverage: ${record.coverage} · stop: ${record.stopCondition ?? NONE} · ceiling: ${record.ceiling}`;
 
   S["BOTTOM LINE"] = adversary.verdict === "undetermined"
-    ? "Undetermined — the counter-case is not clearly weaker. Evidence shown, no verdict claimed."
+    ? "Undetermined - the counter-case is not clearly weaker. Evidence shown, no verdict claimed."
     : cf.bottomLine.summary;
 
   S["JUDGMENT"] = `likelihood: ${cf.bottomLine.likelihood} · confidence: ${cf.bottomLine.confidence} · rung: ${cf.bottomLine.rung}` +
@@ -83,19 +83,19 @@ export function buildSitrep(input: SitrepInput): Sitrep {
   S["WHAT WOULD CHANGE THIS"] = cf.ach.falsification.length ? cf.ach.falsification.map((f) => `- ${f}`).join("\n") : NONE;
 
   S["NOT PURSUED"] = input.notPursued.length
-    ? input.notPursued.map((n) => `${n.task} [diag ${n.diagnosticity.toFixed(2)}] — ${n.reason}`).join("\n")
+    ? input.notPursued.map((n) => `${n.task} [diag ${n.diagnosticity.toFixed(2)}] - ${n.reason}`).join("\n")
     : NONE;
 
-  // Layer 06 · P7 — method reliability, premortem, and the conception watch.
+  // Layer 06 · P7 - method reliability, premortem, and the conception watch.
   S["INSIGHTS FROM YOUR SEARCHES"] = input.insights?.length ? input.insights.map((i) => `- ${i}`).join("\n") : NONE;
 
   const rep = input.operatorReputation;
-  S["EXTERNAL ENRICHMENT — OPERATOR"] = rep
+  S["EXTERNAL ENRICHMENT - OPERATOR"] = rep
     ? [
         `Operator(s): ${rep.operators.join(", ") || rep.asnOrg || "unknown"} · ${rep.coHostedCount} co-hosted domain(s) · sanctions: ${rep.sanctions.connected ? `${rep.sanctions.hits} hit(s)` : "not connected"}`,
-        ...rep.flags.map((f) => `- [${f.kind.replace(/_/g, " ")} · ${f.confidence} · ${f.onOwnInfra ? "own infra" : "co-hosted"}] ${f.detail} (re: ${f.subject})${f.citation ? ` — ${f.citation}` : ""}. Could also be: ${f.alternative}`),
+        ...rep.flags.map((f) => `- [${f.kind.replace(/_/g, " ")} · ${f.confidence} · ${f.onOwnInfra ? "own infra" : "co-hosted"}] ${f.detail} (re: ${f.subject})${f.citation ? ` - ${f.citation}` : ""}. Could also be: ${f.alternative}`),
         ...(rep.publicOfficers?.officers.length
-          ? ["Officers on public record (disclosed, cited — not attribution):", ...rep.publicOfficers.officers.map((o) => `- ${o.name}${o.role ? ` · ${o.role}` : ""} — ${o.sourceUrl || o.source}`)]
+          ? ["Officers on public record (disclosed, cited - not attribution):", ...rep.publicOfficers.officers.map((o) => `- ${o.name}${o.role ? ` · ${o.role}` : ""} - ${o.sourceUrl || o.source}`)]
           : []),
         rep.flags.length ? "" : rep.note,
       ].filter(Boolean).join("\n")
@@ -105,10 +105,10 @@ export function buildSitrep(input: SitrepInput): Sitrep {
     ? `measured false-positive rate ${(input.measuredFpr * 100).toFixed(1)}% (fixture suite ${input.fixtureSuiteVersion ?? "n/a"})`
     : NONE;
   S["THE PREMORTEM"] = input.premortem?.length ? input.premortem.join("\n") : NONE;
-  S["CONCEPTION WATCH"] = input.conceptionWarning || "no conception warning — the leading hypothesis is still accumulating contradictions normally";
+  S["CONCEPTION WATCH"] = input.conceptionWarning || "no conception warning - the leading hypothesis is still accumulating contradictions normally";
 
-  const order = ["STATUS", "BOTTOM LINE", "INSIGHTS FROM YOUR SEARCHES", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "EXTERNAL ENRICHMENT — OPERATOR", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
-  const markdown = ["# THE INVESTIGATOR — situation report", "", "Decision-support, not a verdict. Nodes are infrastructure/accounts, never people.", "", ...order.map((k) => `## ${k}\n${S[k]}`)].join("\n");
+  const order = ["STATUS", "BOTTOM LINE", "INSIGHTS FROM YOUR SEARCHES", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "EXTERNAL ENRICHMENT - OPERATOR", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
+  const markdown = ["# THE INVESTIGATOR - situation report", "", "Decision-support, not a verdict. Nodes are infrastructure/accounts, never people.", "", ...order.map((k) => `## ${k}\n${S[k]}`)].join("\n");
 
   return { version: SITREP_VERSION, sections: S, markdown };
 }

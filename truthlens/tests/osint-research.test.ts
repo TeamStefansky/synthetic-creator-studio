@@ -1,4 +1,4 @@
-// OSINT research orchestrator — pure parts. Gates: query classification;
+// OSINT research orchestrator - pure parts. Gates: query classification;
 // watchlist matching by domain/ASN/AdSense; confidence derived FROM EVIDENCE and
 // capped; report assembly fills real rows and stays honest (org-level actor,
 // null hypothesis always present) with no network access.
@@ -63,6 +63,13 @@ describe("assembleReportInput", () => {
     expect(input.ach_table_rows).toMatch(/null/i); // null hypothesis always present
     expect(input.gaps).toMatch(/publicwww/i); // not-connected disclosed
     expect(input.sources_numbered_with_links).toMatch(/Citizen Lab/);
+  });
+
+  it("folds an Early-Warning Radar forecast into the impact section", () => {
+    const f = findings({ forecast: { available: true, band: "Warning", hazard: 0.78, horizonDays: 7, confidence: "Medium", estimative: "Likely", alternative: "An organic news cycle can explain the same rise.", indicators: [], evidence: [], version: "x" } as any });
+    const input = assembleReportInput(f, "2026-08-10", "run-z");
+    expect(input.impact_evidence).toMatch(/Early-Warning Radar: Warning/);
+    expect(input.impact_evidence).toMatch(/hazard 78%/);
   });
 
   it("no match → Undetermined actor, Low confidence, null hypothesis only", () => {

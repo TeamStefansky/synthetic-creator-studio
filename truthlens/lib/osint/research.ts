@@ -1,4 +1,4 @@
-// OSINT research orchestrator — you write a QUERY, the tool goes out and
+// OSINT research orchestrator - you write a QUERY, the tool goes out and
 // collects from every source that is live, then compiles the 14-section report.
 //
 // It does automatically what an analyst did by hand: classify the query, run the
@@ -17,6 +17,9 @@ import { runPivot, type PivotResult, type AdapterResult, dedupeDomains } from ".
 import { buildHostConduct, type HostConductProfile } from "@/lib/host-conduct";
 import { getResolvedRules, type ResolvedRule } from "./watchlist";
 import { compileReport, type ReportInput, type CompiledReport, type Confidence } from "./report";
+import { collectSignalContext } from "@/lib/signal-context";
+import { forecastNarrativeRisk, type RadarForecast } from "@/lib/forecast/radar";
+import { narrateResearch } from "./narrate";
 
 export const OSINT_RESEARCH_VERSION = "osint-research-v1";
 
@@ -30,6 +33,7 @@ export interface ResearchFindings {
   trackers: { gaIds: string[]; adsenseIds: string[] };
   pivots: PivotResult[];
   hostConduct?: HostConductProfile;
+  forecast?: RadarForecast;
   toolsLive: string[];
   toolsNotConfigured: string[];
   log: string[];
@@ -123,7 +127,7 @@ function sourcesList(f: ResearchFindings): string {
   return [...new Set(src)].map((s, i) => `${i + 1}. ${s}`).join("\n");
 }
 
-/** Assemble a ReportInput from findings — pure, deterministic. Narrative prose is
+/** Assemble a ReportInput from findings - pure, deterministic. Narrative prose is
  * left to the optional LLM layer; without it these stay honest deterministic text. */
 export function assembleReportInput(f: ResearchFindings, date: string, runId: string, narrative?: Partial<ReportInput>): ReportInput {
   const confidence = deriveConfidence(f);
@@ -157,13 +161,15 @@ export function assembleReportInput(f: ResearchFindings, date: string, runId: st
     asset_table_rows: assetRows(f),
     infrastructure_narrative: narrative?.infrastructure_narrative || (f.hostConduct?.matched ? `${f.hostConduct.org}: ${f.hostConduct.summary || "documented host conduct on file."} ${f.hostConduct.clientCaveat}` : ""),
     infra_table_rows: infraRows(f),
-    underground_findings_or_none: "None — dark-web module did not run.",
+    underground_findings_or_none: "None - dark-web module did not run.",
     narrative_analysis: narrative?.narrative_analysis,
     disarm_table_rows: "",
-    impact_evidence: narrative?.impact_evidence,
+    impact_evidence: narrative?.impact_evidence || (f.forecast?.available
+      ? `Early-Warning Radar: ${f.forecast.band} - ${f.forecast.estimative} to escalate within ${f.forecast.horizonDays}d (hazard ${Math.round(f.forecast.hazard * 100)}%, ${f.forecast.confidence} confidence). ${f.forecast.alternative}`
+      : undefined),
     ach_table_rows: f.watchlist
       ? `| H1: ${f.watchlist.cluster} | matches curated pattern + cited reporting | not independently confirmed here | consistent, ${f.watchlist.confidence} |\n| H0 (null): unrelated / coincidental | shared selectors can recur | pattern match | cannot be excluded |`
-      : `| H0 (null): no coordinated operation | no distinctive shared selector found | — | cannot be excluded |`,
+      : `| H0 (null): no coordinated operation | no distinctive shared selector found | - | cannot be excluded |`,
     playbook_comparison: narrative?.playbook_comparison,
     gaps: `Not-connected sources limit coverage: ${f.toolsNotConfigured.join(", ") || "none"}. Paid reverse-lookup/passive-DNS would extend the pivot. This run is passive OSINT only.`,
     next_steps: narrative?.next_steps || `Connect ${f.toolsNotConfigured.slice(0, 3).join(", ") || "additional providers"} to widen the pivot; re-run to diff new nodes; corroborate any attribution against a second independent source.`,
@@ -212,10 +218,28 @@ export async function runResearch(query: string, now: { date: string; runId: str
   else if (kind === "adsense_id" || kind === "ga_id") { partial.pivots = [await runPivot(kind, value)]; log.push(`reverse-lookup pivot on ${kind}.`); }
   else log.push("Free-text query: no direct selector to pivot; watchlist + reporting only.");
 
+  // Early-Warning Radar (keyless: public attention + tone) for a domain or a
+  // named network - folds an escalation forecast into the report's impact section.
+  if (kind === "domain" || kind === "freetext") {
+    try {
+      const ctx = await collectSignalContext(value);
+      const wiki = ctx.signals.find((s) => s.key === "wikipedia");
+      const tone = ctx.signals.find((s) => s.key === "gdelt-tone");
+      const volume = (wiki?.collected ? wiki.series : []).map((p) => ({ date: p.date, value: p.value }));
+      const toneSeries = (tone?.collected ? tone.series : []).map((p) => ({ date: p.date, value: p.value }));
+      if (volume.length) {
+        partial.forecast = forecastNarrativeRisk({ volume, tone: toneSeries });
+        log.push(`radar: ${partial.forecast.band} (hazard ${Math.round(partial.forecast.hazard * 100)}%).`);
+      } else { log.push("radar: no public attention series for this query."); }
+    } catch { log.push("radar: forecast unavailable."); }
+  }
+
   // Tool coverage across everything that ran.
   const toolsLive = new Set<string>(["crtsh.certs"]);
   const toolsNotConfigured = new Set<string>();
   for (const p of partial.pivots || []) { p.connectedTools.forEach((t) => toolsLive.add(t)); p.notConnectedTools.forEach((t) => toolsNotConfigured.add(t)); }
+
+  if (kind === "domain" || kind === "freetext") toolsLive.add("early-warning-radar");
 
   const findings: ResearchFindings = {
     kind, value, watchlist,
@@ -223,9 +247,15 @@ export async function runResearch(query: string, now: { date: string; runId: str
     trackers: partial.trackers || { gaIds: [], adsenseIds: [] },
     pivots: partial.pivots || [],
     hostConduct: partial.hostConduct,
+    forecast: partial.forecast,
     toolsLive: [...toolsLive], toolsNotConfigured: [...toolsNotConfigured], log,
   };
 
-  const input = assembleReportInput(findings, now.date, now.runId);
+  // Deterministic report first; then optional LLM prose for the narrative
+  // sections only (never the scores/attribution). Honest fallback without a key.
+  const confidence = deriveConfidence(findings);
+  const narrative = await narrateResearch(findings, confidence);
+  if (Object.keys(narrative).length) log.push("narrative: synthesized by the LLM (facts + confidence fixed in code).");
+  const input = assembleReportInput(findings, now.date, now.runId, narrative);
   return { findings, report: compileReport(input) };
 }

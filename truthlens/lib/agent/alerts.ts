@@ -1,5 +1,5 @@
 // Agent alert routing (layer 05 · P6). Reuses the Brand Watch pipeline (dedup,
-// cooldown, flapping) — no second alerting system. Alert ONLY on the events that
+// cooldown, flapping) - no second alerting system. Alert ONLY on the events that
 // change the picture or need a human; everything else goes to the digest. No
 // alert text may assert intent, coordination, escalation, or attribution.
 
@@ -18,7 +18,7 @@ export function agentShouldAlert(kind: string): boolean {
   return ALERTING.has(kind as AgentAlertKind);
 }
 
-/** Brand Watch fingerprint — dedup/cooldown are handled by that pipeline. */
+/** Brand Watch fingerprint - dedup/cooldown are handled by that pipeline. */
 export function agentAlertFingerprint(caseId: string, changeKind: string, subjectKey: string): string {
   return `${caseId}␟${changeKind}␟${subjectKey}`;
 }

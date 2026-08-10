@@ -28,7 +28,7 @@ export function recordSearch(type: string, input: string, headline: string, resu
   const entities = extractEntities(type, input, result);
   if (entities.length) { try { linkAndRecord(rec.id, entities); } catch { /* ignore */ } }
 
-  // If a case (profile) is active, link this search to it — like saving into
+  // If a case (profile) is active, link this search to it - like saving into
   // the currently-selected Chrome profile.
   try { linkCheckToActiveCase(rec.id); } catch { /* ignore */ }
 }

@@ -1,10 +1,10 @@
-// OSINT report compiler — fills the 14-section template (lib/osint/template.ts)
+// OSINT report compiler - fills the 14-section template (lib/osint/template.ts)
 // and ENFORCES its compiler rules:
 //   - the BLUF confidence and the Section-10 attribution confidence are ONE value
-//     (drift is structurally impossible — both read `overall_confidence`), and it
+//     (drift is structurally impossible - both read `overall_confidence`), and it
 //     must be a legal High/Moderate/Low;
 //   - fact vs assessment stays visibly separate (a required note);
-//   - a missing narrative section renders an honest "Not assessed" — never a
+//   - a missing narrative section renders an honest "Not assessed" - never a
 //     fabricated paragraph (rule 4);
 //   - attribution is organization/campaign-level; the compiler rejects a report
 //     whose assessed actor looks like a bare personal name (rule 1).
@@ -52,7 +52,7 @@ export interface ReportInput {
   sources_numbered_with_links?: string;
 }
 
-const NOT_ASSESSED = "_Not assessed — insufficient collection._";
+const NOT_ASSESSED = "_Not assessed - insufficient collection._";
 const EMPTY_ROW = "| _no load-bearing rows_ | | | |";
 const FACT_ASSESSMENT_NOTE =
   "Fact and assessment are kept visibly separate: tables and Section 5–6 are observed facts with sources; Sections 1, 4, 7, 9–11 are analytic assessments.";
@@ -84,7 +84,7 @@ export function validateReport(input: ReportInput): ReportValidation {
   if (!input.assessed_actor?.trim()) {
     v.push("assessed_actor is required (use 'Undetermined' when attribution is not established).");
   } else if (looksLikePersonName(input.assessed_actor)) {
-    v.push("assessed_actor looks like a private individual's name — attribution must be organization/campaign-level (rule 1).");
+    v.push("assessed_actor looks like a private individual's name - attribution must be organization/campaign-level (rule 1).");
   }
   return { valid: v.length === 0, violations: v };
 }
@@ -99,7 +99,7 @@ function val(input: ReportInput, key: keyof ReportInput, fallback: string): stri
 export function fillTemplate(input: ReportInput): string {
   const narrative = (k: keyof ReportInput) => val(input, k, NOT_ASSESSED);
   const rows = (k: keyof ReportInput) => val(input, k, EMPTY_ROW);
-  const inline = (k: keyof ReportInput, fb = "—") => val(input, k, fb);
+  const inline = (k: keyof ReportInput, fb = "-") => val(input, k, fb);
 
   const map: Record<string, string> = {
     network_name: inline("network_name"),
@@ -125,7 +125,7 @@ export function fillTemplate(input: ReportInput): string {
     asset_table_rows: rows("asset_table_rows"),
     infrastructure_narrative: narrative("infrastructure_narrative"),
     infra_table_rows: rows("infra_table_rows"),
-    underground_findings_or_none: inline("underground_findings_or_none", "None — dark-web module did not run."),
+    underground_findings_or_none: inline("underground_findings_or_none", "None - dark-web module did not run."),
     narrative_analysis: narrative("narrative_analysis"),
     disarm_table_rows: rows("disarm_table_rows"),
     impact_evidence: narrative("impact_evidence"),
@@ -151,7 +151,7 @@ export interface CompiledReport {
 }
 
 /** Validate then fill. An invalid report still compiles (so the analyst sees it)
- * but is flagged with its violations — never silently emitted as sound. */
+ * but is flagged with its violations - never silently emitted as sound. */
 export function compileReport(input: ReportInput): CompiledReport {
   const { valid, violations } = validateReport(input);
   return { markdown: fillTemplate(input), input, valid, violations, version: REPORT_COMPILER_VERSION };

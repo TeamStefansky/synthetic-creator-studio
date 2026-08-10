@@ -1,10 +1,10 @@
 "use client";
 
-// Early-Warning Radar — enter a watch term and get a forward-looking forecast of
+// Early-Warning Radar - enter a watch term and get a forward-looking forecast of
 // narrative-escalation risk within a horizon, from its public attention + tone
 // history. A forecast, not a verdict: band + probability + confidence + evidence
 // + an explicit alternative; Unknown when the history is too thin. The value
-// holds in quiet periods too — a logged Calm baseline is what the next spike is
+// holds in quiet periods too - a logged Calm baseline is what the next spike is
 // measured against.
 
 import { useState } from "react";
@@ -65,7 +65,7 @@ export default function RadarPage() {
           <h1 className="font-display text-2xl font-bold">Early-Warning <span className="gradient-text">Radar</span></h1>
         </div>
         <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
-          An actuarial forecast of a developing narrative risk — while it is still far off. It reads the term’s public
+          An actuarial forecast of a developing narrative risk - while it is still far off. It reads the term’s public
           attention and tone history, projects the risk of escalation within a horizon, and can re-score the risk so the
           monitoring loop stays a step ahead of the next wave. A forecast, never a verdict.
         </p>
@@ -85,7 +85,7 @@ export default function RadarPage() {
       </div>
 
       {(error || jobError) && <div className="card border-risk-high/30 text-sm text-risk-high">{error || jobError}</div>}
-      {loading && <div className="card flex items-center gap-2 text-sm text-ink-secondary"><Loader2 className="h-4 w-4 animate-spin" /> Forecasting in the background — you can switch tools; the result will be waiting here and in the scans tray.</div>}
+      {loading && <div className="card flex items-center gap-2 text-sm text-ink-secondary"><Loader2 className="h-4 w-4 animate-spin" /> Forecasting in the background - you can switch tools; the result will be waiting here and in the scans tray.</div>}
 
       {f && !f.available && (
         <div className="card text-sm text-ink-secondary">{f.reason || "No forecast available."}</div>
@@ -131,7 +131,7 @@ export default function RadarPage() {
             <p className="text-sm text-ink-soft">{f.evidence.join(" ")}</p>
             <p className="mt-3 border-t border-line pt-3 text-[12px] text-ink-secondary"><span className="font-medium text-ink">Could also be explained by: </span>{f.alternative}</p>
             <div className="mt-2 flex items-center gap-1.5 text-[11px] text-ink-muted">
-              <RotateCcw className="h-3 w-3" /> Report &amp; renewal: this forecast is recomputed each cycle, and the loop tightens as the baseline adapts — a logged Calm is what the next spike is measured against.
+              <RotateCcw className="h-3 w-3" /> Report &amp; renewal: this forecast is recomputed each cycle, and the loop tightens as the baseline adapts - a logged Calm is what the next spike is measured against.
             </div>
             <div className="mt-1 text-[11px] text-ink-muted">
               Sources: attention {data?.sources?.wikipedia ? "connected" : "not connected"} · tone {data?.sources?.tone ? "connected" : "not connected"}.
@@ -142,10 +142,10 @@ export default function RadarPage() {
 
       <div className="mt-4">
         <ToolIntro
-          what={<>The radar fits a transparent hazard model over the term’s recent <span className="text-ink">attention</span> and <span className="text-ink">tone</span> history — level anomaly, growth/diffusion, a recent regime shift, a count spike, and a tone turn — and returns the probability of <span className="text-ink">escalation within a horizon</span>, with every indicator’s contribution shown.</>}
+          what={<>The radar fits a transparent hazard model over the term’s recent <span className="text-ink">attention</span> and <span className="text-ink">tone</span> history - level anomaly, growth/diffusion, a recent regime shift, a count spike, and a tone turn - and returns the probability of <span className="text-ink">escalation within a horizon</span>, with every indicator’s contribution shown.</>}
           steps={[
             <>Enter a watch term and press <span className="text-ink">Forecast</span>.</>,
-            <>Read the band + probability with its confidence — and always its alternative.</>,
+            <>Read the band + probability with its confidence - and always its alternative.</>,
             <>Feed it into monitoring so the loop pre-empts, not just reacts.</>,
           ]}
           note="Keyless: uses public Wikipedia attention + GDELT tone series. Too little history → Unknown, never a guessed forecast. Deterministic and reproducible."

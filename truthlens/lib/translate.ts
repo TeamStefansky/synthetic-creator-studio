@@ -1,7 +1,7 @@
 // Translate short source text (feed headlines/summaries) to English so a mixed-
 // language situational picture is readable. Honest capability (CLAUDE.md rule 7):
 // without ANTHROPIC_API_KEY, or on any error/timeout, the ORIGINAL text is returned
-// unchanged — we never fabricate a translation; untranslated text simply shows in
+// unchanged - we never fabricate a translation; untranslated text simply shows in
 // its own language. Applied at the feeds' daily cache cold-path, so translation
 // runs once per feed per day and the result is cached (reproducible).
 
@@ -17,7 +17,7 @@ const MAX_CHARS = 400; // per line sent to the model
 
 /** Translate an array of strings to English. English strings are returned
  * unchanged (the model is told to pass them through). Returns the originals on no
- * key / parse failure / timeout — never a fabricated translation. */
+ * key / parse failure / timeout - never a fabricated translation. */
 export async function translateToEnglish(texts: string[]): Promise<string[]> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key || !texts.length) return texts;
@@ -35,7 +35,7 @@ export async function translateToEnglish(texts: string[]): Promise<string[]> {
 
   const client = new Anthropic({ apiKey: key, maxRetries: 0, timeout: 30_000 });
   // Try the primary model, then fall back to the vision model on a model-ACCESS
-  // error (same pattern as Post Check) — so translation still works when the account
+  // error (same pattern as Post Check) - so translation still works when the account
   // can't reach the default LLM_MODEL. Any other failure fails open to the original.
   const candidates = [...new Set([LLM_MODEL, VISION_MODEL])];
   for (const model of candidates) {

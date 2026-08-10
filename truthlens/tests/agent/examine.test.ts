@@ -9,13 +9,13 @@ describe("examination discipline (06·P4)", () => {
     expect(assessSufficiency("ssl_san", 0.9).decision).toBe("sufficient");
   });
 
-  it("CONTEXT FIREWALL: the comparator sees only its input — case theory cannot change its output", () => {
+  it("CONTEXT FIREWALL: the comparator sees only its input - case theory cannot change its output", () => {
     const input: ComparisonInput = { kind: "ga_id", valueA: "G-1", valueB: "G-1", sufficientA: true, sufficientB: true };
     // There is no way to pass a hypothesis/ranking to compare(); running it under
     // "opposite theories" (which it cannot receive) is byte-identical.
     expect(compare(input)).toBe(compare({ ...input }));
     expect(compare(input)).toBe("identification");
-    // @ts-expect-error — the input type has no hypothesis/theory field to leak in
+    // @ts-expect-error - the input type has no hypothesis/theory field to leak in
     const _leak: ComparisonInput = { ...input, leadingHypothesis: "same_operator" };
     void _leak;
   });
@@ -25,7 +25,7 @@ describe("examination discipline (06·P4)", () => {
     expect(compare({ kind: "ga_id", valueA: "G-1", valueB: "G-2", sufficientA: true, sufficientB: true })).toBe("exclusion");
   });
 
-  it("BLIND VERIFICATION: disagreement yields inconclusive — never the stronger reading", () => {
+  it("BLIND VERIFICATION: disagreement yields inconclusive - never the stronger reading", () => {
     expect(blindVerify("identification", "identification")).toBe("identification");
     expect(blindVerify("identification", "exclusion")).toBe("inconclusive");
     expect(blindVerify("identification", "inconclusive")).toBe("inconclusive");

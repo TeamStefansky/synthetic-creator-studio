@@ -1,7 +1,7 @@
 // Claim identity (layer 03 · P2). Two texts are the same claim if they are
 // near-duplicates (same-language paraphrase, via lib/similarity) OR they share a
-// distinctive anchor set — numbers, URLs, domains, @handles, #tags, and Latin
-// proper-noun tokens — which survive translation. This gives deterministic,
+// distinctive anchor set - numbers, URLs, domains, @handles, #tags, and Latin
+// proper-noun tokens - which survive translation. This gives deterministic,
 // translation-robust claim clustering WITHOUT calling the model: cross-language
 // restatements that share an entity or figure land together. True semantic
 // translation matching is an optional LLM enhancement (deferred), never faked.

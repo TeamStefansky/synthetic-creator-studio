@@ -85,7 +85,7 @@ async function tryCandidate(cand: string): Promise<FeedPreview | null> {
  * site homepage rather than a feed, AUTO-DISCOVER the site's feed so the user can
  * just paste e.g. cnn.com: (1) a curated known feed for major outlets, (2) the
  * page's own <link rel="alternate"> autodiscovery tags, (3) common feed paths, (4)
- * feed subdomains (rss./feeds.). Throws a user-safe error when nothing safe parses —
+ * feed subdomains (rss./feeds.). Throws a user-safe error when nothing safe parses -
  * the caller must NOT save a feed that fails this. */
 export async function validateAndPreview(rawUrl: string): Promise<FeedPreview> {
   const normalized = normalizeFeedUrl(rawUrl); // throws on invalid URL
@@ -103,7 +103,7 @@ export async function validateAndPreview(rawUrl: string): Promise<FeedPreview> {
   const { text, finalUrl } = await safeFetchText(normalized);
   try {
     return toPreview(normalized, parseFeed(text));
-  } catch { /* not a feed — discover the site's feed below */ }
+  } catch { /* not a feed - discover the site's feed below */ }
 
   // 3) Discover: autodiscovery tags, then common paths, then feed subdomains.
   const origin = new URL(finalUrl).origin;

@@ -1,11 +1,11 @@
-// Shared evidence store (server-side, KV-backed) — the narrative-amplifier
+// Shared evidence store (server-side, KV-backed) - the narrative-amplifier
 // registry that lets the INFRA tools ask "does this domain also amplify a
 // narrative we monitor?". The browser-local clue index (lib/clues/index.ts)
 // stays as the anonymous-user complement; this is its server-side analogue for
 // the one fact the browser can't hold: which domains amplify which monitored
 // narratives (Brand Watch runs server-side).
 //
-// HARD RULES: domains/organizations/infrastructure only — never a person. Gated on
+// HARD RULES: domains/organizations/infrastructure only - never a person. Gated on
 // storeAvailable(): without KV it is an honest no-op ("not connected"), never faked.
 // A registry hit is a LEAD (co-hosting/syndication is context), never proof.
 

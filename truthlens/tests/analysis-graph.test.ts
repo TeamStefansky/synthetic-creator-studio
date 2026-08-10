@@ -12,7 +12,7 @@ import {
   type Graph,
 } from "@/lib/analysis/graph";
 
-// Two triangles joined by a single bridge edge — a clean planted 2-community graph.
+// Two triangles joined by a single bridge edge - a clean planted 2-community graph.
 const plantedTwo: Graph = {
   nodes: ["0", "1", "2", "3", "4", "5"],
   edges: [
@@ -111,7 +111,7 @@ describe("hypergeometric co-occurrence null", () => {
 describe("temporal synchrony vs permutation null", () => {
   it("identical APERIODIC activity series correlate at 1 and register as significant", () => {
     // aperiodic on purpose: a periodic series is matched by its own shifts, so its
-    // synchrony is correctly NOT significant — the null model catches that.
+    // synchrony is correctly NOT significant - the null model catches that.
     const a = [0, 0, 1, 3, 9, 2, 0, 0, 1, 0, 0, 5];
     const r = temporalSynchrony(a, [...a], 42, 300);
     expect(r.correlation).toBeCloseTo(1, 6);

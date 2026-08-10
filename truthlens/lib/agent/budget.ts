@@ -1,7 +1,7 @@
 // Budget + coverage accounting (layer 05 · P1). Hard per-run limits; reaching any
 // marks the run coverage:partial, which (via the monitoring layer) permits adding
 // findings and forbids removing them. A budget-truncated run never retracts and
-// never regression-alerts — our own incompleteness is not a change in the world.
+// never regression-alerts - our own incompleteness is not a change in the world.
 
 import { coverageOf } from "../case/schedule";
 

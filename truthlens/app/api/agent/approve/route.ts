@@ -1,4 +1,4 @@
-// Proposal approval endpoint (layer 05 · P6). An analyst — never the agent —
+// Proposal approval endpoint (layer 05 · P6). An analyst - never the agent -
 // approves a proposed `common-operation` conclusion or accepts a candidate entity
 // out of the queue. The agent cannot mark its own output reviewed: approval
 // requires an approver distinct from the run's initiator (the agent).

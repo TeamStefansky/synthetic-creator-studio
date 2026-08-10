@@ -23,7 +23,7 @@ export interface GaIdInfo {
  * Classify a Google id by family and recency. Universal Analytics (UA-) was shut
  * down by Google on 1 July 2023, so a *live* UA tag is a recency signal in its own
  * right: it points to a long-unmaintained site or a stale value carried across a
- * template — and it carries LESS corroborating weight than a current GA4 (G-) or
+ * template - and it carries LESS corroborating weight than a current GA4 (G-) or
  * Google Tag (GT-) overlap. This is a fact about the id format, not a clock read.
  */
 export function classifyGaId(id: string): GaIdInfo {
@@ -33,7 +33,7 @@ export function classifyGaId(id: string): GaIdInfo {
       deprecated: true,
       note:
         "Universal Analytics (UA-) was shut down by Google on 1 July 2023. A live UA tag " +
-        "indicates a long-unmaintained site or a stale, carried-over value — it corroborates " +
+        "indicates a long-unmaintained site or a stale, carried-over value - it corroborates " +
         "a link less than a current GA4 (G-) or Tag Manager (GTM-) overlap would.",
     };
   }

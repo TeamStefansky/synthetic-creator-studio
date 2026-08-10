@@ -14,7 +14,7 @@ describe("method vs signature (06·P5)", () => {
   });
 });
 
-describe("processing baseline gate — the second headline (06·P5)", () => {
+describe("processing baseline gate - the second headline (06·P5)", () => {
   it("BASELINE scenario: same-CDN/same-optimizer shared quirks credit NO signature strength", () => {
     const toolchain = { cdn: "cloudflare", imagePipeline: "cloudinary" };
     const score = scoreSignature([

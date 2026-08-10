@@ -1,6 +1,6 @@
 // Authenticated case-scan cron endpoint (layer 04 · P3). Reuses the Brand Watch
 // scan auth (CRON_SECRET Bearer). Never publicly triggerable. Anonymous / local
-// cases are never scheduled here — scheduled monitoring is KV-scoped per workspace.
+// cases are never scheduled here - scheduled monitoring is KV-scoped per workspace.
 // The actual scan loop (per-case collection under RUN_BUDGET, coverage marking,
 // monitorDiff, alert dispatch) runs server-side; without a store it reports the
 // honest "not connected" state rather than pretending to have scanned.

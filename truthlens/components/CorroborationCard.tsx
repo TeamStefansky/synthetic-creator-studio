@@ -1,10 +1,10 @@
 "use client";
 
-// Evidence corroboration overlay for the Link Board — makes a shared-artifact
+// Evidence corroboration overlay for the Link Board - makes a shared-artifact
 // "link" defensible: measured worldwide prevalence (reverse-lookup), id recency
 // (deprecated UA-), an analytic null baseline, and an honest list of what was NOT
 // scanned (where the strongest link evidence usually lives). Additive and
-// down-only — it never raises a calibrated tier.
+// down-only - it never raises a calibrated tier.
 
 import type { Corroboration } from "@/lib/board/types";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
@@ -33,7 +33,7 @@ export default function CorroborationCard({ c }: { c: Corroboration }) {
         </div>
         {!c.prevalenceConnected && (
           <div className="mb-2 rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-2.5 py-1.5 text-[12px] text-yellow-200/80">
-            Reverse-lookup not connected — the worldwide prevalence of a shared id is unmeasured, so no
+            Reverse-lookup not connected - the worldwide prevalence of a shared id is unmeasured, so no
             shared id can be called a High-confidence link yet. Connect BuiltWith / DNSlytics / PublicWWW /
             SpyOnWeb to corroborate. A shared id is treated as uncorroborated, never assumed unique.
           </div>
@@ -99,10 +99,10 @@ export default function CorroborationCard({ c }: { c: Corroboration }) {
         <p className="mt-1 text-[10px] text-ink-secondary">{c.control.note}</p>
       </div>
 
-      {/* What was not scanned — where the strongest link evidence lives */}
+      {/* What was not scanned - where the strongest link evidence lives */}
       <div>
         <div className="mb-1 flex items-center gap-1 text-xs font-semibold text-ink">
-          <EyeOff className="h-3.5 w-3.5" /> Not scanned — the strongest link evidence usually lives here
+          <EyeOff className="h-3.5 w-3.5" /> Not scanned - the strongest link evidence usually lives here
         </div>
         <ul className="space-y-1.5">
           {c.notScanned.map((n, i) => (
@@ -114,7 +114,7 @@ export default function CorroborationCard({ c }: { c: Corroboration }) {
           ))}
         </ul>
         <p className="mt-2 text-[10px] text-ink-secondary">
-          Overlay {c.version} · additive &amp; down-only — infrastructure overlap alone proves shared technical
+          Overlay {c.version} · additive &amp; down-only - infrastructure overlap alone proves shared technical
           setup, not cooperation, ownership, or shared aims.
         </p>
       </div>

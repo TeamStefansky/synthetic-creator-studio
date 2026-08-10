@@ -1,4 +1,4 @@
-// Deterministic narrative clustering — TF-IDF + cosine, no model in the loop.
+// Deterministic narrative clustering - TF-IDF + cosine, no model in the loop.
 //
 // The SIGNAL narrative layer previously asked the LLM to both GROUP and LABEL
 // mentions, which made the grouping itself non-reproducible (rule 8: a report
@@ -16,7 +16,7 @@ import { normalizeText } from "@/lib/similarity";
 export const TEXTCLUSTER_VERSION = "textcluster-v1";
 
 /** Cosine similarity a text must reach against a cluster centroid to join it.
- * Topic-level (lower than the 0.72 near-duplicate Jaccard — these are
+ * Topic-level (lower than the 0.72 near-duplicate Jaccard - these are
  * storylines, not copies). */
 export const NARRATIVE_COSINE_THRESHOLD = 0.22;
 
@@ -89,7 +89,7 @@ function addToCentroid(c: Cluster, v: Vec) {
 /**
  * Greedy centroid clustering + one deterministic merge pass. Returns clusters
  * of input indices, largest first (ties: earliest first member). Only clusters
- * with ≥ MIN_CLUSTER_SIZE members are returned; the rest are unclustered —
+ * with ≥ MIN_CLUSTER_SIZE members are returned; the rest are unclustered -
  * never force-fit (rule 4).
  */
 export function clusterTexts(texts: string[], threshold = NARRATIVE_COSINE_THRESHOLD): number[][] {
@@ -111,7 +111,7 @@ export function clusterTexts(texts: string[], threshold = NARRATIVE_COSINE_THRES
     }
   });
 
-  // One merge pass: greedy order, earliest pair first — deterministic.
+  // One merge pass: greedy order, earliest pair first - deterministic.
   for (let i = 0; i < clusters.length; i++) {
     for (let j = clusters.length - 1; j > i; j--) {
       if (cosine(clusters[i].centroid, clusters[j].centroid) >= threshold) {
@@ -131,7 +131,7 @@ export function clusterTexts(texts: string[], threshold = NARRATIVE_COSINE_THRES
     .map((c) => c.members);
 }
 
-/** Top-k highest-TF-IDF terms across a cluster — the mechanical keyword label
+/** Top-k highest-TF-IDF terms across a cluster - the mechanical keyword label
  * used when no LLM is connected (real computation, clearly mechanical). */
 export function topTerms(texts: string[], members: number[], k = 3): string[] {
   const vecs = tfidfVectors(texts);

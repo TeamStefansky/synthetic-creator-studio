@@ -3,7 +3,7 @@
 // Separators are whitespace (newlines/spaces) or a comma/semicolon that is FOLLOWED
 // by whitespace. A BARE comma is NOT a separator: URLs can legitimately contain
 // commas (e.g. Ynet's https://www.ynet.co.il/home/0,7340,L-8,00.html), and splitting
-// on every comma shredded such a URL into invalid fragments. No node deps — safe to
+// on every comma shredded such a URL into invalid fragments. No node deps - safe to
 // import from the client component and unit-test.
 export function parseFeedInput(input: string): string[] {
   return [...new Set(
@@ -20,7 +20,7 @@ const CANDIDATE_RE = /^(?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s]*)?$/
 // Non-site file extensions that a domain-shaped regex would otherwise match.
 const NON_SITE_EXT = /\.(?:xlsx?|csv|pdf|docx?|pptx?|png|jpe?g|gif|svg|zip|txt|json|xml)$/i;
 
-/** Extract site/feed candidates from tabular or messy text — a pasted spreadsheet
+/** Extract site/feed candidates from tabular or messy text - a pasted spreadsheet
  * selection (tab/newline separated), CSV/TSV, or a mixed list. Every cell is split
  * out and only URL/domain-like cells are kept (country names, headers, blank cells
  * are dropped). Used for file import and for pasting Excel cells; the plain "Add"

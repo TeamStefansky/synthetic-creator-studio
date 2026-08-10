@@ -1,4 +1,4 @@
-// Host-conduct layer — turns the "simple research following the connections"
+// Host-conduct layer - turns the "simple research following the connections"
 // into something the system does itself: given a host/ASN/operator, surface its
 // DOCUMENTED, CITED conduct (court records, watchdog designations, a host's own
 // stated policy) at High confidence, plus a SEPARATED severe-context flag for
@@ -8,7 +8,7 @@
 //   - A finding about the HOST's own conduct is public record → High confidence,
 //     named, cited. This is lawful disclosure about an ORGANIZATION, never a person.
 //   - Co-hosted extremist domains are a SEVERE CONTEXT FLAG about the shared
-//     infrastructure — rendered SEPARATELY, never merged into a claim that a
+//     infrastructure - rendered SEPARATELY, never merged into a claim that a
 //     specific client authored that content (sharing a host ≠ shared operation).
 //   - An empty reference / no match → "cannot assess" (Unknown), never "clean"
 //     (rule 4/7). A domain name is an indicator, not proof of content.
@@ -59,7 +59,7 @@ export interface HostConductProfile {
     neutralCount: number;
     total: number;
   };
-  /** Confidence in the DOCUMENTED findings (High — they are public record). */
+  /** Confidence in the DOCUMENTED findings (High - they are public record). */
   confidence: "High" | "Unknown";
   /** The mandatory framing that keeps the strong part unassailable. */
   clientCaveat: string;
@@ -106,7 +106,7 @@ export function matchHost(opts: { asn?: string; org?: string; hostName?: string 
 /**
  * Build a host-conduct profile. `coHostedSample` is an optional list of domains
  * observed on the host's IP ranges (e.g. from origin-exposure / a reverse-DNS
- * sweep) — it is classified and the extremist-character ones are surfaced as the
+ * sweep) - it is classified and the extremist-character ones are surfaced as the
  * separated context flag, alongside any documented flagged domains.
  */
 export function buildHostConduct(opts: {
@@ -142,9 +142,9 @@ export function buildHostConduct(opts: {
 
   const matched = !!host;
   let note: string;
-  if (empty) note = "Host-conduct reference is not populated — cannot assess this host's documented conduct (Unknown, not 'clean').";
+  if (empty) note = "Host-conduct reference is not populated - cannot assess this host's documented conduct (Unknown, not 'clean').";
   else if (matched) note = `Documented public-record conduct on file for ${host!.org}.`;
-  else note = "No documented conduct on file for this host — this is 'not assessed', not a clean record.";
+  else note = "No documented conduct on file for this host - this is 'not assessed', not a clean record.";
 
   return {
     matched,

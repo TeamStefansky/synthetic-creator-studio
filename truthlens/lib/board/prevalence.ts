@@ -42,7 +42,7 @@ export function prevalenceBand(count: number | null): PrevalenceBand {
 
 /** Which reverse-lookup providers have a key configured (else "not connected").
  * Lists ONLY providers that measurePrevalence() actually queries, so a configured
- * key always means a real query — never a "connected" label with no fetch behind it. */
+ * key always means a real query - never a "connected" label with no fetch behind it. */
 export function prevalenceProvidersConnected(): string[] {
   const out: string[] = [];
   if (process.env.SPYONWEB_API_KEY) out.push("SpyOnWeb");
@@ -144,7 +144,7 @@ async function fromDnslytics(id: string): Promise<PrevalenceResult | null> {
 /**
  * Measure worldwide prevalence for one artifact. Tries each connected provider in
  * turn; returns the first real answer, else an honest "not connected" result.
- * Never throws — callers degrade gracefully.
+ * Never throws - callers degrade gracefully.
  */
 export async function measurePrevalence(kind: string, value: string): Promise<PrevalenceResult> {
   if (!isReverseLookupable(kind)) return notConnected();

@@ -1,8 +1,8 @@
-// Processing baseline (layer 06 · P5) — the highest-volume false-positive guard.
+// Processing baseline (layer 06 · P5) - the highest-volume false-positive guard.
 // Between the event and our collection, something processed the artifact: CDN
 // minification, image pipelines, platform transcoding, caches, archive rewriting,
 // Unicode normalization, security gateways. SHARED PROCESSING MASQUERADES AS
-// SHARED SIGNATURE — two unrelated sites behind the same optimizer produce
+// SHARED SIGNATURE - two unrelated sites behind the same optimizer produce
 // identical re-encode artifacts. So before any signature feature contributes
 // strength, compute the baseline for that entity's toolchain and subtract it. A
 // feature indistinguishable from what the toolchain produces for EVERY user is a
@@ -50,7 +50,7 @@ export function isBaselineExplained(feature: string, tc: Toolchain): boolean {
   return baselineFeatures(tc).has(feature);
 }
 
-/** Residual features — only variation the toolchain does NOT impose can carry weight. */
+/** Residual features - only variation the toolchain does NOT impose can carry weight. */
 export function subtractBaseline(features: string[], tc: Toolchain): string[] {
   return features.filter((f) => !isBaselineExplained(f, tc));
 }

@@ -1,7 +1,7 @@
 // Key Assumptions Check (layer 03 · P5). Every assumption the case rests on, each
 // with its own confidence and a load-bearing flag. A load-bearing, low-confidence
-// assumption is the single most important finding in the case — most analytic
-// surprises are not new evidence, they are an old assumption failing — so it
+// assumption is the single most important finding in the case - most analytic
+// surprises are not new evidence, they are an old assumption failing - so it
 // surfaces in the summary, not an appendix.
 
 export const ASSUMPTIONS_VERSION = "case-assumptions-v1";
@@ -25,7 +25,7 @@ export interface AssumptionsResult {
 export function analyzeAssumptions(list: Assumption[]): AssumptionsResult {
   const critical = list.filter((a) => a.loadBearing && a.confidence === "low");
   const summaryLines = critical.map(
-    (a) => `Load-bearing low-confidence assumption: "${a.text}" — if it fails, the case may not hold.`,
+    (a) => `Load-bearing low-confidence assumption: "${a.text}" - if it fails, the case may not hold.`,
   );
   return { version: ASSUMPTIONS_VERSION, list, critical, summaryLines };
 }

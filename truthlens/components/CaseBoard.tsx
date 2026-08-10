@@ -63,7 +63,7 @@ export default function CaseBoard({ refreshKey = 0 }: { refreshKey?: number }) {
               </div>
             ) : (
               <div className="mt-0.5 text-sm text-ink-secondary">
-                <span className="text-ink">No connections found yet</span> across {report.searchCount} saved search{report.searchCount === 1 ? "" : "es"} — a valid, common result. Run more searches; shared infrastructure will surface here.
+                <span className="text-ink">No connections found yet</span> across {report.searchCount} saved search{report.searchCount === 1 ? "" : "es"} - a valid, common result. Run more searches; shared infrastructure will surface here.
               </div>
             )}
           </div>

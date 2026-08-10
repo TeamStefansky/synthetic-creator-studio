@@ -1,6 +1,6 @@
 // Public-record officer disclosure (owner-authorized CLAUDE.md exception). Surfaces
 // named individuals ONLY when an official public registry has already published
-// them — company/nonprofit officer filings — always WITH a citation, labeled as
+// them - company/nonprofit officer filings - always WITH a citation, labeled as
 // disclosure, never inferred, never de-anonymized, never the system's own verdict,
 // and never a node in any graph. This is lawful public-record context (like a
 // sanctions designation), not attribution.
@@ -18,7 +18,7 @@ export interface PublicOfficer {
   org: string;         // the organization the record is filed under
   jurisdiction?: string;
   source: string;      // registry / provider
-  sourceUrl?: string;  // citation — required for the name to render
+  sourceUrl?: string;  // citation - required for the name to render
   asOf?: string;
 }
 
@@ -36,7 +36,7 @@ export async function lookupPublicOfficers(orgName: string): Promise<PublicRecor
   const query = (orgName || "").trim();
   const base: PublicRecordsResult = {
     connected: false, query, officers: [],
-    note: "Names below (if any) are disclosed in an official public registry and cited — public-record disclosure, not attribution, inference, or a verdict.",
+    note: "Names below (if any) are disclosed in an official public registry and cited - public-record disclosure, not attribution, inference, or a verdict.",
   };
   if (query.length < 2) return { ...base, reason: "no organization name to look up" };
 
@@ -77,7 +77,7 @@ export async function lookupPublicOfficers(orgName: string): Promise<PublicRecor
     return {
       ...base, connected: true, officers,
       note: officers.length
-        ? "Officers below are as filed in the official company register, each cited — public-record disclosure, not attribution or a verdict. Confirm the record refers to this operator."
+        ? "Officers below are as filed in the official company register, each cited - public-record disclosure, not attribution or a verdict. Confirm the record refers to this operator."
         : `Register matched "${co.name}" but disclosed no officers. Public-record disclosure only; never inferred.`,
     };
   } catch (e: any) {

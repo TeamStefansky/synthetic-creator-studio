@@ -1,6 +1,6 @@
 // Email Tracer -> EvidenceItem drafts (layer 03 · P1). The origin hop's Received
 // header time is T2 (a relaying MTA observed it; upstream hops are asserted).
-// Assets you own only. No person data — infrastructure and auth results only.
+// Assets you own only. No person data - infrastructure and auth results only.
 
 import { normalizeNetOrg } from "@/lib/clues/extract";
 import type { EvidenceDraft } from "../types";

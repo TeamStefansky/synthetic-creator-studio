@@ -1,7 +1,7 @@
-// NEWS ROOM — on-demand situational brief. Given the headlines currently shown
+// NEWS ROOM - on-demand situational brief. Given the headlines currently shown
 // (already collected + translated by /api/newsroom), an editor-style LLM pass groups
 // them into a few themes, each citing the supporting headlines by index so the UI can
-// link every claim back to a source. Grounded in the supplied headlines only — the
+// link every claim back to a source. Grounded in the supplied headlines only - the
 // model is told to invent nothing. Honest capability: no ANTHROPIC_API_KEY →
 // { available:false } (never a fabricated brief).
 
@@ -16,7 +16,7 @@ const MAX_ITEMS = 40;
 
 export async function POST(req: NextRequest) {
   const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return NextResponse.json({ available: false, reason: "AI brief unavailable — ANTHROPIC_API_KEY not configured." });
+  if (!key) return NextResponse.json({ available: false, reason: "AI brief unavailable - ANTHROPIC_API_KEY not configured." });
 
   let body: any = {};
   try { body = await req.json(); } catch { /* handled */ }
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const system =
     "You are a news-desk editor. You are given numbered English headlines that are ALREADY collected. " +
     "Group them into 3–6 themes describing what is happening right now. Each theme is ONE factual sentence, " +
-    "strictly grounded in the headlines — invent no fact, number, name or event not present in them. For each " +
+    "strictly grounded in the headlines - invent no fact, number, name or event not present in them. For each " +
     'theme list the indexes of the headlines that support it. Respond with ONLY minified JSON: ' +
     '{"themes":[{"text":"<one sentence>","refs":[<index>,...]}]}';
 
@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ available: true, themes, generatedAt: new Date().toISOString() });
   } catch (e: any) {
     const m = String(e?.message || "error");
-    if (/credit balance|billing|insufficient/i.test(m)) return NextResponse.json({ available: false, reason: "AI brief paused — Anthropic account out of credits." });
-    if (/401|authentication|invalid x-api-key/i.test(m)) return NextResponse.json({ available: false, reason: "AI brief unavailable — API key appears invalid." });
-    if (/429|rate limit/i.test(m)) return NextResponse.json({ available: false, reason: "AI brief rate-limited — try again shortly." });
+    if (/credit balance|billing|insufficient/i.test(m)) return NextResponse.json({ available: false, reason: "AI brief paused - Anthropic account out of credits." });
+    if (/401|authentication|invalid x-api-key/i.test(m)) return NextResponse.json({ available: false, reason: "AI brief unavailable - API key appears invalid." });
+    if (/429|rate limit/i.test(m)) return NextResponse.json({ available: false, reason: "AI brief rate-limited - try again shortly." });
     return NextResponse.json({ available: false, reason: `AI brief failed: ${m.slice(0, 120)}` });
   }
 }

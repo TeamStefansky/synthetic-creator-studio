@@ -30,7 +30,7 @@ export interface CibSignal {
   alternative: string;
   /** Quantitative-analysis enrichment (P5, additive): the principled test behind
    * the signal, its p-value, and a one-line estimate. The `confidence` band is
-   * unchanged — these annotate it with uncertainty, they do not replace it. */
+   * unchanged - these annotate it with uncertainty, they do not replace it. */
   method?: string;
   pValue?: number;
   estimate?: string;
@@ -103,7 +103,7 @@ export function analyzeCib(
 
   // --- P5 quantitative enrichment of the timing signal (additive; band unchanged) ---
   // The biggest burst is a COUNT in a fixed window, so its surprise is a Poisson
-  // upper-tail probability against the base posting rate — NOT a Gaussian z on raw
+  // upper-tail probability against the base posting rate - NOT a Gaussian z on raw
   // counts, which overstates significance at low counts (the exact bug P5 fixes).
   let burstStat: { pValue: number; expected: number; note: string } | null = null;
   let burstShape: { B: number; note: string } | null = null;

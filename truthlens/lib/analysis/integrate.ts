@@ -1,12 +1,12 @@
-// lib/analysis/integrate.ts — the ONE place the scorers meet the analysis layer.
+// lib/analysis/integrate.ts - the ONE place the scorers meet the analysis layer.
 //
 // Holds the mapping constants/priors and the small adapters that route existing
 // scorers through stats/graph/dynamics/evidence, so no scorer hard-codes the
 // band mapping or the LR scale. Every result here is ADDITIVE: it annotates a
 // scorer's existing conclusion with a calibrated posterior / significance /
-// sensitivity — it never replaces the scorer's public score or level.
+// sensitivity - it never replaces the scorer's public score or level.
 //
-// The math yields confidence on a hypothesis (coordination/authenticity) only —
+// The math yields confidence on a hypothesis (coordination/authenticity) only -
 // never a posterior identifying a person or state (frozen rules).
 
 import { combineEvidence, type EvidenceItem } from "./evidence";
@@ -49,7 +49,7 @@ export interface ScoredIndicator {
 
 /**
  * Bayesian calibration of a set of 0–100 weighted indicators into a posterior with
- * a band and a sensitivity flag — a parallel, auditable view of the same signals
+ * a band and a sensitivity flag - a parallel, auditable view of the same signals
  * the weighted sum uses. The headline score/status stays the scorer's own; this is
  * the "how confident, and does it rest on one signal?" annotation.
  *
@@ -85,7 +85,7 @@ export function bayesianCalibration(
  * Model a propagation/volume timeline (event timestamps in ms) as dynamics: an
  * exponential growth fit (doubling time + R²) and a change-point (dated
  * earliest-observed, never "the true start"). Returns `insufficient` when the
- * series is too short — a handful of points is not a trend.
+ * series is too short - a handful of points is not a trend.
  */
 export function timelineDynamics(timestampsMs: number[]): QuantAnalysis {
   const times = [...timestampsMs].filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
@@ -93,7 +93,7 @@ export function timelineDynamics(timestampsMs: number[]): QuantAnalysis {
     return {
       method: "Exponential growth fit + CUSUM change-point on the volume series.",
       version: INTEGRATE_VERSION,
-      dynamics: { insufficient: true, note: `Only ${times.length} dated point(s) — insufficient for a growth/change-point estimate (need ≥ 5).` },
+      dynamics: { insufficient: true, note: `Only ${times.length} dated point(s) - insufficient for a growth/change-point estimate (need ≥ 5).` },
     };
   }
   // bucket into hourly counts for a stable series
@@ -124,7 +124,7 @@ export function timelineDynamics(timestampsMs: number[]): QuantAnalysis {
 
 /**
  * Generic score-sensitivity for a weighted-signal scorer: which single signal, if
- * removed, drops the total most — and whether that crosses a level threshold
+ * removed, drops the total most - and whether that crosses a level threshold
  * (a fragile verdict). Uses the scorer's OWN weights, not a new model.
  */
 export function weightedScoreSensitivity(

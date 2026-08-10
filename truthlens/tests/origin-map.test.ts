@@ -2,7 +2,7 @@
 //   - Rule 2: EARLIEST_LABEL says "not the true source"; earliestObserved picks
 //     the earliest DATED, geolocated observation (a lead, never "the origin").
 //   - No-person-nodes: the amplifier network contains ONLY the term (target) and
-//     publisher DOMAIN nodes — never an account handle or a person.
+//     publisher DOMAIN nodes - never an account handle or a person.
 //   - Rule 3/7: infrastructure pins are derived only from real report candidates
 //     with a resolvable country; nothing is invented.
 
@@ -55,7 +55,7 @@ describe("earliestObserved + timeSpan (rule 2)", () => {
   it("returns the earliest DATED, geolocated observation", () => {
     const e = earliestObserved(mentions);
     expect(e).not.toBeNull();
-    expect(mentions[e!.idx].id).toBe("b"); // not "d" (unplottable) — a plottable lead
+    expect(mentions[e!.idx].id).toBe("b"); // not "d" (unplottable) - a plottable lead
   });
 
   it("computes the [min,max] span over dated, geolocated points", () => {
@@ -81,10 +81,10 @@ describe("buildAmplifierNetwork (no person nodes)", () => {
     mk({ source: "reddit", url: "https://reddit.com/r/x/1", account: "u/someone" }),
     mk({ source: "gdelt", url: "https://a.com/2" }),   // second hit for a.com
     mk({ source: "x", url: "https://x.com/@handle/1", account: "@handle" }),
-    mk({ source: "gdelt" }),                            // no url — ignored
+    mk({ source: "gdelt" }),                            // no url - ignored
   ];
 
-  it("nodes are the term (target) + publisher DOMAINS only — never accounts/people", () => {
+  it("nodes are the term (target) + publisher DOMAINS only - never accounts/people", () => {
     const { network, domains } = buildAmplifierNetwork("MyBrand", mentions);
     const kinds = new Set(network.nodes.map((n) => n.kind));
     expect(kinds).toEqual(new Set(["target", "domain"]));

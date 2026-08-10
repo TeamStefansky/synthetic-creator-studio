@@ -1,4 +1,4 @@
-// GET /api/v1/origin-exposure?domain=example.com — programmatic origin-exposure
+// GET /api/v1/origin-exposure?domain=example.com - programmatic origin-exposure
 // audit. Wraps the same engine the UI uses (passive CT + DNS + RDAP, cached),
 // including documented host conduct. Key-authed + rate-limited.
 

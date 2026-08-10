@@ -10,7 +10,7 @@ export const STABILITY_HOLD_RUNS = 3;     // an unstable element must hold this 
 export const CHURN_CEILING = 0.5;         // case churn above this => volatile
 
 // Edges derived from inherently stable T1 artifacts do not flicker and alert on
-// first observation — delaying them costs the analyst time for nothing.
+// first observation - delaying them costs the analyst time for nothing.
 export const T1_STABLE_KINDS: ReadonlySet<string> = new Set(["ga_id", "adsense_id", "domain_created", "ssl_san", "ct_log", "favicon_hash"]);
 
 /** Presence of an element across consecutive runs, oldest -> newest. */
@@ -31,7 +31,7 @@ export function isUnstable(h: PresenceHistory): boolean {
 /** Present across the last EDGE_CONFIRMATION_RUNS runs (or first-seen if T1-stable). */
 export function isConfirmed(h: PresenceHistory, t1Stable = false): boolean {
   if (!h.length || !h[h.length - 1]) return false; // must be present now
-  if (t1Stable) return true;                        // T1 artifact — confirm on first observation
+  if (t1Stable) return true;                        // T1 artifact - confirm on first observation
   const tail = h.slice(-EDGE_CONFIRMATION_RUNS);
   return tail.length >= EDGE_CONFIRMATION_RUNS && tail.every(Boolean);
 }
@@ -60,7 +60,7 @@ export function isVolatile(histories: PresenceHistory[]): boolean {
 }
 
 // ---- Dismissals: analyst marks a change a false positive ---------------------
-// Fingerprinted, revocable, and recorded — a dismissal is a finding about the
+// Fingerprinted, revocable, and recorded - a dismissal is a finding about the
 // system, visible in the audit trail, never a silent mute.
 
 export interface Dismissal {

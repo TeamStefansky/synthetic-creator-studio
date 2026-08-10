@@ -1,4 +1,4 @@
-// Time calibration — tolerances and the ordering rule (layer 03 · P1).
+// Time calibration - tolerances and the ordering rule (layer 03 · P1).
 // Every number is a named export; nothing inline. Versioned so historical cases
 // stay interpretable.
 
@@ -11,7 +11,7 @@ export const TIER_TOLERANCE_MS: Record<TimeTier, number> = {
   T1: 0,
   T2: 24 * 60 * 60 * 1000,      // ±24h
   T3: 7 * 24 * 60 * 60 * 1000,  // ±7d
-  T4: Number.POSITIVE_INFINITY, // observation only — no usable lower bound
+  T4: Number.POSITIVE_INFINITY, // observation only - no usable lower bound
 };
 
 // Independent clocks disagree; never read an ordering out of a smaller gap.
@@ -23,7 +23,7 @@ const TIER_RANK: Record<TimeTier, number> = { T1: 4, T2: 3, T3: 2, T4: 1 };
 
 /**
  * The millisecond lower bound a time can support for ordering, or null when it
- * cannot support one — T4 (bound "upper") and self-reported/low tiers return
+ * cannot support one - T4 (bound "upper") and self-reported/low tiers return
  * null. This is where the T4 asymmetry is enforced, not in a comment.
  */
 export function usableLowerBound(t?: EventTime): number | null {
@@ -39,7 +39,7 @@ export type OrderResult = "a_before_b" | "b_before_a" | "order_not_established";
 /**
  * Decide ordering between two event times. Requires both endpoints usable
  * (T2+, not upper-bound) and a gap exceeding both the wider tier tolerance and
- * clock skew. Otherwise `order_not_established` — never a guess.
+ * clock skew. Otherwise `order_not_established` - never a guess.
  */
 export function orderOf(a?: EventTime, b?: EventTime): OrderResult {
   const la = usableLowerBound(a);

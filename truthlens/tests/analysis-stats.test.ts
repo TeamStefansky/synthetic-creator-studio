@@ -45,7 +45,7 @@ describe("descriptive + quantile", () => {
 });
 
 describe("wilson interval (small-sample proportion)", () => {
-  it("1/10 at 95% ≈ [0.018, 0.404] — wide, not a bare 10%", () => {
+  it("1/10 at 95% ≈ [0.018, 0.404] - wide, not a bare 10%", () => {
     const ci = wilsonInterval(1, 10, 0.95);
     near(ci.point, 0.1, 1e-9);
     near(ci.lower, 0.0179, 3e-3);

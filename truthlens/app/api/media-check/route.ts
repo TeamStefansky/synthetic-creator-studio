@@ -1,4 +1,4 @@
-// Media Check API — analyze browser-extracted video frames for AI/deepfake +
+// Media Check API - analyze browser-extracted video frames for AI/deepfake +
 // persona fingerprint. Frames are extracted client-side from media the user is
 // authorized to inspect (no server ffmpeg, no platform download). Read-and-report
 // only; honest "not connected" without ANTHROPIC_API_KEY.

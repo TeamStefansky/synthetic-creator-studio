@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { parseSubredditQuery, redditOauthConnected } from "@/lib/narrative/sources";
 
-describe("Reddit monitoring — subreddit query parsing", () => {
+describe("Reddit monitoring - subreddit query parsing", () => {
   it("scopes r/<sub> with residual terms", () => {
     expect(parseSubredditQuery("r/geopolitics sanctions")).toEqual({ sub: "geopolitics", rest: "sanctions" });
   });

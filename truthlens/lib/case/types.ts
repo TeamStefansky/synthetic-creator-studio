@@ -1,9 +1,9 @@
-// Case Synthesis v2 — the evidence ledger's type system (layer 03 · P1).
+// Case Synthesis v2 - the evidence ledger's type system (layer 03 · P1).
 // Server-side only. Everything that determines a score/direction/grade is a typed,
 // reproducible value here, never model output. Consumes lib/board/* + lib/types.
 //
 // The T4 asymmetry is encoded in the type system (a bound of "upper" cannot be a
-// lower bound for ordering), not left to a comment — see calibrate-time.ts.
+// lower bound for ordering), not left to a comment - see calibrate-time.ts.
 
 export type EvidenceKind =
   | "domain" | "ip" | "origin_ip" | "asn" | "net_org" | "ga_id" | "adsense_id"
@@ -12,7 +12,7 @@ export type EvidenceKind =
 
 // Time reliability tiers (evidence-handling.md §4). Ordering may only use a
 // tier's value as a *lower bound* when `bound` is "point" or "lower" AND the tier
-// is T2 or better — enforced by usableLowerBound() in calibrate-time.ts.
+// is T2 or better - enforced by usableLowerBound() in calibrate-time.ts.
 export type TimeTier = "T1" | "T2" | "T3" | "T4";
 export type TimeBound = "point" | "lower" | "upper"; // T4 is always "upper"
 
@@ -23,7 +23,7 @@ export interface EventTime {
   bound: TimeBound;
 }
 
-// Admiralty/NATO grading — reliability × credibility, graded independently.
+// Admiralty/NATO grading - reliability × credibility, graded independently.
 export type SourceReliability = "A" | "B" | "C" | "D" | "E" | "F";
 export type InfoCredibility = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -31,7 +31,7 @@ export type InfoCredibility = 1 | 2 | 3 | 4 | 5 | 6;
 export type EvidenceState = "live" | "archived-only" | "lost" | "superseded";
 
 // One retrieval of a fact from one source. A fact found by two sources becomes
-// one EvidenceItem carrying two provenances (a corroboration signal) — unless
+// one EvidenceItem carrying two provenances (a corroboration signal) - unless
 // they share a lineage, in which case they collapse to one corroboration weight.
 export interface Provenance {
   sourceUrl?: string;
@@ -48,7 +48,7 @@ export interface Provenance {
 }
 
 export interface EvidenceItem {
-  id: string;                 // hash(kind, entityKey, normalizedValue) — excludes sourceUrl
+  id: string;                 // hash(kind, entityKey, normalizedValue) - excludes sourceUrl
   entityKey: string;          // the subject entity, e.g. "domain:techforpalestine.org"
   kind: EvidenceKind;
   value: string;

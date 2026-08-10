@@ -1,16 +1,16 @@
 // Server-side narrative clustering for the SIGNAL console.
 //
-// v2 (deterministic core): the GROUPING is now computed in pure TypeScript —
-// TF-IDF + cosine agglomerative clustering (lib/narrative/textcluster) — so the
+// v2 (deterministic core): the GROUPING is now computed in pure TypeScript -
+// TF-IDF + cosine agglomerative clustering (lib/narrative/textcluster) - so the
 // same collected mentions ALWAYS produce the same clusters (rule 8), with no
 // model and no key in the loop. The LLM's only job is to NAME a cluster that
 // already exists; without ANTHROPIC_API_KEY the clusters still render with
-// honest keyword labels (real computation, clearly mechanical — never faked).
+// honest keyword labels (real computation, clearly mechanical - never faked).
 //
 //   - input is ONLY collected public mention texts (never generated),
 //   - clusters reference mentions by index; the model cannot move, add, or
-//     invent a member — it only proposes a name for a fixed index set,
-//   - a mention matching no cluster stays unclustered (rule 4 — never
+//     invent a member - it only proposes a name for a fixed index set,
+//   - a mention matching no cluster stays unclustered (rule 4 - never
 //     force-fit), and the client renders an honest UNCLUSTERED bucket.
 // Narratives describe STORYLINES in public conversation - never actors, never
 // a claim about who is behind them (rule 1).
@@ -34,7 +34,7 @@ export interface NarrativesResult {
   reason?: string;
   considered: number;
   threads: NarrativeThread[];
-  /** How the labels were produced — "llm" (named by the model) or "keywords"
+  /** How the labels were produced - "llm" (named by the model) or "keywords"
    * (mechanical top-TF-IDF terms; shown when no key / label call failed). */
   labelMode?: "llm" | "keywords";
   /** Clustering engine version (the grouping is deterministic either way). */
@@ -111,7 +111,7 @@ function keywordLabel(texts: string[], members: number[]): { name: string; note:
 
 /** Cluster collected mentions into narrative threads. The grouping is pure and
  * deterministic; one optional batched LLM call names the clusters (JSON only,
- * defensive parse, one retry — house pattern). */
+ * defensive parse, one retry - house pattern). */
 export async function clusterNarratives(entity: string, mentions: Mention[]): Promise<NarrativesResult> {
   const batch = mentions.slice(0, NARRATIVES_CAP);
   const rows = batch

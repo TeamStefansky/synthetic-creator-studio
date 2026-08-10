@@ -56,7 +56,7 @@ export function assessCoordination(input: CoordinationInput): CoordinationResult
   else if (score >= 25) level = "Medium";
 
   // P5 (additive): which single signal is load-bearing, and whether removing it
-  // would drop the level — a fragile verdict surfaced. Uses this scorer's OWN
+  // would drop the level - a fragile verdict surfaced. Uses this scorer's OWN
   // weights + thresholds (Medium ≥ 25, High ≥ 50); the level/score are unchanged.
   const analysis: QuantAnalysis = {
     method: "Sensitivity on the weighted signals: the signal whose removal drops the score most, and whether that crosses a level threshold.",

@@ -1,6 +1,6 @@
 "use client";
 
-// Cases — the workspace manager. Each case is a profile that collects the
+// Cases - the workspace manager. Each case is a profile that collects the
 // searches you run while it's active (switch it in the sidebar). Open a case to
 // see its searches and generate one summary report from everything collected.
 
@@ -37,7 +37,7 @@ export default function CasebookPage() {
           <h1 className="font-display text-2xl font-bold">Cases</h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          A case is a workspace — like a browser profile. Set one active in the sidebar and every search you run
+          A case is a workspace - like a browser profile. Set one active in the sidebar and every search you run
           links to it automatically. Open a case to review its searches and generate one summary report from everything the system collected.
         </p>
       </div>
@@ -48,7 +48,7 @@ export default function CasebookPage() {
           <input
             value={name} onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") create(); }}
-            placeholder="Case name (e.g. Infrastructure link — BtS ↔ TfP)"
+            placeholder="Case name (e.g. Infrastructure link - BtS ↔ TfP)"
             className="min-w-0 flex-1 rounded-xl border border-line bg-bg-elev px-3 py-2 text-sm text-ink outline-none focus:border-brand-soft"
           />
           <button onClick={create} disabled={!name.trim()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-4 py-2 text-sm font-medium text-white shadow-glow transition hover:brightness-110 disabled:opacity-50">
@@ -57,13 +57,13 @@ export default function CasebookPage() {
         </div>
         <input
           value={subject} onChange={(e) => setSubject(e.target.value)}
-          placeholder="What is this case about? (optional — shown on the report)"
+          placeholder="What is this case about? (optional - shown on the report)"
           className="w-full rounded-xl border border-line bg-bg-elev px-3 py-2 text-sm text-ink outline-none focus:border-brand-soft"
         />
       </div>
 
       {cases.length === 0 ? (
-        <div className="card text-center text-sm text-ink-secondary">No cases yet. Create one above, then run your searches — they’ll collect here.</div>
+        <div className="card text-center text-sm text-ink-secondary">No cases yet. Create one above, then run your searches - they’ll collect here.</div>
       ) : (
         <div className="space-y-2">
           {cases.map((c) => (

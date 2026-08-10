@@ -7,7 +7,7 @@ const item = (id: string, kind: AchItem["kind"], enteredCaseAt?: string): AchIte
 const noIndicators = assessDeception({});
 const strongIndicators = assessDeception({ mom: { motive: true, opportunity: true }, pop: { priorDeception: true } });
 
-describe("ACH — competing hypotheses (P5)", () => {
+describe("ACH - competing hypotheses (P5)", () => {
   it("the null and the deception hypothesis are always present", () => {
     const r = runAch({ items: [], deception: noIndicators });
     const kinds = r.rows.map((row) => row.kind);

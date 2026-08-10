@@ -1,9 +1,9 @@
-// P0 discovery fixtures — representative *slices* of each tool's real output,
+// P0 discovery fixtures - representative *slices* of each tool's real output,
 // carrying only the evidence-bearing fields the P1 adapters will project into
 // EvidenceItem[]. Not full type instances (the adapters read defensively); these
 // document the shapes and drive per-adapter unit tests. Test-only, not production.
 
-// --- Site Report (lib/types.ts Report) — evidence-bearing slice ---------------
+// --- Site Report (lib/types.ts Report) - evidence-bearing slice ---------------
 export const siteReportFixture = {
   tool: "site",
   url: "https://techforpalestine.org/",
@@ -51,7 +51,7 @@ export const siteReportFixtureB = {
   },
 } as const;
 
-// --- Post Check (lib/types.ts PostCheckResult) — self-reported byline is T3 ---
+// --- Post Check (lib/types.ts PostCheckResult) - self-reported byline is T3 ---
 export const postCheckFixture = {
   tool: "post",
   input: "https://x.com/example/status/1",
@@ -62,7 +62,7 @@ export const postCheckFixture = {
   note: "byline datePublished 2026-07-14 (self-reported).",
 } as const;
 
-// --- Log Analyzer (lib/types.ts LogAnalysisResult) — third-party server log T1 -
+// --- Log Analyzer (lib/types.ts LogAnalysisResult) - third-party server log T1 -
 export const logAnalysisFixture = {
   tool: "logs",
   totalRequests: 1200, uniqueIps: 3, datacenterPct: 66,
@@ -73,7 +73,7 @@ export const logAnalysisFixture = {
   note: "own server access log.",
 } as const;
 
-// --- Email Tracer (lib/types.ts EmailTraceResult) — Received headers T1-ish ---
+// --- Email Tracer (lib/types.ts EmailTraceResult) - Received headers T1-ish ---
 export const emailTraceFixture = {
   tool: "email",
   originIp: "198.51.100.7", originCountry: "DE", originIsAdversary: false,
@@ -82,7 +82,7 @@ export const emailTraceFixture = {
   domain: "sender.org",
 } as const;
 
-// --- Link Board (lib/board/types.ts BoardResult) — calibrated pair edges ------
+// --- Link Board (lib/board/types.ts BoardResult) - calibrated pair edges ------
 export const boardResultFixture = {
   tool: "linkboard",
   entities: ["a.com", "b.com", "c.com"],

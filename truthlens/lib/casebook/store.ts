@@ -1,7 +1,7 @@
 // Casebook browser-local store + active-case selection. Mirrors the
 // zero-config, localStorage-first model of check history: works with no server,
 // and (when KV is configured) can be synced later. The ACTIVE case id is what
-// makes new searches attach to a case — like the selected Chrome profile.
+// makes new searches attach to a case - like the selected Chrome profile.
 
 import { CASE_COLORS, CASEBOOK_VERSION, type Casebook } from "./types";
 

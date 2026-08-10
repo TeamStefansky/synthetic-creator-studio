@@ -1,5 +1,5 @@
 // Order of volatility + dual-tool verification (layer 06 · P5). Collect the
-// most-perishable material FIRST — the world does not wait, and the planner's
+// most-perishable material FIRST - the world does not wait, and the planner's
 // cost ranking would otherwise collect cheap-stable material first and lose the
 // perishable evidence. Volatility is a HARD ordering constraint ABOVE diagnosticity,
 // not a tiebreak. Dual-tool verification catches a stale/misconfigured instrument
@@ -38,6 +38,6 @@ export function dualTool(toolA: string, toolB: string, valueA: string, valueB: s
     valueA, valueB,
     finding: agree
       ? `confirmed by ${toolA} and ${toolB}: ${valueA}`
-      : `TOOLS DISAGREE (${toolA}=${valueA} vs ${toolB}=${valueB}) — the disagreement is the finding; the conclusion does not rest on either reading`,
+      : `TOOLS DISAGREE (${toolA}=${valueA} vs ${toolB}=${valueB}) - the disagreement is the finding; the conclusion does not rest on either reading`,
   };
 }

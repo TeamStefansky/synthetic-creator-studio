@@ -1,4 +1,4 @@
-// The adversarial pass (layer 05 · P4) — mandatory, not optional. Before any
+// The adversarial pass (layer 05 · P4) - mandatory, not optional. Before any
 // report, the agent builds the strongest available case AGAINST its own leading
 // conclusion using the SAME evidence and the SAME ACH inconsistency scoring. If
 // the counter-case is not clearly weaker, the verdict is undetermined and the
@@ -26,7 +26,7 @@ export interface AdversaryResult {
   counterCaseEasyToBuild: boolean;
   verdict: "leading_holds" | "undetermined";
   loadBearing?: string;   // the single item the conclusion depends on (v2 sensitivity)
-  reasons: string[];      // written out in full, stored — a first-class report section
+  reasons: string[];      // written out in full, stored - a first-class report section
 }
 
 export function runAdversary(input: { ach: AchResult; deception: DeceptionAssessment; loadBearing?: string }): AdversaryResult {
@@ -39,9 +39,9 @@ export function runAdversary(input: { ach: AchResult; deception: DeceptionAssess
   const easy = counter ? counterInc - leadingRow.inconsistencies <= ACH_TIE_THRESHOLD : false;
 
   reasons.push(`Strongest counter-case: "${counter?.label ?? "none"}" with ${counterInc} inconsistencies vs the leading ${leadingRow.inconsistencies}.`);
-  if (easy) reasons.push("The counter-case was EASY to build — it is not clearly weaker under the same scoring; the verdict is undetermined.");
+  if (easy) reasons.push("The counter-case was EASY to build - it is not clearly weaker under the same scoring; the verdict is undetermined.");
   if (input.loadBearing) reasons.push(`The leading case depends on a single item: ${input.loadBearing}. Remove it and the case does not hold.`);
-  if (input.deception.convenienceWeightDown) reasons.push("EVE: evidence arrived unusually conveniently for the leading hypothesis — weighted DOWN; the deception question is not settled.");
+  if (input.deception.convenienceWeightDown) reasons.push("EVE: evidence arrived unusually conveniently for the leading hypothesis - weighted DOWN; the deception question is not settled.");
   if (!input.deception.positiveMomPop) reasons.push("Deception lacks positive MOM-POP indicators, so it is carried but cannot itself outrank a simpler hypothesis.");
 
   return {

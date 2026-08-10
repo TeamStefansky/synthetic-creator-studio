@@ -1,5 +1,5 @@
 {
-  "_comment": "Operator-maintained, ORGANIZATION-level, CITED records of documented host/ASN conduct (court records, watchdog designations, a host's own stated policy). Each finding is public record with a source. These are facts about a HOST's conduct — never a claim about a client sharing that infrastructure, and never a person. An empty file means 'cannot assess' → Unknown, never 'clean'. Severity: high | medium | context.",
+  "_comment": "Operator-maintained, ORGANIZATION-level, CITED records of documented host/ASN conduct (court records, watchdog designations, a host's own stated policy). Each finding is public record with a source. These are facts about a HOST's conduct - never a claim about a client sharing that infrastructure, and never a person. An empty file means 'cannot assess' → Unknown, never 'clean'. Severity: high | medium | context.",
   "version": "host-conduct-seed-v1",
   "entries": [
     {

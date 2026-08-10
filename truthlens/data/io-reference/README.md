@@ -1,7 +1,7 @@
 # IO reference data
 
 Publicly-documented, **organization-only** reference sets used to surface
-**corroboration leads — never verdicts** — in Brand Watch and the CIB analyzer:
+**corroboration leads - never verdicts** - in Brand Watch and the CIB analyzer:
 
 | File | What it holds | Populate from |
 |------|---------------|---------------|
@@ -16,9 +16,9 @@ Publicly-documented, **organization-only** reference sets used to surface
   broadcasting the EU suspended, each cited to the official EU Council / EEAS
   designation (RT, Sputnik, RIA Novosti, Izvestia, Rossiyskaya Gazeta, Voice of
   Europe). The other two files ship with `entries: []`. An **empty** reference (or
-  an unmatched domain) renders as **Unknown / "Not collected"** — never a
+  an unmatched domain) renders as **Unknown / "Not collected"** - never a
   reassuring "clean".
-- **Organizations only — never persons.** Do not add an individual under any file.
+- **Organizations only - never persons.** Do not add an individual under any file.
   `scripts/refresh-fara.ts` drops records that look like people.
 - **Every entry is auditable.** Each entry carries a provenance URL
   (`source` / `report` / `filingUrl`). No provenance → don't add it.
@@ -26,7 +26,7 @@ Publicly-documented, **organization-only** reference sets used to surface
   always render with a level, the matched evidence, and an explicit innocent
   alternative (syndication, legitimate citation, a lawful filing).
 - **Weight 0 today.** In the current phase the two IO indicators are
-  informational only — they do not move the combined threat score. Scoring weight
+  informational only - they do not move the combined threat score. Scoring weight
   (and the single `RUBRIC_VERSION` bump) land in the next phase so historical
   scores stay comparable.
 
@@ -34,7 +34,7 @@ See each file's `_comment` and `schema` for the exact entry shape.
 
 ## Refreshing the lists (operator-run)
 
-All three refresh scripts are **operator-run** — not part of the app runtime or
+All three refresh scripts are **operator-run** - not part of the app runtime or
 the build. Each is throttled, defaults to a **dry run**, has **no fabricated
 default endpoint** (you supply the official/auditable source URL), keeps
 **organizations/domains only**, and **drops any record without a provenance URL**.
@@ -42,10 +42,10 @@ Add `--write` to persist; `refresh-state-media.ts` / `refresh-campaigns.ts` also
 take `--merge` to union with the existing seed. Review the diff before committing.
 
 ```bash
-# State media — from an auditable export; every record needs a source URL
+# State media - from an auditable export; every record needs a source URL
 STATE_MEDIA_SOURCE_URL="https://<export>.json" npx tsx scripts/refresh-state-media.ts --merge --write
 
-# Documented campaigns — from a published takedown dataset; provenance required
+# Documented campaigns - from a published takedown dataset; provenance required
 CAMPAIGN_SOURCE_URL="https://<dataset>.json" CAMPAIGN_DISCLOSED_BY="EU DisinfoLab" \
 CAMPAIGN_REPORT_URL="https://<report>" CAMPAIGN_NAME="Doppelganger" \
   npx tsx scripts/refresh-campaigns.ts --write
@@ -53,12 +53,12 @@ CAMPAIGN_REPORT_URL="https://<report>" CAMPAIGN_NAME="Doppelganger" \
 
 ### Refreshing the foreign-agent registry
 
-`scripts/refresh-fara.ts` is **operator-run** — not part of the app runtime or
+`scripts/refresh-fara.ts` is **operator-run** - not part of the app runtime or
 the build. It is throttled and defaults to a dry run.
 
 ```bash
 # 1. Get the current machine-readable export URL from the official portal:
-#    https://efile.fara.gov/   (there is NO fabricated default — you supply it)
+#    https://efile.fara.gov/   (there is NO fabricated default - you supply it)
 # 2. Dry run (prints a summary, writes nothing):
 FARA_SOURCE_URL="https://<official-fara-export>.json" npx tsx scripts/refresh-fara.ts
 # 3. Persist once the summary looks right:

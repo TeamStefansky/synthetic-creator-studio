@@ -12,18 +12,18 @@ const AT = "2026-08-09T00:00:00.000Z";
 
 // Two site reports sharing a Google Analytics id (the "1984" signature link).
 const siteA: DossierCheck = {
-  id: "a", type: "site", input: "shovrimshtika.org", headline: "shovrimshtika.org — likely legitimate",
+  id: "a", type: "site", input: "shovrimshtika.org", headline: "shovrimshtika.org - likely legitimate",
   level: "Low", createdAt: AT,
   result: { risk: { score: 33, confidence: "High" }, trackers: { gaIds: ["UA-23181380-2"] }, ip: "35.201.107.91" },
 };
 const siteB: DossierCheck = {
-  id: "b", type: "site", input: "techforpalestine.org", headline: "techforpalestine.org — high risk",
+  id: "b", type: "site", input: "techforpalestine.org", headline: "techforpalestine.org - high risk",
   level: "High", createdAt: AT,
   result: { risk: { score: 83, confidence: "Medium" }, trackers: { gaIds: ["UA-23181380-2"] }, ip: "35.201.107.91" },
 };
 
 describe("buildDossier", () => {
-  it("needs ≥2 searches — a single search is Insufficient data", () => {
+  it("needs ≥2 searches - a single search is Insufficient data", () => {
     const d = buildDossier({ caseId: "c1", name: "Case", checks: [siteA], generatedAt: AT });
     expect(d.conclusionLevel).toBe("Insufficient data");
     expect(d.bluf).toMatch(/add at least two/i);

@@ -279,8 +279,8 @@ export function computeThreat(
     ? timed.reduce((a, b) => (Date.parse(a.timestamp!) <= Date.parse(b.timestamp!) ? a : b))
     : undefined;
 
-  // P5 (additive): a calibrated Bayesian view of the SAME indicators — posterior,
-  // information, and which indicator is load-bearing — alongside the unchanged
+  // P5 (additive): a calibrated Bayesian view of the SAME indicators - posterior,
+  // information, and which indicator is load-bearing - alongside the unchanged
   // weighted score/status. Content-derived signals share a dependence group so they
   // aren't counted as independent confirmations.
   const analysis = bayesianCalibration(

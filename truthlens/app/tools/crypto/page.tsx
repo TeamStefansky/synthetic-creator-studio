@@ -98,7 +98,7 @@ export default function CryptoPage() {
                 </div>
                 <div>
                   <div className="label-muted">Transactions</div>
-                  <div className="mt-1 text-xl font-bold">{result.txCount != null ? result.txCount.toLocaleString() : "—"}</div>
+                  <div className="mt-1 text-xl font-bold">{result.txCount != null ? result.txCount.toLocaleString() : "-"}</div>
                 </div>
                 <div className="flex items-end">
                   {result.url && (

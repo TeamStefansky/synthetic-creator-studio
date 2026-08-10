@@ -1,4 +1,4 @@
-// lib/forecast/radar.ts — Predictive Forecasting · Early-Warning Radar.
+// lib/forecast/radar.ts - Predictive Forecasting · Early-Warning Radar.
 //
 // An actuarial (hazard-model) forecaster that turns a narrative's recent signal
 // history into a forward-looking risk of ESCALATION within a horizon, so the
@@ -7,7 +7,7 @@
 // It is a FORECAST, held to the same frozen rules as every other output:
 //   - BAND + probability + confidence + evidence + an explicit alternative
 //     (rule 3). A forecast is never a verdict and never names a person (rule 1).
-//   - Below the data floor → Unknown, no forecast (rule 4) — never a guess.
+//   - Below the data floor → Unknown, no forecast (rule 4) - never a guess.
 //   - Deterministic + pure: same history → same forecast (rule 8). Scores are
 //     computed in TypeScript, never by a model.
 //
@@ -30,7 +30,7 @@ export const HORIZON_DAYS_DEFAULT = 7;
 /** Hazard-probability cut points for the early-warning bands (named exports). */
 export const BAND_THRESHOLDS = { watch: 0.25, elevated: 0.5, warning: 0.75 } as const;
 
-/** Fixed, interpretable hazard weights (log-odds). Documented, not learned —
+/** Fixed, interpretable hazard weights (log-odds). Documented, not learned -
  * conformal calibration (lib/analysis/conformal) is the empirical upgrade path. */
 export const HAZARD_WEIGHTS = {
   intercept: -1.15, // base rate: escalation is the exception, not the default
@@ -104,7 +104,7 @@ function clamp(x: number, lo: number, hi: number): number {
 }
 
 const ALTERNATIVE =
-  "An organic news cycle, a single real-world event, or seasonality can drive the same rise without any coordinated campaign — a forecast is a prompt to watch, not proof that an operation is under way.";
+  "An organic news cycle, a single real-world event, or seasonality can drive the same rise without any coordinated campaign - a forecast is a prompt to watch, not proof that an operation is under way.";
 
 /**
  * Forecast the risk of narrative escalation within the horizon from recent
@@ -129,7 +129,7 @@ export function forecastNarrativeRisk(input: RadarInput): RadarForecast {
   const latest = vol[vol.length - 1];
   const baseline = describe(vol.slice(0, Math.max(1, vol.length - win)));
 
-  // 1) Level anomaly — how extreme is the recent window vs the whole history.
+  // 1) Level anomaly - how extreme is the recent window vs the whole history.
   const recentMean = recent.reduce((s, v) => s + v, 0) / recent.length;
   const rz = clamp(robustZ(recentMean, history), -4, 4);
   if (isFinite(rz) && Math.abs(rz) > 0.5) {
@@ -139,7 +139,7 @@ export function forecastNarrativeRisk(input: RadarInput): RadarForecast {
     indicators.push({ key: "level", label: "Recent level vs baseline", contribution: c, detail: `Recent window is ${rz > 0 ? "" : "below "}${Math.abs(rz).toFixed(1)}σ (robust) ${rz > 0 ? "above" : "under"} the baseline.` });
   }
 
-  // 2) Growth — exponential diffusion of volume (a doubling curve is the classic
+  // 2) Growth - exponential diffusion of volume (a doubling curve is the classic
   //    pre-escalation signature). Weighted by fit quality.
   const t = vol.map((_, i) => i);
   const fit = fitExponential(t, vol);
@@ -153,10 +153,10 @@ export function forecastNarrativeRisk(input: RadarInput): RadarForecast {
     const c = -HAZARD_WEIGHTS.growth * clamp(-fit.rate * 3, 0, 1) * clamp(fit.r2, 0, 1) * 0.5;
     logit += c;
     agree.push(-1);
-    indicators.push({ key: "growth", label: "Volume decay", contribution: c, detail: `Declining trend (r²=${fit.r2.toFixed(2)}) — cooling, not building.` });
+    indicators.push({ key: "growth", label: "Volume decay", contribution: c, detail: `Declining trend (r²=${fit.r2.toFixed(2)}) - cooling, not building.` });
   }
 
-  // 3) Change-point — a recent upward regime shift is a strong leading signal.
+  // 3) Change-point - a recent upward regime shift is a strong leading signal.
   //    Direction is the mean after the break minus the mean before it.
   if (vol.length >= CHANGEPOINT_MIN_POINTS) {
     const cp = changePoint(vol);
@@ -176,7 +176,7 @@ export function forecastNarrativeRisk(input: RadarInput): RadarForecast {
     }
   }
 
-  // 4) Spike — is the latest point beyond what the baseline Poisson rate expects.
+  // 4) Spike - is the latest point beyond what the baseline Poisson rate expects.
   const lambda = Math.max(0.5, baseline.mean);
   if (latest > lambda) {
     const tail = poissonTail(Math.round(latest), lambda);
@@ -188,7 +188,7 @@ export function forecastNarrativeRisk(input: RadarInput): RadarForecast {
     }
   }
 
-  // 5) Tone deterioration — recent tone more negative than the earlier baseline.
+  // 5) Tone deterioration - recent tone more negative than the earlier baseline.
   const tone = (input.tone || []).map((p) => Number(p.value)).filter((v) => isFinite(v));
   if (tone.length >= RADAR_MIN_POINTS) {
     const tw = Math.max(2, Math.min(7, Math.floor(tone.length / 3)));
@@ -220,7 +220,7 @@ export function forecastNarrativeRisk(input: RadarInput): RadarForecast {
     confScore > 0.66 ? "High" : confScore > 0.33 ? "Medium" : "Low";
 
   evidence.push(`${indicators.length} leading indicator${indicators.length === 1 ? "" : "s"} over ${vol.length} history points; horizon ${horizonDays}d.`);
-  if (band === "Calm") evidence.push("No escalation signature dominates right now — the quiet-period baseline is itself the finding, and it is logged.");
+  if (band === "Calm") evidence.push("No escalation signature dominates right now - the quiet-period baseline is itself the finding, and it is logged.");
 
   return {
     available: true,
@@ -244,12 +244,12 @@ export interface ReScore {
 
 /**
  * Feed the forecast back into a risk score. The forecast can RAISE the score
- * early (warning ahead of the wave) or gently relax it in a sustained calm —
+ * early (warning ahead of the wave) or gently relax it in a sustained calm -
  * bounded by RESCORE_MAX_DELTA and scaled by confidence, so a thin forecast
  * barely moves the number. Fully reversible and labelled as forecast-driven.
  */
 export function reScoreRisk(baseScore: number, f: RadarForecast): ReScore {
-  if (!f.available) return { score: baseScore, delta: 0, rationale: "No forecast available — risk score unchanged." };
+  if (!f.available) return { score: baseScore, delta: 0, rationale: "No forecast available - risk score unchanged." };
   const confW = f.confidence === "High" ? 1 : f.confidence === "Medium" ? 0.6 : 0.3;
   const delta = Math.round((f.hazard - 0.5) * 2 * RESCORE_MAX_DELTA * confW);
   const score = clamp(baseScore + delta, 0, 100);
@@ -257,12 +257,12 @@ export function reScoreRisk(baseScore: number, f: RadarForecast): ReScore {
   return {
     score,
     delta: score - baseScore,
-    rationale: `Forecast (${f.band}, ${f.estimative}) ${dir} the risk score by ${Math.abs(score - baseScore)} at ${f.confidence} confidence — reversible, recomputed each cycle.`,
+    rationale: `Forecast (${f.band}, ${f.estimative}) ${dir} the risk score by ${Math.abs(score - baseScore)} at ${f.confidence} confidence - reversible, recomputed each cycle.`,
   };
 }
 
 /**
- * Exponentially-weighted baseline update — the "loop tightening" across Report &
+ * Exponentially-weighted baseline update - the "loop tightening" across Report &
  * Renewal cycles. Each cycle folds the latest observation into the running
  * baseline so the detector adapts to a shifting normal instead of drifting.
  */

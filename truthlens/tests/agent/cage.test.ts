@@ -12,7 +12,7 @@ import type { EvidenceItem } from "../../lib/case/types";
 const init: RunInit = { initiator: "analyst@x", scope: "ws1", question: "linked?", seedEntities: ["a.com", "b.com"], ceiling: AGENT_CEILING };
 const evidence: EvidenceItem = { id: "e1", entityKey: "domain:a.com", kind: "ga_id", value: "G-1", normalizedValue: "g-1", enteredCaseAt: "t", state: "live", provenances: [] };
 
-describe("agent authority cage — rung ceiling (05·P1)", () => {
+describe("agent authority cage - rung ceiling (05·P1)", () => {
   it("association publishes, common-operation is a PROPOSAL, attribution is rejected", () => {
     expect(classifyPublication("association").action).toBe("publish");
     expect(classifyPublication("common-operation").action).toBe("propose");

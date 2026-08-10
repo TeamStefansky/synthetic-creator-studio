@@ -1,5 +1,5 @@
 // Planning by expected diagnostic value (layer 05 · P2). The agent does not
-// collect breadth-first or what is easiest — it ranks tasks by how much their
+// collect breadth-first or what is easiest - it ranks tasks by how much their
 // likely results would SEPARATE the current hypotheses, weighted by cost and
 // probability of success. Evidence consistent with every hypothesis has zero
 // diagnostic value however interesting it looks. This is what separates
@@ -50,8 +50,8 @@ export function scoreDiagnosticity(t: Pick<CollectionTask, "kind" | "expectedArt
 }
 
 function reasonFor(base: number, kind: TaskKind, enablesOrdering?: boolean): string {
-  if (kind === "archive_lookup" && enablesOrdering) return "archive lookup would lift T4→T2 and establish an ordering — highest available diagnostic value";
-  if (base === 0) return "would be consistent with every hypothesis — zero diagnostic value; skip candidate";
+  if (kind === "archive_lookup" && enablesOrdering) return "archive lookup would lift T4→T2 and establish an ordering - highest available diagnostic value";
+  if (base === 0) return "would be consistent with every hypothesis - zero diagnostic value; skip candidate";
   if (base >= 0.8) return "an individualizing artifact that would separate same_operator from the null";
   if (base >= 0.4) return "a distinctive-but-calibrated artifact; partial separation";
   return "low discrimination; informational only";

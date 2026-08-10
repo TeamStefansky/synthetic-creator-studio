@@ -1,4 +1,4 @@
-// lib/analysis/ — the quantitative-analysis layer (the "brain").
+// lib/analysis/ - the quantitative-analysis layer (the "brain").
 //
 // Four pure, deterministic, textbook-validated method modules that make every
 // quantity carry its uncertainty (fabricated precision is a bug):
@@ -9,7 +9,7 @@
 //
 // Integration (P5) routes the existing scorers through these while preserving their
 // public output contracts, enriching each with an estimate + uncertainty + a
-// method note. The math yields confidence on coordination/authenticity only — never
+// method note. The math yields confidence on coordination/authenticity only - never
 // a posterior identifying a person or state (frozen rules).
 
 export * from "./stats";

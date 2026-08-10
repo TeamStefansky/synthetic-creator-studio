@@ -122,7 +122,7 @@ export default function ContinuousWatch() {
                 Vercel and redeploy:
               </p>
               <ul className="space-y-1 text-xs text-ink-secondary">
-                <li>• <code className="text-ink">KV_REST_API_URL</code> + <code className="text-ink">KV_REST_API_TOKEN</code> <span className="text-ink-muted">(Vercel KV)</span> — or <code className="text-ink">UPSTASH_REDIS_REST_URL</code> + <code className="text-ink">UPSTASH_REDIS_REST_TOKEN</code></li>
+                <li>• <code className="text-ink">KV_REST_API_URL</code> + <code className="text-ink">KV_REST_API_TOKEN</code> <span className="text-ink-muted">(Vercel KV)</span> - or <code className="text-ink">UPSTASH_REDIS_REST_URL</code> + <code className="text-ink">UPSTASH_REDIS_REST_TOKEN</code></li>
                 <li>• <span className="text-ink-secondary">Optional alert channels:</span> <code className="text-ink">TELEGRAM_BOT_TOKEN</code> + <code className="text-ink">TELEGRAM_ALERT_CHAT_ID</code>, or <code className="text-ink">ALERT_WEBHOOK_URL</code></li>
                 <li>• <span className="text-ink-secondary">Optional:</span> <code className="text-ink">CRON_SECRET</code> to authorize the scheduled scan</li>
               </ul>

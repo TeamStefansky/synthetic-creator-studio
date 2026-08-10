@@ -356,7 +356,7 @@ export async function runBoard(domains: string[]): Promise<BoardResult> {
   } catch { /* bridge is optional enrichment */ }
   // Evidence corroboration overlay: measured worldwide prevalence + id recency +
   // an analytic null baseline + an honest "what wasn't scanned" list. Additive and
-  // down-only — it never rewrites a calibrated tier.
+  // down-only - it never rewrites a calibrated tier.
   try {
     result.corroboration = await buildCorroboration(result);
   } catch { /* corroboration is optional enrichment */ }

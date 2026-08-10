@@ -1,4 +1,4 @@
-// NEWS ROOM — a personal, English-language news front page assembled from the
+// NEWS ROOM - a personal, English-language news front page assembled from the
 // SAME sources/APIs the rest of TruthLens uses (collectMentions: the user's
 // Connections feeds + every built-in news source). No new backend: it reuses the
 // source layer, the translation helper, and the region tagger.
@@ -32,7 +32,7 @@ function hostOf(url?: string): string | undefined {
   if (!url) return undefined;
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return undefined; }
 }
-// Hotlinked favicon (source logo) — never downloaded or re-hosted.
+// Hotlinked favicon (source logo) - never downloaded or re-hosted.
 const faviconFor = (domain?: string) => (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : undefined);
 
 // A Mention's text is "Title. Summary"; split into a headline + a capped extract.
@@ -46,7 +46,7 @@ function splitText(text: string): { title: string; extract?: string } {
 
 // ---- story clustering (Google-News "Full Coverage" style) --------------------
 // Group articles covering the SAME story across outlets, by distinctive shared
-// title tokens (union-find). No embeddings/LLM — a lightweight topical grouping.
+// title tokens (union-find). No embeddings/LLM - a lightweight topical grouping.
 const STOP = new Set(
   ("the a an of in to and for on with as is are was were be by from at over after amid into out about " +
    "it its his her their new say says said will has have had not you your we our they this that those " +

@@ -1,5 +1,5 @@
 // Premortem + structured self-critique (layer 06 · P6). Before any report: assume
-// it is six months later and this judgment was proven badly wrong — explain how.
+// it is six months later and this judgment was proven badly wrong - explain how.
 // Prospective hindsight surfaces failure paths that "what could go wrong?" misses,
 // because it removes the need to defend the conclusion while critiquing it. Output
 // is labeled statements, stored and rendered.
@@ -24,7 +24,7 @@ export function buildPremortem(cf: CaseFile): { statements: LabeledStatement[] }
   return { statements: s };
 }
 
-// Mechanical structured self-critique — each item resolved, not merely acknowledged.
+// Mechanical structured self-critique - each item resolved, not merely acknowledged.
 export const SELF_CRITIQUE_ITEMS = ["sources", "assumptions", "diagnosticity", "alternatives", "deception", "gaps", "changed circumstances"] as const;
 export type SelfCritiqueItem = (typeof SELF_CRITIQUE_ITEMS)[number];
 

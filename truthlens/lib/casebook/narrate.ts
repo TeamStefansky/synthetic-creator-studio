@@ -1,9 +1,9 @@
 // Optional LLM polish for the case report's bottom-line (BLUF). The dossier
 // builder already produces a correct, deterministic BLUF; this only rewrites it
 // into cleaner prose. Without ANTHROPIC_API_KEY it returns the deterministic
-// text unchanged (rule 7: never fake capability — the report is fully usable
+// text unchanged (rule 7: never fake capability - the report is fully usable
 // with no key). The model may NOT change the conclusion, add a person, or
-// exceed the recorded conclusion level — it is handed the finished facts and
+// exceed the recorded conclusion level - it is handed the finished facts and
 // asked only to phrase them.
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -18,7 +18,7 @@ export interface NarrationResult {
 
 export async function narrateReport(d: CaseDossier): Promise<NarrationResult> {
   const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return { bluf: d.bluf, source: "deterministic", reason: "No ANTHROPIC_API_KEY — using the deterministic bottom line." };
+  if (!key) return { bluf: d.bluf, source: "deterministic", reason: "No ANTHROPIC_API_KEY - using the deterministic bottom line." };
 
   const facts = {
     searches: d.searchCount,
@@ -46,9 +46,9 @@ export async function narrateReport(d: CaseDossier): Promise<NarrationResult> {
     });
     const block = msg.content.find((b) => b.type === "text");
     const text = block && block.type === "text" ? block.text.trim() : "";
-    if (!text) return { bluf: d.bluf, source: "deterministic", reason: "Empty model output — using the deterministic bottom line." };
+    if (!text) return { bluf: d.bluf, source: "deterministic", reason: "Empty model output - using the deterministic bottom line." };
     return { bluf: text, source: "llm" };
   } catch (e: any) {
-    return { bluf: d.bluf, source: "deterministic", reason: `Model unavailable (${String(e?.message || "error").slice(0, 80)}) — using the deterministic bottom line.` };
+    return { bluf: d.bluf, source: "deterministic", reason: `Model unavailable (${String(e?.message || "error").slice(0, 80)}) - using the deterministic bottom line.` };
   }
 }

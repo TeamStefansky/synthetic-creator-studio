@@ -3,7 +3,7 @@
 // stopping rule -> decide. Hypotheses (null + deception + substantive) are formed
 // BEFORE deep collection (anchoring is the agent's most likely failure). The
 // adversarial pass (P4) and the model are hooked separately; conclusions are
-// deterministic given the final ledger — collection ORDER may vary, conclusions
+// deterministic given the final ledger - collection ORDER may vary, conclusions
 // may not. Collection is injected so the loop is testable without live network.
 
 import { synthesizeCase, type CaseFile } from "../case/synthesize";
@@ -64,7 +64,7 @@ export function runInvestigation(init: RunInit, deps: RunDeps): RunResult {
     catch (e) {
       if (e instanceof AgentHalted) {
         record.status = "halted"; record.stopCondition = "kill_switch";
-        journal = appendJournal(journal, deps.now(), cycle, "stop_eval", "kill switch — halted; retracts nothing");
+        journal = appendJournal(journal, deps.now(), cycle, "stop_eval", "kill switch - halted; retracts nothing");
         break;
       }
       throw e;

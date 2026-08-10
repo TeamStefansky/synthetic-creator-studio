@@ -1,6 +1,6 @@
 // Case Synthesis API (layer 03 · P7). POST { domains } -> runs the existing Link
 // Board collection, then composes the deterministic case file (ledger, timeline,
-// clusters, path, ACH, gaps). The LLM reconstruction is NOT run here — the wall
+// clusters, path, ACH, gaps). The LLM reconstruction is NOT run here - the wall
 // renders the structural case, and narrative reconstruction is a separate,
 // key-gated step that degrades to "not connected" honestly.
 

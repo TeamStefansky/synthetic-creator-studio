@@ -1,13 +1,13 @@
-// Casebook dossier builder — assembles the structured OSINT report (the
+// Casebook dossier builder - assembles the structured OSINT report (the
 // "1984 Hosting"-style dossier) from ONLY the searches linked to a case.
 //
-// Pure + deterministic (no Date.now, no I/O — the caller passes generatedAt), so
+// Pure + deterministic (no Date.now, no I/O - the caller passes generatedAt), so
 // a given case + search set always produces the same dossier (rule 8). It never
 // fabricates: every subject, evidence row and infrastructure fact is derived
 // from a collected CheckRecord. Frozen rules honored:
 //   - every cross-search link carries confidence + evidence + an alternative
 //     ("could also be explained by …") (rule 3);
-//   - the conclusion is CAPPED at "Association" — infrastructure links are never
+//   - the conclusion is CAPPED at "Association" - infrastructure links are never
 //     shared ownership, never a person, never an actor (Investigator invariants);
 //   - a shared entity that is a generic CDN/mega-provider is Background, not
 //     evidence; nothing distinctive → "No link established" (rule 4);
@@ -76,7 +76,7 @@ export interface CaseDossier {
   evidence: EvidenceRow[];
   infrastructure: InfraFact[];
   /** Documented, cited conduct of the hosts behind the infrastructure (court
-   * records, watchdog designations). High confidence — public record. Separated
+   * records, watchdog designations). High confidence - public record. Separated
    * from any client claim. Empty when no host in the case is on file. */
   hostConduct: HostConductProfile[];
   conclusionLevel: ConclusionLevel;
@@ -217,7 +217,7 @@ export function buildDossier(
   // ---- Host conduct: documented, cited conduct of the hosts on file ------
   // For each distinct host operator/ASN in the infrastructure, pull its
   // public-record conduct. This is the "simple research following the
-  // connections" done automatically — High confidence, cited, and kept SEPARATE
+  // connections" done automatically - High confidence, cited, and kept SEPARATE
   // from any claim about a client that merely shares the infrastructure.
   const hostConduct: HostConductProfile[] = [];
   const hcSeen = new Set<string>();
@@ -252,9 +252,9 @@ export function buildDossier(
   // ---- Gaps: what was NOT scanned ---------------------------------------
   const gaps: string[] = [];
   const haveTypes = new Set(checks.map((c) => c.type));
-  if (!haveTypes.has("origin") && !haveTypes.has("origin-map")) gaps.push("Origin/hosting exposure was not run — hosting and IP associations are unverified.");
-  if (!haveTypes.has("linkboard") && !haveTypes.has("relboard")) gaps.push("Link Board cross-referencing was not run — shared-infrastructure links may be incomplete.");
-  if (!haveTypes.has("signal") && !haveTypes.has("mentions")) gaps.push("Platforms such as Telegram / X / Meta were not scanned — narrative spread is out of scope for this dossier.");
+  if (!haveTypes.has("origin") && !haveTypes.has("origin-map")) gaps.push("Origin/hosting exposure was not run - hosting and IP associations are unverified.");
+  if (!haveTypes.has("linkboard") && !haveTypes.has("relboard")) gaps.push("Link Board cross-referencing was not run - shared-infrastructure links may be incomplete.");
+  if (!haveTypes.has("signal") && !haveTypes.has("mentions")) gaps.push("Platforms such as Telegram / X / Meta were not scanned - narrative spread is out of scope for this dossier.");
   gaps.push("Registration dates (RDAP) and archive coverage are only present where a search collected them.");
   gaps.push("Infrastructure association is not shared ownership; treat every link as a lead to verify, not a conclusion.");
 
@@ -290,7 +290,7 @@ function buildBluf(a: {
     return `This case contains ${a.checks.length} search${a.checks.length === 1 ? "" : "es"}. Add at least two searches to establish links between assets. Unknown is a valid result.`;
   }
   const parts: string[] = [];
-  // A documented, high-severity host on file is a load-bearing, citable finding —
+  // A documented, high-severity host on file is a load-bearing, citable finding -
   // lead with it (it is public record about the host, not a claim about a client).
   const severeHost = a.hostConduct.find((h) => h.topSeverity === "high");
   if (severeHost) {

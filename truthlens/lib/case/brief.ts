@@ -5,12 +5,12 @@
 import type { CaseFile } from "./synthesize";
 import type { EvidenceItem } from "./types";
 
-// Inlined (client-safe) — avoids importing ledger.ts, which pulls in node:crypto.
+// Inlined (client-safe) - avoids importing ledger.ts, which pulls in node:crypto.
 const corroborationWeight = (i: EvidenceItem): number => new Set(i.provenances.map((p) => p.lineageId)).size;
 
 export function caseBrief(cf: CaseFile): string {
   const L: string[] = [];
-  L.push(`# TruthLens — case brief`);
+  L.push(`# TruthLens - case brief`);
   L.push("");
   L.push(`Decision-support, not a verdict. Nodes are infrastructure/accounts, never people. "Undetermined" and "no case" are valid results.`);
   L.push("");
@@ -33,23 +33,23 @@ export function caseBrief(cf: CaseFile): string {
   L.push(`## Clusters`);
   if (!linked.length) L.push(`- none beyond common-by-default infrastructure.`);
   linked.forEach((c) => {
-    L.push(`- **${c.members.join(", ")}** — ${c.confidence}${c.dependsOn ? ` · depends on: ${c.dependsOn.why}` : ""}`);
+    L.push(`- **${c.members.join(", ")}** - ${c.confidence}${c.dependsOn ? ` · depends on: ${c.dependsOn.why}` : ""}`);
   });
   L.push("");
 
   L.push(`## Key evidence (top by corroboration)`);
   [...cf.ledger.items].sort((a, b) => corroborationWeight(b) - corroborationWeight(a)).slice(0, 12).forEach((i) => {
     const p = i.provenances[0];
-    L.push(`- ${i.kind}: ${i.value} — ${p?.sourceGrade}${p?.infoCredibility} · ${i.eventTime ? `${i.eventTime.tier}` : "no time"} · corroboration ${corroborationWeight(i)}`);
+    L.push(`- ${i.kind}: ${i.value} - ${p?.sourceGrade}${p?.infoCredibility} · ${i.eventTime ? `${i.eventTime.tier}` : "no time"} · corroboration ${corroborationWeight(i)}`);
   });
   L.push("");
 
-  L.push(`## Competing hypotheses (ACH — fewest inconsistencies)`);
+  L.push(`## Competing hypotheses (ACH - fewest inconsistencies)`);
   cf.ach.rows.forEach((r) => L.push(`- ${r.label}: ${r.inconsistencies} inconsistencies`));
   L.push("");
 
   L.push(`## Negative evidence & gaps (kept separate)`);
-  L.push(`- Gaps (${cf.gaps.length}) — zero evidential weight:`);
+  L.push(`- Gaps (${cf.gaps.length}) - zero evidential weight:`);
   cf.gaps.slice(0, 12).forEach((g) => L.push(`  - [${g.kind}] ${g.subject}: ${g.reason}`));
   L.push("");
 

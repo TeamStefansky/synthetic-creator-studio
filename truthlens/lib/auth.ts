@@ -1,6 +1,6 @@
 // Simple shared-password access gate. Opt-in: active ONLY when SITE_PASSWORD is set
 // on the deployment (without it the app is open, so local dev / an unconfigured
-// deploy is never locked out — an honest "not configured" state, never a fake gate).
+// deploy is never locked out - an honest "not configured" state, never a fake gate).
 // The cookie stores a SHA-256 token of the password (+ a fixed app salt), never the
 // raw password. Uses Web Crypto so it works in both the Edge middleware and Node
 // route handlers. This is a lightweight team gate, not per-user authentication.
@@ -9,7 +9,7 @@ export const AUTH_COOKIE = "tl_auth";
 const SALT = "truthlens-gate:v1:";
 
 // Owner-chosen default access password. Overridable per-deployment with
-// SITE_PASSWORD (recommended for real secrecy — this default is visible in the
+// SITE_PASSWORD (recommended for real secrecy - this default is visible in the
 // repo). The gate is therefore always ON.
 const DEFAULT_PASSWORD = "291986";
 

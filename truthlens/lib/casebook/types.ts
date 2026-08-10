@@ -1,4 +1,4 @@
-// Casebook — a case is a named workspace (like a Chrome profile) that collects
+// Casebook - a case is a named workspace (like a Chrome profile) that collects
 // the searches you run under it. Switch the active case and every new search is
 // linked to it; open a case to see all its searches and generate one dossier
 // from everything the system actually collected.

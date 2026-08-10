@@ -12,7 +12,7 @@ const prov = (sourceClass: string, lineageId: string, sourceUrl?: string, bytes?
 const d = (kind: any, entityKey: string, value: string, p: ReturnType<typeof prov>, eventTime?: any): EvidenceDraft =>
   ({ kind, entityKey, value, provenance: p, eventTime });
 
-describe("case ledger — custody, dedup, corroboration (P1)", () => {
+describe("case ledger - custody, dedup, corroboration (P1)", () => {
   it("id is deterministic and excludes sourceUrl", () => {
     const a = evidenceId("ga_id", "domain:x.com", normalizeValue("G-ABC"));
     const b = evidenceId("ga_id", "domain:x.com", normalizeValue("g-abc")); // normalized upstream
@@ -65,7 +65,7 @@ describe("case ledger — custody, dedup, corroboration (P1)", () => {
     expect(p.infoCredibility).toBe(6);
   });
 
-  it("corrections supersede (append-only) — the old record is never removed", () => {
+  it("corrections supersede (append-only) - the old record is never removed", () => {
     const { byId, items } = buildLedger([d("registrar", "domain:x.com", "OldReg", prov("rdap", "lin:r"))], "2026-07-20T00:00:00Z");
     const oldId = items[0].id;
     const replacement = { ...items[0], id: "new123", value: "NewReg", normalizedValue: "newreg" };

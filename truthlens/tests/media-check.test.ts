@@ -79,7 +79,7 @@ describe("dctHash (v2 perceptual fingerprint)", () => {
 describe("temporalConsistency (swap-flicker signature)", () => {
   const N = DCT_SAMPLE_SIDE;
   // Broadband "scenes": 8px light/dark blocks seeded per scene (rich low-freq
-  // spectrum, like real frames — a pure sinusoid would be all quantization noise).
+  // spectrum, like real frames - a pure sinusoid would be all quantization noise).
   const blocks = (seed: number) =>
     Array.from({ length: N * N }, (_, i) => {
       const bx = (i % N) >> 3, by = Math.floor(i / N) >> 3;

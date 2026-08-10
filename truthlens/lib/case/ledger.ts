@@ -12,7 +12,7 @@ import type { EvidenceDraft, EvidenceItem, EventTime, Ledger, TimeTier } from ".
 
 export const LEDGER_VERSION = "case-ledger-v1";
 
-/** SHA-256 hex of the retrieved bytes — the chain-of-custody integrity anchor. */
+/** SHA-256 hex of the retrieved bytes - the chain-of-custody integrity anchor. */
 export function contentHashOf(bytes: string): string {
   return createHash("sha256").update(bytes, "utf8").digest("hex");
 }
@@ -24,7 +24,7 @@ export function normalizeValue(v: string): string {
   return (v || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-/** Deterministic id — hash(kind, entityKey, normalizedValue). Excludes sourceUrl. */
+/** Deterministic id - hash(kind, entityKey, normalizedValue). Excludes sourceUrl. */
 export function evidenceId(kind: string, entityKey: string, normalizedValue: string): string {
   return createHash("sha256").update(`${kind}␟${entityKey}␟${normalizedValue}`, "utf8").digest("hex").slice(0, 24);
 }

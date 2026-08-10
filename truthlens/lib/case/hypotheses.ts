@@ -27,7 +27,7 @@ export interface AchItem {
 const CELLS: Record<AchItemKind, Record<HypothesisKind, Cell>> = {
   // an individualizing shared artifact (unique GA id, non-wildcard SAN)
   individualizing: { same_operator: "consistent", coincidence_null: "inconsistent", deception: "consistent" },
-  // a class-only overlap (CDN, ASN, registrar) — discriminates nothing
+  // a class-only overlap (CDN, ASN, registrar) - discriminates nothing
   class:           { same_operator: "neutral", coincidence_null: "neutral", deception: "neutral" },
   // an adequate absence of a predicted individualizing artifact (negative evidence)
   negative:        { same_operator: "inconsistent", coincidence_null: "consistent", deception: "neutral" },
@@ -71,7 +71,7 @@ const FALSIFICATION: Record<HypothesisKind, string[]> = {
     "temporally consistent, directional propagation of identical content",
   ],
   deception: [
-    "positive MOM and POP indicators (motive + prior practice) — currently absent",
+    "positive MOM and POP indicators (motive + prior practice) - currently absent",
     "chain-of-custody showing the convenient artifact was not plant-able",
   ],
 };
@@ -131,7 +131,7 @@ export function runAch(input: AchInput): AchResult {
     deceptionCappedReason,
     falsification: FALSIFICATION[leadingRow.kind],
     note: undetermined
-      ? "Top hypotheses are within the tie threshold — verdict is undetermined."
+      ? "Top hypotheses are within the tie threshold - verdict is undetermined."
       : `Leading (fewest inconsistencies): ${leadingRow.label}.`,
   };
 }

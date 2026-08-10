@@ -1,4 +1,4 @@
-// The cage (layer 05 · P1) — authority, scope lock, kill switch, attributable
+// The cage (layer 05 · P1) - authority, scope lock, kill switch, attributable
 // initiation, cross-case separation. Built BEFORE the reasoning loop: an agent
 // whose constraints are added afterwards has already run unconstrained. Where the
 // rules differ from an analyst-driven case they are STRICTER, never looser.
@@ -24,7 +24,7 @@ export type PublishDecision =
 /**
  * Enforced in code at the point of publication, not in the prompt. A conclusion
  * above the ceiling is a proposal (common-operation) or rejected outright
- * (attribution) — the same visible drop discipline as an uncited sentence.
+ * (attribution) - the same visible drop discipline as an uncited sentence.
  */
 export function classifyPublication(rung: Rung, ceiling: Rung = AGENT_CEILING): PublishDecision {
   if (rung === "attribution") return { action: "reject", reason: "attribution is human-only and unreachable by the agent" };
@@ -84,7 +84,7 @@ export function asCrossCaseEvidence(e: EvidenceItem): CrossCaseEvidence {
 export function assertEvidenceNotConclusion(x: unknown): asserts x is EvidenceItem {
   const o = x as any;
   if (o && (Array.isArray(o.clusters) || o.bottomLine || Array.isArray(o.members) || o.ach)) {
-    throw new Error("a conclusion (cluster/case) may never be imported as evidence across cases — circular reinforcement");
+    throw new Error("a conclusion (cluster/case) may never be imported as evidence across cases - circular reinforcement");
   }
   if (!o || !o.kind || !o.entityKey) throw new Error("not an evidence item");
 }
@@ -92,7 +92,7 @@ export function assertEvidenceNotConclusion(x: unknown): asserts x is EvidenceIt
 // ---- Confidence cannot be raised by re-reasoning -----------------------------
 
 /**
- * Confidence is read straight from the deterministic case computation — never
+ * Confidence is read straight from the deterministic case computation - never
  * from the model. Re-running the LLM over an unchanged ledger yields the same
  * value because this function never consults the model.
  */

@@ -127,7 +127,7 @@ const ucdp: GeoSource = {
       return {
         uid: `ucdp:${ev.id ?? `${ev.side_a}-${ev.side_b}-${ev.date_start}`}`,
         source: "ucdp", kind: "conflict", ts: ev.date_start ? String(ev.date_start) : undefined,
-        title: `${ev.type_of_violence_name || "Violence"}: ${ev.side_a || "?"} vs ${ev.side_b || "?"} — ${country}`,
+        title: `${ev.type_of_violence_name || "Violence"}: ${ev.side_a || "?"} vs ${ev.side_b || "?"} - ${country}`,
         country, region: matchRegion(country),
         score: Number(ev.best) || 0, scoreKind: "fatalities",
       };
@@ -166,7 +166,7 @@ const usgs: GeoSource = {
         uid: `usgs:${feat.id}`,
         source: "usgs", kind: "disaster",
         ts: p.time ? new Date(p.time).toISOString() : undefined,
-        title: `M${p.mag} earthquake — ${place}`, url: p.url, country: place,
+        title: `M${p.mag} earthquake - ${place}`, url: p.url, country: place,
         region: matchRegion(place), score: p.mag, scoreKind: "magnitude",
       };
     });
@@ -260,7 +260,7 @@ const acled: GeoSource = {
       return {
         uid: `acled:${ev.event_id_cnty || ev.data_id}`,
         source: "acled", kind: "conflict", ts: ev.event_date,
-        title: `${ev.event_type || "Event"}: ${ev.actor1 || "?"} — ${ev.location || country}`,
+        title: `${ev.event_type || "Event"}: ${ev.actor1 || "?"} - ${ev.location || country}`,
         url: ev.source_scale ? undefined : undefined, country, region: matchRegion(country),
         score: Number(ev.fatalities) || 0, scoreKind: "fatalities",
       };

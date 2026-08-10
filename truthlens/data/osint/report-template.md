@@ -11,7 +11,7 @@ Placeholders are {{double_braced}}.
 
 # Influence Operation Investigation: {{network_name}}
 
-**Classification / Handling:** OSINT — open-source, for research use
+**Classification / Handling:** OSINT - open-source, for research use
 **Date:** {{date}} · **Run ID:** {{run_id}} · **Mode:** {{mode}}
 **Seed indicator(s):** {{seed}}
 **Confidence key:** High / Moderate / Low · **Source grading:** Admiralty (A–F / 1–6)
@@ -31,19 +31,19 @@ Frameworks applied: ABCDE · DISARM · Breakout Scale · Admiralty · ACH.
 Tools live this run: {{tools_live}} · Not configured: {{tools_not_configured}}.
 Collection dates: {{collection_dates}}. {{fact_vs_assessment_note}}
 
-## 4. Actor Mapping — Who Is Behind It
+## 4. Actor Mapping - Who Is Behind It
 {{actor_narrative}}
 
 | Actor / Org | Role in the operation | Evidence basis | Confidence |
 |---|---|---|---|
 {{actor_table_rows}}
 
-## 5. Asset Inventory — Fake-News Sites & Inauthentic Assets
+## 5. Asset Inventory - Fake-News Sites & Inauthentic Assets
 | Asset (name / domain / handle) | Type | Platform | Status | Notes / authenticity signals |
 |---|---|---|---|---|
 {{asset_table_rows}}
 
-## 6. Distribution Infrastructure — The Technical Stack
+## 6. Distribution Infrastructure - The Technical Stack
 {{infrastructure_narrative}}
 
 | Selector / Indicator | Value | Linked assets | Pivot type | Collection date |
@@ -53,10 +53,10 @@ Collection dates: {{collection_dates}}. {{fact_vs_assessment_note}}
 Underground / commercial stack (if the dark-web module ran): {{underground_findings_or_none}}
 <!-- observation-only; grade forum claims low; state any boundary hand-offs to a vetted provider. -->
 
-## 7. Narrative Analysis — The Payload
+## 7. Narrative Analysis - The Payload
 {{narrative_analysis}}
 
-## 8. TTPs — DISARM Mapping
+## 8. TTPs - DISARM Mapping
 | DISARM phase | Technique observed | Evidence |
 |---|---|---|
 {{disarm_table_rows}}
@@ -69,7 +69,7 @@ Breakout Scale: {{breakout_category}}. {{impact_evidence}}
 |---|---|---|---|
 {{ach_table_rows}}
 
-Assessed attribution: **{{assessed_actor}}** — **{{overall_confidence}} confidence**.
+Assessed attribution: **{{assessed_actor}}** - **{{overall_confidence}} confidence**.
 <!-- compiler check: this confidence MUST equal the BLUF in Section 1. -->
 
 ## 11. Comparison to Known Playbooks

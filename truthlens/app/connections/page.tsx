@@ -132,7 +132,7 @@ export default function ConnectionsPage() {
   };
 
   const addFeeds = async () => {
-    // A pasted spreadsheet selection arrives tab-separated with extra columns — pull
+    // A pasted spreadsheet selection arrives tab-separated with extra columns - pull
     // the site cells out of it; a plain list keeps parseFeedInput (comma-URL safe).
     const urls = /\t/.test(input) ? extractFeedCandidates(input) : parseFeedInput(input);
     await runAdd(urls);
@@ -142,7 +142,7 @@ export default function ConnectionsPage() {
     if (/\.xlsx?$/i.test(file.name) && !/\.csv$/i.test(file.name)) {
       // Real .xlsx is a binary workbook; we don't bundle a spreadsheet parser. Guide
       // the user to the two zero-dependency paths instead of failing silently.
-      setErr('Excel .xlsx can’t be read directly. In Excel: "Save As → CSV", then choose the file here — or copy the column of sites and paste it into the box above.');
+      setErr('Excel .xlsx can’t be read directly. In Excel: "Save As → CSV", then choose the file here - or copy the column of sites and paste it into the box above.');
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
@@ -272,7 +272,7 @@ export default function ConnectionsPage() {
             </button>
           </div>
           <p className="text-[11px] text-ink-muted">
-            Tip: many regional outlets don’t publish RSS or block automated access — those are
+            Tip: many regional outlets don’t publish RSS or block automated access - those are
             reported as failed and skipped, never faked.
           </p>
         </div>

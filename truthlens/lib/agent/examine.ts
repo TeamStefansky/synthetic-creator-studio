@@ -1,12 +1,12 @@
 // Examination discipline (layer 06 · P4). Three controls from forensic practice:
-//  1. Sufficiency BEFORE comparison — assess an artifact on its own merits against
+//  1. Sufficiency BEFORE comparison - assess an artifact on its own merits against
 //     a fixed threshold and record the decision before any comparison runs.
-//  2. Context firewall (Linear Sequential Unmasking) — the comparator receives
+//  2. Context firewall (Linear Sequential Unmasking) - the comparator receives
 //     task-relevant information ONLY. It is architecturally unable to see the
 //     hypothesis ranking, the leading explanation, or any prior conclusion, so
 //     contextual bias (a property of expert cognition, not weak examiners) cannot
 //     enter. Enforced by a deliberately narrow input TYPE, not by instruction.
-//  3. Blind verification — a second, independent pass that does not see the first;
+//  3. Blind verification - a second, independent pass that does not see the first;
 //     disagreement yields `inconclusive`, never an average, never the stronger.
 
 export const EXAMINE_VERSION = "examine-v1";
@@ -25,7 +25,7 @@ export interface SufficiencyRecord {
   kind: string;
   quality: number;
   decision: SufficiencyDecision;
-  recordedBefore: true; // recorded before any comparison — a structural guarantee
+  recordedBefore: true; // recorded before any comparison - a structural guarantee
 }
 
 export function assessSufficiency(kind: string, quality: number): SufficiencyRecord {
@@ -34,7 +34,7 @@ export function assessSufficiency(kind: string, quality: number): SufficiencyRec
 }
 
 // The ONLY thing the comparator may see. No hypothesis, no theory, no ranking,
-// no prior conclusion — those fields are not on this type, so they are unreachable.
+// no prior conclusion - those fields are not on this type, so they are unreachable.
 export interface ComparisonInput {
   kind: string;
   valueA: string;
@@ -45,7 +45,7 @@ export interface ComparisonInput {
 
 export type ComparisonOutcome = "identification" | "exclusion" | "inconclusive";
 
-/** Pure comparison. Deterministic in its input alone — case theory cannot reach it. */
+/** Pure comparison. Deterministic in its input alone - case theory cannot reach it. */
 export function compare(input: ComparisonInput): ComparisonOutcome {
   if (!input.sufficientA || !input.sufficientB) return "inconclusive"; // frequent + expected
   return input.valueA.trim().toLowerCase() === input.valueB.trim().toLowerCase() ? "identification" : "exclusion";
@@ -54,7 +54,7 @@ export function compare(input: ComparisonInput): ComparisonOutcome {
 /**
  * Blind verification: two independent examinations of the same feature. The
  * verifier does not see the first conclusion. Agreement stands; disagreement is
- * inconclusive — never averaged, never the stronger reading (that would measure
+ * inconclusive - never averaged, never the stronger reading (that would measure
  * agreeableness, not evidence).
  */
 export function blindVerify(first: ComparisonOutcome, second: ComparisonOutcome): ComparisonOutcome {

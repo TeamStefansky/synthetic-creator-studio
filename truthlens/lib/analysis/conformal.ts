@@ -1,4 +1,4 @@
-// lib/analysis/conformal.ts — split-conformal calibration (distribution-free).
+// lib/analysis/conformal.ts - split-conformal calibration (distribution-free).
 //
 // Turns "confidence: High" from a hand-tuned rubric into a claim with a FINITE-
 // SAMPLE mathematical guarantee: given n calibration scores from cases with a
@@ -9,7 +9,7 @@
 // Honesty gates (frozen rules):
 //   - below CONFORMAL_MIN_CALIBRATION labeled cases → null ("Unknown is a valid
 //     answer"), never a guarantee we cannot back (rule 4/7);
-//   - the guarantee text always names alpha and n — a coverage claim without
+//   - the guarantee text always names alpha and n - a coverage claim without
 //     its sample size is an overclaim;
 //   - pure TypeScript, deterministic, testable (scores are never model-made).
 //
@@ -38,7 +38,7 @@ export interface ConformalBand {
 /**
  * Finite-sample conformal quantile: the k-th smallest value with
  * k = ceil((n+1)(1-alpha)). Returns null when n is too small for the requested
- * alpha (k > n) — no guarantee is possible, and we say so instead of clamping.
+ * alpha (k > n) - no guarantee is possible, and we say so instead of clamping.
  */
 export function conformalQuantile(scores: number[], alpha: number): number | null {
   const n = scores.length;
@@ -67,7 +67,7 @@ export function conformalPValue(nullScores: number[], score: number): number | n
  * Calibrated alert threshold from scores of KNOWN-BENIGN cases: flagging only
  * scores above the returned threshold keeps the false-alarm rate ≤ alpha,
  * guaranteed in finite samples (assuming future benign cases are exchangeable
- * with the calibration set). Returns null below the calibration floor —
+ * with the calibration set). Returns null below the calibration floor -
  * "not calibrated" is rendered, never a fake guarantee.
  */
 export function conformalThreshold(benignScores: number[], alpha = 0.1): ConformalBand | null {

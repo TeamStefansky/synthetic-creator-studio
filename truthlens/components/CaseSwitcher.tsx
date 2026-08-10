@@ -1,6 +1,6 @@
 "use client";
 
-// Case switcher — the "Chrome profile" selector. Shows the active case; pick
+// Case switcher - the "Chrome profile" selector. Shows the active case; pick
 // another and every new search links to it; create a case inline; jump to the
 // manager. Browser-local (localStorage), so it works with zero config.
 
@@ -59,7 +59,7 @@ export default function CaseSwitcher() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] uppercase tracking-wider text-ink-muted">Active case</span>
-          <span className="block truncate text-ink">{activeCase ? activeCase.name : "None — searches unfiled"}</span>
+          <span className="block truncate text-ink">{activeCase ? activeCase.name : "None - searches unfiled"}</span>
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-ink-secondary" />
       </button>

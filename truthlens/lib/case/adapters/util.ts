@@ -13,7 +13,7 @@ export interface ProvenanceInput {
   acquisitionMethod?: string;
   collector?: string;
   collectorVersion?: string;
-  collectedAt: string;      // from the tool's own fetch time — keep deterministic
+  collectedAt: string;      // from the tool's own fetch time - keep deterministic
   lineageId?: string;
 }
 

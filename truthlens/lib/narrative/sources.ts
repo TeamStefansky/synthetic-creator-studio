@@ -35,7 +35,7 @@ const UA = "TruthLens/0.1 (brand narrative monitoring)";
 // official OAuth app-only ("client_credentials") flow. With REDDIT_CLIENT_ID +
 // REDDIT_CLIENT_SECRET set we mint an app token and hit oauth.reddit.com; without
 // them we fall back to the public www.reddit.com JSON (best-effort). Official
-// endpoints only — no scraping.
+// endpoints only - no scraping.
 const SUBREDDIT_RE = /\b(?:subreddit:|r\/)([a-z0-9_]{2,21})\b/i;
 
 export function redditOauthConnected(): boolean {
@@ -191,7 +191,7 @@ const reddit: NarrativeSource = {
     ? undefined
     : "Keyless public JSON (server IPs may be rate-limited). Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET for reliable OAuth monitoring.",
   // Query syntax: a bare term does a global search; `r/<sub>` or `subreddit:<sub>`
-  // scopes to (or monitors the new feed of) that community — e.g. a watch term
+  // scopes to (or monitors the new feed of) that community - e.g. a watch term
   // "r/geopolitics" tracks that subreddit's new posts, "r/geopolitics sanctions"
   // searches within it. Reliable server-side when OAuth is connected.
   async search(q) {
@@ -344,7 +344,7 @@ const newsapi: NarrativeSource = {
   },
 };
 
-// Webz.io — licensed news/web-content API (official endpoint, keyed). Broad global
+// Webz.io - licensed news/web-content API (official endpoint, keyed). Broad global
 // + multilingual recall for News Room, SIGNAL Grid and Brand Watch. Token comes
 // ONLY from WEBZ_API_TOKEN (never hardcoded); without it the source reports
 // connected:false and renders as "source not connected".

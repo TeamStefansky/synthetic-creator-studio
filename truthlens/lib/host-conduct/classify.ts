@@ -1,4 +1,4 @@
-// Domain-character classifier — a fast, transparent triage of a domain NAME into
+// Domain-character classifier - a fast, transparent triage of a domain NAME into
 // a character bucket, for grouping a reverse-DNS sweep of a host's IP ranges.
 //
 // HARD RULE (frozen): a domain NAME is an INDICATOR, not proof of content. Every
@@ -17,7 +17,7 @@ export const NAME_NOT_CONTENT =
 
 // Multilingual keyword signals. IDN (xn--…) labels are decoded to their native
 // script first, so these match Hebrew/Arabic/Cyrillic/Greek/CJK domains too.
-// Domain labels are compounds ("scientistrebellion"), so we match SUBSTRINGS — a
+// Domain labels are compounds ("scientistrebellion"), so we match SUBSTRINGS - a
 // name is a lead, not proof (every result carries the caveat). Extremist tokens
 // are kept high-precision (unambiguous neo-Nazi / hate references across
 // languages + transliterations) so the "red flag" bucket stays defensible.
@@ -35,7 +35,7 @@ const EXTREMIST_WORDS = [
   "היטלר", "נאצי", "נאצים", "צלב-קרס", "צלבקרס",
   // Arabic
   "هتلر", "نازي", "النازية",
-  // Cyrillic (Russian/Ukrainian) — boundaried forms to avoid "национал" (national)
+  // Cyrillic (Russian/Ukrainian) - boundaried forms to avoid "национал" (national)
   "гитлер", "нацист", "нацизм", "зигхайль", "зиг-хайль", "фюрер", "свастика",
   // Greek
   "χίτλερ", "ναζί",

@@ -8,17 +8,17 @@ import { dropReason } from "../../lib/case/narrate";
 import { exceedsRung } from "../../lib/case/lexicon";
 
 // ============================================================================
-// Layer 03 · P0 — target-behavior specs (discovery, no production code yet).
+// Layer 03 · P0 - target-behavior specs (discovery, no production code yet).
 //
 // These state the behaviours later phases must satisfy. They are registered as
 // PENDING (it.todo) so `main` stays green on auto-deploy; the phase that builds
 // the module named in each todo replaces it with a live assertion that must fail
 // for the right reason before it passes. This is the single documented deviation
-// from "write failing tests" in P0 — the target is captured executably, without
+// from "write failing tests" in P0 - the target is captured executably, without
 // shipping a red suite to production.
 // ============================================================================
 
-describe("case synthesis — target behaviours (P0, activated as phases land)", () => {
+describe("case synthesis - target behaviours (P0, activated as phases land)", () => {
   // ACTIVATED in 03·P3 (graph/direction).
   it("T4-only pair yields order_not_established, not silently dropped", () => {
     expect(orderOf(eventTime("2026-01-01T00:00:00Z", "T4"), eventTime("2026-02-01T00:00:00Z", "T4"))).toBe("order_not_established");
@@ -28,7 +28,7 @@ describe("case synthesis — target behaviours (P0, activated as phases land)", 
   it("weak edges never join components", () => {
     const edges: StrengthEdge[] = [
       { a: "a.com", b: "b.com", strength: "High" },  // GA-id cluster
-      { a: "b.com", b: "c.com", strength: "Low" },   // ASN — must not pull c.com in
+      { a: "b.com", b: "c.com", strength: "Low" },   // ASN - must not pull c.com in
     ];
     const clusters = buildClusters(["a.com", "b.com", "c.com"], edges);
     expect(clusters.find((c) => c.members.includes("a.com"))!.members).not.toContain("c.com");
@@ -58,7 +58,7 @@ describe("case synthesis — target behaviours (P0, activated as phases land)", 
 
 // A green sanity check now: the discovery fixtures carry the evidence-bearing
 // fields the P1 adapters will read, so the adapters have real shapes to target.
-describe("P0 fixtures — shape sanity (green now)", () => {
+describe("P0 fixtures - shape sanity (green now)", () => {
   it("site fixtures expose the operator/time-tier fields adapters need", () => {
     expect(ALL_FIXTURES.site.infrastructure.domain.value.createdAt).toBeTruthy();       // T1 (RDAP)
     expect(ALL_FIXTURES.site.originTrace.likelyOrigin.asnOrg).toContain("1984");        // net_org clue

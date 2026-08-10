@@ -84,7 +84,7 @@ export default function CaseDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      {/* Header / controls — hidden in print */}
+      {/* Header / controls - hidden in print */}
       <div className="no-print space-y-4">
         <Link href="/casebook" className="inline-flex items-center gap-1 text-sm text-ink-secondary hover:text-white"><ArrowLeft className="h-4 w-4" /> Cases</Link>
 
@@ -122,7 +122,7 @@ export default function CaseDetailPage() {
             <button onClick={() => setShowAdd((v) => !v)} className="inline-flex items-center gap-1 text-xs text-brand-soft"><Plus className="h-3.5 w-3.5" /> Add existing</button>
           </div>
           {linked.length === 0 ? (
-            <p className="text-sm text-ink-secondary">No searches yet. Set this case active, then run any tool — or add existing searches below.</p>
+            <p className="text-sm text-ink-secondary">No searches yet. Set this case active, then run any tool - or add existing searches below.</p>
           ) : (
             <ul className="space-y-1.5">
               {linked.map((c) => (

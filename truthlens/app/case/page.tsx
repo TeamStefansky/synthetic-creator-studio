@@ -58,7 +58,7 @@ export default function CaseWallPage() {
           Compose an evidence-grounded case from a set of domains: chain-of-custody ledger, time-tiered
           timeline, clusters bounded by their weakest link, a propagation path drawn only where
           timestamps justify a direction, competing hypotheses scored by inconsistency, and negative
-          evidence kept separate from gaps. Decision-support, not a verdict — nodes are infrastructure,
+          evidence kept separate from gaps. Decision-support, not a verdict - nodes are infrastructure,
           never people.
         </p>
       </div>
@@ -77,7 +77,7 @@ export default function CaseWallPage() {
       {!cf && !loading && (
         <ToolIntro
           heading="What does the evidence actually support?"
-          what={<>Where the Link Board answers &ldquo;are these connected?&rdquo;, Case Synthesis answers <span className="text-ink">&ldquo;what happened, in what order, and how sure are we?&rdquo;</span> — with every conclusion carrying its evidence, an alternative, and a falsification list.</>}
+          what={<>Where the Link Board answers &ldquo;are these connected?&rdquo;, Case Synthesis answers <span className="text-ink">&ldquo;what happened, in what order, and how sure are we?&rdquo;</span> - with every conclusion carrying its evidence, an alternative, and a falsification list.</>}
           legend={[
             { label: "Likelihood ≠ confidence", tone: "unknown", text: "two separate axes; very likely / low confidence is a valid result." },
             { label: "Gaps ≠ negative evidence", tone: "neutral", text: "what we didn't look for scores nothing; kept separate." },
@@ -154,7 +154,7 @@ export default function CaseWallPage() {
 
           {/* TIMELINE */}
           <div className="card">
-            <div className="label-muted mb-2">Timeline (earliest observed in collected data — never an origin claim)</div>
+            <div className="label-muted mb-2">Timeline (earliest observed in collected data - never an origin claim)</div>
             {cf.timeline.entries.length === 0 ? <p className="text-sm text-ink-secondary">No dated events collected.</p> : (
               <ul className="space-y-1 text-xs">
                 {cf.timeline.entries.slice(0, 30).map((e) => (
@@ -176,7 +176,7 @@ export default function CaseWallPage() {
               <ul className="space-y-1 text-xs">
                 {cf.path.edges.map((e, i) => (
                   <li key={i} className={e.kind === "directed" ? "text-ink" : "text-risk-unknown"}>
-                    {e.from} {e.kind === "directed" ? "→" : "—"} {e.to} <span className="text-ink-secondary">· {e.kind === "directed" ? e.reason : "order not established"}</span>
+                    {e.from} {e.kind === "directed" ? "→" : "-"} {e.to} <span className="text-ink-secondary">· {e.kind === "directed" ? e.reason : "order not established"}</span>
                   </li>
                 ))}
               </ul>
@@ -194,7 +194,7 @@ export default function CaseWallPage() {
                     <tr key={i.id} className="border-t border-white/5">
                       <td className="p-1 text-ink-secondary">{i.kind}</td>
                       <td className="p-1 text-ink">{i.value.slice(0, 40)}</td>
-                      <td className="p-1 text-center font-mono">{i.eventTime?.tier || "—"}</td>
+                      <td className="p-1 text-center font-mono">{i.eventTime?.tier || "-"}</td>
                       <td className="p-1 text-center font-mono">{i.provenances[0]?.sourceGrade}{i.provenances[0]?.infoCredibility}</td>
                       <td className="p-1 text-center font-mono">{new Set(i.provenances.map((p) => p.lineageId)).size}</td>
                     </tr>
@@ -204,21 +204,21 @@ export default function CaseWallPage() {
             </div>
           </div>
 
-          {/* GAPS + NEGATIVE EVIDENCE — separate, always visible */}
+          {/* GAPS + NEGATIVE EVIDENCE - separate, always visible */}
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="card">
               <div className="label-muted mb-2">Gaps register (zero evidential weight)</div>
               <ul className="space-y-1 text-xs text-ink-secondary">
-                {cf.gaps.slice(0, 20).map((g, i) => <li key={i}><span className="rounded bg-white/5 px-1.5 py-0.5">{g.kind}</span> {g.subject} — {g.reason}</li>)}
+                {cf.gaps.slice(0, 20).map((g, i) => <li key={i}><span className="rounded bg-white/5 px-1.5 py-0.5">{g.kind}</span> {g.subject} - {g.reason}</li>)}
               </ul>
             </div>
             <div className="card">
               <div className="label-muted mb-2">Negative evidence (counts against a hypothesis)</div>
-              <p className="text-sm text-ink-secondary">No adequate predicted-artifact searches were run in this pass, so there is no negative evidence — distinct from the gaps at left. Never conflated.</p>
+              <p className="text-sm text-ink-secondary">No adequate predicted-artifact searches were run in this pass, so there is no negative evidence - distinct from the gaps at left. Never conflated.</p>
             </div>
           </div>
 
-          {/* Reconstruction — honest not-connected state */}
+          {/* Reconstruction - honest not-connected state */}
           <div className="card">
             <div className="label-muted mb-1">Narrative reconstruction</div>
             <p className="text-sm text-ink-secondary">

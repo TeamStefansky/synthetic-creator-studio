@@ -1,5 +1,5 @@
 // Ask-the-Investigator chat. Answers are grounded STRICTLY in the case context the
-// client passes (the situation report the agent already produced) — the model
+// client passes (the situation report the agent already produced) - the model
 // receives only that structured text, never raw web content, and the case data
 // itself contains no person records, so there is nothing to leak. Frozen-rule
 // framing: decision-support not a verdict; never name/infer a private individual;
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     const answer = msg.content.map((c: any) => (c.type === "text" ? c.text : "")).join("").trim() || "That is not in the collected data.";
     return NextResponse.json({ connected: true, answer }, { headers: { "Cache-Control": "no-store" } });
   } catch (e: any) {
-    const m = /credit|billing/i.test(e?.message || "") ? "Q&A paused — the Anthropic account is out of credits." : "Q&A unavailable right now.";
+    const m = /credit|billing/i.test(e?.message || "") ? "Q&A paused - the Anthropic account is out of credits." : "Q&A unavailable right now.";
     return NextResponse.json({ connected: false, answer: keywordAnswer(question, context), note: m }, { headers: { "Cache-Control": "no-store" } });
   }
 }

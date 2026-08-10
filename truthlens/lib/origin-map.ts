@@ -1,4 +1,4 @@
-// Origin Map — pure helpers behind the "where did this content come from?" view.
+// Origin Map - pure helpers behind the "where did this content come from?" view.
 //
 // The page composes THREE existing capabilities on one world map:
 //   1. geographic origin + spread  (/api/mentions, geolocated observations)
@@ -6,10 +6,10 @@
 //   3. propagation graph            (NetworkGraph over amplifier domains)
 //
 // Everything here is pure + testable and honors the frozen rules:
-//   - Rule 2: the earliest observation is ALWAYS carried with EARLIEST_LABEL — it
+//   - Rule 2: the earliest observation is ALWAYS carried with EARLIEST_LABEL - it
 //     is "earliest observed", never "the true source". The label is not optional.
 //   - Rule 1 / no-person-nodes: the amplifier graph contains ONLY the term and
-//     publisher DOMAIN nodes — never an account handle or a person.
+//     publisher DOMAIN nodes - never an account handle or a person.
 //   - Rule 3: infrastructure pins carry the report's confidence + evidence + an
 //     innocent alternative (a candidate IP is often a shared host / relay).
 //   - Rule 7: nothing is invented; callers render honest "not connected" states
@@ -21,13 +21,13 @@ import type { MapMention } from "./mentions-map";
 import type { OperatorNetwork, GraphNode, GraphEdge } from "./types";
 import type { OriginExposureReport } from "./origin-exposure";
 
-/** Rule 2 — mandatory label on every earliest/origin marker. Not optional UI text. */
+/** Rule 2 - mandatory label on every earliest/origin marker. Not optional UI text. */
 export const EARLIEST_LABEL =
-  "earliest observed in collected data — not the true source";
+  "earliest observed in collected data - not the true source";
 
 /** Innocent alternative for an infrastructure origin pin (rule 3). */
 export const ORIGIN_SERVER_ALT =
-  "A resolved non-CDN address is frequently a shared host, mail/analytics box, or relay — not necessarily the live origin server.";
+  "A resolved non-CDN address is frequently a shared host, mail/analytics box, or relay - not necessarily the live origin server.";
 
 /** Does the input look like a URL / domain (→ infrastructure layer) rather than a
  * free-text topic/term? No spaces + a dotted host, or an http(s) scheme. */
@@ -84,7 +84,7 @@ export function plottablePoints(mentions: MapMention[]): MapPoint[] {
 /**
  * The earliest-OBSERVED plottable mention (rule 2). Returns the point with the
  * smallest valid timestamp that also has coordinates, or null when no dated,
- * geolocated observation exists. NEVER call this "the origin" — see EARLIEST_LABEL.
+ * geolocated observation exists. NEVER call this "the origin" - see EARLIEST_LABEL.
  */
 export function earliestObserved(mentions: MapMention[]): MapPoint | null {
   let best: MapPoint | null = null;
@@ -121,7 +121,7 @@ export interface OriginServerPoint {
 /**
  * Pin the resolved origin-server candidates on the map. Only candidates whose
  * country resolves to a centroid are plottable; the rest are surfaced in the
- * evidence table by the caller (honest — never invented coordinates). A small
+ * evidence table by the caller (honest - never invented coordinates). A small
  * deterministic jitter keeps co-located pins distinct.
  */
 export function originServerPoints(report: OriginExposureReport | null): OriginServerPoint[] {
@@ -147,7 +147,7 @@ export function originServerPoints(report: OriginExposureReport | null): OriginS
  * Reusable origin-network builder (extracted from the Origin Exposure page so both
  * pages share ONE source of truth). Domain → exposed/historical subdomains →
  * exposed/historical origin IPs (geolocation on each IP label). Shared IPs link
- * multiple names automatically. Infrastructure only — never a person node.
+ * multiple names automatically. Infrastructure only - never a person node.
  */
 export function buildOriginExposureNetwork(report: OriginExposureReport | null): OperatorNetwork {
   if (!report) return { nodes: [], edges: [] };
@@ -194,7 +194,7 @@ export interface AmplifierDomain {
 /**
  * The propagation / amplifier graph: which publisher DOMAINS carried the content,
  * linked to the searched term. Nodes are the term (target) + publisher domains
- * ONLY — never an account handle or a person (rule 1 / no-person-nodes). An edge
+ * ONLY - never an account handle or a person (rule 1 / no-person-nodes). An edge
  * means "appeared in collected mentions", a co-appearance observation, NOT proof
  * of coordination. Domains are ranked by mention count; `limit` caps clutter.
  */

@@ -22,7 +22,7 @@ interface RunResponse {
   journal: { entries: { seq: number; cycle: number; type: string; detail: string }[] };
 }
 
-const ORDER = ["STATUS", "BOTTOM LINE", "INSIGHTS FROM YOUR SEARCHES", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "EXTERNAL ENRICHMENT — OPERATOR", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
+const ORDER = ["STATUS", "BOTTOM LINE", "INSIGHTS FROM YOUR SEARCHES", "JUDGMENT", "CHANGED SINCE LAST REPORT", "KEY EVIDENCE", "EXTERNAL ENRICHMENT - OPERATOR", "RECONSTRUCTION", "THE CASE AGAINST", "KEY ASSUMPTIONS", "NEGATIVE EVIDENCE", "GAPS", "WHAT WOULD CHANGE THIS", "NOT PURSUED", "METHOD RELIABILITY", "THE PREMORTEM", "CONCEPTION WATCH"];
 
 const DOMAIN_RE = /\b([a-z0-9-]+(?:\.[a-z0-9-]+)+)\b/i;
 function firstDomain(label: string): string | null {
@@ -31,7 +31,7 @@ function firstDomain(label: string): string | null {
 }
 
 // A stable, browser-local attribution handle so runs are attributed automatically
-// (the frozen rule requires an initiator) — entered once, never re-typed.
+// (the frozen rule requires an initiator) - entered once, never re-typed.
 function autoHandle(): string {
   if (typeof window === "undefined") return "analyst";
   try {
@@ -70,12 +70,12 @@ export default function InvestigatorPage() {
   };
 
   // Autonomous mode: the agent seeds itself from the analyst's OWN searches
-  // (the browser-local cross-search clue index) — no manual link-pasting — and
+  // (the browser-local cross-search clue index) - no manual link-pasting - and
   // carries the auto-derived insights into the run, then enriches externally and
   // reports like an investigative brief.
   const investigateMySearches = async (silent = false) => {
     const findings = buildFindings();
-    if (!findings.findings.length) { if (!silent) setError("No cross-search connections yet — run a few Site Report / Origin / Link Board searches first, then let the investigator work from them."); return; }
+    if (!findings.findings.length) { if (!silent) setError("No cross-search connections yet - run a few Site Report / Origin / Link Board searches first, then let the investigator work from them."); return; }
     const seeds = [...new Set(findings.findings.flatMap((f) => f.searches.map((s) => firstDomain(s.label)).filter((d): d is string => !!d)))].slice(0, 12);
     if (seeds.length < 2) { if (!silent) setError("Your searches don't yet share enough domain-level entities to investigate. Run a couple more site/origin searches."); return; }
     const insights = findings.findings.slice(0, 12).map((f) => f.evidence);
@@ -97,7 +97,7 @@ export default function InvestigatorPage() {
     const a = document.createElement("a"); a.href = url; a.download = "situation-report.md"; a.click(); URL.revokeObjectURL(url);
   };
 
-  // Ask the investigator — grounded strictly, server-side. Uses the current report
+  // Ask the investigator - grounded strictly, server-side. Uses the current report
   // when one exists; otherwise falls back to the insights from your own searches so
   // the chat is useful even before a full run. With neither, it answers honestly
   // that there is nothing collected yet.
@@ -131,7 +131,7 @@ export default function InvestigatorPage() {
   };
 
   // Fully automatic: attribute the run to a stable local handle and investigate
-  // your own searches on load — no fields to fill, no button to press.
+  // your own searches on load - no fields to fill, no button to press.
   useEffect(() => {
     setInitiator(autoHandle());
     investigateMySearches(true); // silent: no error banner if there's nothing to investigate yet
@@ -158,11 +158,11 @@ export default function InvestigatorPage() {
       </div>
 
       <div className="card space-y-2">
-        {/* Primary: fully automatic — runs on your own searches, no fields to fill. */}
+        {/* Primary: fully automatic - runs on your own searches, no fields to fill. */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="flex items-center gap-1 text-sm text-ink-secondary">
             <ShieldCheck className="h-4 w-4 text-brand-soft" />
-            Runs automatically on your searches — read-only, budgeted, ceiling <span className="text-ink">association</span>, attributed to you.
+            Runs automatically on your searches - read-only, budgeted, ceiling <span className="text-ink">association</span>, attributed to you.
           </p>
           <button onClick={() => investigateMySearches()} disabled={loading} className="btn shrink-0">
             {loading ? "Investigating…" : <>Investigate my searches <ArrowRight className="h-4 w-4" /></>}
@@ -175,7 +175,7 @@ export default function InvestigatorPage() {
         </button>
         {showAdvanced && (
           <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-3">
-            <textarea value={seed} onChange={(e) => { setSeed(e.target.value); setError(""); }} placeholder={"Optional — specific domains (2-12), one per line or comma-separated"} className="h-20 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-sm outline-none focus:border-brand scroll-thin" />
+            <textarea value={seed} onChange={(e) => { setSeed(e.target.value); setError(""); }} placeholder={"Optional - specific domains (2-12), one per line or comma-separated"} className="h-20 w-full rounded-xl border border-white/15 bg-bg-elev p-3 font-mono text-sm outline-none focus:border-brand scroll-thin" />
             <div className="flex flex-col gap-2 sm:flex-row">
               <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Question (optional)" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
               <input value={initiator} onChange={(e) => setInitiator(e.target.value)} placeholder="Attribution handle (auto-set)" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand sm:max-w-xs" />
@@ -189,7 +189,7 @@ export default function InvestigatorPage() {
       {!data && !loading && (
         <ToolIntro
           heading="An investigator you can supervise"
-          what={<>Give it a seed set and a question. It works the case like an analyst — plan, collect, integrate, <span className="text-ink">argue against itself</span>, stop when more collection would not change the answer — and hands you a report with its reasoning, what it did not pursue, and what would prove it wrong. A run that concludes <span className="text-ink">&ldquo;no case established&rdquo;</span> is a success.</>}
+          what={<>Give it a seed set and a question. It works the case like an analyst - plan, collect, integrate, <span className="text-ink">argue against itself</span>, stop when more collection would not change the answer - and hands you a report with its reasoning, what it did not pursue, and what would prove it wrong. A run that concludes <span className="text-ink">&ldquo;no case established&rdquo;</span> is a success.</>}
           legend={[
             { label: "Association only", tone: "legit", text: "autonomous to association; higher rungs are proposals for your approval." },
             { label: "Scope-locked", tone: "neutral", text: "discovered entities queue for review; the agent never expands the case." },
@@ -226,7 +226,7 @@ export default function InvestigatorPage() {
             <button onClick={() => setShowJournal((v) => !v)} className="text-xs text-brand-soft hover:underline">{showJournal ? "Hide" : "Show"} reasoning journal ({data.journal.entries.length})</button>
             {showJournal && (
               <ul className="mt-2 space-y-1 text-xs text-ink-secondary">
-                {data.journal.entries.map((e) => <li key={e.seq}><span className="font-mono text-ink-muted">c{e.cycle} {e.type}</span> — {e.detail}</li>)}
+                {data.journal.entries.map((e) => <li key={e.seq}><span className="font-mono text-ink-muted">c{e.cycle} {e.type}</span> - {e.detail}</li>)}
               </ul>
             )}
           </div>
@@ -234,7 +234,7 @@ export default function InvestigatorPage() {
         </div>
       )}
 
-      {/* Ask the investigator — always available; grounded in the report when one
+      {/* Ask the investigator - always available; grounded in the report when one
           exists, otherwise in the insights from your own searches. */}
       <div className="card">
         <div className="label-muted mb-2 flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> Ask the investigator</div>
@@ -252,11 +252,11 @@ export default function InvestigatorPage() {
           </div>
         )}
         <form onSubmit={(e) => { e.preventDefault(); ask(); }} className="flex gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask the investigator — e.g. what connects these? who is the host? what would disprove it?" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask the investigator - e.g. what connects these? who is the host? what would disprove it?" className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
           <button type="submit" disabled={asking || !q.trim()} className="btn shrink-0">{asking ? "…" : "Ask"}</button>
         </form>
         <p className="mt-2 text-[11px] text-ink-secondary">
-          {data ? "Answers come only from this report" : "Answers come from the insights in your searches (run an investigation for the full report)"} — never invented, never a private individual, never a verdict. &ldquo;Not in the collected data&rdquo; is a valid answer.
+          {data ? "Answers come only from this report" : "Answers come from the insights in your searches (run an investigation for the full report)"} - never invented, never a private individual, never a verdict. &ldquo;Not in the collected data&rdquo; is a valid answer.
         </p>
       </div>
 

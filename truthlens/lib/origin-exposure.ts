@@ -24,7 +24,7 @@ const MAX_NAMES = 90; // cap total names probed (politeness + bounded runtime)
 const CONCURRENCY = 16;
 // Hard internal wall-clock budget, kept safely below the route's maxDuration (180s
 // on Vercel Pro). Optional enrichment stops here and we RETURN (and cache) a
-// complete core finding, marked partial — a bounded result always beats a 504.
+// complete core finding, marked partial - a bounded result always beats a 504.
 // Most domains finish in well under 30s; this ceiling only bites on extreme
 // certificate/DNS footprints.
 const DEADLINE_MS = 160000;
@@ -96,7 +96,7 @@ export interface OriginExposureReport {
   available: boolean;
   domain: string;
   /** True when the wall-clock budget was hit and optional enrichment (RDAP/geo/
-   * historical) was skipped — the core exposure finding is complete, provider/geo
+   * historical) was skipped - the core exposure finding is complete, provider/geo
    * labels may be missing. Honestly labeled, never silently dropped. */
   partial?: boolean;
   /** Whether the apex/www appears to sit behind the CDN at all. */
@@ -562,7 +562,7 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     if (!c.sources.includes(src)) c.sources.push(src);
     candMap.set(rec.ip, c);
   }
-  // Enrich historical candidates in PARALLEL (was sequential — the main timeout on
+  // Enrich historical candidates in PARALLEL (was sequential - the main timeout on
   // large footprints) and only while within budget; over budget, they still appear
   // as candidates, just without provider/geo labels.
   await mapLimit(historical.candidates.slice(0, 20), 6, async (h) => {
@@ -629,7 +629,7 @@ export async function auditOriginExposure(domainInput: string, opts: AuditOption
     recommendations: band === "possible_exposure" ? RECOMMENDATIONS : RECOMMENDATIONS.slice(0, 3),
     hostConduct,
     note: (partial
-      ? "Partial result: this domain has a large certificate/DNS footprint, so provider/geo enrichment was stopped at the time budget — the exposure finding and candidate IPs are complete, some provider/location labels may be missing. "
+      ? "Partial result: this domain has a large certificate/DNS footprint, so provider/geo enrichment was stopped at the time budget - the exposure finding and candidate IPs are complete, some provider/location labels may be missing. "
       : "") + "Passive audit of PUBLIC records (Certificate Transparency + DNS + RDAP) for a domain you are authorized to inspect. Indicators for hardening, not a verdict; this tool never probes or connects to the origin, so candidates are for the owner to verify, not confirmed origins.",
     collectedAt: now(),
   };

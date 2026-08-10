@@ -30,7 +30,7 @@ export const SHARED_IP_THRESHOLD = 12;
 // Forensic rule: class characteristics NARROW a population and can never
 // identify, no matter how many accumulate. Individuation requires at least one
 // individual characteristic. An artifact whose base rate cannot be estimated is
-// `class` by DEFAULT — the burden is on individuation, not on commonality.
+// `class` by DEFAULT - the burden is on individuation, not on commonality.
 export type CharacteristicClass = "class" | "individual";
 
 export interface Characteristic {
@@ -41,7 +41,7 @@ export interface Characteristic {
 
 // EVERY BoardArtifactKind MUST appear here (schema-completeness test).
 export const CHARACTERISTIC: Record<BoardArtifactKind, Characteristic> = {
-  // individual — account-specific / deliberate / near-unique
+  // individual - account-specific / deliberate / near-unique
   ssl_san: { characteristicClass: "individual", baseRate: 0.01, provenance: "non-wildcard SAN provisioning is operator-specific (operator estimate)" },
   ga_id: { characteristicClass: "individual", baseRate: 0.002, provenance: "GA property ids are account-scoped (operator estimate)" },
   adsense_id: { characteristicClass: "individual", baseRate: 0.002, provenance: "ca-pub- ids are publisher-account-scoped" },
@@ -57,7 +57,7 @@ export const CHARACTERISTIC: Record<BoardArtifactKind, Characteristic> = {
   social_handle: { characteristicClass: "individual", baseRate: 0.02, provenance: "an org's published handle is account-specific" },
   org_email: { characteristicClass: "individual", baseRate: 0.02, provenance: "org-published contact address is org-specific" },
   org_phone: { characteristicClass: "individual", baseRate: 0.03, provenance: "org-published contact phone is org-specific" },
-  // class — infrastructure / commodity / shared-by-default
+  // class - infrastructure / commodity / shared-by-default
   ip: { characteristicClass: "class", baseRate: 0.1, provenance: "shared/virtual hosting places unrelated sites on one IP; base rate unknown -> class" },
   ip_24: { characteristicClass: "class", baseRate: 0.2, provenance: "a /24 spans many tenants" },
   ip_16: { characteristicClass: "class", baseRate: 0.4, provenance: "a /16 spans very many tenants" },
@@ -82,8 +82,8 @@ export function isIndividualCharacteristic(kind: BoardArtifactKind): boolean {
 
 /**
  * The rung a set of shared artifact kinds can support. `common-operation`
- * requires at least one INDIVIDUAL characteristic; class characteristics alone —
- * however many — can never individualize, so they cap at `association`.
+ * requires at least one INDIVIDUAL characteristic; class characteristics alone -
+ * however many - can never individualize, so they cap at `association`.
  */
 export function rungForCharacteristics(kinds: BoardArtifactKind[]): "association" | "common-operation" {
   return kinds.some(isIndividualCharacteristic) ? "common-operation" : "association";

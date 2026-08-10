@@ -1,6 +1,6 @@
 "use client";
 
-// NEWS ROOM — an English news feed, Google-News "Full Coverage" style: related
+// NEWS ROOM - an English news feed, Google-News "Full Coverage" style: related
 // articles are clustered into STORIES, each shown as a headline plus the outlets
 // covering it. Built from the SAME sources TruthLens uses (Connections feeds +
 // built-in news APIs, via /api/newsroom). Headlines auto-translated; every card
@@ -100,7 +100,7 @@ function CoverageLinks({ story, primary, max }: { story: Story; primary: NewsIte
   );
 }
 
-// A story as an image-forward news card (image on top, then headline) — news-site
+// A story as an image-forward news card (image on top, then headline) - news-site
 // hierarchy. `lead` renders the large hero treatment.
 function StoryCard({ story, lead }: { story: Story; lead?: boolean }) {
   const primary = story.items.find((m) => m.title === story.title) || story.items[0];
@@ -128,7 +128,7 @@ function StoryCard({ story, lead }: { story: Story; lead?: boolean }) {
   );
 }
 
-// Interest topics — pick some to personalize the feed (MSN-style). Each maps to a
+// Interest topics - pick some to personalize the feed (MSN-style). Each maps to a
 // keyword bundle; the feed then shows stories matching ANY selected topic.
 const TOPICS: { key: string; label: string; kw: string[] }[] = [
   { key: "israel_me", label: "Israel & Middle East", kw: ["israel", "gaza", "hamas", "hezbollah", "iran", "idf", "netanyahu", "west bank", "lebanon", "syria", "palestinian"] },
@@ -201,7 +201,7 @@ export default function NewsRoomPage() {
           <h1 className="font-display text-2xl font-bold">News <span className="gradient-text">Room</span></h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          Your news, in English — from every source TruthLens is connected to (your{" "}
+          Your news, in English - from every source TruthLens is connected to (your{" "}
           <Link href="/connections" className="text-brand-soft hover:underline">Connections feeds</Link>{" "}
           + built-in news APIs). Related articles are grouped into stories; every card links to the original.
         </p>
@@ -212,7 +212,7 @@ export default function NewsRoomPage() {
         <div className="mb-2 flex items-center gap-2">
           <Star className="h-4 w-4 text-brand-soft" />
           <span className="text-sm font-semibold text-ink">Your interests</span>
-          <span className="text-[11px] text-ink-muted">— pick topics to personalize your feed{interests.length ? ` · ${interests.length} selected` : " (showing everything)"}</span>
+          <span className="text-[11px] text-ink-muted">- pick topics to personalize your feed{interests.length ? ` · ${interests.length} selected` : " (showing everything)"}</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {TOPICS.map((t) => {
@@ -233,7 +233,7 @@ export default function NewsRoomPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
             <input
               value={q} onChange={(e) => setQ(e.target.value)} dir="auto"
-              placeholder="Search a topic across all sources — e.g. Gaza ceasefire, elections, sanctions"
+              placeholder="Search a topic across all sources - e.g. Gaza ceasefire, elections, sanctions"
               className="w-full rounded-xl border border-white/15 bg-bg-elev py-2 pl-9 pr-3 text-sm outline-none focus:border-brand"
             />
           </div>
@@ -246,13 +246,13 @@ export default function NewsRoomPage() {
           <label className="block">
             <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Keywords</span>
             <input value={keywords} onChange={(e) => setKeywords(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") apply(); }}
-              placeholder="comma-separated — e.g. sanctions, ceasefire, election"
+              placeholder="comma-separated - e.g. sanctions, ceasefire, election"
               className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
           </label>
           <label className="block">
             <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Countries</span>
             <input value={countries} onChange={(e) => setCountries(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") apply(); }}
-              placeholder="comma-separated — e.g. Israel, Ukraine, Iran"
+              placeholder="comma-separated - e.g. Israel, Ukraine, Iran"
               className="w-full rounded-xl border border-white/15 bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand" />
           </label>
         </div>
@@ -272,12 +272,12 @@ export default function NewsRoomPage() {
         </div>
         {data?.translation && !data.translation.available && (
           <p className="inline-flex items-center gap-1 text-xs text-yellow-200/80">
-            <Languages className="h-3.5 w-3.5" /> Translation is off (ANTHROPIC_API_KEY not configured) — headlines show in their original language.
+            <Languages className="h-3.5 w-3.5" /> Translation is off (ANTHROPIC_API_KEY not configured) - headlines show in their original language.
           </p>
         )}
         {!q && connectedFeeds && !connectedFeeds.connected && (
           <p className="inline-flex items-center gap-1 text-xs text-yellow-200/80">
-            <Rss className="h-3.5 w-3.5" /> No feeds connected yet — add news sites under{" "}
+            <Rss className="h-3.5 w-3.5" /> No feeds connected yet - add news sites under{" "}
             <Link href="/connections" className="underline">Connections</Link> to fill your front page.
           </p>
         )}

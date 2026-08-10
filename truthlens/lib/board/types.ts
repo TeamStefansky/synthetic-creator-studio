@@ -146,8 +146,8 @@ export interface Corroboration {
     significance: string;
     note: string;
   };
-  // What this scan did NOT look at — where the strongest "link" evidence usually
-  // lives — surfaced honestly rather than left implied (frozen rule 7).
+  // What this scan did NOT look at - where the strongest "link" evidence usually
+  // lives - surfaced honestly rather than left implied (frozen rule 7).
   notScanned: { area: string; why: string; where: string }[];
   summary: string;
 }

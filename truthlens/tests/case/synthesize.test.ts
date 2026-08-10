@@ -4,7 +4,7 @@ import { diffCases } from "../../lib/case/diff";
 import type { StrengthEdge } from "../../lib/case/cluster";
 import { ALL_FIXTURES } from "./fixtures/tool-outputs";
 
-describe("case synthesis — integration (P7)", () => {
+describe("case synthesis - integration (P7)", () => {
   it("headline calibration: only the GA pair clusters; mass-host pair and loner do not", () => {
     const entities = ["a.com", "b.com", "c.com", "d.com", "e.com"];
     const boardEdges: StrengthEdge[] = [

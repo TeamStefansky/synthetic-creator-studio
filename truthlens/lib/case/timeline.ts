@@ -2,7 +2,7 @@
 // chronological sequence with adaptive bucketing (minutes inside a burst, days
 // for infrastructure events), every entry keeping its tier badge. Computes the
 // earliest observed appearance per entity and per CLAIM (claim identity via
-// lib/case/claim-identity, not string equality). Never says "origin" — only
+// lib/case/claim-identity, not string equality). Never says "origin" - only
 // "earliest observed in collected data".
 
 import { usableLowerBound } from "./calibrate-time";
@@ -111,6 +111,6 @@ export function buildTimeline(ledger: Ledger): Timeline {
     entries,
     earliestByEntity,
     earliestByClaim,
-    note: `${entries.length} dated events; tiers preserved per entry. Earliest points are ${EARLIEST_OBSERVED_LABEL} — a statement about our collection, not about where a thing began.`,
+    note: `${entries.length} dated events; tiers preserved per entry. Earliest points are ${EARLIEST_OBSERVED_LABEL} - a statement about our collection, not about where a thing began.`,
   };
 }

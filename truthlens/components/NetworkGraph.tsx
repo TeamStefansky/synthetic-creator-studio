@@ -72,7 +72,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
   );
 
   // Spread the layout so nodes/labels don't pile up: stronger repulsion, longer
-  // links, and — crucially — a COLLISION force whose radius accounts for each
+  // links, and - crucially - a COLLISION force whose radius accounts for each
   // node's label width, so two labels can never occupy the same space. Without
   // this, force-graph only repels node *centres* and long labels still overlap.
   // Collision radius grows with the label so labels can't overlap; key nodes
@@ -138,7 +138,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         nodeColor={(n: any) => (n.flaggedFake ? STATUS.high : KIND_COLOR[n.kind] || TOKENS.textSecondary)}
         nodeCanvasObjectMode={() => "after"}
         nodeCanvasObject={(node: any, ctx: any, scale: number) => {
-          // Declutter: by default only the meaningful nodes are labelled — the
+          // Declutter: by default only the meaningful nodes are labelled - the
           // searched targets and the hosting operators (the connective tissue of
           // the investigation). Secondary nodes (IPs, sibling domains, ASNs) get
           // labels only when you zoom in past a threshold or hover them. Without
@@ -182,7 +182,7 @@ export default function NetworkGraph({ network }: { network: OperatorNetwork }) 
         <Legend color={KIND_COLOR.ga} label="GA id" />
         <Legend color={KIND_COLOR.adsense} label="AdSense id" />
         <Legend color={STATUS.high} label="Flagged fake" />
-        <span className="ml-auto text-ink-muted">Targets & operators are labelled — zoom in or hover to reveal the rest.</span>
+        <span className="ml-auto text-ink-muted">Targets & operators are labelled - zoom in or hover to reveal the rest.</span>
       </div>
 
       {/* Clickable domain links (tap-friendly; nodes are also clickable). */}

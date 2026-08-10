@@ -1,4 +1,4 @@
-// Background-jobs model — pure, deterministic helpers for the client-side job
+// Background-jobs model - pure, deterministic helpers for the client-side job
 // store. Kept separate from the singleton so the reducer logic is unit-testable
 // with no DOM. A "job" is a scan the user started that keeps running even after
 // they navigate to another tool.
@@ -48,7 +48,7 @@ export function runningCount(list: Job[]): number {
   return list.filter((j) => j.status === "running").length;
 }
 
-/** Only finished jobs are safe to persist across a full page reload — a running
+/** Only finished jobs are safe to persist across a full page reload - a running
  * fetch cannot survive one, so we never rehydrate a stale "running" (rule 7:
  * never fake capability). */
 export function persistable(list: Job[]): Job[] {

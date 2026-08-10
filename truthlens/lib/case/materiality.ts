@@ -1,7 +1,7 @@
 // Materiality classification (layer 04 · P1). Every diff item lands in exactly one
 // tier. Only Structural and Interpretive alert; Evidential accumulates into the
 // digest; Cosmetic never reaches the diff feed. The unit of change is the
-// conclusion, not the evidence — a re-observed fact or an advanced crawl time is
+// conclusion, not the evidence - a re-observed fact or an advanced crawl time is
 // Cosmetic no matter how much the ledger churned.
 
 export const MATERIALITY_VERSION = "case-materiality-v1";

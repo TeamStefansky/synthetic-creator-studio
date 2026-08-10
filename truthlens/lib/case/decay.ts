@@ -1,5 +1,5 @@
 // Evidence decay + regression alerts (layer 04 · P4). Sources die and, worse,
-// silently change. Handle both as STATE TRANSITIONS, never deletion — the audit
+// silently change. Handle both as STATE TRANSITIONS, never deletion - the audit
 // trail is the product's integrity.
 //   404/410/DNS + archive  -> archived-only (strength unchanged; the fact was captured)
 //   404/410/DNS, no archive -> lost
@@ -7,7 +7,7 @@
 //     new record created for the current bytes; a Structural alert names the
 //     conclusions that relied on the old version.
 // A conclusion resting SOLELY on lost evidence is downgraded and emits exactly one
-// regression alert — an analyst who already acted needs the picture-got-weaker.
+// regression alert - an analyst who already acted needs the picture-got-weaker.
 
 import type { Cluster } from "./cluster";
 import type { EvidenceItem, EvidenceState } from "./types";
@@ -84,7 +84,7 @@ export function regressionsFromLost(clusters: Cluster[], lostEvidenceIds: Set<st
       out.push({
         clusterId: c.id,
         members: c.members,
-        alert: `Regression: cluster ${c.members.join(", ")} rested solely on now-lost evidence — confidence downgraded from ${c.confidence}. Could also be: the source moved; the link may still hold but is no longer verifiable.`,
+        alert: `Regression: cluster ${c.members.join(", ")} rested solely on now-lost evidence - confidence downgraded from ${c.confidence}. Could also be: the source moved; the link may still hold but is no longer verifiable.`,
       });
     }
   }

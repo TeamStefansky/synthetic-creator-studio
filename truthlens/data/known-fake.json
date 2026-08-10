@@ -1,5 +1,5 @@
 {
-  "_comment": "Seed list of well-documented hoax / disinformation / fabricated-news / impersonation domains, drawn from public fact-checker and academic write-ups of fake-news sites (Snopes, PolitiFact, FactCheck.org, academic disinfo datasets). These are illustrative starting points — treat as a seed and curate for your own policy. A match (directly, or via shared IP / ad-id / SAN) is a strong risk signal. Some entries are defunct but remain useful for historical/forensic matching.",
+  "_comment": "Seed list of well-documented hoax / disinformation / fabricated-news / impersonation domains, drawn from public fact-checker and academic write-ups of fake-news sites (Snopes, PolitiFact, FactCheck.org, academic disinfo datasets). These are illustrative starting points - treat as a seed and curate for your own policy. A match (directly, or via shared IP / ad-id / SAN) is a strong risk signal. Some entries are defunct but remain useful for historical/forensic matching.",
   "domains": [
     "infowars.com",
     "naturalnews.com",

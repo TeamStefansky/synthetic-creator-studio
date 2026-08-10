@@ -1,4 +1,4 @@
-// THE INVESTIGATOR — agent runtime types (layer 05). The agent is a runtime, not
+// THE INVESTIGATOR - agent runtime types (layer 05). The agent is a runtime, not
 // a second analyst: it consumes lib/case/* and adds no analytic machinery. All
 // limits/ceilings live here and in authority.ts / budget.ts, versioned by
 // AGENT_POLICY_VERSION, stamped on every run and report.
@@ -12,7 +12,7 @@ export type StopCondition =
   | "diminishing_diagnosticity" | "stability" | "budget" | "ceiling" | "kill_switch" | "no_progress";
 
 export interface RunInit {
-  initiator: string;        // who started it — an unattributed run cannot start
+  initiator: string;        // who started it - an unattributed run cannot start
   scope: string;            // workspace scope; never global
   question: string;
   seedEntities: string[];   // the scope-lock contract

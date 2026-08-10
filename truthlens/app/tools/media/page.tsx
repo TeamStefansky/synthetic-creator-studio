@@ -1,6 +1,6 @@
 "use client";
 
-// Media Check — upload a video (or audio) you are authorized to inspect. The
+// Media Check - upload a video (or audio) you are authorized to inspect. The
 // BROWSER extracts evenly-spaced keyframes (<video>+<canvas>) and a small grayscale
 // sample for the persona fingerprint, then the server scores AI-generation /
 // deepfake and (hedged, public-figures-only) likeness. No platform download/scrape;
@@ -74,7 +74,7 @@ async function extractFrames(
     frameSamples.push(graySample());
   }
   // Persona sample: the middle frame's grayscale (crop/compression-robust DCT
-  // hash is computed server-side — one tested hashing path).
+  // hash is computed server-side - one tested hashing path).
   const personaSample = frameSamples[Math.floor(frameSamples.length / 2)] ?? [];
   URL.revokeObjectURL(url);
   return { frames, personaSample, frameSamples };
@@ -117,7 +117,7 @@ export default function MediaCheckPage() {
         <h1 className="font-display text-2xl font-bold">Media <span className="gradient-text">Check</span></h1>
       </div>
       <p className="mt-2 text-sm text-ink-secondary">
-        Upload a video you are authorized to inspect. We sample keyframes in your browser and check for AI-generation, deepfake/impersonation, and (hedged, public figures only) likeness — with a persona fingerprint to spot the same synthetic face across clips.
+        Upload a video you are authorized to inspect. We sample keyframes in your browser and check for AI-generation, deepfake/impersonation, and (hedged, public figures only) likeness - with a persona fingerprint to spot the same synthetic face across clips.
       </p>
 
       <div className="card mt-5">
@@ -137,7 +137,7 @@ export default function MediaCheckPage() {
           {loading ? "Analyzing…" : "Upload a video"}
         </button>
         {fileName && <span className="ml-3 text-xs text-ink-secondary">{fileName}</span>}
-        <p className="mt-2 text-[11px] text-ink-secondary">Only analyze media you own or are authorized to test. Frames are extracted locally in your browser; the file itself is not uploaded — only sampled frames.</p>
+        <p className="mt-2 text-[11px] text-ink-secondary">Only analyze media you own or are authorized to test. Frames are extracted locally in your browser; the file itself is not uploaded - only sampled frames.</p>
       </div>
 
       {error && <div className="card mt-4 border-risk-high/30 text-sm text-risk-high">{error}</div>}
@@ -184,7 +184,7 @@ export default function MediaCheckPage() {
                 <div className="flex items-center gap-2 text-xs text-ink-secondary">
                   <Fingerprint className="h-3.5 w-3.5" />
                   Persona fingerprint: <code className="font-mono text-ink">{result.personaFingerprint}</code>
-                  <span className="text-ink-faint">— matches the same synthetic face across clips carrying this hash.</span>
+                  <span className="text-ink-faint">- matches the same synthetic face across clips carrying this hash.</span>
                 </div>
               )}
               {result.evidence.length > 0 && <p className="text-sm text-ink-soft">{result.evidence.join(" ")}</p>}
@@ -196,13 +196,13 @@ export default function MediaCheckPage() {
 
       <div className="mt-6">
         <ToolIntro
-          what={<>Upload a video (or a screen-recording of one). Your browser samples evenly-spaced frames and a small fingerprint, then we score whether the footage looks <span className="text-ink">AI-generated</span> or a <span className="text-ink">face-swap/impersonation deepfake</span>, and flag if it <span className="text-ink">appears to depict a public figure</span> (hedged — public figures only, never a private person). The <span className="text-ink">persona fingerprint</span> lets you spot the same synthetic face reused across many clips.</>}
+          what={<>Upload a video (or a screen-recording of one). Your browser samples evenly-spaced frames and a small fingerprint, then we score whether the footage looks <span className="text-ink">AI-generated</span> or a <span className="text-ink">face-swap/impersonation deepfake</span>, and flag if it <span className="text-ink">appears to depict a public figure</span> (hedged - public figures only, never a private person). The <span className="text-ink">persona fingerprint</span> lets you spot the same synthetic face reused across many clips.</>}
           steps={[
             <>Press <span className="text-ink">Upload a video</span> and pick a file you are authorized to inspect.</>,
             <>Frames are extracted <span className="text-ink">in your browser</span> and scored server-side.</>,
-            <>Read the AI/deepfake likelihood with its confidence — and always its alternative.</>,
+            <>Read the AI/deepfake likelihood with its confidence - and always its alternative.</>,
           ]}
-          note="Needs ANTHROPIC_API_KEY for the vision assessment; without it the tool shows a visible 'not connected' state. It never downloads from a platform — only media you upload."
+          note="Needs ANTHROPIC_API_KEY for the vision assessment; without it the tool shows a visible 'not connected' state. It never downloads from a platform - only media you upload."
         />
       </div>
     </div>

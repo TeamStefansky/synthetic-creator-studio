@@ -1,4 +1,4 @@
-// Early-Warning Radar API — forecasts narrative-escalation risk for a watch term
+// Early-Warning Radar API - forecasts narrative-escalation risk for a watch term
 // from its recent PUBLIC signal history (keyless: Wikipedia attention + GDELT
 // tone via lib/signal-context). The forecast is computed deterministically
 // (lib/forecast/radar) and cached briefly for reproducibility. Honest

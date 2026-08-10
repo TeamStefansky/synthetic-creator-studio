@@ -45,7 +45,7 @@ describe("case timeline + claim identity (P2)", () => {
     ], "2026-07-20T00:00:00Z").items;
     const tl = buildTimeline({ items, byId: Object.fromEntries(items.map((i) => [i.id, i])) });
     expect(tl.earliestByClaim).toHaveLength(1);
-    // the timeline is descriptive only — it asserts no coordination/edge field
+    // the timeline is descriptive only - it asserts no coordination/edge field
     expect((tl as any).coordination).toBeUndefined();
     expect((tl as any).edges).toBeUndefined();
   });

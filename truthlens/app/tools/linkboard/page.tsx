@@ -27,7 +27,7 @@ const CELL: Record<ConfidenceLevel, { bg: string; label: string }> = {
   High: { bg: "rgba(169,139,240,0.85)", label: "Strong" },
   Medium: { bg: "rgba(169,139,240,0.45)", label: "Moderate" },
   Low: { bg: "rgba(169,139,240,0.18)", label: "Weak" },
-  Unknown: { bg: "transparent", label: "—" },
+  Unknown: { bg: "transparent", label: "-" },
 };
 
 function EdgeCard({ edge }: { edge: PairEdge }) {
@@ -51,7 +51,7 @@ function EdgeCard({ edge }: { edge: PairEdge }) {
       {open && (
         <div className="mt-3 space-y-2 border-t border-white/5 pt-3">
           {strong.length === 0 && (
-            <p className="text-xs text-ink-secondary">Only common-by-default overlaps below — informational, they don&apos;t establish a link.</p>
+            <p className="text-xs text-ink-secondary">Only common-by-default overlaps below - informational, they don&apos;t establish a link.</p>
           )}
           {strong.map((it, i) => (
             <div key={i} className="rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
@@ -79,7 +79,7 @@ function EdgeCard({ edge }: { edge: PairEdge }) {
                   {weak.map((it, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-ink-secondary">
                       <span className="mt-0.5 rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">{CELL[it.strength].label}</span>
-                      <span><span className="text-ink">{it.display}</span> — {it.alternative}</span>
+                      <span><span className="text-ink">{it.display}</span> - {it.alternative}</span>
                     </div>
                   ))}
                 </div>
@@ -293,7 +293,7 @@ export default function LinkBoardPage() {
                 </div>
                 {visible.length === 0 ? (
                   <div className="card text-sm text-ink-secondary">
-                    No pair shares a discriminating artifact — only common-by-default facts (which don&apos;t establish a link).
+                    No pair shares a discriminating artifact - only common-by-default facts (which don&apos;t establish a link).
                     {commonOnly > 0 && <> Use &ldquo;Show {commonOnly} pair(s)&rdquo; above to see them anyway, labeled as common.</>} That is a valid, common result.
                   </div>
                 ) : (
@@ -341,7 +341,7 @@ export default function LinkBoardPage() {
                   </ul>
                 </div>
               )}
-              <p className="mt-2 text-[11px] text-ink-secondary">Org-level, cited. Co-hosting is context, not guilt. Named officers are official public-record disclosure — never inferred, never a verdict.</p>
+              <p className="mt-2 text-[11px] text-ink-secondary">Org-level, cited. Co-hosting is context, not guilt. Named officers are official public-record disclosure - never inferred, never a verdict.</p>
             </div>
           )}
 

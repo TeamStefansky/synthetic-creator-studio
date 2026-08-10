@@ -5,7 +5,7 @@
 import type { EvidenceOutcome } from "./negative";
 import type { Ledger } from "./types";
 
-// Platforms we do not ingest — their absence is a coverage gap, never a finding.
+// Platforms we do not ingest - their absence is a coverage gap, never a finding.
 export const UNINGESTED_PLATFORMS = ["Telegram", "X", "Meta"] as const;
 
 export interface Gap {
@@ -28,8 +28,8 @@ export function buildGapsRegister(input: GapsInput): Gap[] {
     input.ledger.items.some((i) => i.entityKey === entityKey && i.kind === kind && i.state !== "superseded");
 
   for (const ek of input.entities) {
-    if (!has(ek, "domain_created")) gaps.push({ kind: "no_rdap", subject: ek, reason: "no RDAP/WHOIS creation date collected — no T1 lower bound for age/ordering" });
-    if (!has(ek, "archive_first_seen")) gaps.push({ kind: "no_archive", subject: ek, reason: "no archive coverage — cannot bound when it first appeared" });
+    if (!has(ek, "domain_created")) gaps.push({ kind: "no_rdap", subject: ek, reason: "no RDAP/WHOIS creation date collected - no T1 lower bound for age/ordering" });
+    if (!has(ek, "archive_first_seen")) gaps.push({ kind: "no_archive", subject: ek, reason: "no archive coverage - cannot bound when it first appeared" });
   }
 
   // Items that assert a value but carry no usable eventAt.
@@ -39,9 +39,9 @@ export function buildGapsRegister(input: GapsInput): Gap[] {
     }
   }
 
-  for (const ip of input.reverseIpUnavailable || []) gaps.push({ kind: "reverse_ip_unavailable", subject: ip, reason: "reverse-IP neighbour count unavailable — shared-IP commonness could not be measured" });
-  for (const a of input.emptyAdapters || []) gaps.push({ kind: "empty_adapter", subject: a, reason: "adapter returned no evidence — source unavailable or nothing to collect" });
-  for (const p of UNINGESTED_PLATFORMS) gaps.push({ kind: "uningested_platform", subject: p, reason: "platform not ingested (out of scope) — a genuinely earlier/other instance may exist there" });
+  for (const ip of input.reverseIpUnavailable || []) gaps.push({ kind: "reverse_ip_unavailable", subject: ip, reason: "reverse-IP neighbour count unavailable - shared-IP commonness could not be measured" });
+  for (const a of input.emptyAdapters || []) gaps.push({ kind: "empty_adapter", subject: a, reason: "adapter returned no evidence - source unavailable or nothing to collect" });
+  for (const p of UNINGESTED_PLATFORMS) gaps.push({ kind: "uningested_platform", subject: p, reason: "platform not ingested (out of scope) - a genuinely earlier/other instance may exist there" });
 
   for (const o of input.outcomes || []) {
     if (o.type === "gap") gaps.push({ kind: "predicted_but_uncollected", subject: `${o.hypothesis}:${o.expectedKind}`, reason: o.reason });

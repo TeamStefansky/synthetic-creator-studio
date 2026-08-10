@@ -13,10 +13,10 @@ export interface SearchAttempt {
   id: string;
   hypothesis: HypothesisKind;   // the hypothesis that predicted this artifact
   expectedKind: EvidenceKind;
-  predicted: true;              // condition 1 — always true here (only predicted artifacts are searched)
-  searchCapable: boolean;      // condition 2 — right source/period/access, NOT truncated
-  coverageComplete: boolean;   // condition 3 — source reachable and complete for the window
-  found: boolean;              // condition 4 — the result
+  predicted: true;              // condition 1 - always true here (only predicted artifacts are searched)
+  searchCapable: boolean;      // condition 2 - right source/period/access, NOT truncated
+  coverageComplete: boolean;   // condition 3 - source reachable and complete for the window
+  found: boolean;              // condition 4 - the result
   where: string;               // provenance of the attempt
 }
 
@@ -32,8 +32,8 @@ export function classifyOutcome(a: SearchAttempt): EvidenceOutcome {
     return { type: "negative_evidence", hypothesis: a.hypothesis, expectedKind: a.expectedKind, where: a.where };
   }
   const reason = !a.searchCapable
-    ? "search not capable (wrong source/period/access or truncated) — absence carries no weight"
-    : "source not reachable/complete for the window — absence carries no weight";
+    ? "search not capable (wrong source/period/access or truncated) - absence carries no weight"
+    : "source not reachable/complete for the window - absence carries no weight";
   return { type: "gap", hypothesis: a.hypothesis, expectedKind: a.expectedKind, reason, where: a.where };
 }
 

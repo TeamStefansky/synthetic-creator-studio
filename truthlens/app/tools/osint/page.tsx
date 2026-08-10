@@ -1,6 +1,6 @@
 "use client";
 
-// OSINT — query-driven investigation. Write a QUERY (a domain, an ASN, a shared
+// OSINT - query-driven investigation. Write a QUERY (a domain, an ASN, a shared
 // AdSense/GA id, or a network name); the tool goes out and collects from every
 // live source (crt.sh CT logs, homepage trackers + reverse-lookup pivots,
 // documented host conduct, and a curated-watchlist match), then compiles the
@@ -47,7 +47,7 @@ export default function OsintPage() {
           <h1 className="font-display text-2xl font-bold">OSINT</h1>
         </div>
         <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
-          Write a query — a domain, an ASN, a shared AdSense/GA id, or a network name. The tool goes out, collects from
+          Write a query - a domain, an ASN, a shared AdSense/GA id, or a network name. The tool goes out, collects from
           every source that is live, and compiles the 14-section investigation report. Passive and open-source; attribution
           is organization/campaign-level with cited reporting, never a private individual.
         </p>
@@ -66,11 +66,11 @@ export default function OsintPage() {
       </div>
 
       {(error || jobError) && <div className="no-print card border-risk-high/30 text-sm text-risk-high">{error || jobError}</div>}
-      {loading && <div className="no-print card flex items-center gap-2 text-sm text-ink-secondary"><Loader2 className="h-4 w-4 animate-spin" /> Collecting in the background — you can switch tools; the report will be waiting here and in the scans tray.</div>}
+      {loading && <div className="no-print card flex items-center gap-2 text-sm text-ink-secondary"><Loader2 className="h-4 w-4 animate-spin" /> Collecting in the background - you can switch tools; the report will be waiting here and in the scans tray.</div>}
 
       {findings && (
         <div className="no-print card space-y-2">
-          <div className="label-muted">Collection log — query classified as {findings.kind}{findings.watchlist ? ` · watchlist: ${findings.watchlist}` : ""}</div>
+          <div className="label-muted">Collection log - query classified as {findings.kind}{findings.watchlist ? ` · watchlist: ${findings.watchlist}` : ""}</div>
           <ul className="space-y-0.5 text-[12px] text-ink-secondary">{(findings.log || []).map((l: string, i: number) => <li key={i}>· {l}</li>)}</ul>
           <div className="flex flex-wrap gap-1.5 pt-1">
             {(findings.toolsLive || []).map((t: string) => <span key={t} className="inline-flex items-center gap-1 rounded border border-risk-legit/30 px-1.5 py-0.5 text-[11px] text-risk-legit"><ShieldCheck className="h-3 w-3" />{t}</span>)}
@@ -98,7 +98,7 @@ export default function OsintPage() {
           what={<>One query in, a full investigation out. The tool classifies the seed, runs <span className="text-ink">crt.sh CT logs</span>, extracts <span className="text-ink">homepage trackers</span> and reverse-looks-them-up, checks <span className="text-ink">documented host conduct</span> and the <span className="text-ink">curated watchlist</span>, then compiles the 14-section, Admiralty-graded report.</>}
           steps={[
             <>Type a domain, ASN, shared AdSense/GA id, or network name.</>,
-            <>The tool collects from every live source — not-connected ones are shown honestly.</>,
+            <>The tool collects from every live source - not-connected ones are shown honestly.</>,
             <>Read (or print to PDF) the compiled report; confidence is derived from the evidence.</>,
           ]}
           note="Passive, open-source only. crt.sh is keyless and always on; reverse-lookup/passive-DNS pivots run the moment their provider keys are set. Confidence is computed in code, never by a model."

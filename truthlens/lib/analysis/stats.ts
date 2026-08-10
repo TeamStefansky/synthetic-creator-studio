@@ -1,15 +1,15 @@
-// lib/analysis/stats.ts — statistical inference primitives (the "mathematician").
+// lib/analysis/stats.ts - statistical inference primitives (the "mathematician").
 //
 // The governing rule of this whole layer: every quantity carries its uncertainty,
 // and fabricated precision is a bug. So each estimator here returns the estimate
-// AND its uncertainty (a confidence interval, or a p-value + n) — never a bare
+// AND its uncertainty (a confidence interval, or a p-value + n) - never a bare
 // point value. Small samples produce WIDE intervals, not confident-looking numbers;
 // that is the correct behavior, not a limitation.
 //
 // Pure, deterministic, no dependencies. Formulas are the textbook/standard methods,
 // cited inline. Validated against hand-computed values in stats.test.ts.
 //
-// This module never identifies a person or an actor — it quantifies rates,
+// This module never identifies a person or an actor - it quantifies rates,
 // differences, spikes and over-representation. Attribution stays forbidden by the
 // project rules regardless of how strong a statistic is.
 
@@ -37,7 +37,7 @@ export function gammaln(x: number): number {
   return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
 }
 
-/** error function erf(x) — Abramowitz & Stegun 7.1.26 (|error| < 1.5e-7). */
+/** error function erf(x) - Abramowitz & Stegun 7.1.26 (|error| < 1.5e-7). */
 export function erf(x: number): number {
   const sign = x < 0 ? -1 : 1;
   x = Math.abs(x);
@@ -216,10 +216,10 @@ export interface Interval {
 }
 
 /**
- * Wilson score interval for a binomial proportion — the correct interval for
+ * Wilson score interval for a binomial proportion - the correct interval for
  * "X% of accounts are …" claims on small samples (the naive Wald interval is
  * badly wrong for small n or extreme p). Returns a WIDE interval when n is small
- * — that width IS the uncertainty and must be shown.
+ * - that width IS the uncertainty and must be shown.
  */
 export function wilsonInterval(successes: number, n: number, level = 0.95): Interval {
   const p = n > 0 ? successes / n : NaN;
@@ -253,7 +253,7 @@ export function zScore(x: number, xs: number[]): number {
   return d.sd > 0 ? (x - d.mean) / d.sd : 0;
 }
 
-/** Robust z-score using median and MAD — resistant to the very outliers we hunt. */
+/** Robust z-score using median and MAD - resistant to the very outliers we hunt. */
 export function robustZ(x: number, xs: number[]): number {
   const d = describe(xs);
   return d.mad > 0 ? (x - d.median) / d.mad : 0;
@@ -268,7 +268,7 @@ export interface TailTest {
 
 /**
  * Poisson upper-tail test P(X >= k | λ) for a COUNT spike. Mention/post volumes are
- * counts, not Gaussian — a z-score on raw low counts overstates significance. Uses
+ * counts, not Gaussian - a z-score on raw low counts overstates significance. Uses
  * the identity P(X>=k;λ) = gammp(k, λ) (regularized lower incomplete gamma).
  */
 export function poissonTail(k: number, lambda: number): TailTest {
@@ -279,7 +279,7 @@ export function poissonTail(k: number, lambda: number): TailTest {
 
 /**
  * Negative-binomial upper tail for OVERDISPERSED counts (variance > mean), which
- * real volume series usually are — Poisson then under-states the p-value. `size`
+ * real volume series usually are - Poisson then under-states the p-value. `size`
  * (r) is the dispersion parameter estimated from mean m and variance v as
  * r = m²/(v−m); as v→m this converges to the Poisson tail.
  */
@@ -323,7 +323,7 @@ export function twoProportionTest(k1: number, n1: number, k2: number, n2: number
 }
 
 /**
- * Mann–Whitney U (Wilcoxon rank-sum), non-parametric — the right test for skewed
+ * Mann–Whitney U (Wilcoxon rank-sum), non-parametric - the right test for skewed
  * engagement distributions where a t-test's normality assumption fails. Normal
  * approximation with tie correction; rank-biserial correlation as effect size.
  */

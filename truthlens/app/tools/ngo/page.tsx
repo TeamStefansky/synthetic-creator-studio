@@ -9,7 +9,7 @@ import type { NgoAggregate, NgoRecord } from "@/lib/ngo";
 interface Result extends NgoAggregate { query: string; generatedAt: string }
 
 function money(n?: number, currency?: string): string {
-  if (typeof n !== "number") return "—";
+  if (typeof n !== "number") return "-";
   const sym = currency === "GBP" ? "£" : currency === "USD" ? "$" : "";
   if (Math.abs(n) >= 1e9) return `${sym}${(n / 1e9).toFixed(1)}B`;
   if (Math.abs(n) >= 1e6) return `${sym}${(n / 1e6).toFixed(1)}M`;

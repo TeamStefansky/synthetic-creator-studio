@@ -9,7 +9,7 @@ import { Terminal, KeyRound, ShieldCheck } from "lucide-react";
 import Disclaimer from "@/components/Disclaimer";
 
 const ENDPOINTS = [
-  { m: "GET", p: "/api/v1", d: "Discovery — endpoints, auth, enabled state (no key required)." },
+  { m: "GET", p: "/api/v1", d: "Discovery - endpoints, auth, enabled state (no key required)." },
   { m: "GET", p: "/api/v1/origin-exposure?domain=example.com", d: "Passive origin-exposure audit + documented host conduct." },
   { m: "GET", p: "/api/v1/radar?entity=some+term&horizon=7", d: "Early-warning narrative-escalation forecast." },
   { m: "GET", p: "/api/v1/host-conduct?asn=AS44925", d: "Documented, cited public-record conduct for a host/ASN/operator." },
@@ -34,7 +34,7 @@ export default function DevelopersPage() {
         </div>
         <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
           A programmatic REST API over the same engines the app uses. Every response is a decision-support
-          indicator with confidence + evidence + an alternative — never a verdict, never a named private individual.
+          indicator with confidence + evidence + an alternative - never a verdict, never a named private individual.
         </p>
       </div>
 
@@ -43,7 +43,7 @@ export default function DevelopersPage() {
           <ShieldCheck className={`h-4 w-4 ${enabled ? "text-risk-legit" : "text-risk-unknown"}`} />
           {enabled == null ? "Checking API status…"
             : enabled ? "The API is enabled on this deployment."
-            : "The API is not enabled here — set TRUTHLENS_API_KEYS on the deployment to turn it on."}
+            : "The API is not enabled here - set TRUTHLENS_API_KEYS on the deployment to turn it on."}
         </div>
       </div>
 

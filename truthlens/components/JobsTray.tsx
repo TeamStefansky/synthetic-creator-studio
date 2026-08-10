@@ -1,6 +1,6 @@
 "use client";
 
-// Global background-jobs tray — a floating indicator (bottom-right) that shows
+// Global background-jobs tray - a floating indicator (bottom-right) that shows
 // scans still running and recently finished, from anywhere in the app. Because
 // the job store is a module singleton mounted here in the shell, a scan started
 // in one tool keeps running when you move to another, and its result is waiting

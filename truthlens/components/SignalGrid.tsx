@@ -569,7 +569,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
             <input
               className="sg-q" dir="auto" value={entity}
               onChange={(e) => setEntity(e.target.value)}
-              placeholder="Enter a brand or term — e.g. Wolt, Nike, Monday.com"
+              placeholder="Enter a brand or term - e.g. Wolt, Nike, Monday.com"
               autoComplete="off" aria-label="Brand or term to scan"
             />
             <button className="sg-go" type="submit" disabled={loading || entity.trim().length < 2}>
@@ -822,7 +822,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
             <div className="sg-trendhud">
               <div className="sg-trendhud-h">TREND VECTORS</div>
               {!context ? (
-                <div className="sg-trendhud-empty">Not connected — no trend series for this scan.</div>
+                <div className="sg-trendhud-empty">Not connected - no trend series for this scan.</div>
               ) : (
                 context.signals.map((s: ContextSignal) => (
                   <div key={s.key} className="sg-trendhud-row">
@@ -860,7 +860,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
           )}
           {narrSel >= 0 && threads[narrSel] && (
             <button className="sg-threadbar" onClick={() => setNarrSel(-1)}>
-              THREAD «{threads[narrSel].name.toUpperCase()}» — {threads[narrSel].mentions.length} SIGNALS · CLEAR ✕
+              THREAD «{threads[narrSel].name.toUpperCase()}» - {threads[narrSel].mentions.length} SIGNALS · CLEAR ✕
             </button>
           )}
 
@@ -869,7 +869,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <h1>GLOBAL MENTION GRID</h1>
               <div className="sg-big">AWAITING TARGET</div>
               <div className="sg-hint">
-                Type a brand above and press SCAN — TruthLens sweeps connected public sources
+                Type a brand above and press SCAN - TruthLens sweeps connected public sources
                 <br />and plots who is talking, where, across the open web.
               </div>
             </div>
@@ -941,7 +941,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
 
           {error && (
             <div className="sg-err" style={{ display: "block" }}>
-              Scan failed ({error}). Public sources may be throttling — press SCAN to retry.
+              Scan failed ({error}). Public sources may be throttling - press SCAN to retry.
             </div>
           )}
         </div>
@@ -961,13 +961,13 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <div className="sg-ph sg-sub"><i style={{ background: "var(--sg-pos)" }} />SENTIMENT</div>
               <div className="sg-gauge">
                 {!data ? (
-                  <div className="sg-empty" style={{ padding: 0 }}>—</div>
+                  <div className="sg-empty" style={{ padding: 0 }}>-</div>
                 ) : !data.sentiment ? (
                   <div className="sg-empty" style={{ padding: 0 }}>Not requested for this scan.</div>
                 ) : !data.sentiment.available ? (
-                  <div className="sg-empty" style={{ padding: 0 }}>Not connected — {data.sentiment.reason}</div>
+                  <div className="sg-empty" style={{ padding: 0 }}>Not connected - {data.sentiment.reason}</div>
                 ) : data.sentiment.score === null ? (
-                  <div className="sg-empty" style={{ padding: 0 }}>Unknown — no mention could be labeled.</div>
+                  <div className="sg-empty" style={{ padding: 0 }}>Unknown - no mention could be labeled.</div>
                 ) : (
                   <>
                     <div className="sg-gval" style={{
@@ -1003,7 +1003,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               </div>
               <div>
                 {!data ? (
-                  <div className="sg-empty">—</div>
+                  <div className="sg-empty">-</div>
                 ) : geoRows.length === 0 ? (
                   <div className="sg-empty">No source reported a country in this view.</div>
                 ) : (
@@ -1019,7 +1019,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                       <div className="sg-geocities">
                         {g.items.slice(0, 4).map((it, i) => (
                           <span key={i}>
-                            <em dir="auto">{outletName(it.source, it.account)}</em> — {it.source}
+                            <em dir="auto">{outletName(it.source, it.account)}</em> - {it.source}
                             {i < Math.min(3, g.items.length - 1) ? <br /> : null}
                           </span>
                         ))}
@@ -1040,7 +1040,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               </div>
               <div>
                 {!data ? (
-                  <div className="sg-empty">—</div>
+                  <div className="sg-empty">-</div>
                 ) : (
                   anomalies.map((a) => (
                     <div key={a.key} className="sg-trend">
@@ -1067,7 +1067,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <div className="sg-ph sg-sub"><i style={{ background: "var(--sg-cat-forum)" }} />TREND VECTORS</div>
               <div>
                 {!context ? (
-                  <div className="sg-empty">—</div>
+                  <div className="sg-empty">-</div>
                 ) : (
                   context.signals.map((s: ContextSignal) => (
                     <div key={s.key} className="sg-trend">
@@ -1083,7 +1083,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                             </span>
                           )}
                         </b>
-                        <span>{s.collected ? s.note : `Not collected — ${s.reason}`}</span>
+                        <span>{s.collected ? s.note : `Not collected - ${s.reason}`}</span>
                         {s.sourceUrl && (
                           <span><a href={s.sourceUrl} target="_blank" rel="noopener noreferrer">source ↗</a></span>
                         )}
@@ -1099,9 +1099,9 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <div className="sg-ph sg-sub"><i style={{ background: "var(--sg-cat-social)" }} />NARRATIVE THREADS</div>
               <div>
                 {!data ? (
-                  <div className="sg-empty">—</div>
+                  <div className="sg-empty">-</div>
                 ) : !data.narratives?.available ? (
-                  <div className="sg-empty">Not connected — {data.narratives?.reason || "narratives not requested."}</div>
+                  <div className="sg-empty">Not connected - {data.narratives?.reason || "narratives not requested."}</div>
                 ) : threads.length === 0 ? (
                   <div className="sg-empty">No threads found in the collected mentions.</div>
                 ) : (
@@ -1127,7 +1127,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <div className="sg-ph sg-sub"><i style={{ background: "var(--sg-cat-video)" }} />SIGNAL BY TYPE</div>
               <div style={{ padding: "10px 14px" }}>
                 {!data ? (
-                  <div className="sg-empty" style={{ padding: 0 }}>—</div>
+                  <div className="sg-empty" style={{ padding: 0 }}>-</div>
                 ) : (
                   data.byType.map((t) => (
                     <div key={t.type} className="sg-bar">
@@ -1147,7 +1147,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
               <div className="sg-ph sg-sub"><i style={{ background: "var(--sg-cat-social)" }} />MOST ACTIVE ACCOUNTS</div>
               <div>
                 {!data || data.talkers.length === 0 ? (
-                  <div className="sg-empty">—</div>
+                  <div className="sg-empty">-</div>
                 ) : (
                   data.talkers.map((t, i) => (
                     <div key={i} className="sg-talker">
@@ -1192,7 +1192,7 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                 <span key={i} className="sg-tk"><b>{e.date}</b><span dir="auto">{e.event}</span></span>
               ))
             ) : (
-              <span className="sg-tk">No dated events yet — run a scan.</span>
+              <span className="sg-tk">No dated events yet - run a scan.</span>
             )}
           </div>
         </div>

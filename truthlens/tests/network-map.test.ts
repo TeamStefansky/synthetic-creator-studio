@@ -227,7 +227,7 @@ describe("buildNetworkMap - clusters, core/bridge, overlays (P2)", () => {
   });
 });
 
-// P5: graph.ts enrichment — modularity Q of the partition + Brandes betweenness.
+// P5: graph.ts enrichment - modularity Q of the partition + Brandes betweenness.
 describe("buildNetworkMap - quantitative graph enrichment (P5)", () => {
   it("attaches modularity Q + betweenness on two clear coordinated clusters", () => {
     const A = "identical push text from cluster alpha about the relief funds scandal";

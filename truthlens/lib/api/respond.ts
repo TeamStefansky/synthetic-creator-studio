@@ -24,7 +24,7 @@ export function apiOptions() {
   return new NextResponse(null, { status: 204, headers: CORS });
 }
 
-/** Minute bucket for rate limiting — passed in so handlers stay pure-ish. */
+/** Minute bucket for rate limiting - passed in so handlers stay pure-ish. */
 function nowMinute(): number {
   return Math.floor(Date.now() / 60_000);
 }

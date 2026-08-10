@@ -1,6 +1,6 @@
-// OSINT watchlist — loads the operator-curated monitor rules (data/osint/
+// OSINT watchlist - loads the operator-curated monitor rules (data/osint/
 // watchlist.json) and resolves, honestly, which of each rule's tools are LIVE on
-// this deployment vs not configured (rule 7 — degraded coverage is disclosed,
+// this deployment vs not configured (rule 7 - degraded coverage is disclosed,
 // never hidden). Attribution is organization/campaign-level with cited public
 // reporting only; no private individuals (rule 1). Pure + testable.
 
@@ -31,10 +31,10 @@ export interface ResolvedRule extends WatchRule {
 /**
  * Tool availability. A tool is LIVE when it needs no key (keyless open source) or
  * when its env key is present; otherwise it is not_configured. The map is the one
- * place that knows what powers each selector — extend it as connectors are added.
+ * place that knows what powers each selector - extend it as connectors are added.
  */
 const TOOL_ENV: Record<string, string | null> = {
-  "crtsh.certs": null, // crt.sh CT logs — keyless, always live
+  "crtsh.certs": null, // crt.sh CT logs - keyless, always live
   "urlscan.search": "URLSCAN_API_KEY",
   "securitytrails.subdomains": "SECURITYTRAILS_API_KEY",
   "securitytrails.whois_history": "SECURITYTRAILS_API_KEY",
@@ -55,8 +55,8 @@ export function toolStatus(toolId: string, env: NodeJS.ProcessEnv = process.env)
 
 function coverageNote(live: string[], missing: string[]): string {
   if (missing.length === 0) return "Full tool coverage for this rule.";
-  if (live.length === 0) return `Degraded: no configured tools — free-source checks only (${missing.join(", ")} not configured).`;
-  return `Partial coverage: ${live.join(", ")} live; ${missing.join(", ")} not configured — free-source checks fill the gap.`;
+  if (live.length === 0) return `Degraded: no configured tools - free-source checks only (${missing.join(", ")} not configured).`;
+  return `Partial coverage: ${live.join(", ")} live; ${missing.join(", ")} not configured - free-source checks fill the gap.`;
 }
 
 /** Resolve one rule against the live tool set. Pure given `env`. */

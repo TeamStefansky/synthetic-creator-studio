@@ -64,7 +64,7 @@ describe("structured pluralism (06·P6)", () => {
   });
 });
 
-describe("audience analysis — segment level only (06·P6 ethics)", () => {
+describe("audience analysis - segment level only (06·P6 ethics)", () => {
   it("weights mismatches highest and never represents a named individual", () => {
     const a = analyzeAudience([
       { segment: "diaspora forum", register: "dated slang", mismatch: true, alternative: "a diaspora author explains the same signal" },

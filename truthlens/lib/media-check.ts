@@ -1,4 +1,4 @@
-// Media Check (video/audio deepfake & AI-persona analysis) — the pure core.
+// Media Check (video/audio deepfake & AI-persona analysis) - the pure core.
 //
 // The Graphika "Pundit by Prompt" gap: their whole investigation is VIDEO/AUDIO
 // (recurring AI personas across 154 channels, deepfakes of public figures). This
@@ -6,18 +6,18 @@
 // a perceptual PERSONA FINGERPRINT, and cross-clip clustering ("the same synthetic
 // face keeps appearing"). The vision-model calls live in the API route; frame
 // extraction happens in the browser (no server ffmpeg needed, and only media the
-// user is authorized to inspect — never a platform download / scrape).
+// user is authorized to inspect - never a platform download / scrape).
 //
 // Frozen rules: a headline is a BAND with confidence + an innocent alternative,
 // never a verdict; below the frame floor it returns `insufficient` (Unknown);
-// public-figure likeness is HEDGED and only for public figures — a private person
+// public-figure likeness is HEDGED and only for public figures - a private person
 // is never identified. No scrapers, no de-anonymization.
 
 import type { ConfidenceLevel } from "@/components/ConfidenceBadge";
 
 export const MEDIA_CHECK_VERSION = "media-check-v2";
 
-// Minimum analyzed frames before an aggregate is trustworthy — fewer → Insufficient
+// Minimum analyzed frames before an aggregate is trustworthy - fewer → Insufficient
 // (a one-frame "verdict" is fabricated precision).
 export const MIN_FRAMES = 3;
 
@@ -58,7 +58,7 @@ export interface MediaAssessment {
 /**
  * Average-hash a downscaled 8×8 grayscale sample (64 values, 0–255) into a 16-hex
  * (64-bit) fingerprint: each bit is 1 when the pixel is above the sample mean.
- * Deterministic and robust to re-encoding/scaling — so the same synthetic face
+ * Deterministic and robust to re-encoding/scaling - so the same synthetic face
  * yields a near-identical hash across clips. Returns "" for a malformed sample.
  */
 export function perceptualHash(gray: number[]): string {
@@ -76,7 +76,7 @@ export function perceptualHash(gray: number[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// DCT perceptual hash (pHash-style) — v2 fingerprint
+// DCT perceptual hash (pHash-style) - v2 fingerprint
 // ---------------------------------------------------------------------------
 
 /** Side of the grayscale sample the DCT hash expects (32×32 = 1024 values). */
@@ -89,7 +89,7 @@ export const DCT_SAMPLE_SIDE = 32;
  * comparable with hammingHex/clusterPersonas exactly like the v1 aHash.
  *
  * Why it beats the aHash: the low-frequency spectrum survives crops, scaling,
- * re-encoding and brightness/contrast changes that flip many aHash bits —
+ * re-encoding and brightness/contrast changes that flip many aHash bits -
  * uniform brightness shifts move only the DC term and contrast scaling
  * preserves every median comparison, so the hash is invariant to both by
  * construction. Returns "" for a malformed sample.
@@ -120,7 +120,7 @@ export function dctHash(gray: number[]): string {
       coef[u * K + v] = s;
     }
   }
-  // Median of the 63 AC coefficients (DC excluded — it is pure brightness).
+  // Median of the 63 AC coefficients (DC excluded - it is pure brightness).
   const ac = coef.slice(1).slice().sort((a, b) => a - b);
   const median = (ac[30] + ac[31]) / 2; // 63 values → average the middle pair
   // Comparison epsilon scaled to the spectrum: floating-point noise around
@@ -177,7 +177,7 @@ export interface PersonaCluster {
 
 /**
  * Cluster clips by persona fingerprint (union-find on Hamming ≤ threshold). Two
- * clips in one cluster carry the SAME recurring synthetic face/template — the
+ * clips in one cluster carry the SAME recurring synthetic face/template - the
  * Graphika "persona across N channels" signal. Deterministic; order-independent.
  */
 export function clusterPersonas(items: PersonaItem[], threshold = PERSONA_HAMMING_THRESHOLD): PersonaCluster[] {
@@ -209,10 +209,10 @@ export function clusterPersonas(items: PersonaItem[], threshold = PERSONA_HAMMIN
 // ---------------------------------------------------------------------------
 
 /** A shot whose consecutive-frame hash distances have a median at or below
- * this is treated as CONTINUOUS (same scene) — the baseline a spike needs. */
+ * this is treated as CONTINUOUS (same scene) - the baseline a spike needs. */
 export const TEMPORAL_STABLE_MEDIAN = 12;
 /** A consecutive-frame distance at or above this, inside a continuous shot,
- * is a spike — the "face flickers between frames" swap signature. */
+ * is a spike - the "face flickers between frames" swap signature. */
 export const TEMPORAL_SPIKE_DISTANCE = 20;
 /** Fewer frames than this → null (no aggregate from too little data). */
 export const TEMPORAL_MIN_FRAMES = 3;
@@ -233,7 +233,7 @@ export interface TemporalConsistency {
  * Frame-to-frame stability of perceptual fingerprints. A genuine continuous
  * shot drifts smoothly (small distances); a face-swap that momentarily fails
  * produces isolated large jumps inside an otherwise stable sequence. A video
- * with a HIGH median is simply an edit with scene cuts — that is NOT flagged
+ * with a HIGH median is simply an edit with scene cuts - that is NOT flagged
  * (the spike only means something against a stable baseline). Deterministic,
  * pure; never a verdict on its own.
  */
@@ -254,10 +254,10 @@ export function temporalConsistency(hashes: string[]): TemporalConsistency | nul
     spikes,
     unstable,
     note: unstable
-      ? `Frame fingerprints jump ${spikes} time(s) inside an otherwise stable shot (median distance ${median}) — a pattern face-swap flicker produces. Could also be a hard scene cut or a flash/transition.`
+      ? `Frame fingerprints jump ${spikes} time(s) inside an otherwise stable shot (median distance ${median}) - a pattern face-swap flicker produces. Could also be a hard scene cut or a flash/transition.`
       : stable
-        ? `Frame fingerprints are stable (median distance ${median}) — consistent with a continuous, unspliced shot.`
-        : `Frame fingerprints vary throughout (median distance ${median}) — an edited/multi-scene video; per-frame comparison is uninformative here.`,
+        ? `Frame fingerprints are stable (median distance ${median}) - consistent with a continuous, unspliced shot.`
+        : `Frame fingerprints vary throughout (median distance ${median}) - an edited/multi-scene video; per-frame comparison is uninformative here.`,
   };
 }
 
@@ -272,7 +272,7 @@ function clamp(n: number): number {
 /**
  * Aggregate per-frame scores into an overall AI/deepfake likelihood + a confidence
  * band. Confidence rises with more frames AND tighter agreement (low spread); below
- * MIN_FRAMES it is `insufficient` (Unknown) — never a confident number from one frame.
+ * MIN_FRAMES it is `insufficient` (Unknown) - never a confident number from one frame.
  */
 export function aggregateFrameScores(frames: FrameScore[]): {
   aiGeneratedLikelihood: number;
@@ -329,10 +329,10 @@ export function buildAssessment(
     manipulationTechniques: extras.manipulationTechniques ?? [],
     personaFingerprint: extras.personaFingerprint,
     alternative:
-      "AI-generation cues can also come from ordinary post-production, heavy compression, stock/stylized footage, or a legitimately labeled synthetic-media production — a high score is a lead to verify, not proof of a deceptive deepfake.",
+      "AI-generation cues can also come from ordinary post-production, heavy compression, stock/stylized footage, or a legitimately labeled synthetic-media production - a high score is a lead to verify, not proof of a deceptive deepfake.",
     evidence: extras.evidence ?? [],
     note: agg.insufficient
-      ? `Only ${agg.frames} frame(s) analyzed — need ≥ ${MIN_FRAMES} for an aggregate assessment.`
+      ? `Only ${agg.frames} frame(s) analyzed - need ≥ ${MIN_FRAMES} for an aggregate assessment.`
       : undefined,
   };
 }

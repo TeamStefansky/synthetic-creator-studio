@@ -1,7 +1,7 @@
 // OSINT tool. Gates: the installed watchlist loads with org/campaign-level
 // attribution and cited reporting (no private-person names, rule 1); keyless
 // tools are live and gated tools honestly not_configured (rule 7); the report
-// compiler enforces the template invariants — BLUF confidence == Section 10 (one
+// compiler enforces the template invariants - BLUF confidence == Section 10 (one
 // value), legal confidence word, org-level attribution, honest "Not assessed"
 // for missing sections; and the installed .md mirror matches the compiler
 // constant (no drift).
@@ -19,7 +19,7 @@ describe("watchlist install", () => {
     expect(ids).toEqual(["copycop-fingerprint", "io-apt-coresidence-tripwire", "paperwall-adsense-pivot", "pravda-new-subdomains"]);
   });
 
-  it("attribution is organization/campaign-level with cited reporting — never a private person", () => {
+  it("attribution is organization/campaign-level with cited reporting - never a private person", () => {
     for (const r of getRules()) {
       expect(r.reporting.length).toBeGreaterThan(0);
       // no bare personal names leaked into attribution (e.g. the CopyCop operator)
@@ -48,7 +48,7 @@ describe("watchlist install", () => {
   });
 });
 
-describe("report compiler — template invariants", () => {
+describe("report compiler - template invariants", () => {
   const base: ReportInput = {
     network_name: "Test Net", date: "2026-08-10", run_id: "r1", mode: "full",
     seed: "example.com", overall_confidence: "Moderate", cluster: "Portal Kombat (Pravda)",
@@ -59,7 +59,7 @@ describe("report compiler — template invariants", () => {
     const md = fillTemplate(base);
     expect(md).toContain("with Moderate confidence"); // BLUF (Section 1)
     expect(md).toContain("**Moderate confidence**"); // Section 10
-    // exactly one confidence word is used in both places — swap it and both move
+    // exactly one confidence word is used in both places - swap it and both move
     const high = fillTemplate({ ...base, overall_confidence: "High" });
     expect(high).toContain("with High confidence");
     expect(high).toContain("**High confidence**");
@@ -83,7 +83,7 @@ describe("report compiler — template invariants", () => {
 
   it("missing narrative sections render an honest 'Not assessed', tables an empty-row marker", () => {
     const md = fillTemplate(base);
-    expect(md).toMatch(/Not assessed — insufficient collection/);
+    expect(md).toMatch(/Not assessed - insufficient collection/);
     expect(md).toMatch(/no load-bearing rows/);
     expect(md).toContain("Fact and assessment are kept visibly separate");
   });

@@ -1,11 +1,11 @@
-// Evidence corroboration overlay (layer 07) — turns a calibrated Link Board result
+// Evidence corroboration overlay (layer 07) - turns a calibrated Link Board result
 // into a *defensible* one. It answers the questions the base rubric can reason about
 // but not measure, and that a careful analyst asks before calling an overlap a "link":
 //
-//   1. Prevalence — how many sites in the WORLD carry this exact id? (reverse-lookup)
-//   2. Recency    — is the shared id a deprecated UA- tag (weaker) or a current one?
-//   3. Null model — how likely is this overlap by pure chance? (analytic control)
-//   4. Coverage   — what wasn't scanned, where the strongest link evidence lives?
+//   1. Prevalence - how many sites in the WORLD carry this exact id? (reverse-lookup)
+//   2. Recency    - is the shared id a deprecated UA- tag (weaker) or a current one?
+//   3. Null model - how likely is this overlap by pure chance? (analytic control)
+//   4. Coverage   - what wasn't scanned, where the strongest link evidence lives?
 //
 // It is ADDITIVE and DOWN-ONLY: it never raises a base strength, only caps it when
 // corroboration is missing or refuting. Its own version stamp keeps it interpretable
@@ -43,27 +43,27 @@ export function applyCorroboration(
     case "ubiquitous":
       cap = "Low";
       notes.push(
-        `Shared by ${prevalence.count} sites worldwide — this is an agency/template deployment, ` +
+        `Shared by ${prevalence.count} sites worldwide - this is an agency/template deployment, ` +
           `not a link between these two. The overlap is near-meaningless.`,
       );
       break;
     case "many":
       cap = "Low";
-      notes.push(`Shared by ${prevalence.count} sites worldwide — too common to corroborate a link.`);
+      notes.push(`Shared by ${prevalence.count} sites worldwide - too common to corroborate a link.`);
       break;
     case "few":
       cap = "Medium";
-      notes.push(`Shared by only ${prevalence.count} sites worldwide — corroborating, but not conclusive.`);
+      notes.push(`Shared by only ${prevalence.count} sites worldwide - corroborating, but not conclusive.`);
       break;
     case "unique-pair":
       cap = "High";
-      notes.push(`Carried by only the compared sites — the strongest possible corroboration for this id.`);
+      notes.push(`Carried by only the compared sites - the strongest possible corroboration for this id.`);
       break;
     case "unknown":
     default:
       cap = "Medium";
       notes.push(
-        `Worldwide prevalence not measured — cannot claim a High-confidence link on a shared id ` +
+        `Worldwide prevalence not measured - cannot claim a High-confidence link on a shared id ` +
           `without knowing how many other sites carry it. Treated as uncorroborated.`,
       );
       break;
@@ -96,10 +96,10 @@ function distinctiveOverlaps(result: BoardResult): OverlapItem[] {
 
 function significanceText(p: number | null, n: number): string {
   if (n === 0 || p == null) return "No distinctive shared ids to test against chance.";
-  if (p <= 1e-6) return `≈1 in ${Math.round(1 / p).toLocaleString()} by chance — far beyond coincidence.`;
-  if (p <= 1e-3) return `≈1 in ${Math.round(1 / p).toLocaleString()} by chance — unlikely to be coincidental.`;
-  if (p <= 5e-2) return `≈1 in ${Math.round(1 / p).toLocaleString()} by chance — modestly above coincidence.`;
-  return `≈${(p * 100).toFixed(0)}% expected by chance — consistent with coincidence.`;
+  if (p <= 1e-6) return `≈1 in ${Math.round(1 / p).toLocaleString()} by chance - far beyond coincidence.`;
+  if (p <= 1e-3) return `≈1 in ${Math.round(1 / p).toLocaleString()} by chance - unlikely to be coincidental.`;
+  if (p <= 5e-2) return `≈1 in ${Math.round(1 / p).toLocaleString()} by chance - modestly above coincidence.`;
+  return `≈${(p * 100).toFixed(0)}% expected by chance - consistent with coincidence.`;
 }
 
 const NULL_HYPOTHESIS = {
@@ -109,7 +109,7 @@ const NULL_HYPOTHESIS = {
     "non-generic certificate / mail host / nameserver, or a shared registrant in historical WHOIS.",
   ifUnrelated:
     "If the two sites were unrelated, we would still expect them to share commodity infrastructure " +
-    "(Cloudflare, a popular registrar, nginx, WordPress) and possibly an agency-wide tracker id — " +
+    "(Cloudflare, a popular registrar, nginx, WordPress) and possibly an agency-wide tracker id - " +
     "none of which distinguishes a link from coincidence.",
 };
 
@@ -117,7 +117,7 @@ const NOT_SCANNED = [
   {
     area: "Social platforms (Telegram, X/Twitter, Meta)",
     why:
-      "Shared admins, cross-posting and coordinated amplification usually live here — often the " +
+      "Shared admins, cross-posting and coordinated amplification usually live here - often the " +
       "strongest link signal. Reachable only via official platform APIs; never scraped.",
     where: "Brand Watch · SIGNAL Grid (when official platform API keys are connected)",
   },
@@ -125,7 +125,7 @@ const NOT_SCANNED = [
     area: "Organizational filings & funding",
     why:
       "Shared officers, board members or funders outweigh any shared server. Available only from " +
-      "official public records, cited, at the organization level — never inferred here, never a graph node.",
+      "official public records, cited, at the organization level - never inferred here, never a graph node.",
     where: "Sanctions Screening · Nonprofit Registry (990 / registry filings) · foreign-agent registries",
   },
   {
@@ -180,9 +180,9 @@ export async function buildCorroboration(
   const capped = artifacts.filter((a) => ORDER[a.effectiveStrength] < ORDER[a.baseStrength]).length;
   const summary =
     distinctive.length === 0
-      ? "No account-scoped shared ids were found among the compared sites. Infrastructure overlap alone caps at 'common operation' — the strongest link evidence would come from the areas not scanned below."
+      ? "No account-scoped shared ids were found among the compared sites. Infrastructure overlap alone caps at 'common operation' - the strongest link evidence would come from the areas not scanned below."
       : providers.length === 0
-        ? `${lookupable.length} account-scoped shared id(s) found, but reverse-lookup is not connected — their worldwide prevalence is unmeasured, so none can be called a High-confidence link yet. ${capped} were capped pending prevalence.`
+        ? `${lookupable.length} account-scoped shared id(s) found, but reverse-lookup is not connected - their worldwide prevalence is unmeasured, so none can be called a High-confidence link yet. ${capped} were capped pending prevalence.`
         : `${lookupable.length} account-scoped shared id(s) measured against worldwide prevalence; ${capped} were down-tiered as too common or unmeasured.`;
 
   return {

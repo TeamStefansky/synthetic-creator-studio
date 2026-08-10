@@ -1,4 +1,4 @@
-// OSINT pivot adapters — pure helpers. Gates: host normalization strips
+// OSINT pivot adapters - pure helpers. Gates: host normalization strips
 // scheme/port/*./www; dedupe is stable + capped; provider parsers read their
 // real response shapes; adaptersForKind routes tracker ids vs domains; a pivot
 // with no keys returns honest not-connected for every provider (rule 7).

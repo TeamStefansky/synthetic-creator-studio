@@ -19,7 +19,7 @@ describe("graph algorithms (P3)", () => {
   });
 });
 
-describe("clusters — the anti-conspiracy-wall guards (P3)", () => {
+describe("clusters - the anti-conspiracy-wall guards (P3)", () => {
   it("weak edges never join two components", () => {
     const edges: StrengthEdge[] = [
       { a: "A", b: "B", strength: "Medium" }, // forms {A,B}
@@ -62,7 +62,7 @@ describe("clusters — the anti-conspiracy-wall guards (P3)", () => {
   });
 });
 
-describe("propagation path — direction matrix + coverage cap (P3)", () => {
+describe("propagation path - direction matrix + coverage cap (P3)", () => {
   const inst = (id: string, at: string | undefined, tier: any): PathInstance =>
     ({ id, claimId: "claim1", entity: id, time: eventTime(at, tier) });
 

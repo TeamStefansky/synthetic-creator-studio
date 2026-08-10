@@ -108,7 +108,7 @@ export async function tracePropagation(
   const coordinatedAmplification = overlap >= 2 || hits.length >= 8;
 
   // P5 (additive): model the republication timeline as dynamics (growth fit +
-  // change-point). `Insufficient` when too few dated hits — never a trend from a
+  // change-point). `Insufficient` when too few dated hits - never a trend from a
   // handful of points. The existing fields are unchanged.
   const datedMs = hits
     .map((h) => (h.publishedAt ? Date.parse(h.publishedAt) : NaN))

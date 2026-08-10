@@ -1,18 +1,18 @@
-// lib/analysis/dynamics.ts — spread & time-series (the "physicist").
+// lib/analysis/dynamics.ts - spread & time-series (the "physicist").
 //
 // Turns a chronological propagation/volume trace into modeled dynamics, each with a
-// fit-quality figure and an explicit `insufficient` flag below its data floor — a
+// fit-quality figure and an explicit `insufficient` flag below its data floor - a
 // three-point "trend" is a defect, not a result. Distinguishes the core physics of
 // an influence campaign (externally injected / self-exciting) from an organic event.
 //
 // Pure, deterministic (seeded PRNG for the change-point bootstrap). No dependencies.
-// Nothing here attributes to a person or state — it characterizes a curve.
+// Nothing here attributes to a person or state - it characterizes a curve.
 
 import { mulberry32 } from "./graph";
 
 export const DYNAMICS_VERSION = "analysis-dynamics-v1";
 
-// Data floors — below these, a method returns `insufficient` rather than a number.
+// Data floors - below these, a method returns `insufficient` rather than a number.
 export const GROWTH_MIN_POINTS = 5;
 export const HAWKES_MIN_EVENTS = 12;
 export const CHANGEPOINT_MIN_POINTS = 8;
@@ -61,7 +61,7 @@ function ols(x: number[], y: number[]): { a: number; b: number } {
 /**
  * Fit an exponential diffusion curve y = a·e^{bt} by OLS on log(y) (positive y),
  * reporting the doubling time and R² on the original scale. Returns `insufficient`
- * below GROWTH_MIN_POINTS — never a "trend" from a handful of points.
+ * below GROWTH_MIN_POINTS - never a "trend" from a handful of points.
  */
 export function fitExponential(t: number[], y: number[]): GrowthFit {
   const n = Math.min(t.length, y.length);

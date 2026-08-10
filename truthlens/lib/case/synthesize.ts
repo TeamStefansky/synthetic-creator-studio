@@ -1,5 +1,5 @@
 // Case synthesis orchestrator (layer 03 · P7). Composes every deterministic
-// layer — ledger, timeline, clusters, path, ACH, gaps, assumptions — into one
+// layer - ledger, timeline, clusters, path, ACH, gaps, assumptions - into one
 // CaseFile. No model here: the reconstruction (narrate.ts) is applied separately
 // and degrades to "not connected" without a key. Same inputs + versions =>
 // identical CaseFile apart from the snapshot timestamp.
@@ -107,9 +107,9 @@ function deriveBottomLine(clusters: Cluster[], ach: AchResult, ledger: Ledger, g
   const likelihood: Likelihood | "n/a" = !linked.length ? "n/a" : LIKELIHOOD_BY_CONFIDENCE[strongest];
 
   const summary = !linked.length
-    ? "No connection is established beyond common-by-default infrastructure — a valid, common result."
+    ? "No connection is established beyond common-by-default infrastructure - a valid, common result."
     : undetermined
-      ? "Competing explanations are within the tie threshold — undetermined. Showing evidence, not a verdict."
+      ? "Competing explanations are within the tie threshold - undetermined. Showing evidence, not a verdict."
       : `${linked.length} cluster(s) at ${rung} rung; strongest link ${strongest}. Likelihood and confidence are stated separately.`;
 
   return { leading, undetermined, likelihood, confidence, rung, summary };

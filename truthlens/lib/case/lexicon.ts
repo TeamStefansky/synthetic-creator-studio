@@ -1,19 +1,19 @@
 // Lexicon + rung ladder (layer 03 · P6). The load-bearing ethics control: language
 // may never exceed its recorded rung, and drift up the ladder between the evidence
-// section and the summary — the way a defensible report becomes an indefensible
-// headline — must be impossible by construction. Pure + deterministic.
+// section and the summary - the way a defensible report becomes an indefensible
+// headline - must be impossible by construction. Pure + deterministic.
 
 export const LEXICON_VERSION = "case-lexicon-v1";
 
 export type Rung = "association" | "common-operation" | "attribution";
 export const RUNG_RANK: Record<Rung, number> = { association: 1, "common-operation": 2, attribution: 3 };
 
-// Verbs of agency — attribution rung ONLY, and attribution additionally requires a
+// Verbs of agency - attribution rung ONLY, and attribution additionally requires a
 // completed deception assessment (enforced in narrate.ts).
 export const ATTRIBUTION_VERBS = /\b(coordinated|directed|funded|controlled|orchestrated|operated by|run by|managed by|backed by|sponsored by|state-sponsored)\b/i;
 // Common-operation language: same hands, without naming who.
 export const COMMON_OP_PHRASES = /\b(same (operator|party|group|hands|entity)|jointly (run|operated)|common control|under one operator)\b/i;
-// Association rung — the only verbs permitted there.
+// Association rung - the only verbs permitted there.
 export const ASSOCIATION_VERBS = /\b(shares?|is hosted alongside|hosted alongside|published identical content to|overlaps? with|is associated with)\b/i;
 
 // The rung a statement's LANGUAGE implies (the highest it reaches).
@@ -27,7 +27,7 @@ export function exceedsRung(text: string, recorded: Rung): boolean {
   return RUNG_RANK[rungOf(text)] > RUNG_RANK[recorded];
 }
 
-// The standard likelihood lexicon — the only permitted likelihood terms.
+// The standard likelihood lexicon - the only permitted likelihood terms.
 export const LIKELIHOOD_TERMS = [
   "almost no chance", "very unlikely", "unlikely", "roughly even chance",
   "likely", "very likely", "almost certain",

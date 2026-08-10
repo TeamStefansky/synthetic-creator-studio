@@ -1,4 +1,4 @@
-// OSINT research API — POST { query } → the orchestrator classifies it, collects
+// OSINT research API - POST { query } → the orchestrator classifies it, collects
 // from every live source (crt.sh, homepage trackers + reverse-lookup pivots,
 // documented host conduct, curated-watchlist match), and compiles the 14-section
 // report. Passive/open-source only; not-connected sources disclosed honestly.

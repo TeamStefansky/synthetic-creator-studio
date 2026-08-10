@@ -1,4 +1,4 @@
-// GET /api/v1/radar?entity=…&horizon=7&baseScore=50 — programmatic early-warning
+// GET /api/v1/radar?entity=…&horizon=7&baseScore=50 - programmatic early-warning
 // forecast. Keyless upstream (Wikipedia attention + GDELT tone); key-authed at
 // the API edge. Honest not-collected when no public series exists.
 

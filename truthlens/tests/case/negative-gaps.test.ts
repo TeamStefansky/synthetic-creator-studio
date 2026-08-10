@@ -10,7 +10,7 @@ const attempt = (over: Partial<SearchAttempt>): SearchAttempt => ({
   ...over,
 });
 
-describe("negative evidence vs. gap — the four-condition test (P4)", () => {
+describe("negative evidence vs. gap - the four-condition test (P4)", () => {
   it("an ADEQUATE search that finds nothing is negative evidence and scores against its hypothesis", () => {
     const o = classifyOutcome(attempt({ found: false, searchCapable: true, coverageComplete: true }));
     expect(o.type).toBe("negative_evidence");
@@ -18,7 +18,7 @@ describe("negative evidence vs. gap — the four-condition test (P4)", () => {
     expect(scoreContribution(o, "coincidence_null")).toBe(0); // not against others
   });
 
-  it("a TRUNCATED search (not capable) is a gap and scores zero — even for the predicting hypothesis", () => {
+  it("a TRUNCATED search (not capable) is a gap and scores zero - even for the predicting hypothesis", () => {
     const o = classifyOutcome(attempt({ found: false, searchCapable: false }));
     expect(o.type).toBe("gap");
     expect(scoreContribution(o, "same_operator")).toBe(0); // the defect this section prevents

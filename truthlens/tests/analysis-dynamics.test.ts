@@ -19,7 +19,7 @@ describe("growth fit", () => {
     expect(f.r2).toBeGreaterThan(0.99);
   });
 
-  it("returns Insufficient below the point floor — no trend from 3 points", () => {
+  it("returns Insufficient below the point floor - no trend from 3 points", () => {
     const f = fitExponential([0, 1, 2], [1, 2, 4]);
     expect(f.insufficient).toBe(true);
     expect(f.model).toBe("none");

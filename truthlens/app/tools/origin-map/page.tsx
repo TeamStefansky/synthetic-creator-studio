@@ -1,18 +1,18 @@
 "use client";
 
-// Origin Map — "where did this content come from?" on one geographic map.
+// Origin Map - "where did this content come from?" on one geographic map.
 // Composes THREE existing capabilities as toggleable layers, all fed by the
 // EXISTING APIs (called from the client; no new orchestration route needed):
-//   1. Geographic origin + spread — /api/mentions (geolocated observations),
+//   1. Geographic origin + spread - /api/mentions (geolocated observations),
 //      with the EARLIEST-observed point marked distinctly and carrying the
 //      mandatory rule-2 label, plus a time control for spread-over-time.
-//   2. Infrastructure origin (de-CDN) — /api/origin-exposure pins the resolved
+//   2. Infrastructure origin (de-CDN) - /api/origin-exposure pins the resolved
 //      server country/host, with confidence + evidence + an innocent alternative.
-//   3. Propagation graph — NetworkGraph over the amplifier domains (co-appearance),
+//   3. Propagation graph - NetworkGraph over the amplifier domains (co-appearance),
 //      and the origin infra network. Nodes are domains/infra only, never people.
 //
 // Honest throughout: a layer with no connected source / no data renders a visible
-// "not connected" / "no data" state — never a faked one (CLAUDE.md rules 2,3,7).
+// "not connected" / "no data" state - never a faked one (CLAUDE.md rules 2,3,7).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, ArrowRight, Server, Globe, Share2, Play, Pause, ExternalLink } from "lucide-react";
@@ -32,8 +32,8 @@ import {
 } from "@/lib/origin-map";
 import { recordSearch } from "@/lib/clues/record";
 
-const EARLIEST_RING = "#22D3EE"; // cyan — matches the influence-map "earliest" ring
-const INFRA_COLOR = "#F87171";   // red — resolved origin-server pins
+const EARLIEST_RING = "#22D3EE"; // cyan - matches the influence-map "earliest" ring
+const INFRA_COLOR = "#F87171";   // red - resolved origin-server pins
 
 type Layers = { geo: boolean; infra: boolean; propagation: boolean };
 
@@ -66,7 +66,7 @@ export default function OriginMapPage() {
     setMentionsErr(""); setReportErr("");
     setSelected(null); setT(1); setPlaying(false);
 
-    // Geographic layer — always (term, or the URL's domain as the term).
+    // Geographic layer - always (term, or the URL's domain as the term).
     const mentionsP = (async () => {
       try {
         const r = await fetch(`/api/mentions?entity=${encodeURIComponent(term)}`);
@@ -82,7 +82,7 @@ export default function OriginMapPage() {
       }
     })();
 
-    // Infrastructure layer — only when the input is a URL / domain.
+    // Infrastructure layer - only when the input is a URL / domain.
     const reportP = url
       ? (async () => {
           try {
@@ -134,7 +134,7 @@ export default function OriginMapPage() {
           ring: isEarliest ? EARLIEST_RING : undefined,
           label: outletName(m.source, m.account),
           title: isEarliest
-            ? `EARLIEST OBSERVED — ${EARLIEST_LABEL}\n${outletName(m.source, m.account)} · ${m.timestamp || "undated"}`
+            ? `EARLIEST OBSERVED - ${EARLIEST_LABEL}\n${outletName(m.source, m.account)} · ${m.timestamp || "undated"}`
             : `${outletName(m.source, m.account)} · ${m.country || "?"}${m.timestamp ? " · " + m.timestamp.slice(0, 10) : ""}`,
         });
       });
@@ -199,7 +199,7 @@ export default function OriginMapPage() {
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
           "Where did this content come from?" on one map. Enter a <span className="text-ink">topic/term</span> to plot
           geolocated observations and their spread, or a <span className="text-ink">URL/domain</span> to also pin the
-          resolved origin server behind a CDN. The earliest observed point is marked distinctly — and it is{" "}
+          resolved origin server behind a CDN. The earliest observed point is marked distinctly - and it is{" "}
           <span className="text-ink">not</span> a claim about the true source.
         </p>
       </div>
@@ -249,7 +249,7 @@ export default function OriginMapPage() {
       {!scanned && !loading && (
         <div className="card text-sm text-ink-secondary">
           Enter a term or URL above. TruthLens sweeps connected public sources, plots where the content was observed,
-          marks the earliest observation (labeled as observed, not the origin), and — for a URL — reveals the true
+          marks the earliest observation (labeled as observed, not the origin), and - for a URL - reveals the true
           server behind any CDN. Nothing is invented: a layer with no connected source shows an honest "not connected" state.
         </div>
       )}
@@ -269,7 +269,7 @@ export default function OriginMapPage() {
               {mentions !== null && totalGeo === 0 ? (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-ink-secondary">
                   {mentionsErr
-                    ? <>Mentions source not connected — {mentionsErr}.</>
+                    ? <>Mentions source not connected - {mentionsErr}.</>
                     : <>No geolocated observations of "{entity}" from the connected sources. This is a real "none observed" result, not an error.</>}
                 </div>
               ) : (
@@ -299,7 +299,7 @@ export default function OriginMapPage() {
                     </div>
                   )}
                   {!span && mentions && totalGeo > 0 && (
-                    <p className="text-xs text-ink-secondary">No timestamps on the geolocated observations — the time control is unavailable (shown honestly, not faked).</p>
+                    <p className="text-xs text-ink-secondary">No timestamps on the geolocated observations - the time control is unavailable (shown honestly, not faked).</p>
                   )}
 
                   {/* legend + earliest label (rule 2) */}
@@ -323,7 +323,7 @@ export default function OriginMapPage() {
                       <p className="mt-1 text-ink-secondary">
                         Marked in cyan on the map. <strong className="text-cyan-200/90">{EARLIEST_LABEL}.</strong> The
                         earliest item we collected can pre-date our collection window, sit behind a paywall, or have been
-                        syndicated — treat it as a lead to verify, not the source.
+                        syndicated - treat it as a lead to verify, not the source.
                       </p>
                     </div>
                   )}
@@ -364,7 +364,7 @@ export default function OriginMapPage() {
                 </p>
               ) : report === null ? (
                 <p className="text-sm text-ink-secondary">
-                  {reportErr ? <>Origin-exposure source not connected — {reportErr}.</> : "Resolving origin exposure…"}
+                  {reportErr ? <>Origin-exposure source not connected - {reportErr}.</> : "Resolving origin exposure…"}
                 </p>
               ) : (
                 <>
@@ -401,7 +401,7 @@ export default function OriginMapPage() {
                   ) : (
                     <p className="text-sm text-ink-secondary">
                       No resolved origin-server candidates with a known country to pin on the map
-                      {report.candidates.length > 0 ? " (candidates found but not geolocated — shown honestly, not placed)" : ""}. Band: {report.band}.
+                      {report.candidates.length > 0 ? " (candidates found but not geolocated - shown honestly, not placed)" : ""}. Band: {report.band}.
                     </p>
                   )}
 
@@ -423,13 +423,13 @@ export default function OriginMapPage() {
           {/* ---- Layer 3: Propagation graph ---- */}
           {layers.propagation && (
             <div className="card space-y-3">
-              <div className="label-muted flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5" /> Propagation — amplifier domains</div>
+              <div className="label-muted flex items-center gap-1.5"><Share2 className="h-3.5 w-3.5" /> Propagation - amplifier domains</div>
               {amplifier.network.nodes.length > 1 ? (
                 <>
                   <NetworkGraph network={amplifier.network} />
                   <p className="text-xs text-ink-secondary">
                     The searched term linked to the publisher <strong>domains</strong> that carried it across the collected
-                    mentions. Nodes are domains only — never an account handle or a person. A line means "appeared in
+                    mentions. Nodes are domains only - never an account handle or a person. A line means "appeared in
                     collected mentions" (a co-appearance observation), <span className="text-ink">not</span> proof of
                     coordination: this can be ordinary coverage, syndication, or criticism.
                   </p>
@@ -438,7 +438,7 @@ export default function OriginMapPage() {
                 <p className="text-sm text-ink-secondary">
                   {mentions === null
                     ? "…"
-                    : "No amplifier domains to graph — the collected mentions carried no resolvable publisher domains. Shown honestly, not faked."}
+                    : "No amplifier domains to graph - the collected mentions carried no resolvable publisher domains. Shown honestly, not faked."}
                 </p>
               )}
             </div>

@@ -20,7 +20,7 @@ export interface ParsedFeed { title?: string; siteUrl?: string; items: FeedItem[
 // ---- SSRF guard --------------------------------------------------------------
 
 /** True when an IP literal is private / loopback / link-local / unique-local /
- * metadata — anything that must never be reachable from a user-supplied URL. */
+ * metadata - anything that must never be reachable from a user-supplied URL. */
 export function isBlockedIp(ip: string): boolean {
   const v = net.isIP(ip);
   if (v === 4) {
@@ -137,7 +137,7 @@ function concat(chunks: Uint8Array[]): Uint8Array {
 
 // ---- sanitize ----------------------------------------------------------------
 
-/** Strip HTML/CDATA/entities from feed text — content is DATA, never rendered as
+/** Strip HTML/CDATA/entities from feed text - content is DATA, never rendered as
  * markup and never executed. */
 export function sanitizeText(s: string, max = 500): string {
   if (!s) return "";
@@ -158,7 +158,7 @@ export function sanitizeText(s: string, max = 500): string {
 // So a user can paste a site's homepage (e.g. cnn.com) instead of hunting for its
 // exact feed URL. We read the site's OWN declared feed(s) via the standard
 // <link rel="alternate" type="application/rss+xml|atom+xml"> autodiscovery tag, then
-// fall back to conventional feed paths. This is not content scraping — only the
+// fall back to conventional feed paths. This is not content scraping - only the
 // site's declared RSS/Atom feed is ever ingested.
 
 export const COMMON_FEED_PATHS = [
@@ -248,7 +248,7 @@ function toIso(v?: string): string | undefined {
   return isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
-/** The first plausible article image URL declared in a feed item — media:content /
+/** The first plausible article image URL declared in a feed item - media:content /
  * media:thumbnail, an image <enclosure>, an Atom enclosure link, or an <img> in the
  * HTML body. URL only; the image is hotlinked at render, never downloaded/re-hosted. */
 function extractImage(block: string): string | undefined {

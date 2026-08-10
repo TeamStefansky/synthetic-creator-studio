@@ -1,4 +1,4 @@
-// Case report API — receives the searches linked to a case (from the browser's
+// Case report API - receives the searches linked to a case (from the browser's
 // local case store) and returns the assembled summary report. The report is
 // built deterministically from the collected data; the BLUF is optionally
 // polished by the LLM (honest fallback without a key). Read-and-report only.

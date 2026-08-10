@@ -19,12 +19,12 @@ describe("punycode decoder", () => {
     expect(idnToUnicode("plain.com")).toBe("plain.com");
     expect(idnToUnicode("xn--mnchen-3ya.plain.com")).toBe("münchen.plain.com");
   });
-  it("never throws on malformed input — keeps the original label", () => {
+  it("never throws on malformed input - keeps the original label", () => {
     expect(idnToUnicode("xn--!!!bad.com")).toBe("xn--!!!bad.com");
   });
 });
 
-describe("classifyDomainCharacter — all scripts", () => {
+describe("classifyDomainCharacter - all scripts", () => {
   const extremist = [
     "hitler.nu", "drittereich.de", "sieg-heil.net", // Latin/German
     "היטלר.co.il", "נאצי.com",                        // Hebrew

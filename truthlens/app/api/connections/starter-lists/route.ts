@@ -16,10 +16,10 @@ interface Entry { country: string; outlet: string; url: string }
 interface StarterList { id: string; title: string; entries: Entry[] }
 
 const LISTS: StarterList[] = [
-  { id: "europe-batch1", title: "Europe — top outlets by country", entries: europeBatch1 as Entry[] },
-  { id: "world-batch2", title: "World — Americas, Middle East, Asia, Africa, Oceania", entries: worldBatch2 as Entry[] },
+  { id: "europe-batch1", title: "Europe - top outlets by country", entries: europeBatch1 as Entry[] },
+  { id: "world-batch2", title: "World - Americas, Middle East, Asia, Africa, Oceania", entries: worldBatch2 as Entry[] },
   { id: "factcheck-osint-batch3", title: "Fact-checkers, OSINT & analysis", entries: factcheckBatch3 as Entry[] },
-  { id: "alt-independent-batch4", title: "Independent & alt-media (monitoring, via RSS — not an endorsement)", entries: altBatch4 as Entry[] },
+  { id: "alt-independent-batch4", title: "Independent & alt-media (monitoring, via RSS - not an endorsement)", entries: altBatch4 as Entry[] },
 ];
 
 function countryCounts(entries: Entry[]): { country: string; count: number }[] {

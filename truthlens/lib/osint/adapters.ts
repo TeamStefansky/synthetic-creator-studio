@@ -1,7 +1,7 @@
-// OSINT pivot adapters — one per external selector source. Each runs a REAL
+// OSINT pivot adapters - one per external selector source. Each runs a REAL
 // query against the provider's OFFICIAL API the moment its key is present, and
 // returns an honest "not connected" state otherwise (rule 7). Official endpoints
-// only — no scrapers, no wrapper resellers (rule 5). Results are the actual
+// only - no scrapers, no wrapper resellers (rule 5). Results are the actual
 // MEMBER domains behind a shared selector (the pivot), deduped + capped; cached
 // upstream by lib/http where applicable. Pure helpers are unit-tested; the
 // network calls degrade to null on any error (failure isolation).
@@ -69,7 +69,7 @@ export function adaptersForKind(kind: string): string[] {
 
 const notConnected = (tool: string, envName: string): AdapterResult => ({
   tool, connected: false, members: [], count: null,
-  note: `${tool} not connected — set ${envName} to enable this pivot.`,
+  note: `${tool} not connected - set ${envName} to enable this pivot.`,
 });
 
 // ---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ async function spyOnWeb(id: string): Promise<AdapterResult> {
     const j = await getJson<any>(`https://api.spyonweb.com/v1/analytics/${encodeURIComponent(id)}?access_token=${key}`, { timeoutMs: 8000 });
     const members = j?.status === "found" ? parseSpyonwebItems(j, id) : [];
     return { tool: "reversetracker.spyonweb", connected: true, members, count: members.length, note: `SpyOnWeb: ${members.length} site(s) carry this id.`, url: `https://spyonweb.com/${encodeURIComponent(id)}` };
-  } catch { return { tool: "reversetracker.spyonweb", connected: true, members: [], count: null, note: "SpyOnWeb query failed — try again." }; }
+  } catch { return { tool: "reversetracker.spyonweb", connected: true, members: [], count: null, note: "SpyOnWeb query failed - try again." }; }
 }
 
 async function publicWww(value: string): Promise<AdapterResult> {
@@ -93,7 +93,7 @@ async function publicWww(value: string): Promise<AdapterResult> {
     const csv = await getText(`https://publicwww.com/websites/%22${encodeURIComponent(value)}%22/?export=csv&key=${key}`, { timeoutMs: 9000 });
     const members = csv == null ? [] : parsePublicwwwCsv(csv);
     return { tool: "reversetracker.publicwww", connected: true, members, count: members.length, note: `PublicWWW source-code search matched ${members.length} site(s).`, url: `https://publicwww.com/websites/%22${encodeURIComponent(value)}%22/` };
-  } catch { return { tool: "reversetracker.publicwww", connected: true, members: [], count: null, note: "PublicWWW query failed — try again." }; }
+  } catch { return { tool: "reversetracker.publicwww", connected: true, members: [], count: null, note: "PublicWWW query failed - try again." }; }
 }
 
 async function dnslytics(id: string): Promise<AdapterResult> {
@@ -105,7 +105,7 @@ async function dnslytics(id: string): Promise<AdapterResult> {
     const members = dedupeDomains(rows.map((r) => (typeof r === "string" ? r : r?.domain || r?.name || "")));
     const count = typeof j?.total === "number" ? j.total : members.length;
     return { tool: "reversetracker.dnslytics", connected: true, members, count, note: `DNSlytics reverse-analytics matched ${count} domain(s).` };
-  } catch { return { tool: "reversetracker.dnslytics", connected: true, members: [], count: null, note: "DNSlytics query failed — try again." }; }
+  } catch { return { tool: "reversetracker.dnslytics", connected: true, members: [], count: null, note: "DNSlytics query failed - try again." }; }
 }
 
 async function crtsh(domain: string): Promise<AdapterResult> {
@@ -115,7 +115,7 @@ async function crtsh(domain: string): Promise<AdapterResult> {
     const names = Array.isArray(j) ? j.flatMap((r) => String(r?.name_value || "").split(/\n/)) : [];
     const members = dedupeDomains(names);
     return { tool: "crtsh.certs", connected: true, members, count: members.length, note: `crt.sh: ${members.length} unique host(s) in CT logs for ${domain}.`, url: `https://crt.sh/?q=%25.${encodeURIComponent(domain)}` };
-  } catch { return { tool: "crtsh.certs", connected: true, members: [], count: null, note: "crt.sh query failed — try again." }; }
+  } catch { return { tool: "crtsh.certs", connected: true, members: [], count: null, note: "crt.sh query failed - try again." }; }
 }
 
 async function securityTrailsSubdomains(domain: string): Promise<AdapterResult> {
@@ -126,7 +126,7 @@ async function securityTrailsSubdomains(domain: string): Promise<AdapterResult> 
     const subs: string[] = Array.isArray(j?.subdomains) ? j.subdomains : [];
     const members = dedupeDomains(subs.map((s) => `${s}.${domain}`));
     return { tool: "securitytrails.subdomains", connected: true, members, count: typeof j?.subdomain_count === "number" ? j.subdomain_count : members.length, note: `SecurityTrails: ${members.length} subdomain(s) for ${domain}.` };
-  } catch { return { tool: "securitytrails.subdomains", connected: true, members: [], count: null, note: "SecurityTrails query failed — check the key/plan." }; }
+  } catch { return { tool: "securitytrails.subdomains", connected: true, members: [], count: null, note: "SecurityTrails query failed - check the key/plan." }; }
 }
 
 async function urlscanSearch(query: string): Promise<AdapterResult> {
@@ -137,7 +137,7 @@ async function urlscanSearch(query: string): Promise<AdapterResult> {
     const results: any[] = Array.isArray(j?.results) ? j.results : [];
     const members = dedupeDomains(results.map((r) => r?.page?.domain || r?.task?.domain || ""));
     return { tool: "urlscan.search", connected: true, members, count: typeof j?.total === "number" ? j.total : members.length, note: `urlscan.io: ${members.length} recent scan domain(s) for this query.`, url: `https://urlscan.io/search/#${encodeURIComponent(query)}` };
-  } catch { return { tool: "urlscan.search", connected: true, members: [], count: null, note: "urlscan query failed — check the key." }; }
+  } catch { return { tool: "urlscan.search", connected: true, members: [], count: null, note: "urlscan query failed - check the key." }; }
 }
 
 const REGISTRY: Record<string, (value: string) => Promise<AdapterResult>> = {
@@ -161,7 +161,7 @@ export interface PivotResult {
 
 /**
  * Run every adapter relevant to a selector kind. Connected ones query live;
- * others report honest not-connected. Members are the union across providers —
+ * others report honest not-connected. Members are the union across providers -
  * a co-behavior LEAD for a human analyst, never proof of shared operation.
  */
 export async function runPivot(kind: string, value: string): Promise<PivotResult> {

@@ -1,10 +1,10 @@
-// Propagation path (layer 03 · P3). A directed graph over CLAIM INSTANCES —
-// (claim × entity × earliest reliable time) — not over entities. An A→B edge is
+// Propagation path (layer 03 · P3). A directed graph over CLAIM INSTANCES -
+// (claim × entity × earliest reliable time) - not over entities. An A→B edge is
 // drawn only when both endpoints are T2+ and B's time exceeds A's by more than
 // the wider tolerance AND clock skew (via orderOf), and a content relationship
 // exists (instances of one claim cluster are near-duplicate content, so that
 // holds by construction). When ordering fails, an explicit `order_not_established`
-// edge is emitted — never silently dropped. Positional roles come from graph
+// edge is emitted - never silently dropped. Positional roles come from graph
 // position only, each carrying the "a genuinely earlier instance may exist on a
 // platform never ingested" alternative. Path confidence is capped by coverage.
 
@@ -17,7 +17,7 @@ export const COVERAGE_CAP: ConfidenceLevel = "Medium";
 
 export type PathRole = "earliest_observed" | "amplifier" | "terminal" | "cross_language_bridge" | "isolated";
 export const ROLE_ALTERNATIVE: Record<PathRole, string> = {
-  earliest_observed: "a genuinely earlier instance may exist on a platform never ingested — this is earliest observed in collected data, not the source.",
+  earliest_observed: "a genuinely earlier instance may exist on a platform never ingested - this is earliest observed in collected data, not the source.",
   amplifier: "re-publishing may be independent reporting rather than coordinated amplification.",
   terminal: "later instances may exist beyond our collection window.",
   cross_language_bridge: "shared entities can appear in two languages independently, without a bridging actor.",
@@ -85,7 +85,7 @@ export function buildPath(instances: PathInstance[]): CasePath {
         const rel = orderOf(A.time, B.time);
         if (rel === "a_before_b") { edges.push({ from: A.id, to: B.id, kind: "directed", reason: "B's reliable time follows A's beyond tolerance + skew" }); bump(outDeg, A.id); bump(inDeg, B.id); }
         else if (rel === "b_before_a") { edges.push({ from: B.id, to: A.id, kind: "directed", reason: "A's reliable time follows B's beyond tolerance + skew" }); bump(outDeg, B.id); bump(inDeg, A.id); }
-        else { edges.push({ from: A.id, to: B.id, kind: "order_not_established", reason: "endpoints not both T2+ or gap within tolerance/skew — related but unordered" }); }
+        else { edges.push({ from: A.id, to: B.id, kind: "order_not_established", reason: "endpoints not both T2+ or gap within tolerance/skew - related but unordered" }); }
       }
       // Coverage cap conditions.
       if (usableLowerBound(sorted[i].time) === null) { coverageCapped = true; coverageReasons.push(`${sorted[i].entity}: no T2+ time (${sorted[i].time?.tier ?? "none"})`); }

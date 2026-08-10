@@ -31,7 +31,7 @@ export default function OriginExposurePage() {
   const [domain, setDomain] = useState("");
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  // The audit runs as a BACKGROUND JOB — it keeps running if you switch tools,
+  // The audit runs as a BACKGROUND JOB - it keeps running if you switch tools,
   // and the latest audit's result is shown here when you return (plus the tray).
   const job = useJob(jobId, "origin");
   const loading = job?.status === "running";
@@ -57,12 +57,12 @@ export default function OriginExposurePage() {
         catch {
           throw new Error(
             r.status === 504 || /timeout|invocation/i.test(txt)
-              ? "The audit took too long for this domain (large certificate/DNS footprint). Please try again — partial results are cached."
+              ? "The audit took too long for this domain (large certificate/DNS footprint). Please try again - partial results are cached."
               : txt.slice(0, 160) || `Audit failed (${r.status})`,
           );
         }
         if (!r.ok) throw new Error(data.error || "Audit failed");
-        recordSearch("origin", d, `${d} — origin exposure`, data); // feed cross-search network
+        recordSearch("origin", d, `${d} - origin exposure`, data); // feed cross-search network
         return data;
       },
     });
@@ -114,7 +114,7 @@ export default function OriginExposurePage() {
           </button>
         </form>
         {(error || jobError) && <p className="mt-2 text-sm text-risk-high">{error || jobError}</p>}
-        {loading && <p className="mt-2 text-sm text-ink-secondary">Auditing in the background — you can switch tools; the result will be waiting here and in the scans tray.</p>}
+        {loading && <p className="mt-2 text-sm text-ink-secondary">Auditing in the background - you can switch tools; the result will be waiting here and in the scans tray.</p>}
         <p className="mt-2 text-xs text-ink-secondary">
           Only run this on assets you own or are authorized to test. This is a defensive posture
           check; results are cached per day for reproducibility.
@@ -246,7 +246,7 @@ export default function OriginExposurePage() {
 
           {result.hostConduct?.matched && (
             <div className="card border-risk-high/30">
-              <div className="label-muted mb-1 text-risk-high">Host conduct — documented public record</div>
+              <div className="label-muted mb-1 text-risk-high">Host conduct - documented public record</div>
               <div className="mb-2 text-sm font-medium text-ink">{result.hostConduct.org}{result.hostConduct.country ? ` · ${result.hostConduct.country}` : ""} <span className="ml-1 rounded bg-risk-high/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-risk-high">High · public record</span></div>
               {result.hostConduct.summary && <p className="mb-2 text-[13px] text-ink-secondary">{result.hostConduct.summary}</p>}
               <ul className="space-y-2">
@@ -263,7 +263,7 @@ export default function OriginExposurePage() {
               </ul>
               {result.hostConduct.coHostedExtremist.length > 0 && (
                 <div className="mt-3 rounded-lg border border-risk-high/25 bg-risk-high/5 p-3">
-                  <div className="label-muted mb-1 text-risk-high">Severe context flag — co-hosted domains</div>
+                  <div className="label-muted mb-1 text-risk-high">Severe context flag - co-hosted domains</div>
                   <div className="flex flex-wrap gap-1.5">
                     {result.hostConduct.coHostedExtremist.map((d, i) => <code key={i} className="rounded border border-risk-high/30 px-1.5 py-0.5 font-mono text-[12px] text-risk-high">{d.domain}</code>)}
                   </div>

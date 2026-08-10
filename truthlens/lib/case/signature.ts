@@ -1,5 +1,5 @@
 // Method vs. signature (layer 06 · P5). MO is what the operation NEEDS (hosting,
-// registrar, CDN, platform) — learned, adaptive, cheap to change under pressure.
+// registrar, CDN, platform) - learned, adaptive, cheap to change under pressure.
 // Signature is what it does NOT need but repeats anyway (idiosyncratic phrasing,
 // recurring error patterns, re-encode habits, publishing rhythm, transliteration
 // choices, the same broken markup). Signature outweighs MO because MO changes
@@ -22,7 +22,7 @@ const MO_HINTS = /(hosting|registrar|cdn|platform|nameserver|publishing|server)/
 export function classifyFeature(name: string): FeatureType {
   if (SIGNATURE_HINTS.test(name)) return "signature";
   if (MO_HINTS.test(name)) return "mo";
-  return "mo"; // default to MO — the burden is on individuation
+  return "mo"; // default to MO - the burden is on individuation
 }
 
 export interface SigFeature { name: string; isSignature: boolean }
@@ -69,6 +69,6 @@ export function scoreSignature(features: SigFeature[], toolchain: Toolchain): Si
     baselineAbsorbed,
     moFeatures,
     strength,
-    alternative: "Shared tooling and shared templates produce shared signatures innocently — a common CDN, image optimizer, CMS theme, or publishing tool explains identical artifacts without common operation; each signature type carries its own base rate.",
+    alternative: "Shared tooling and shared templates produce shared signatures innocently - a common CDN, image optimizer, CMS theme, or publishing tool explains identical artifacts without common operation; each signature type carries its own base rate.",
   };
 }

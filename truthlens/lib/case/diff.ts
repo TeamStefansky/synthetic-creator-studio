@@ -47,7 +47,7 @@ export function diffCases(prev: CaseFile | null, next: CaseFile): CaseDiff {
 // ---------------------------------------------------------------------------
 // Monitoring diff (layer 04 · P1). Shape hash is the first gate: identical shape
 // => zero items, zero alerts, no matter how much the ledger churned. Otherwise
-// every change is classified by materiality, and — the hard guard — a
+// every change is classified by materiality, and - the hard guard - a
 // partial-coverage run may ADD but never RETRACT (removals are suppressed and
 // counted, never alerted). Only Structural + Interpretive changes alert.
 // ---------------------------------------------------------------------------

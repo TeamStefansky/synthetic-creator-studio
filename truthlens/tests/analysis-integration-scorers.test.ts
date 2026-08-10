@@ -9,7 +9,7 @@ function mk(text: string, account: string, minute: number): Mention {
   return { source: "bluesky", id: `${account}-${minute}`, text, account, accountId: account, timestamp: new Date(Date.UTC(2024, 0, 1, 12, minute)).toISOString() };
 }
 
-describe("threat.ts — Bayesian calibration enrichment", () => {
+describe("threat.ts - Bayesian calibration enrichment", () => {
   const mentions: Mention[] = [
     mk("boycott brand now", "a1", 0), mk("boycott brand now", "a2", 0),
     mk("boycott brand now", "a3", 1), mk("boycott brand now", "a4", 1),
@@ -44,7 +44,7 @@ describe("threat.ts — Bayesian calibration enrichment", () => {
   });
 });
 
-describe("coordination.ts — sensitivity enrichment", () => {
+describe("coordination.ts - sensitivity enrichment", () => {
   it("preserves level/score and flags the load-bearing signal", () => {
     const r = assessCoordination({
       network: { nodes: Array.from({ length: 6 }, (_, i) => ({ id: `d${i}`, label: `d${i}`, kind: "domain" })), edges: [] } as any,

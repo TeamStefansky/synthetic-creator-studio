@@ -72,7 +72,7 @@ export function bridges(nodes: string[], edges: UndirectedEdge[]): UndirectedEdg
 }
 
 /**
- * Betweenness centrality (Brandes, unweighted, undirected) — identifies brokers:
+ * Betweenness centrality (Brandes, unweighted, undirected) - identifies brokers:
  * the nodes that most span the structure. Layer 06 · P7. Deterministic.
  * NOTE: a node is central partly because you LOOKED at its neighbourhood; every
  * centrality value must be rendered with its collection boundary (seed + hop

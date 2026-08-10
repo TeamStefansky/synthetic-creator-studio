@@ -1,4 +1,4 @@
-// Minimal RFC 3492 punycode decoder — so internationalized domain names (IDN,
+// Minimal RFC 3492 punycode decoder - so internationalized domain names (IDN,
 // the `xn--…` labels) are matched in their NATIVE script (Hebrew, Arabic,
 // Cyrillic, Greek, CJK, …) rather than as opaque ASCII. Pure, dependency-free,
 // deterministic. Decode-only (we never emit IDNs, only read them).
@@ -62,7 +62,7 @@ export function decodePunycodeLabel(input: string): string {
 /**
  * Convert an ASCII/IDN domain to Unicode: every `xn--` label is decoded to its
  * native script, all others pass through. On any malformed label the ORIGINAL
- * label is kept (never throws — a classifier must not crash on junk input).
+ * label is kept (never throws - a classifier must not crash on junk input).
  */
 export function idnToUnicode(domain: string): string {
   return (domain || "")

@@ -82,7 +82,7 @@ export function foreignAgentMatch(domain?: string): ForeignAgentEntry | null {
   return lookup(foreignAgents, normalizeDomain(domain));
 }
 
-/** Documented-reference overlap over a set of mentions — the shared computation
+/** Documented-reference overlap over a set of mentions - the shared computation
  * behind the threat engine's and CIB analyzer's documented-campaign/state-media +
  * foreign-agent indicators (previously duplicated verbatim). Hit strings are
  * human-readable and deduped; `*Ref` counts distinguish "no overlap" from

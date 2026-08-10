@@ -405,7 +405,7 @@ function OperatorReputationCard({ rep }: { rep: NonNullable<Report["operatorRepu
           <p className="mt-1 text-[11px] text-ink-muted">{rep.publicOfficers.note}</p>
         </div>
       )}
-      <p className="mt-3 text-[11px] text-ink-secondary">Organization-level, cited. Shared/CDN hosting places unrelated sites together — co-hosting is context, not evidence about this site. Named officers are official public-record disclosure, cited — never inferred, never a verdict.</p>
+      <p className="mt-3 text-[11px] text-ink-secondary">Organization-level, cited. Shared/CDN hosting places unrelated sites together - co-hosting is context, not evidence about this site. Named officers are official public-record disclosure, cited - never inferred, never a verdict.</p>
     </section>
   );
 }

@@ -1,4 +1,4 @@
-// lib/analysis/evidence.ts — evidence combination (the "senior researcher").
+// lib/analysis/evidence.ts - evidence combination (the "senior researcher").
 //
 // The epistemics layer that enforces "Unknown is valid" mathematically. It combines
 // indicators as likelihood ratios into a posterior (log-odds, auditable), maps that
@@ -6,10 +6,10 @@
 // correlated indicators so several views of one fact aren't counted as independent
 // confirmations, runs a sensitivity check for fragile verdicts, and returns
 // `Insufficient` whenever the combined evidence doesn't clear a minimum-information
-// threshold — that is how this layer produces Unknown.
+// threshold - that is how this layer produces Unknown.
 //
 // Pure, deterministic. It yields confidence on a HYPOTHESIS (coordination /
-// authenticity) — never a posterior identifying a person or state. Attribution
+// authenticity) - never a posterior identifying a person or state. Attribution
 // stays forbidden regardless of how strong the posterior is (frozen rules).
 
 export const EVIDENCE_VERSION = "analysis-evidence-v1";
@@ -17,7 +17,7 @@ export const EVIDENCE_VERSION = "analysis-evidence-v1";
 export type EvidenceBand = "Insufficient" | "Low" | "Moderate" | "High";
 
 // Documented posterior→band mapping (the one source of truth; versioned so a change
-// is traceable). A band means the stated probability range — nothing looser.
+// is traceable). A band means the stated probability range - nothing looser.
 export const EVIDENCE_BANDS: { band: Exclude<EvidenceBand, "Insufficient">; min: number }[] = [
   { band: "High", min: 0.85 },
   { band: "Moderate", min: 0.6 },
@@ -25,7 +25,7 @@ export const EVIDENCE_BANDS: { band: Exclude<EvidenceBand, "Insufficient">; min:
 ];
 
 // Minimum total information (sum of |log-LR| contributions, in nats) below which the
-// result is Insufficient regardless of the point posterior — a near-0.5 posterior
+// result is Insufficient regardless of the point posterior - a near-0.5 posterior
 // from no real evidence must not read as "Low", it reads as Unknown.
 export const INFO_FLOOR_NATS = 0.4;
 
@@ -63,7 +63,7 @@ export interface EvidenceResult {
   band: EvidenceBand;
   insufficient: boolean;
   /** IC/Graphika estimative-language word for the posterior (omitted when
-   * Insufficient — an unknown likelihood gets no probability word). */
+   * Insufficient - an unknown likelihood gets no probability word). */
   estimative?: Estimative;
   updates: EvidenceUpdate[];
   sensitivity: Sensitivity;
@@ -73,7 +73,7 @@ export interface EvidenceResult {
 
 // IC estimative-probability scale (ODNI ICD-203; matches Graphika's likelihood
 // legend). Maps a calibrated posterior to the standard probability word so an
-// assessment reads in the same vocabulary a professional intelligence report uses —
+// assessment reads in the same vocabulary a professional intelligence report uses -
 // tied to a real probability range, not a vibe.
 export interface Estimative {
   word: string;
