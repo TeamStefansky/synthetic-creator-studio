@@ -1,0 +1,68 @@
+{
+  "_comment": "Operator-curated monitor rules for documented disinformation clusters, installed from config/watchlist.yaml. ATTRIBUTION IS ORGANIZATION / CAMPAIGN LEVEL ONLY, each with its cited public reporting — never a private individual (frozen rule 1). All checks are passive/open-source; nothing transacts or logs in. A rule whose required tool is not configured runs its free-source checks and reports degraded coverage (rule 7). A tripwire with no hit is a CLEAN NEGATIVE, never 'insufficient' dressed as 'clean' (rule 4).",
+  "version": 1,
+  "defaults": {
+    "schedule": "0 */6 * * *",
+    "min_confidence_to_alert": "low",
+    "dedupe_window_days": 30
+  },
+  "rules": [
+    {
+      "id": "pravda-new-subdomains",
+      "cluster": "Portal Kombat (Pravda)",
+      "attribution": "Russia-aligned content-aggregator network",
+      "reporting": ["VIGINUM", "DFRLab"],
+      "confidence": "moderate",
+      "tools": ["crtsh.certs", "securitytrails.subdomains", "urlscan.search"],
+      "match": {
+        "ct_log_domains": ["*.news-pravda.com"],
+        "new_domain_regex": ["^pravda-[a-z]{2,}\\.(com|net)$", "^[a-z]{3,}-news\\.(com|net)$"],
+        "content_keywords_any": ["news-pravda", "pravda"]
+      },
+      "notes": "Enumerate CT logs for news-pravda.com; diff against last run. Reposts/translations of RU state + Telegram, ~zero original media."
+    },
+    {
+      "id": "copycop-fingerprint",
+      "cluster": "CopyCop / Storm-1516",
+      "attribution": "Russia-aligned AI fake-local-news campaign",
+      "reporting": ["Recorded Future", "Microsoft Threat Intelligence"],
+      "confidence": "moderate",
+      "tools": ["reversetracker.shared_code", "urlscan.search", "securitytrails.whois_history"],
+      "match": {
+        "tech_fingerprint_any": ["codetipi zeen", "zeen news", "the world times"],
+        "hosting_asn_any": ["AS63949"],
+        "registrar_email_pattern": ["@proton\\.me$", "@zohomail\\.eu$"],
+        "registered_in_same_day_batch": true
+      },
+      "notes": "Reverse-tracker/shared-code sweep for the Zeen demo config; flag same-day batch registrations."
+    },
+    {
+      "id": "paperwall-adsense-pivot",
+      "cluster": "PAPERWALL / Haimai (GLASSBRIDGE)",
+      "attribution": "Shenzhen Haimai Yunxiang Media — commercial fake-local-news network",
+      "reporting": ["Citizen Lab", "Google / Mandiant"],
+      "confidence": "high",
+      "tools": ["reversetracker.by_adsense", "securitytrails.subdomains", "crtsh.certs"],
+      "match": {
+        "adsense_pub_ids": ["ca-pub-5378976189690174"],
+        "hosting_asn_any": ["AS132203"],
+        "tech_fingerprint_any": ["wordpress wpbakery"],
+        "backlink_hub_any": ["timesnewswire.com", "worldnewswire"],
+        "recurring_author_usernames_any": ["tina", "chunqt", "sophia", "peter"]
+      },
+      "notes": "Reverse-AdSense on the shared pub ID is the strongest new-node signal for this cluster."
+    },
+    {
+      "id": "io-apt-coresidence-tripwire",
+      "cluster": "cross-cutting",
+      "attribution": "Tripwire — tests whether tracked IO infrastructure ever co-resides with named APT hosting",
+      "reporting": ["Recorded Future (IOC corpus)"],
+      "confidence": "low",
+      "tools": ["securitytrails.passive_dns_history", "domaintools.reverse_ip", "recordedfuture.ioc_context"],
+      "match": {
+        "coresidence_check_against_apts": ["Silk Typhoon", "APT41", "APT29", "Sandworm"]
+      },
+      "notes": "Passive-DNS co-tenancy check. A hit would be significant and rare — current OSINT baseline is a CLEAN NEGATIVE. Requires SecurityTrails/DomainTools + an APT IOC corpus; degrades to 'insufficient data' when those keys are absent."
+    }
+  ]
+}

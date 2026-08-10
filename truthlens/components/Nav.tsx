@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
   CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper, MapPin, Clapperboard, FolderKanban, Radar as RadarIcon, Terminal,
+  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper, MapPin, Clapperboard, FolderKanban, Radar as RadarIcon, Terminal, Crosshair,
 } from "lucide-react";
 import CaseSwitcher from "./CaseSwitcher";
 
@@ -50,6 +50,7 @@ const groups: NavGroup[] = [
     group: "Investigate",
     items: [
       { href: "/casebook", label: "Cases", icon: FolderKanban, match: (p) => p.startsWith("/casebook") },
+      { href: "/tools/osint", label: "OSINT", icon: Crosshair, match: (p) => p.startsWith("/tools/osint") },
       { href: "/tools/linkboard", label: "Link Board", icon: Share2, match: (p) => p.startsWith("/tools/linkboard") },
       { href: "/tools/relboard", label: "Relationship Board", icon: Network, match: (p) => p.startsWith("/tools/relboard") },
       { href: "/case", label: "Case Synthesis", icon: ScrollText, match: (p) => p.startsWith("/case") },
