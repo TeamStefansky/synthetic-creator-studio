@@ -77,7 +77,7 @@ export default function OsintReport({ input, annex }: { input: ReportInput; anne
   const sourceN = countLines(input.sources_numbered_with_links);
 
   return (
-    <div className="space-y-6 rounded-2xl bg-bg-base p-1">
+    <div className="tl-report space-y-6 rounded-2xl bg-bg-base p-1">
       {/* Header */}
       <div className="rounded-2xl border border-line bg-bg-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">

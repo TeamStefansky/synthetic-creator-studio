@@ -332,4 +332,35 @@ body.embed-mode main {
   [class*="bg-yellow"],
   [class*="bg-amber"] { background: #fef9c3 !important; }
   [class*="bg-white/"] { background: #f3f4f6 !important; }
+
+  /* -------------------------------------------------------------------------
+     Intelligence reports (.tl-report) print in their DARK, DESIGNED form -
+     the global light conversion above is overridden inside the report wrapper
+     so the PDF matches the on-screen design (higher specificity + !important).
+     ------------------------------------------------------------------------- */
+  body:has(.tl-report) { background: #05080f !important; }
+  .tl-report { background: #07080f !important; color: #e9ecf5 !important; border-radius: 0 !important; }
+  .tl-report * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .tl-report .card,
+  .tl-report [class*="bg-bg-base"] { background: #07080f !important; }
+  .tl-report [class*="bg-bg-card"] { background: #0e1020 !important; box-shadow: none !important; backdrop-filter: none !important; break-inside: avoid; }
+  .tl-report [class*="bg-bg-elev"] { background: #161828 !important; }
+  .tl-report [class*="bg-bg-sunken"] { background: #0b0d1a !important; }
+  .tl-report [class*="border-line"] { border-color: rgba(255,255,255,0.10) !important; }
+  /* Text back to the dark-theme palette. */
+  .tl-report .text-white, .tl-report [class*="text-ink"]:not([class*="text-ink-muted"]):not([class*="text-ink-secondary"]) { color: #e9ecf5 !important; }
+  .tl-report [class*="text-ink-soft"] { color: #c9cfdd !important; }
+  .tl-report [class*="text-ink-secondary"] { color: #98a1b6 !important; }
+  .tl-report [class*="text-ink-muted"] { color: #6b7386 !important; }
+  /* Keep the vivid accents (do NOT wash out to the light print shades). */
+  .tl-report [class*="text-risk-high"] { color: #f0454f !important; }
+  .tl-report [class*="text-risk-unknown"] { color: #f5a623 !important; }
+  .tl-report [class*="text-risk-legit"] { color: #22c55e !important; }
+  .tl-report [class*="text-brand"] { color: #8fb0ff !important; }
+  .tl-report [class*="bg-risk-high"] { background: rgba(240,69,79,0.12) !important; }
+  .tl-report [class*="bg-risk-unknown"] { background: rgba(245,166,35,0.12) !important; }
+  .tl-report [class*="bg-risk-legit"] { background: rgba(34,197,94,0.12) !important; }
+  .tl-report [class*="bg-bg-elev"] { background: #161828 !important; }
+  /* gradient-text is unreliable in print engines - render it as solid brand. */
+  .tl-report .gradient-text { -webkit-text-fill-color: #8fb0ff !important; color: #8fb0ff !important; background: none !important; }
 }
