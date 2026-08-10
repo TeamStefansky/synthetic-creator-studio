@@ -7,7 +7,7 @@
 // 14-section report in the designed, printable layout. Runs as a background job
 // so you can switch tools while it works.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Crosshair, Loader2, Printer, Copy, ShieldCheck, ShieldAlert, FolderPlus } from "lucide-react";
 import ToolIntro from "@/components/ToolIntro";
 import Disclaimer from "@/components/Disclaimer";
@@ -52,6 +52,20 @@ export default function OsintPage() {
   const findings = data?.findings;
   const annex = data?.annex;
   const [saved, setSaved] = useState("");
+
+  // Auto-run from ?q= (used by "Full OSINT report" buttons on other tools).
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q && q.trim().length >= 3) {
+      setQuery(q.trim());
+      const id = startFetchJob({
+        tool: "osint", href: "/tools/osint", input: q.trim(), label: `OSINT · ${q.trim()}`,
+        url: "/api/osint-research", init: { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: q.trim() }) },
+      });
+      setJobId(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveToCase = () => {
     if (!report) return;

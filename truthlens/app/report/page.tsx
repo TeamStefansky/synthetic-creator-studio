@@ -99,10 +99,14 @@ function ReportInner() {
             <a href={report.finalUrl || report.url} target="_blank" rel="noreferrer" className="text-xs text-brand-soft break-all">
               {report.finalUrl || report.url}
             </a>
-            <div className="mt-1.5">
+            <div className="mt-1.5 flex flex-wrap gap-3">
               <a href={`/check?type=narrative&input=${encodeURIComponent(report.domain)}`}
                 className="inline-flex items-center gap-1 text-xs text-brand-soft hover:underline">
                 <Search className="h-3.5 w-3.5" /> Check narratives from this site
+              </a>
+              <a href={`/tools/osint?q=${encodeURIComponent(report.domain)}`}
+                className="inline-flex items-center gap-1 text-xs text-brand-soft hover:underline">
+                <Search className="h-3.5 w-3.5" /> Full OSINT report (designed, printable)
               </a>
             </div>
           </div>
