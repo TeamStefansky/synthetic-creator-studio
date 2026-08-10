@@ -77,7 +77,7 @@ const notConnected = (tool: string, envName: string): AdapterResult => ({
 // ---------------------------------------------------------------------------
 
 async function spyOnWeb(id: string): Promise<AdapterResult> {
-  const key = process.env.SPYONWEB_API_KEY;
+  const key = (process.env.SPYONWEB_API_KEY || process.env.SPYONWEB_API);
   if (!key) return notConnected("reversetracker.spyonweb", "SPYONWEB_API_KEY");
   try {
     const j = await getJson<any>(`https://api.spyonweb.com/v1/analytics/${encodeURIComponent(id)}?access_token=${key}`, { timeoutMs: 8000 });
@@ -87,7 +87,7 @@ async function spyOnWeb(id: string): Promise<AdapterResult> {
 }
 
 async function publicWww(value: string): Promise<AdapterResult> {
-  const key = process.env.PUBLICWWW_API_KEY;
+  const key = (process.env.PUBLICWWW_API_KEY || process.env.PUBLICWWW_API);
   if (!key) return notConnected("reversetracker.publicwww", "PUBLICWWW_API_KEY");
   try {
     const csv = await getText(`https://publicwww.com/websites/%22${encodeURIComponent(value)}%22/?export=csv&key=${key}`, { timeoutMs: 9000 });
@@ -97,7 +97,7 @@ async function publicWww(value: string): Promise<AdapterResult> {
 }
 
 async function dnslytics(id: string): Promise<AdapterResult> {
-  const key = process.env.DNSLYTICS_API_KEY;
+  const key = (process.env.DNSLYTICS_API_KEY || process.env.DNSLYTICS_API);
   if (!key) return notConnected("reversetracker.dnslytics", "DNSLYTICS_API_KEY");
   try {
     const j = await getJson<any>(`https://api.dnslytics.net/v1/reverseanalytics/${encodeURIComponent(id)}?apikey=${key}`, { timeoutMs: 9000 });
@@ -119,7 +119,7 @@ async function crtsh(domain: string): Promise<AdapterResult> {
 }
 
 async function securityTrailsSubdomains(domain: string): Promise<AdapterResult> {
-  const key = process.env.SECURITYTRAILS_API_KEY;
+  const key = (process.env.SECURITYTRAILS_API_KEY || process.env.SECURITYTRAILS_API);
   if (!key) return notConnected("securitytrails.subdomains", "SECURITYTRAILS_API_KEY");
   try {
     const j = await getJson<any>(`https://api.securitytrails.com/v1/domain/${encodeURIComponent(domain)}/subdomains?apikey=${key}`, { timeoutMs: 9000 });
@@ -130,7 +130,7 @@ async function securityTrailsSubdomains(domain: string): Promise<AdapterResult> 
 }
 
 async function urlscanSearch(query: string): Promise<AdapterResult> {
-  const key = process.env.URLSCAN_API_KEY;
+  const key = (process.env.URLSCAN_API_KEY || process.env.URLSCAN_API);
   if (!key) return notConnected("urlscan.search", "URLSCAN_API_KEY");
   try {
     const j = await getJson<any>(`https://urlscan.io/api/v1/search/?q=${encodeURIComponent(query)}&size=100`, { timeoutMs: 10000, headers: { "API-Key": key } });

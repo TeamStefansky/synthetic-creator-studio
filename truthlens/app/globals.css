@@ -279,9 +279,13 @@ body.embed-mode main {
   }
   header,
   footer,
+  aside,
+  nav,
   .no-print {
     display: none !important;
   }
+  /* Report fills the page once the app chrome is hidden. */
+  main { max-width: none !important; margin: 0 !important; padding: 0 !important; }
   html,
   body {
     background: #fff !important;
