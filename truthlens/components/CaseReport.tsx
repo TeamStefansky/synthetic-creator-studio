@@ -22,29 +22,44 @@ const CONCLUSION_TONE: Record<string, string> = {
 
 export default function CaseReport({ report }: { report: CaseDossier }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl bg-bg-base p-1">
       {/* Header */}
       <div className="rounded-2xl border border-line bg-bg-card p-6">
-        <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-ink-muted">
-          <span className="gradient-text font-bold">TruthLens</span>
-          <span>Defensive OSINT · Decision-support</span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-display text-xl font-bold tracking-tight">TRUTH<span className="gradient-text">LENS</span></span>
+          <span className="rounded-full border border-line px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-secondary">Defensive OSINT · Decision-support</span>
         </div>
-        <h1 className="mt-4 font-display text-2xl font-bold text-ink">{report.title}</h1>
+        <div className="mt-5 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-muted">Case Summary Report</div>
+        <h1 className="mt-2 font-display text-3xl font-bold leading-tight text-ink">{report.title}</h1>
         {report.subject && <p className="mt-2 max-w-2xl text-sm text-ink-secondary">{report.subject}</p>}
         <div className="mt-4 flex flex-wrap gap-2 text-[12px]">
           <span className="rounded-full border border-line px-2.5 py-1 text-ink-secondary">Generated: {fmtDate(report.generatedAt)}</span>
-          <span className="rounded-full border border-line px-2.5 py-1 text-ink-secondary">{report.searchCount} searches</span>
           {report.toolsUsed.length > 0 && <span className="rounded-full border border-line px-2.5 py-1 text-ink-secondary">Modules: {report.toolsUsed.join(" · ")}</span>}
-          <span className={`rounded-full border border-line px-2.5 py-1 font-medium ${CONCLUSION_TONE[report.conclusionLevel] || "text-ink"}`}>
+          <span className={`rounded-full border border-line px-2.5 py-1 font-semibold ${CONCLUSION_TONE[report.conclusionLevel] || "text-ink"}`}>
             Conclusion: {report.conclusionLevel}
           </span>
         </div>
       </div>
 
-      {/* BLUF */}
-      <div className="rounded-2xl border border-risk-unknown/25 bg-bg-card p-6">
-        <div className="label-muted mb-2 text-risk-unknown">◆ Bottom line</div>
+      {/* BLUF - amber-accented callout */}
+      <div className="rounded-2xl border border-risk-unknown/30 bg-bg-card p-6" style={{ borderLeftWidth: 3 }}>
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-risk-unknown">◆ Bottom line up front</div>
         <p className="text-sm leading-relaxed text-ink-soft">{report.bluf}</p>
+      </div>
+
+      {/* Stat tiles */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { n: String(report.searchCount), label: "Searches" },
+          { n: String(report.subjects.length), label: "Assets" },
+          { n: String(report.evidence.length), label: "Links found" },
+          { n: String(report.hostConduct.length), label: "Documented hosts" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-2xl border border-line bg-bg-card px-5 py-4">
+            <div className="font-display text-3xl font-bold gradient-text">{s.n}</div>
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-muted">{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Subjects */}
@@ -171,7 +186,14 @@ export default function CaseReport({ report }: { report: CaseDossier }) {
         </ul>
       </section>
 
-      <p className="text-[11px] leading-relaxed text-ink-muted">{report.disclaimer}</p>
+      {/* Mono footer */}
+      <div className="border-t border-line pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[12px] text-ink-secondary">
+          <span>TruthLens · Case Summary Report</span>
+          <span className="text-ink-muted">{fmtDate(report.generatedAt)} · decision-support, never a verdict</span>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-ink-muted">{report.disclaimer}</p>
+      </div>
     </div>
   );
 }

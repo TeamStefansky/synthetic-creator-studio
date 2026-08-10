@@ -8,12 +8,14 @@
 // so you can switch tools while it works.
 
 import { useState } from "react";
-import { Crosshair, Loader2, Printer, Copy, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Crosshair, Loader2, Printer, Copy, ShieldCheck, ShieldAlert, FolderPlus } from "lucide-react";
 import ToolIntro from "@/components/ToolIntro";
 import Disclaimer from "@/components/Disclaimer";
 import OsintReport from "@/components/OsintReport";
 import { startFetchJob } from "@/lib/jobs/store";
 import { useJob } from "@/lib/jobs/useJobs";
+import { recordSearch } from "@/lib/clues/record";
+import { getActiveCase, listCasebooks } from "@/lib/casebook/store";
 
 export default function OsintPage() {
   const [query, setQuery] = useState("");
@@ -39,6 +41,16 @@ export default function OsintPage() {
   const report = data?.report;
   const findings = data?.findings;
   const annex = data?.annex;
+  const [saved, setSaved] = useState("");
+
+  const saveToCase = () => {
+    if (!report) return;
+    const active = getActiveCase();
+    const caseName = listCasebooks().find((c) => c.id === active)?.name;
+    // recordSearch auto-links to the active case (lib/clues/record).
+    recordSearch("osint", query.trim(), `OSINT · ${query.trim()}`, { report, findings, annex }, report.input?.overall_confidence);
+    setSaved(active ? `Saved to case “${caseName}”.` : "Saved to History. Set an active case in the sidebar to file it.");
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -87,6 +99,8 @@ export default function OsintPage() {
             <button onClick={() => setRawView((v) => !v)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white">{rawView ? "Designed view" : "Raw Markdown"}</button>
             <button onClick={() => navigator.clipboard?.writeText(report.markdown + (annex?.markdown ? "\n\n" + annex.markdown : ""))} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Copy className="h-3.5 w-3.5" /> Copy Markdown</button>
             <button onClick={() => window.print()} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Printer className="h-3.5 w-3.5" /> Print / PDF</button>
+            <button onClick={saveToCase} className="inline-flex items-center gap-1 rounded-lg border border-brand-soft/40 px-2.5 py-1.5 text-xs text-brand-soft hover:bg-white/5"><FolderPlus className="h-3.5 w-3.5" /> Save to case</button>
+            {saved && <span className="text-[11px] text-ink-muted">{saved}</span>}
           </div>
           {rawView
             ? <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-line bg-bg-sunken p-4 text-[12px] leading-relaxed text-ink-soft">{report.markdown}{annex?.markdown ? "\n\n" + annex.markdown : ""}</pre>
