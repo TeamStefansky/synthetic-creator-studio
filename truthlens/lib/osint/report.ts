@@ -143,6 +143,8 @@ export function fillTemplate(input: ReportInput): string {
 
 export interface CompiledReport {
   markdown: string;
+  /** The normalized input, echoed so a designed renderer has every section. */
+  input: ReportInput;
   valid: boolean;
   violations: string[];
   version: string;
@@ -152,5 +154,5 @@ export interface CompiledReport {
  * but is flagged with its violations — never silently emitted as sound. */
 export function compileReport(input: ReportInput): CompiledReport {
   const { valid, violations } = validateReport(input);
-  return { markdown: fillTemplate(input), valid, violations, version: REPORT_COMPILER_VERSION };
+  return { markdown: fillTemplate(input), input, valid, violations, version: REPORT_COMPILER_VERSION };
 }

@@ -12,6 +12,8 @@ import { useEffect, useState } from "react";
 import { Crosshair, ShieldCheck, ShieldAlert, FileText, Copy, Printer, Loader2 } from "lucide-react";
 import ToolIntro from "@/components/ToolIntro";
 import Disclaimer from "@/components/Disclaimer";
+import OsintReport from "@/components/OsintReport";
+import { recordSearch } from "@/lib/clues/record";
 
 type Rule = {
   id: string; cluster: string; attribution: string; reporting: string[];
@@ -31,9 +33,10 @@ export default function OsintPage() {
   const [pivot, setPivot] = useState<any>(null);
   const [pBusy, setPBusy] = useState(false);
   const [pErr, setPErr] = useState("");
+  const [sent, setSent] = useState(false);
 
   const runPivot = async () => {
-    setPBusy(true); setPErr(""); setPivot(null);
+    setPBusy(true); setPErr(""); setPivot(null); setSent(false);
     try {
       const r = await fetch("/api/osint-watch/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: pKind, value: pValue.trim() }) });
       const d = await r.json();
@@ -47,9 +50,10 @@ export default function OsintPage() {
     network_name: "", cluster: "", seed: "", assessed_actor: "Undetermined",
     overall_confidence: "Low", executive_summary: "", narrative_analysis: "", gaps: "", next_steps: "",
   });
-  const [report, setReport] = useState<{ markdown: string; valid: boolean; violations: string[] } | null>(null);
+  const [report, setReport] = useState<{ markdown: string; input: any; valid: boolean; violations: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [rawView, setRawView] = useState(false);
 
   useEffect(() => {
     fetch("/api/osint-watch").then((r) => r.json()).then((d) => setRules(d.rules || [])).catch(() => setRules([]));
@@ -124,11 +128,22 @@ export default function OsintPage() {
                 </div>
               </div>
               <div className="card">
-                <div className="label-muted mb-2">{pivot.members.length} member domain(s) — co-behavior lead, not proof of shared operation</div>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <span className="label-muted">{pivot.members.length} member domain(s) — co-behavior lead, not proof of shared operation</span>
+                  {pivot.members.length > 0 && (
+                    <button
+                      onClick={() => { recordSearch("osint-pivot", `${pKind}:${pValue.trim()}`, `Pivot ${pKind} ${pValue.trim()} → ${pivot.members.length} domains`, { kind: pKind, selector: pValue.trim(), domains: pivot.members }); setSent(true); }}
+                      className="inline-flex items-center gap-1 rounded-lg border border-brand-soft/40 px-2.5 py-1 text-[12px] text-brand-soft hover:bg-white/5"
+                    >{sent ? "✓ Added to graph" : "Add members to investigation graph →"}</button>
+                  )}
+                </div>
                 {pivot.members.length === 0 ? (
                   <p className="text-sm text-ink-secondary">No members returned{pivot.connectedTools.length === 0 ? " — no providers connected. Connect a key (see below) to run this pivot." : "."}</p>
                 ) : (
-                  <div className="flex flex-wrap gap-1.5">{pivot.members.slice(0, 200).map((d: string) => <code key={d} className="rounded border border-line px-1.5 py-0.5 font-mono text-[12px] text-ink">{d}</code>)}</div>
+                  <>
+                    <div className="flex flex-wrap gap-1.5">{pivot.members.slice(0, 200).map((d: string) => <code key={d} className="rounded border border-line px-1.5 py-0.5 font-mono text-[12px] text-ink">{d}</code>)}</div>
+                    {sent && <p className="mt-2 text-[12px] text-ink-muted">Members recorded to the cross-search clue index — open <a href="/tools/linkboard" className="text-brand-soft">Link Board</a> or <a href="/tools/relboard" className="text-brand-soft">Relationship Board</a> to see them as linked nodes.</p>}
+                  </>
                 )}
               </div>
             </div>
@@ -194,10 +209,13 @@ export default function OsintPage() {
                 </div>
               )}
               <div className="flex items-center gap-2 no-print">
+                <button onClick={() => setRawView((v) => !v)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white">{rawView ? "Designed view" : "Raw Markdown"}</button>
                 <button onClick={() => navigator.clipboard?.writeText(report.markdown)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Copy className="h-3.5 w-3.5" /> Copy Markdown</button>
                 <button onClick={() => window.print()} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Printer className="h-3.5 w-3.5" /> Print / PDF</button>
               </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-line bg-bg-sunken p-4 text-[12px] leading-relaxed text-ink-soft">{report.markdown}</pre>
+              {rawView
+                ? <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-line bg-bg-sunken p-4 text-[12px] leading-relaxed text-ink-soft">{report.markdown}</pre>
+                : <OsintReport input={report.input} />}
             </div>
           )}
         </div>
