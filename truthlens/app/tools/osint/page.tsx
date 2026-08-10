@@ -23,7 +23,24 @@ const CONF_CLS: Record<string, string> = { high: "text-risk-high", moderate: "te
 
 export default function OsintPage() {
   const [rules, setRules] = useState<Rule[] | null>(null);
-  const [tab, setTab] = useState<"watchlist" | "report">("watchlist");
+  const [tab, setTab] = useState<"watchlist" | "pivot" | "report">("watchlist");
+
+  // pivot panel
+  const [pKind, setPKind] = useState("adsense_id");
+  const [pValue, setPValue] = useState("");
+  const [pivot, setPivot] = useState<any>(null);
+  const [pBusy, setPBusy] = useState(false);
+  const [pErr, setPErr] = useState("");
+
+  const runPivot = async () => {
+    setPBusy(true); setPErr(""); setPivot(null);
+    try {
+      const r = await fetch("/api/osint-watch/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind: pKind, value: pValue.trim() }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Pivot failed");
+      setPivot(d);
+    } catch (e: any) { setPErr(e.message); } finally { setPBusy(false); }
+  };
 
   // report compiler fields
   const [f, setF] = useState({
@@ -77,8 +94,47 @@ export default function OsintPage() {
 
       <div className="no-print flex gap-2">
         <button onClick={() => setTab("watchlist")} className={`rounded-lg px-3 py-1.5 text-sm ${tab === "watchlist" ? "bg-bg-elev text-white" : "text-ink-secondary hover:text-white"}`}>Watchlist</button>
+        <button onClick={() => setTab("pivot")} className={`rounded-lg px-3 py-1.5 text-sm ${tab === "pivot" ? "bg-bg-elev text-white" : "text-ink-secondary hover:text-white"}`}>Pivot</button>
         <button onClick={() => setTab("report")} className={`rounded-lg px-3 py-1.5 text-sm ${tab === "report" ? "bg-bg-elev text-white" : "text-ink-secondary hover:text-white"}`}>Report compiler</button>
       </div>
+
+      {tab === "pivot" && (
+        <div className="space-y-4">
+          <div className="card flex flex-col gap-2 sm:flex-row">
+            <select value={pKind} onChange={(e) => setPKind(e.target.value)} className="rounded-lg border border-line bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand-soft">
+              <option value="adsense_id">AdSense pub id</option>
+              <option value="ga_id">Google Analytics id</option>
+              <option value="gtm_id">GTM id</option>
+              <option value="code">Shared code string</option>
+              <option value="domain">Domain (CT + subdomains)</option>
+            </select>
+            <input value={pValue} onChange={(e) => setPValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") runPivot(); }} placeholder="e.g. ca-pub-5378976189690174" className="min-w-0 flex-1 rounded-lg border border-line bg-bg-elev px-3 py-2 text-sm outline-none focus:border-brand-soft" />
+            <button onClick={runPivot} disabled={pBusy || pValue.trim().length < 3} className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-medium text-white shadow-glow disabled:opacity-50">{pBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" />} Run pivot</button>
+          </div>
+          {pErr && <div className="card border-risk-high/30 text-sm text-risk-high">{pErr}</div>}
+          {pivot && (
+            <div className="space-y-3">
+              <div className="card">
+                <div className="flex flex-wrap gap-1.5">
+                  {pivot.results.map((r: any) => (
+                    <span key={r.tool} className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] ${r.connected ? "border-risk-legit/30 text-risk-legit" : "border-line text-ink-muted"}`}>
+                      {r.connected ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}{r.tool}{r.connected ? ` · ${r.count ?? r.members.length}` : " · not connected"}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <div className="label-muted mb-2">{pivot.members.length} member domain(s) — co-behavior lead, not proof of shared operation</div>
+                {pivot.members.length === 0 ? (
+                  <p className="text-sm text-ink-secondary">No members returned{pivot.connectedTools.length === 0 ? " — no providers connected. Connect a key (see below) to run this pivot." : "."}</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">{pivot.members.slice(0, 200).map((d: string) => <code key={d} className="rounded border border-line px-1.5 py-0.5 font-mono text-[12px] text-ink">{d}</code>)}</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === "watchlist" && (
         <div className="space-y-3">
