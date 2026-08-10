@@ -44,6 +44,19 @@ export async function kvSet(key: string, value: string): Promise<void> {
   }
 }
 
+/** Atomic counter with a TTL, for rate limiting. Returns the post-increment
+ * count (1 on the first hit of a window); 0 on any KV error (fail-open — a
+ * broken limiter must never lock out a valid key). Sets the TTL only on create. */
+export async function kvIncr(key: string, ttlSec: number): Promise<number> {
+  try {
+    const n = Number(await command(["INCR", key]));
+    if (n === 1) await command(["EXPIRE", key, ttlSec]);
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function kvGetJson<T>(key: string): Promise<T | null> {
   const raw = await kvGet(key);
   if (!raw) return null;
