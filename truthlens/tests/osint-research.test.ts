@@ -8,6 +8,7 @@ import {
   classifyQuery, matchWatchlist, deriveConfidence, assembleReportInput, type ResearchFindings,
 } from "@/lib/osint/research";
 import { getResolvedRules } from "@/lib/osint/watchlist";
+import { buildAnnex } from "@/lib/osint/annex";
 
 const rules = getResolvedRules({} as any); // no keys
 
@@ -33,7 +34,7 @@ describe("matchWatchlist", () => {
 function findings(over: Partial<ResearchFindings> = {}): ResearchFindings {
   return {
     kind: "domain", value: "example.com", watchlist: null,
-    trackers: { gaIds: [], adsenseIds: [] }, pivots: [], toolsLive: ["crtsh.certs"], toolsNotConfigured: [], log: [], ...over,
+    trackers: { gaIds: [], adsenseIds: [] }, pivots: [], articles: [], toolsLive: ["crtsh.certs"], toolsNotConfigured: [], log: [], ...over,
   };
 }
 
@@ -72,10 +73,48 @@ describe("assembleReportInput", () => {
     expect(input.impact_evidence).toMatch(/hazard 78%/);
   });
 
+  it("resolved-ASN host conduct + RDAP fill the infrastructure section", () => {
+    const f = findings({
+      infra: { ip: "89.147.108.5", asn: "AS44925", org: "1984 ehf", country: "IS" } as any,
+      rdap: { registrar: "Namecheap", registrationDate: "2019-04-01", registrantOrg: "Example Org" } as any,
+      hostConduct: { matched: true, org: "1984 ehf" } as any,
+    });
+    const input = assembleReportInput(f, "2026-08-10", "run-i");
+    expect(input.infra_table_rows).toMatch(/AS44925/);
+    expect(input.infra_table_rows).toMatch(/Namecheap/);
+    expect(input.infra_table_rows).toMatch(/1984 ehf/);
+  });
+
+  it("news articles become numbered primary sources", () => {
+    const f = findings({ articles: [{ title: "State media pushes claim", url: "https://x.test/a", domain: "x.test", date: "2026-08-01" }] as any });
+    const input = assembleReportInput(f, "2026-08-10", "run-n");
+    expect(input.sources_numbered_with_links).toMatch(/State media pushes claim/);
+  });
+
   it("no match → Undetermined actor, Low confidence, null hypothesis only", () => {
     const input = assembleReportInput(findings(), "2026-08-10", "run-y");
     expect(input.assessed_actor).toBe("Undetermined");
     expect(input.overall_confidence).toBe("Low");
     expect(input.ach_table_rows).toMatch(/no coordinated operation/i);
+  });
+});
+
+describe("buildAnnex (Part II)", () => {
+  it("assembles primary sources, monitor rules, provider RFI, and the honest co-residence test", () => {
+    const wl = rules.find((r) => r.id === "paperwall-adsense-pivot")!;
+    const f = findings({ watchlist: wl, articles: [{ title: "A", url: "https://x/a", domain: "x", date: "2026-08-01" }] as any });
+    const a = buildAnnex(f, rules, {} as any);
+    expect(a.primarySources.some((s) => s.kind === "news")).toBe(true);
+    expect(a.primarySources.some((s) => s.kind === "reporting")).toBe(true); // cited reporting
+    expect(a.watchlistRules[0].cluster).toBe(wl.cluster);
+    expect(a.providerRfi.every((p) => p.status === "not connected")).toBe(true); // no keys
+    expect(a.coResidence.tested).toBe(false);
+    expect(a.coResidence.result).toMatch(/insufficient data/i); // honest, not a fake clean negative
+    expect(a.markdown).toMatch(/Part II - Collection Annex/);
+  });
+
+  it("marks a provider connected when its key is present", () => {
+    const a = buildAnnex(findings(), rules, { PUBLICWWW_API_KEY: "x" } as any);
+    expect(a.providerRfi.find((p) => p.envVar === "PUBLICWWW_API_KEY")!.status).toBe("connected");
   });
 });

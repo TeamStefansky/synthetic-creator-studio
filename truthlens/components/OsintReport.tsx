@@ -6,6 +6,7 @@
 // ReportInput from the compiler; prints to PDF via the app's print CSS.
 
 import type { ReportInput } from "@/lib/osint/report";
+import type { ReportAnnex } from "@/lib/osint/annex";
 
 const CONF_CLS: Record<string, string> = { High: "text-risk-high", Moderate: "text-risk-unknown", Low: "text-ink-secondary" };
 const NA = "_Not assessed - insufficient collection._";
@@ -44,7 +45,7 @@ function Section({ n, title, children }: { n: number; title: string; children: R
   );
 }
 
-export default function OsintReport({ input }: { input: ReportInput }) {
+export default function OsintReport({ input, annex }: { input: ReportInput; annex?: ReportAnnex }) {
   const conf = input.overall_confidence;
   return (
     <div className="space-y-5">
@@ -94,6 +95,50 @@ export default function OsintReport({ input }: { input: ReportInput }) {
       <Section n={12} title="Intelligence Gaps & Limitations"><Prose text={input.gaps} /></Section>
       <Section n={13} title="Recommended Next Collection Steps"><Prose text={input.next_steps} /></Section>
       <Section n={14} title="Sources"><Prose text={input.sources_numbered_with_links} /></Section>
+
+      {annex && (
+        <div className="mt-6 space-y-4 border-t border-line pt-6">
+          <h2 className="font-display text-lg font-bold text-ink">Part II - Collection Annex</h2>
+
+          <section className="space-y-2">
+            <div className="label-muted">Primary sources</div>
+            {annex.primarySources.length === 0 ? <p className="text-[13px] italic text-ink-muted">None collected.</p> : (
+              <ol className="space-y-1 text-[12px] text-ink-secondary">
+                {annex.primarySources.slice(0, 15).map((s, i) => (
+                  <li key={i}><span className="rounded bg-bg-elev px-1 py-0.5 text-[10px] uppercase text-ink-muted">{s.kind}</span> {s.url ? <a href={s.url} target="_blank" rel="noreferrer" className="text-brand-soft hover:underline">{s.label}</a> : s.label}{s.date ? ` (${s.date})` : ""}</li>
+                ))}
+              </ol>
+            )}
+          </section>
+
+          <section className="space-y-2">
+            <div className="label-muted">Ready-to-run monitor rules</div>
+            {annex.watchlistRules.map((r) => (
+              <div key={r.id} className="rounded-lg border border-line bg-bg-card p-3 text-[12px]">
+                <div className="text-ink"><span className="font-medium">{r.cluster}</span> <span className="text-ink-muted">({r.confidence})</span></div>
+                <div className="text-ink-secondary">tools: {r.tools.join(", ")}</div>
+                <div className="text-ink-muted">{r.coverage}</div>
+              </div>
+            ))}
+          </section>
+
+          <section className="space-y-2">
+            <div className="label-muted">Provider RFI - connect to extend coverage</div>
+            <ul className="space-y-1 text-[12px]">
+              {annex.providerRfi.map((p) => (
+                <li key={p.envVar} className={p.status === "connected" ? "text-risk-legit" : "text-ink-secondary"}>
+                  {p.status === "connected" ? "☑" : "☐"} <span className="text-ink">{p.provider}</span> <code className="font-mono text-ink-muted">{p.envVar}</code> - {p.wouldAdd}
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="space-y-1">
+            <div className="label-muted">Cyber - IO co-residence test</div>
+            <p className="text-[12px] text-ink-secondary">{annex.coResidence.result}</p>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

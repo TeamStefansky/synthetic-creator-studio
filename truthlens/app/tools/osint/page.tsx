@@ -38,6 +38,7 @@ export default function OsintPage() {
 
   const report = data?.report;
   const findings = data?.findings;
+  const annex = data?.annex;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -84,12 +85,12 @@ export default function OsintPage() {
           <div className="no-print flex items-center gap-2">
             {!report.valid && <span className="text-[12px] text-risk-high">Template invariants: {report.violations.join("; ")}</span>}
             <button onClick={() => setRawView((v) => !v)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white">{rawView ? "Designed view" : "Raw Markdown"}</button>
-            <button onClick={() => navigator.clipboard?.writeText(report.markdown)} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Copy className="h-3.5 w-3.5" /> Copy Markdown</button>
+            <button onClick={() => navigator.clipboard?.writeText(report.markdown + (annex?.markdown ? "\n\n" + annex.markdown : ""))} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Copy className="h-3.5 w-3.5" /> Copy Markdown</button>
             <button onClick={() => window.print()} className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1.5 text-xs text-ink-secondary hover:text-white"><Printer className="h-3.5 w-3.5" /> Print / PDF</button>
           </div>
           {rawView
-            ? <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-line bg-bg-sunken p-4 text-[12px] leading-relaxed text-ink-soft">{report.markdown}</pre>
-            : <OsintReport input={report.input} />}
+            ? <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-line bg-bg-sunken p-4 text-[12px] leading-relaxed text-ink-soft">{report.markdown}{annex?.markdown ? "\n\n" + annex.markdown : ""}</pre>
+            : <OsintReport input={report.input} annex={annex} />}
         </div>
       )}
 

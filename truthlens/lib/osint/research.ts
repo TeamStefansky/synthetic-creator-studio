@@ -20,6 +20,8 @@ import { compileReport, type ReportInput, type CompiledReport, type Confidence }
 import { collectSignalContext } from "@/lib/signal-context";
 import { forecastNarrativeRisk, type RadarForecast } from "@/lib/forecast/radar";
 import { narrateResearch } from "./narrate";
+import { resolveDomainInfra, lookupDomainRdap, gdeltArticles, type DomainInfra, type DomainRdap, type NewsArticle } from "./collect";
+import { buildAnnex, type ReportAnnex } from "./annex";
 
 export const OSINT_RESEARCH_VERSION = "osint-research-v1";
 
@@ -34,6 +36,9 @@ export interface ResearchFindings {
   pivots: PivotResult[];
   hostConduct?: HostConductProfile;
   forecast?: RadarForecast;
+  infra?: DomainInfra;
+  rdap?: DomainRdap;
+  articles: NewsArticle[];
   toolsLive: string[];
   toolsNotConfigured: string[];
   log: string[];
@@ -107,6 +112,12 @@ function assetRows(f: ResearchFindings): string {
 
 function infraRows(f: ResearchFindings): string {
   const rows: string[] = [];
+  if (f.infra?.ip) rows.push(`| Resolved IP | ${f.infra.ip} | ${f.value} | DNS A record | live DNS |`);
+  if (f.infra?.asn) rows.push(`| ASN / operator | ${f.infra.asn}${f.infra.org ? ` ${f.infra.org}` : ""} | ${f.value} | IP enrichment | live |`);
+  if (f.infra?.country) rows.push(`| Hosting country | ${f.infra.country} | ${f.value} | IP geo (approx) | live |`);
+  if (f.rdap?.registrar) rows.push(`| Registrar | ${f.rdap.registrar} | ${f.value} | RDAP | registry |`);
+  if (f.rdap?.registrationDate) rows.push(`| Registered | ${f.rdap.registrationDate} | ${f.value} | RDAP | registry |`);
+  if (f.rdap?.registrantOrg) rows.push(`| Registrant org | ${f.rdap.registrantOrg} | ${f.value} | RDAP (org, disclosed) | registry |`);
   for (const id of f.trackers.gaIds) rows.push(`| Google Analytics id | ${id} | ${f.value} | reverse-analytics | homepage |`);
   for (const id of f.trackers.adsenseIds) rows.push(`| AdSense pub id | ${id} | ${f.value} | reverse-adsense | homepage |`);
   if (f.hostConduct?.matched) rows.push(`| Host operator | ${f.hostConduct.org} | ${f.value} | documented conduct | host-conduct |`);
@@ -124,6 +135,7 @@ function sourcesList(f: ResearchFindings): string {
   for (const p of f.pivots) for (const r of p.results) if (r.connected && r.url) src.push(r.url);
   if (f.watchlist) src.push(...f.watchlist.reporting);
   for (const fi of f.hostConduct?.findings || []) src.push(...fi.sources);
+  for (const a of f.articles.slice(0, 10)) src.push(`${a.title || a.domain} - ${a.url}${a.date ? ` (${a.date})` : ""}`);
   return [...new Set(src)].map((s, i) => `${i + 1}. ${s}`).join("\n");
 }
 
@@ -180,7 +192,22 @@ export function assembleReportInput(f: ResearchFindings, date: string, runId: st
 // --- async collection --------------------------------------------------------
 
 async function collectDomain(value: string, log: string[]): Promise<Partial<ResearchFindings>> {
-  const out: Partial<ResearchFindings> = { trackers: { gaIds: [], adsenseIds: [] }, pivots: [] };
+  const out: Partial<ResearchFindings> = { trackers: { gaIds: [], adsenseIds: [] }, pivots: [], articles: [] };
+  // Resolve infrastructure (domain → IP → ASN/org) + RDAP + news, in parallel.
+  const [infra, rdap, articles] = await Promise.all([
+    resolveDomainInfra(value),
+    lookupDomainRdap(value),
+    gdeltArticles(value),
+  ]);
+  out.infra = infra; out.rdap = rdap; out.articles = articles;
+  if (infra.asn) {
+    log.push(`infra: ${infra.ip} · ${infra.asn}${infra.org ? ` ${infra.org}` : ""}${infra.country ? ` · ${infra.country}` : ""}.`);
+    // The #1 gap closed: resolved ASN/operator → documented host conduct.
+    const hc = buildHostConduct({ asn: infra.asn, org: infra.org, hostName: infra.org });
+    if (hc.matched) { out.hostConduct = hc; log.push(`host-conduct: documented (${hc.org}).`); }
+  } else { log.push("infra: could not resolve to an IP/ASN."); }
+  if (rdap.registrar || rdap.registrationDate) log.push(`rdap: ${[rdap.registrar, rdap.registrationDate].filter(Boolean).join(", ")}.`);
+  if (articles.length) log.push(`news: ${articles.length} recent article(s) (GDELT).`);
   // crt.sh (keyless)
   try {
     const { runPivot: _rp } = await import("./adapters");
@@ -204,19 +231,19 @@ async function collectDomain(value: string, log: string[]): Promise<Partial<Rese
   return out;
 }
 
-/** Run the full research pipeline for a query and compile the report. */
-export async function runResearch(query: string, now: { date: string; runId: string }): Promise<{ findings: ResearchFindings; report: CompiledReport }> {
+/** Run the full research pipeline for a query and compile the report + annex. */
+export async function runResearch(query: string, now: { date: string; runId: string }): Promise<{ findings: ResearchFindings; report: CompiledReport; annex: ReportAnnex }> {
   const { kind, value } = classifyQuery(query);
   const rules = getResolvedRules();
   const log: string[] = [`Classified query as ${kind}.`];
   const watchlist = matchWatchlist(kind, value, rules);
   if (watchlist) log.push(`Watchlist match: ${watchlist.cluster}.`);
 
-  let partial: Partial<ResearchFindings> = { trackers: { gaIds: [], adsenseIds: [] }, pivots: [] };
+  let partial: Partial<ResearchFindings> = { trackers: { gaIds: [], adsenseIds: [] }, pivots: [], articles: [] };
   if (kind === "domain") partial = await collectDomain(value, log);
   else if (kind === "asn") { partial.hostConduct = buildHostConduct({ asn: value }); log.push(partial.hostConduct.matched ? `host-conduct: documented (${partial.hostConduct.org}).` : "host-conduct: not on file."); }
   else if (kind === "adsense_id" || kind === "ga_id") { partial.pivots = [await runPivot(kind, value)]; log.push(`reverse-lookup pivot on ${kind}.`); }
-  else log.push("Free-text query: no direct selector to pivot; watchlist + reporting only.");
+  else { partial.articles = await gdeltArticles(value); log.push(`Free-text query: ${partial.articles.length} news article(s) (GDELT) + watchlist/reporting.`); }
 
   // Early-Warning Radar (keyless: public attention + tone) for a domain or a
   // named network - folds an escalation forecast into the report's impact section.
@@ -248,6 +275,9 @@ export async function runResearch(query: string, now: { date: string; runId: str
     pivots: partial.pivots || [],
     hostConduct: partial.hostConduct,
     forecast: partial.forecast,
+    infra: partial.infra,
+    rdap: partial.rdap,
+    articles: partial.articles || [],
     toolsLive: [...toolsLive], toolsNotConfigured: [...toolsNotConfigured], log,
   };
 
@@ -257,5 +287,6 @@ export async function runResearch(query: string, now: { date: string; runId: str
   const narrative = await narrateResearch(findings, confidence);
   if (Object.keys(narrative).length) log.push("narrative: synthesized by the LLM (facts + confidence fixed in code).");
   const input = assembleReportInput(findings, now.date, now.runId, narrative);
-  return { findings, report: compileReport(input) };
+  const annex = buildAnnex(findings, rules);
+  return { findings, report: compileReport(input), annex };
 }

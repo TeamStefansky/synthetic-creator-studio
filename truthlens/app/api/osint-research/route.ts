@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
     if (query.length < 3) return NextResponse.json({ error: "query must be at least 3 characters" }, { status: 400, headers: NO_STORE });
     const date = new Date().toISOString().slice(0, 10);
     const runId = `run-${Date.now().toString(36)}`;
-    const { findings, report } = await runResearch(query, { date, runId });
-    return NextResponse.json({ query, findings: { kind: findings.kind, value: findings.value, log: findings.log, toolsLive: findings.toolsLive, toolsNotConfigured: findings.toolsNotConfigured, watchlist: findings.watchlist?.cluster || null }, report }, { headers: NO_STORE });
+    const { findings, report, annex } = await runResearch(query, { date, runId });
+    return NextResponse.json({ query, findings: { kind: findings.kind, value: findings.value, log: findings.log, toolsLive: findings.toolsLive, toolsNotConfigured: findings.toolsNotConfigured, watchlist: findings.watchlist?.cluster || null }, report, annex }, { headers: NO_STORE });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "research failed" }, { status: 500, headers: NO_STORE });
   }
