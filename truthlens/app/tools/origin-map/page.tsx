@@ -197,7 +197,7 @@ export default function OriginMapPage() {
           </h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          "Where did this content come from?" on one map. Enter a <span className="text-ink">topic/term</span> to plot
+          “Where did this content come from?” on one map. Enter a <span className="text-ink">topic/term</span> to plot
           geolocated observations and their spread, or a <span className="text-ink">URL/domain</span> to also pin the
           resolved origin server behind a CDN. The earliest observed point is marked distinctly - and it is{" "}
           <span className="text-ink">not</span> a claim about the true source.
@@ -250,7 +250,7 @@ export default function OriginMapPage() {
         <div className="card text-sm text-ink-secondary">
           Enter a term or URL above. TruthLens sweeps connected public sources, plots where the content was observed,
           marks the earliest observation (labeled as observed, not the origin), and - for a URL - reveals the true
-          server behind any CDN. Nothing is invented: a layer with no connected source shows an honest "not connected" state.
+          server behind any CDN. Nothing is invented: a layer with no connected source shows an honest “not connected” state.
         </div>
       )}
 
@@ -270,7 +270,7 @@ export default function OriginMapPage() {
                 <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-ink-secondary">
                   {mentionsErr
                     ? <>Mentions source not connected - {mentionsErr}.</>
-                    : <>No geolocated observations of "{entity}" from the connected sources. This is a real "none observed" result, not an error.</>}
+                    : <>No geolocated observations of “{entity}” from the connected sources. This is a real “none observed” result, not an error.</>}
                 </div>
               ) : (
                 <>
@@ -429,8 +429,8 @@ export default function OriginMapPage() {
                   <NetworkGraph network={amplifier.network} />
                   <p className="text-xs text-ink-secondary">
                     The searched term linked to the publisher <strong>domains</strong> that carried it across the collected
-                    mentions. Nodes are domains only - never an account handle or a person. A line means "appeared in
-                    collected mentions" (a co-appearance observation), <span className="text-ink">not</span> proof of
+                    mentions. Nodes are domains only - never an account handle or a person. A line means “appeared in
+                    collected mentions” (a co-appearance observation), <span className="text-ink">not</span> proof of
                     coordination: this can be ordinary coverage, syndication, or criticism.
                   </p>
                 </>
