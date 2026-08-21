@@ -1,18 +1,29 @@
 "use client";
 
-// Access-gate login. Posts the shared password to /api/auth/login, which sets an
-// httpOnly cookie; on success we go to ?next= (or the home dashboard). Styled in the
-// new design language (near-black, violet primary, cyan accent). No password is
-// stored client-side. When the gate isn't configured the API says so honestly.
+// Access-gate login. Two REAL ways in: (1) the shared access password (posts to
+// /api/auth/login, which sets an httpOnly cookie), and (2) "Continue with
+// Facebook" - standard Meta OAuth via /api/auth/facebook/login, which shows
+// Meta's own permission dialog (public_profile, pages_show_list,
+// pages_read_engagement, instagram_basic) and lands on the Meta Assets
+// monitoring view. No password or token is stored client-side. Errors from
+// either path are reported honestly (never a faked success).
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, Lock, ArrowRight } from "lucide-react";
+import { Loader2, Lock, ArrowRight, Facebook } from "lucide-react";
+
+const FB_ERRORS: Record<string, string> = {
+  not_configured: "Facebook Login is not configured on this deployment (FACEBOOK_APP_ID / FACEBOOK_APP_SECRET are not set).",
+  denied: "Facebook sign-in was cancelled - no permissions were granted.",
+  state_mismatch: "Facebook sign-in could not be verified (state mismatch). Please try again.",
+  exchange_failed: "Facebook sign-in failed while exchanging the code for a token. Please try again.",
+};
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/";
+  const fbError = FB_ERRORS[params.get("fb") || ""] || "";
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -75,6 +86,23 @@ function LoginForm() {
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Enter <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wide text-[#6b6e8a]">
+            <span className="h-px flex-1 bg-[#4755a5]/20" /> or <span className="h-px flex-1 bg-[#4755a5]/20" />
+          </div>
+
+          {/* Real Meta OAuth - the server route redirects to Facebook's own
+              permission dialog; the callback exchanges the code server-side. */}
+          <a
+            href={`/api/auth/facebook/login?next=${encodeURIComponent("/tools/meta")}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1877F2] px-4 py-2.5 text-sm font-medium text-white transition hover:brightness-110"
+          >
+            <Facebook className="h-4 w-4" /> Continue with Facebook
+          </a>
+          <p className="mt-2 text-center text-[11px] text-[#6b6e8a]">
+            Connects the Pages and Instagram account you manage, for read-only monitoring.
+          </p>
+          {fbError && <p className="mt-2 text-sm text-[#f87171]">{fbError}</p>}
         </div>
 
         <p className="mt-6 text-center text-xs text-[#6b6e8a]">
