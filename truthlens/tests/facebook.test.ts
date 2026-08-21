@@ -4,7 +4,7 @@
 // the request origin; unconfigured → honestly not configured.
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { FB_SCOPES, fbConfigured, fbAuthorizeUrl, fbRedirectUri } from "@/lib/facebook";
+import { FB_SCOPES, fbConfigured, fbAuthorizeUrl, fbRedirectUri, sanitizeNextPath } from "@/lib/facebook";
 
 const ENV_KEYS = ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET", "FACEBOOK_REDIRECT_URI"] as const;
 const saved: Record<string, string | undefined> = {};
@@ -47,6 +47,18 @@ describe("configuration honesty", () => {
     expect(fbConfigured()).toBe(false);
     process.env.FACEBOOK_APP_SECRET = "abc";
     expect(fbConfigured()).toBe(true);
+  });
+});
+
+describe("open-redirect guard (post-login next path)", () => {
+  it("accepts only plain same-origin paths", () => {
+    expect(sanitizeNextPath("/tools/meta")).toBe("/tools/meta");
+    expect(sanitizeNextPath("/casebook?x=1")).toBe("/casebook?x=1");
+  });
+  it("rejects protocol-relative, absolute, backslash, and junk values", () => {
+    for (const bad of ["//evil.com", "//evil.com/tools/meta", "https://evil.com", "/\\evil.com", "/tools\\..\\x", "javascript:alert(1)", "", null, undefined, 42]) {
+      expect(sanitizeNextPath(bad as any)).toBe("/tools/meta");
+    }
   });
 });
 

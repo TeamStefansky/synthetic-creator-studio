@@ -58,6 +58,17 @@ export function fbRedirectUri(requestOrigin: string): string {
   return fromEnv || `${requestOrigin.replace(/\/$/, "")}/api/auth/facebook/callback`;
 }
 
+/**
+ * Sanitize the post-login destination to a same-origin path. Only a plain
+ * in-app path passes: it must start with a single "/" (a protocol-relative
+ * "//evil.com" or a backslash variant would redirect off-site) - anything else
+ * falls back to the monitoring view.
+ */
+export function sanitizeNextPath(next: unknown): string {
+  const n = typeof next === "string" ? next : "";
+  return /^\/(?![/\\])/.test(n) && !n.includes("\\") ? n : "/tools/meta";
+}
+
 /** The Meta permission dialog URL (the real dialog - no shortcut around it). */
 export function fbAuthorizeUrl(redirectUri: string, state: string): string {
   const p = new URLSearchParams({

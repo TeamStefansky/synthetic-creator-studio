@@ -5,7 +5,7 @@
 // honest redirect back to /login with an error flag (never a fake dialog).
 
 import { NextRequest, NextResponse } from "next/server";
-import { fbConfigured, fbAuthorizeUrl, fbRedirectUri, FB_STATE_COOKIE } from "@/lib/facebook";
+import { fbConfigured, fbAuthorizeUrl, fbRedirectUri, sanitizeNextPath, FB_STATE_COOKIE } from "@/lib/facebook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,12 +19,12 @@ export async function GET(req: NextRequest) {
   }
 
   const state = crypto.randomUUID().replace(/-/g, "");
-  const next = req.nextUrl.searchParams.get("next") || "/tools/meta";
+  const next = sanitizeNextPath(req.nextUrl.searchParams.get("next"));
   const redirectUri = fbRedirectUri(origin);
 
   const res = NextResponse.redirect(fbAuthorizeUrl(redirectUri, state));
   // State + intended destination live in one short-lived httpOnly cookie.
-  res.cookies.set(FB_STATE_COOKIE, JSON.stringify({ state, next: next.startsWith("/") ? next : "/tools/meta" }), {
+  res.cookies.set(FB_STATE_COOKIE, JSON.stringify({ state, next }), {
     httpOnly: true,
     sameSite: "lax",
     secure: origin.startsWith("https"),

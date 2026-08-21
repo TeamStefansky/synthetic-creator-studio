@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE, expectedToken } from "@/lib/auth";
-import { fbConfigured, fbExchangeCode, fbMe, fbRedirectUri, FB_STATE_COOKIE, FB_TOKEN_COOKIE } from "@/lib/facebook";
+import { fbConfigured, fbExchangeCode, fbMe, fbRedirectUri, sanitizeNextPath, FB_STATE_COOKIE, FB_TOKEN_COOKIE } from "@/lib/facebook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,7 +41,8 @@ export async function GET(req: NextRequest) {
     const token = await fbExchangeCode(code, fbRedirectUri(origin));
     await fbMe(token); // confirm the token is live before granting a session
 
-    const next = saved.next && saved.next.startsWith("/") ? saved.next : "/tools/meta";
+    // Same-origin path only - "//evil.com" and friends fall back (open-redirect guard).
+    const next = sanitizeNextPath(saved.next);
     const res = NextResponse.redirect(new URL(next, origin));
     const secure = origin.startsWith("https");
     res.cookies.set(FB_TOKEN_COOKIE, token, {
