@@ -1166,10 +1166,17 @@ export default function SignalGrid({ initialEntity = "" }: { initialEntity?: str
                 <div className="sg-ph sg-sub"><i style={{ background: "var(--sg-cat-video)" }} />SOURCES</div>
                 <div className="sg-sources">
                   {data.sources.map((s) => (
-                    <span key={s.source} className={`sg-srcchip ${s.connected ? "" : "sg-off"}`}
+                    <span key={s.source} className={`sg-srcchip ${s.connected ? (s.error ? "sg-err" : "") : "sg-off"}`}
                       title={s.connected ? s.error || "" : s.reason || "not connected"}>
-                      {s.source}{s.connected ? ` · ${s.count}` : " · off"}
+                      {s.source}{s.connected ? (s.error ? " · error" : ` · ${s.count}`) : " · off"}
                     </span>
+                  ))}
+                </div>
+                {/* A failing source states its reason in the open - hover hides
+                    a diagnosis nobody finds (e.g. an X token below Basic tier). */}
+                <div className="sg-srcerrs">
+                  {data.sources.filter((s) => s.connected && s.error).map((s) => (
+                    <div key={s.source} className="sg-srcerr"><b>{s.source}:</b> {s.error}</div>
                   ))}
                 </div>
               </div>
@@ -1324,6 +1331,9 @@ const CSS = `
 .sg-sources{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px}
 .sg-srcchip{border:1px solid var(--sg-line);color:var(--sg-dim);font-size:10px;padding:2px 8px;border-radius:var(--radius-full)}
 .sg-srcchip.sg-off{border-color:rgba(245,166,35,.3);color:var(--sg-warn);background:rgba(245,166,35,.05)}
+.sg-srcchip.sg-err{border-color:rgba(255,92,98,.35);color:var(--sg-bad,#ff5c62);background:rgba(255,92,98,.06)}
+.sg-srcerrs{padding:0 14px 10px}
+.sg-srcerr{color:var(--sg-bad,#ff5c62);font-size:10px;line-height:1.5;overflow-wrap:anywhere}
 .sg-mapzone{grid-area:map;position:relative;overflow:hidden;touch-action:none;
   background:radial-gradient(ellipse at 50% 40%, rgba(127,73,225,.08) 0%, transparent 70%),var(--color-surface-sunken)}
 .sg-stage{position:absolute;inset:0}
