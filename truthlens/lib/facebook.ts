@@ -47,6 +47,17 @@ export function fbConfigured(): boolean {
 }
 
 /**
+ * Optional "Facebook Login for Business" Configuration ID. Business-type Meta
+ * apps expect the login dialog to reference a saved Configuration (created in
+ * App Dashboard → Facebook Login for Business → Configurations) instead of a
+ * raw scope list. When set, the dialog is called with config_id; the
+ * Configuration itself must contain exactly the four review permissions.
+ */
+export function fbConfigId(): string {
+  return (process.env.FACEBOOK_CONFIG_ID || "").trim();
+}
+
+/**
  * The OAuth redirect URI. FACEBOOK_REDIRECT_URI wins when set; otherwise it is
  * derived from the request origin (`https://<host>/api/auth/facebook/callback`),
  * so the same code serves the Vercel domain and http://localhost:3000. Whatever
@@ -76,8 +87,12 @@ export function fbAuthorizeUrl(redirectUri: string, state: string): string {
     redirect_uri: redirectUri,
     state,
     response_type: "code",
-    scope: FB_SCOPES.join(","),
   });
+  const configId = fbConfigId();
+  // Business apps: reference the saved Configuration (which lists the same four
+  // permissions). Otherwise: request the scopes directly. Never both.
+  if (configId) p.set("config_id", configId);
+  else p.set("scope", FB_SCOPES.join(","));
   return `https://www.facebook.com/${fbGraphVersion()}/dialog/oauth?${p.toString()}`;
 }
 

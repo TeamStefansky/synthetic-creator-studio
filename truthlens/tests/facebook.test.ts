@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { FB_SCOPES, fbConfigured, fbAuthorizeUrl, fbRedirectUri, sanitizeNextPath } from "@/lib/facebook";
 
-const ENV_KEYS = ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET", "FACEBOOK_REDIRECT_URI"] as const;
+const ENV_KEYS = ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET", "FACEBOOK_REDIRECT_URI", "FACEBOOK_CONFIG_ID"] as const;
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -36,6 +36,16 @@ describe("scope discipline", () => {
     expect(url.searchParams.get("client_id")).toBe("1566011568209587");
     expect(url.searchParams.get("state")).toBe("state123");
     expect(url.toString()).not.toContain("test-secret-never-in-url");
+    expect(url.searchParams.has("client_secret")).toBe(false);
+  });
+
+  it("Business apps: FACEBOOK_CONFIG_ID switches the dialog to config_id (no raw scope, still no secret)", () => {
+    process.env.FACEBOOK_APP_ID = "1566011568209587";
+    process.env.FACEBOOK_APP_SECRET = "test-secret-never-in-url";
+    process.env.FACEBOOK_CONFIG_ID = "987654321";
+    const url = new URL(fbAuthorizeUrl("https://example.com/api/auth/facebook/callback", "s1"));
+    expect(url.searchParams.get("config_id")).toBe("987654321");
+    expect(url.searchParams.has("scope")).toBe(false);
     expect(url.searchParams.has("client_secret")).toBe(false);
   });
 });
