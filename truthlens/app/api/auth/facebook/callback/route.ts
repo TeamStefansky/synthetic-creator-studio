@@ -63,7 +63,10 @@ export async function GET(req: NextRequest) {
     });
     res.cookies.set(FB_STATE_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
     return res;
-  } catch {
+  } catch (e: any) {
+    // Server-side only (Vercel function logs): the Graph error message, never
+    // any token or secret. Helps diagnose version/secret/redirect mismatches.
+    console.error("[facebook-callback] token exchange failed:", e?.message || e);
     return backToLogin(origin, "exchange_failed");
   }
 }
