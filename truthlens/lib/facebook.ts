@@ -211,9 +211,12 @@ export type FbPost = {
 /**
  * pages_read_engagement → recent posts of a managed Page with reaction /
  * comment / share counts. Reads with the Page token from /me/accounts.
+ * Uses /published_posts (posts published BY the Page): with a Page token it
+ * needs only pages_read_engagement, whereas /posts and /feed demand the extra
+ * pages_read_user_content permission we deliberately do not request.
  */
 export async function fbPagePosts(pageId: string, pageToken: string): Promise<FbPost[]> {
-  const j = await graphGet<any>(`/${pageId}/posts`, {
+  const j = await graphGet<any>(`/${pageId}/published_posts`, {
     access_token: pageToken,
     fields:
       "id,message,created_time,permalink_url,shares," +
