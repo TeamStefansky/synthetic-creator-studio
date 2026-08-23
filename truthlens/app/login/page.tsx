@@ -24,6 +24,9 @@ function LoginForm() {
   const params = useSearchParams();
   const next = params.get("next") || "/";
   const fbError = FB_ERRORS[params.get("fb") || ""] || "";
+  // Meta's own error string relayed by the callback (never a token/secret) -
+  // makes configuration problems diagnosable from the screen itself.
+  const fbDetail = (params.get("fb_detail") || "").slice(0, 160);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -103,6 +106,7 @@ function LoginForm() {
             Connects the Pages and Instagram account you manage, for read-only monitoring.
           </p>
           {fbError && <p className="mt-2 text-sm text-[#f87171]">{fbError}</p>}
+          {fbDetail && <p className="mt-1 text-[11px] text-[#f87171]/80">Meta says: {fbDetail}</p>}
         </div>
 
         <p className="mt-6 text-center text-xs text-[#6b6e8a]">

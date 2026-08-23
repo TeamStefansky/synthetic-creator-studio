@@ -13,9 +13,12 @@ import { fbConfigured, fbExchangeCode, fbMe, fbRedirectUri, sanitizeNextPath, FB
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function backToLogin(origin: string, flag: string): NextResponse {
+function backToLogin(origin: string, flag: string, detail?: string): NextResponse {
   const url = new URL("/login", origin);
   url.searchParams.set("fb", flag);
+  // Meta's own Graph error string (never a token/secret) - shown on /login so
+  // configuration problems are diagnosable without digging in server logs.
+  if (detail) url.searchParams.set("fb_detail", detail.slice(0, 160));
   const res = NextResponse.redirect(url);
   res.cookies.set(FB_STATE_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
   return res;
@@ -64,9 +67,7 @@ export async function GET(req: NextRequest) {
     res.cookies.set(FB_STATE_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
     return res;
   } catch (e: any) {
-    // Server-side only (Vercel function logs): the Graph error message, never
-    // any token or secret. Helps diagnose version/secret/redirect mismatches.
     console.error("[facebook-callback] token exchange failed:", e?.message || e);
-    return backToLogin(origin, "exchange_failed");
+    return backToLogin(origin, "exchange_failed", String(e?.message || ""));
   }
 }
