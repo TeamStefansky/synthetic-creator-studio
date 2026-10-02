@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LayoutGrid, ExternalLink, AlertTriangle } from "lucide-react";
 import { fmtDate } from "@/lib/ui";
 import Disclaimer from "@/components/Disclaimer";
+import ViewTabs from "@/components/ViewTabs";
 
 interface Entry { id: string; verdict: string; summary: string; ts: string; }
 
@@ -31,6 +32,7 @@ export default function ChecksPage() {
 
   return (
     <div className="space-y-6">
+      <ViewTabs set="history" />
       <div>
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-6 w-6 text-brand-soft" />

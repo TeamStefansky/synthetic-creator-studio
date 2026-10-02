@@ -11,6 +11,7 @@ import { buildOriginExposureNetwork } from "@/lib/origin-map";
 import { recordSearch } from "@/lib/clues/record";
 import { startJob } from "@/lib/jobs/store";
 import { useJob } from "@/lib/jobs/useJobs";
+import ViewTabs from "@/components/ViewTabs";
 
 // "🇮🇱 Tel Aviv, Israel" for a record's geo (blank when unknown).
 function locLabel(country?: string, city?: string): string {
@@ -86,6 +87,7 @@ export default function OriginExposurePage() {
 
   return (
     <div className="space-y-6">
+      <ViewTabs set="origin" />
       <div>
         <div className="flex items-center gap-2">
           <Server className="h-6 w-6 text-brand-soft" />

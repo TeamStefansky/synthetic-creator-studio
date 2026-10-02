@@ -2,6 +2,7 @@ import { Radio } from "lucide-react";
 import SignalGrid from "@/components/SignalGrid";
 import Disclaimer from "@/components/Disclaimer";
 import FullBleed from "@/components/FullBleed";
+import ViewTabs from "@/components/ViewTabs";
 
 // SIGNAL - Brand Intelligence Grid. A full-console view of Brand Mentions: the
 // same real, server-collected public mentions (GET /api/mentions) rendered as a
@@ -18,6 +19,7 @@ export default function SignalPage({ searchParams }: { searchParams: { entity?: 
   const initial = (searchParams?.entity || "").trim();
   return (
     <div className="space-y-6">
+      <ViewTabs set="signal" />
       <FullBleed />
       <div>
         <div className="flex items-center gap-2">
@@ -27,8 +29,9 @@ export default function SignalPage({ searchParams }: { searchParams: { entity?: 
           </h1>
         </div>
         <p className="mt-1 max-w-2xl text-sm text-ink-secondary">
-          A full-console view of Brand Mentions - the same real, server-collected public mentions,
-          rendered as a live world grid with a signal feed and honest analysis panels.
+          Real, server-collected public mentions across every connected source, rendered as a live
+          world grid with a signal feed and honest analysis panels. Switch views above for the flat
+          list with prediction markets, or the early-warning escalation forecast.
         </p>
       </div>
       <SignalGrid initialEntity={initial} />

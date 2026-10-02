@@ -19,6 +19,8 @@ import { detectCheckType, CHECK_TYPES, CheckType } from "@/lib/check/detect";
 import { CheckRecord, genId, getLocal, saveLocal, syncShared } from "@/lib/check/history";
 import { extractEntities } from "@/lib/clues/extract";
 import { linkAndRecord, connectionsFor, ClueConnection } from "@/lib/clues";
+import { linkCheckToActiveCase } from "@/lib/casebook/store";
+import { reopenHref } from "@/lib/clues/reopen";
 import { bandLabel } from "@/lib/ui";
 
 const ENDPOINT: Record<CheckType, string> = {
@@ -27,7 +29,7 @@ const ENDPOINT: Record<CheckType, string> = {
   social: "/api/social-analyze",
 };
 const TOOL_ROUTE: Record<CheckType, string> = {
-  site: "/", post: "/tools/post", logs: "/tools/logs", email: "/tools/email",
+  site: "/report", post: "/tools/post", logs: "/tools/logs", email: "/tools/email",
   narrative: "/platform", cib: "/platform", social: "/check",
 };
 
@@ -137,6 +139,8 @@ function CheckInner() {
       syncShared(rec);
       // Clue layer: link repeated entities to earlier checks, then record this one.
       setConnections(linkAndRecord(rec.id, extractEntities(t, value, data)));
+      // Same as every other tool (lib/clues/record): file it into the active case.
+      try { linkCheckToActiveCase(rec.id); } catch { /* no active case */ }
     } catch (e: any) {
       setError(e?.message || "Check failed");
     } finally {
@@ -238,7 +242,7 @@ function CheckInner() {
                     {c.checks.slice(0, 4).map((ch, j) => (
                       <span key={ch.id}>
                         {j > 0 && ", "}
-                        <Link href={`/check?reopen=${encodeURIComponent(ch.id)}`} className="text-brand-soft hover:underline">{ch.headline.slice(0, 40)}</Link>
+                        <Link href={reopenHref(ch)} className="text-brand-soft hover:underline">{ch.headline.slice(0, 40)}</Link>
                       </span>
                     ))}
                   </li>

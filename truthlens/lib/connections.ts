@@ -48,7 +48,7 @@ export const INTEGRATIONS: Integration[] = [
   { key: "mediastack", label: "Mediastack", category: "Brand mentions", envVars: ["MEDIASTACK_API_KEY"], getUrl: "mediastack.com", href: "https://mediastack.com/" },
   { key: "youtube", label: "YouTube (video)", category: "Brand mentions", envVars: ["YOUTUBE_API_KEY"], getUrl: "console.cloud.google.com (YouTube Data API v3)", href: "https://console.cloud.google.com/apis/library/youtube.googleapis.com" },
   { key: "x", label: "X / Twitter", category: "Brand mentions", envVars: ["X_BEARER_TOKEN"], getUrl: "developer.x.com (Basic tier+ for search)", href: "https://developer.x.com/en/portal/dashboard", note: "Paid" },
-  { key: "rss", label: "RSS feeds", category: "Brand mentions", envVars: ["RSS_FEEDS"], getUrl: "your own comma-separated feed URLs" },
+  { key: "rss", label: "RSS feeds", category: "Brand mentions", envVars: ["RSS_FEEDS"], getUrl: "comma-separated feed URLs - or add feeds on the RSS feeds tab (those are used even when this is unset)" },
 
   // --- Analysis & signals ---
   { key: "anthropic", label: "Anthropic (sentiment + narratives)", category: "Analysis & signals", envVars: ["ANTHROPIC_API_KEY"], getUrl: "console.anthropic.com", href: "https://console.anthropic.com/settings/keys" },

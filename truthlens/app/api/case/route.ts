@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 import { runBoard } from "@/lib/board/links";
 import { synthesizeCase } from "@/lib/case/synthesize";
 import type { StrengthEdge } from "@/lib/case/cluster";
-import { isIndividualCharacteristic } from "@/lib/board/calibrate";
+import { boardStrengthEdges } from "@/lib/board/edges";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,12 +22,7 @@ export async function POST(req: Request) {
 
   try {
     const board = await runBoard(domains);
-    const boardEdges: StrengthEdge[] = board.edges
-      .filter((e) => e.strength !== "Unknown")
-      .map((e) => ({
-        a: e.a, b: e.b, strength: e.strength, evidenceId: `${e.a}:${e.b}`, reason: e.top?.display,
-        characteristic: e.top ? (isIndividualCharacteristic(e.top.kind) ? "individual" as const : "class" as const) : undefined,
-      }));
+    const boardEdges: StrengthEdge[] = boardStrengthEdges(board);
 
     const caseFile = synthesizeCase({
       entities: board.entities,
