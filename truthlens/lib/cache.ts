@@ -4,6 +4,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
+import { createHash } from "crypto";
 
 const TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -17,8 +18,22 @@ interface Envelope<T> {
 
 const mem = new Map<string, Envelope<any>>();
 
+// TRUTHLENS_DISK_CACHE=off keeps the cache memory-only (the test suite sets it so
+// no run reads another run's stale files).
+const diskEnabled = () => process.env.TRUTHLENS_DISK_CACHE !== "off";
+
+/** Drop every in-memory entry (test isolation; disk entries simply age out). */
+export function cacheReset(): void {
+  mem.clear();
+}
+
+// Filesystem-safe AND injective: a key that needed rewriting carries a hash of
+// the original, so Hebrew/Arabic/Cyrillic queries of equal length (all of which
+// rewrite to the same run of "_") can never share an entry.
 function safeKey(key: string): string {
-  return key.replace(/[^a-z0-9._-]/gi, "_");
+  const cleaned = key.replace(/[^a-z0-9._-]/gi, "_");
+  if (cleaned === key) return key;
+  return `${cleaned.slice(0, 80)}~${createHash("sha256").update(key).digest("hex").slice(0, 24)}`;
 }
 
 function isFresh(env: Envelope<any> | undefined, maxAgeMs: number): boolean {
@@ -32,6 +47,7 @@ export async function cacheGet<T>(
   const k = safeKey(key);
   const m = mem.get(k);
   if (isFresh(m, maxAgeMs)) return m!.value as T;
+  if (!diskEnabled()) return null;
 
   try {
     const file = path.join(CACHE_DIR, `${k}.json`);
@@ -51,6 +67,7 @@ export async function cacheSet<T>(key: string, value: T): Promise<void> {
   const k = safeKey(key);
   const env: Envelope<T> = { storedAt: Date.now(), value };
   mem.set(k, env);
+  if (!diskEnabled()) return;
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
     await fs.writeFile(path.join(CACHE_DIR, `${k}.json`), JSON.stringify(env));

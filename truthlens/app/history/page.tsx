@@ -11,6 +11,8 @@ import Disclaimer from "@/components/Disclaimer";
 import { CheckRecord, listLocal, removeLocal } from "@/lib/check/history";
 import { buildFindings, type FindingsReport } from "@/lib/clues/findings";
 import { fmtDate } from "@/lib/ui";
+import ViewTabs from "@/components/ViewTabs";
+import { reopenHref } from "@/lib/clues/reopen";
 
 const TYPE_LABEL: Record<string, string> = {
   site: "Site Report", post: "Post Check", logs: "Log Analyzer", email: "Email Tracer",
@@ -43,7 +45,7 @@ export default function HistoryPage() {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Link href={`/check?reopen=${encodeURIComponent(c.id)}`} className="flex items-center gap-1 text-xs text-brand-soft hover:underline">
+        <Link href={reopenHref(c)} className="flex items-center gap-1 text-xs text-brand-soft hover:underline">
           <RotateCcw className="h-3.5 w-3.5" /> Reopen
         </Link>
         {isLocal && (
@@ -57,6 +59,7 @@ export default function HistoryPage() {
 
   return (
     <div className="animate-fade-up space-y-4">
+      <ViewTabs set="history" />
       <div>
         <div className="flex items-center gap-2">
           <HistoryIcon className="h-6 w-6 text-brand-soft" />

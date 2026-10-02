@@ -31,6 +31,7 @@ import {
   EARLIEST_LABEL, ORIGIN_SERVER_ALT,
 } from "@/lib/origin-map";
 import { recordSearch } from "@/lib/clues/record";
+import ViewTabs from "@/components/ViewTabs";
 
 const EARLIEST_RING = "#22D3EE"; // cyan - matches the influence-map "earliest" ring
 const INFRA_COLOR = "#F87171";   // red - resolved origin-server pins
@@ -189,6 +190,7 @@ export default function OriginMapPage() {
 
   return (
     <div className="space-y-6">
+      <ViewTabs set="origin" />
       <div>
         <div className="flex items-center gap-2">
           <MapPin className="h-6 w-6 text-brand-soft" />

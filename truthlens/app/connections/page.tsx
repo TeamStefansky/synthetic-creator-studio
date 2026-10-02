@@ -11,6 +11,7 @@ import { Rss, Plus, Trash2, RefreshCw, Loader2, Power, Pencil, ExternalLink, Shi
 import Disclaimer from "@/components/Disclaimer";
 import ToolIntro from "@/components/ToolIntro";
 import { parseFeedInput, extractFeedCandidates } from "@/lib/feeds/input";
+import ViewTabs from "@/components/ViewTabs";
 
 interface UserFeed {
   id: string; url: string; title?: string; siteUrl?: string; addedAt: string;
@@ -173,6 +174,7 @@ export default function ConnectionsPage() {
 
   return (
     <div className="animate-fade-up space-y-6">
+      <ViewTabs set="connections" />
       <div>
         <div className="flex items-center gap-2">
           <Rss className="h-6 w-6 text-brand-soft" />

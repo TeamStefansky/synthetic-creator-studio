@@ -1,6 +1,7 @@
 import { Plug, CheckCircle2, Circle, ExternalLink } from "lucide-react";
 import { connectionSummary } from "@/lib/connections";
 import Disclaimer from "@/components/Disclaimer";
+import ViewTabs from "@/components/ViewTabs";
 
 // Live connection status - the system reports which integrations are connected
 // (keyless, or their env vars are set on this deployment) vs. not, with the
@@ -16,6 +17,7 @@ export default function StatusPage() {
 
   return (
     <div className="space-y-6">
+      <ViewTabs set="connections" />
       <div>
         <div className="flex items-center gap-2">
           <Plug className="h-6 w-6 text-brand-soft" />

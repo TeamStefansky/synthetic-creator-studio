@@ -14,6 +14,7 @@ import ConfidenceBadge, { type ConfidenceLevel } from "@/components/ConfidenceBa
 import Disclaimer from "@/components/Disclaimer";
 import { startFetchJob } from "@/lib/jobs/store";
 import { useJob } from "@/lib/jobs/useJobs";
+import ViewTabs from "@/components/ViewTabs";
 
 type Indicator = { key: string; label: string; contribution: number; detail: string };
 type Forecast = {
@@ -59,6 +60,7 @@ export default function RadarPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <ViewTabs set="signal" />
       <div>
         <div className="flex items-center gap-2">
           <RadarIcon className="h-6 w-6 text-brand-soft" />

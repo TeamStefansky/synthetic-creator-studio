@@ -446,7 +446,22 @@ export const SOURCES: NarrativeSource[] = [
 ];
 
 /** Run every source in parallel, isolating failures. */
+/** Per-query cache for the full multi-source sweep. Every caller (Brand Watch,
+ * CIB, newsroom, watch scans, OSINT research) shares one collection per window,
+ * so a report is reproducible and sources are not re-hit back-to-back (rule 8). */
+export const MENTIONS_CACHE_MS = 90_000;
+
 export async function collectMentions(query: string): Promise<SourceResult[]> {
+  const ck = `mentions-raw:${query.trim().toLowerCase()}`;
+  const hit = await cacheGet<SourceResult[]>(ck, MENTIONS_CACHE_MS);
+  if (hit) return hit;
+  const results = await collectMentionsUncached(query);
+  // A sweep where every source failed is transient - never cache it.
+  if (results.some((r) => r.mentions.length > 0)) await cacheSet(ck, results);
+  return results;
+}
+
+async function collectMentionsUncached(query: string): Promise<SourceResult[]> {
   return Promise.all(SOURCES.map(async (s): Promise<SourceResult> => {
     if (!s.available()) {
       return { status: { source: s.name, connected: false, reason: s.reason, count: 0 }, mentions: [] };

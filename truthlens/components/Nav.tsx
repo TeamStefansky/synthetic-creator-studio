@@ -9,10 +9,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   FileSearch, Mail, ScrollText, Activity, Info, ShieldQuestion, Radar,
-  CheckCircle, History, Menu, X, Server, Globe, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
-  ShieldAlert, Coins, Bot, LogOut, Rss, Newspaper, MapPin, Clapperboard, FolderKanban, Radar as RadarIcon, Terminal, Crosshair, Facebook,
+  CheckCircle, History, Menu, X, Server, Radio, Globe2, Plug, HeartHandshake, Network, Share2,
+  ShieldAlert, Coins, Bot, LogOut, Newspaper, Clapperboard, FolderKanban, Terminal, Crosshair, Facebook,
 } from "lucide-react";
 import CaseSwitcher from "./CaseSwitcher";
+import { inViewSet } from "@/lib/views";
 
 // Six mission hubs. The flat tool list is grouped into the areas of the mission:
 // analyze an asset, monitor narratives, investigate connections, look up entities,
@@ -31,17 +32,14 @@ const groups: NavGroup[] = [
       { href: "/tools/media", label: "Media Check", icon: Clapperboard, match: (p) => p.startsWith("/tools/media") },
       { href: "/tools/logs", label: "Log Analyzer", icon: ScrollText, match: (p) => p.startsWith("/tools/logs") },
       { href: "/tools/email", label: "Email Tracer", icon: Mail, match: (p) => p.startsWith("/tools/email") },
-      { href: "/tools/origin", label: "Origin Exposure", icon: Server, match: (p) => p === "/tools/origin" || p.startsWith("/tools/origin/") },
-      { href: "/tools/origin-map", label: "Origin Map", icon: MapPin, match: (p) => p.startsWith("/tools/origin-map") },
+      { href: "/tools/origin", label: "Origin Exposure", icon: Server, match: (p) => inViewSet("origin", p) },
     ],
   },
   {
     group: "Monitor",
     items: [
       { href: "/platform", label: "Brand Watch", icon: Radar, match: (p) => p.startsWith("/platform") },
-      { href: "/tools/mentions", label: "Brand Mentions", icon: Globe, match: (p) => p.startsWith("/tools/mentions") },
-      { href: "/tools/signal", label: "SIGNAL Grid", icon: Radio, match: (p) => p.startsWith("/tools/signal") },
-      { href: "/tools/radar", label: "Early-Warning Radar", icon: RadarIcon, match: (p) => p.startsWith("/tools/radar") },
+      { href: "/tools/signal", label: "SIGNAL Grid", icon: Radio, match: (p) => inViewSet("signal", p) },
       { href: "/tools/meta", label: "Meta Assets", icon: Facebook, match: (p) => p.startsWith("/tools/meta") },
       { href: "/newsroom", label: "News Room", icon: Newspaper, match: (p) => p.startsWith("/newsroom") },
       { href: "/monitor", label: "Monitor", icon: Activity, match: (p) => p.startsWith("/monitor") },
@@ -53,7 +51,6 @@ const groups: NavGroup[] = [
       { href: "/casebook", label: "Cases", icon: FolderKanban, match: (p) => p.startsWith("/casebook") },
       { href: "/tools/osint", label: "OSINT", icon: Crosshair, match: (p) => p.startsWith("/tools/osint") },
       { href: "/tools/linkboard", label: "Link Board", icon: Share2, match: (p) => p.startsWith("/tools/linkboard") },
-      { href: "/tools/relboard", label: "Relationship Board", icon: Network, match: (p) => p.startsWith("/tools/relboard") },
       { href: "/case", label: "Case Synthesis", icon: ScrollText, match: (p) => p.startsWith("/case") },
       { href: "/investigator", label: "The Investigator", icon: Bot, match: (p) => p.startsWith("/investigator") },
     ],
@@ -64,6 +61,7 @@ const groups: NavGroup[] = [
       { href: "/tools/sanctions", label: "Sanctions Screening", icon: ShieldAlert, match: (p) => p.startsWith("/tools/sanctions") },
       { href: "/tools/ngo", label: "Nonprofit Registry", icon: HeartHandshake, match: (p) => p.startsWith("/tools/ngo") },
       { href: "/tools/crypto", label: "Crypto OSINT", icon: Coins, match: (p) => p.startsWith("/tools/crypto") },
+      { href: "/tools/relboard", label: "Org Chart", icon: Network, match: (p) => p.startsWith("/tools/relboard") },
     ],
   },
   {
@@ -73,16 +71,10 @@ const groups: NavGroup[] = [
     ],
   },
   {
-    group: "Connections",
-    items: [
-      { href: "/connections", label: "Feed Sources", icon: Rss, match: (p) => p.startsWith("/connections") },
-    ],
-  },
-  {
     group: "System",
     items: [
-      { href: "/history", label: "History", icon: History, match: (p) => p.startsWith("/history") },
-      { href: "/status", label: "Connections", icon: Plug, match: (p) => p.startsWith("/status") },
+      { href: "/history", label: "History", icon: History, match: (p) => inViewSet("history", p) },
+      { href: "/status", label: "Connections", icon: Plug, match: (p) => inViewSet("connections", p) },
       { href: "/developers", label: "Developer API", icon: Terminal, match: (p) => p.startsWith("/developers") },
       { href: "/about", label: "About", icon: Info, match: (p) => p.startsWith("/about") },
     ],

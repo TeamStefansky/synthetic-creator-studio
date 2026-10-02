@@ -9,6 +9,7 @@ import ToolIntro from "@/components/ToolIntro";
 import MentionsMap from "@/components/MentionsMap";
 import PredictionMarkets from "@/components/PredictionMarkets";
 import { recordSearch } from "@/lib/clues/record";
+import ViewTabs from "@/components/ViewTabs";
 
 interface Result extends MentionsAggregate { entity: string; generatedAt: string }
 
@@ -51,6 +52,7 @@ export default function BrandMentionsPage() {
 
   return (
     <div className="space-y-6">
+      <ViewTabs set="signal" />
       <div>
         <div className="flex items-center gap-2">
           <Globe className="h-6 w-6 text-brand-soft" />

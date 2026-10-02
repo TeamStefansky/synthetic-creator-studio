@@ -15,7 +15,7 @@ import { buildPremortem } from "@/lib/agent/premortem";
 import { runValidation } from "@/lib/agent/validation";
 import { AGENT_CEILING } from "@/lib/agent/authority";
 import type { StrengthEdge } from "@/lib/case/cluster";
-import { isIndividualCharacteristic } from "@/lib/board/calibrate";
+import { boardStrengthEdges } from "@/lib/board/edges";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,12 +35,7 @@ export async function POST(req: Request) {
   try {
     // Single authorized collection pass over the seed set (read-only).
     const board = await runBoard(seed);
-    const edges: StrengthEdge[] = board.edges
-      .filter((e) => e.strength !== "Unknown")
-      .map((e) => ({
-        a: e.a, b: e.b, strength: e.strength, evidenceId: `${e.a}:${e.b}`, reason: e.top?.display,
-        characteristic: e.top ? (isIndividualCharacteristic(e.top.kind) ? "individual" as const : "class" as const) : undefined,
-      }));
+    const edges: StrengthEdge[] = boardStrengthEdges(board);
 
     const collector: Collector = (cycle) =>
       cycle === 1
