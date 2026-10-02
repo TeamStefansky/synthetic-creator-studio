@@ -23,8 +23,11 @@ import { narrateResearch } from "./narrate";
 import { resolveDomainInfra, lookupDomainRdap, gdeltArticles, type DomainInfra, type DomainRdap, type NewsArticle } from "./collect";
 import { buildAnnex, type ReportAnnex } from "./annex";
 import { extractSelectors, briefTitle, type Selectors } from "./brief";
+import { deepenDomain, collectNarrativeCoordination, documentedMatches, type DomainDeep, type NarrativeCoordination, type DocumentedHit } from "./deepen";
 
-export const OSINT_RESEARCH_VERSION = "osint-research-v1";
+// v2: second-hop infra, co-hosting, site age, documented-reference match across
+// every discovered domain, and narrative coordination via the shared CIB analyzer.
+export const OSINT_RESEARCH_VERSION = "osint-research-v2";
 
 export type QueryKind = "domain" | "asn" | "adsense_id" | "ga_id" | "freetext";
 
@@ -40,9 +43,20 @@ export interface ResearchFindings {
   infra?: DomainInfra;
   rdap?: DomainRdap;
   articles: NewsArticle[];
+  /** v2 deep pass for a domain seed (second hop, co-hosting, age, documented refs). */
+  deep?: DomainDeep;
+  /** Documented-reference hits when there is no full domain deep pass (brief mode). */
+  documentedHits?: DocumentedHit[];
+  /** v2 narrative coordination (public mentions → shared CIB analyzer). */
+  coordination?: NarrativeCoordination;
   toolsLive: string[];
   toolsNotConfigured: string[];
   log: string[];
+}
+
+/** Every documented-reference hit in the findings (seed first). */
+export function allDocumentedHits(f: ResearchFindings): DocumentedHit[] {
+  return [...(f.deep?.documented.seed || []), ...(f.deep?.documented.related || []), ...(f.documentedHits || [])];
 }
 
 // --- pure classification -----------------------------------------------------
@@ -90,13 +104,21 @@ export function matchWatchlist(kind: QueryKind, value: string, rules: ResolvedRu
 
 /** Derive overall confidence FROM EVIDENCE. Capped by the matched cluster's own
  * confidence; documented host conduct + corroborating pivot members raise it.
- * OSINT collection alone never asserts High without a documented anchor. */
+ * OSINT collection alone never asserts High without a documented anchor.
+ * v2 corroboration: ≥ SHARED_IP_MIN discovered domains on the seed's own non-CDN
+ * IP, or a Moderate/Strong coordination grade, count like ≥3 pivot members. A
+ * seed listed in a cited reference dataset is a documented anchor. Coordination
+ * is behavioural and never, on its own, lifts confidence to High. */
 export function deriveConfidence(f: ResearchFindings): Confidence {
   const pivotMembers = f.pivots.reduce((s, p) => s + p.members.length, 0);
   const wl = f.watchlist?.confidence; // "high" | "moderate" | "low"
-  const anchored = !!f.hostConduct?.matched || (!!wl && wl !== "low");
-  if (wl === "high" && (f.hostConduct?.matched || pivotMembers >= 3)) return "High";
-  if (anchored || pivotMembers >= 3) return "Moderate";
+  const seedDocumented = (f.deep?.documented.seed.length || 0) > 0;
+  const anchored = !!f.hostConduct?.matched || (!!wl && wl !== "low") || seedDocumented;
+  const sharedInfra = !!f.deep?.sharedInfra.corroborates;
+  const coordinated = f.coordination?.cib?.likelihood === "Strong" || f.coordination?.cib?.likelihood === "Moderate";
+  const infraCorroborated = pivotMembers >= 3 || sharedInfra;
+  if (wl === "high" && (f.hostConduct?.matched || infraCorroborated || seedDocumented)) return "High";
+  if (anchored || infraCorroborated || coordinated) return "Moderate";
   return "Low";
 }
 
@@ -108,6 +130,9 @@ function assetRows(f: ResearchFindings): string {
   for (const d of ct) rows.push(`| ${d} | site | web | observed in CT | crt.sh |`);
   const pivotMembers = dedupeDomains(f.pivots.flatMap((p) => p.members)).slice(0, 25);
   for (const d of pivotMembers) rows.push(`| ${d} | site | web | reverse-lookup | ${f.pivots.map((p) => p.connectedTools.join("/")).filter(Boolean).join(", ") || "pivot"} |`);
+  for (const d of f.deep?.sharedInfra.sameIp || []) rows.push(`| ${d} | site | web | same non-CDN IP as seed (${f.infra?.ip}) | live DNS |`);
+  for (const d of (f.deep?.coHosted.domains || []).slice(0, 15)) rows.push(`| ${d} | site | web | co-hosted on seed IP | reverse-IP |`);
+  for (const h of allDocumentedHits(f)) rows.push(`| ${h.domain} | site | web | documented: ${h.kind} - ${h.label} | ${h.citation || "reference dataset"} |`);
   return rows.join("\n");
 }
 
@@ -122,7 +147,35 @@ function infraRows(f: ResearchFindings): string {
   for (const id of f.trackers.gaIds) rows.push(`| Google Analytics id | ${id} | ${f.value} | reverse-analytics | homepage |`);
   for (const id of f.trackers.adsenseIds) rows.push(`| AdSense pub id | ${id} | ${f.value} | reverse-adsense | homepage |`);
   if (f.hostConduct?.matched) rows.push(`| Host operator | ${f.hostConduct.org} | ${f.value} | documented conduct | host-conduct |`);
+  const d = f.deep;
+  if (d?.sharedInfra.seedOnCdn) rows.push(`| Edge network | ${d.sharedInfra.seedOnCdn} | ${f.value} | CDN - shared IPs not operator evidence | live |`);
+  if (d?.sharedInfra.sameIp.length) rows.push(`| Shared IP (non-CDN) | ${f.infra?.ip} | ${d.sharedInfra.sameIp.join(", ")} | second-hop DNS | live DNS |`);
+  if (d?.sharedInfra.sameAsn.length) rows.push(`| Shared network | ${f.infra?.asn} | ${d.sharedInfra.sameAsn.join(", ")} | second-hop DNS (weak: same ASN) | live DNS |`);
+  if (d?.age.firstSeen) rows.push(`| First observed | ${d.age.firstSeen} (earliest observed, not creation) | ${f.value} | Wayback CDX (${d.age.snapshots} capture(s)) | archive.org |`);
+  if (d?.age.recent) rows.push(`| Site age | ${d.age.ageDays} days | ${f.value} | recently stood up (≤ threshold) | Wayback/RDAP |`);
   return rows.join("\n");
+}
+
+/** Deterministic narrative-coordination prose (used when no LLM narrative). */
+function coordinationProse(f: ResearchFindings): string | undefined {
+  const c = f.coordination;
+  if (!c) return undefined;
+  if (!c.collected || !c.cib) {
+    return `Narrative coordination: not collected (${c.note || "no data"}). Unknown is the correct answer when nothing was collected.`;
+  }
+  const cib = c.cib;
+  const lines = [
+    `Coordination Likelihood: ${cib.likelihood}${cib.likelihood === "Strong" ? " - actor UNDETERMINED" : ""} (${cib.totalItems} public mention(s), ${cib.accounts} distinct account(s); sources: ${c.sourcesLive.join(", ") || "none"}).`,
+  ];
+  for (const s of cib.signals.filter((x) => x.confidence !== "Not collected").slice(0, 5)) {
+    lines.push(`- ${s.name} (${s.confidence}): ${s.evidence.slice(0, 2).join("; ")}. Could also be explained by: ${s.alternative}`);
+  }
+  if (cib.clusters.length) {
+    const top = cib.clusters[0];
+    lines.push(`- Largest near-duplicate cluster: ${top.size} item(s) across ${top.accounts} account(s) on ${top.sources.join("/")} - “${top.text.slice(0, 120)}”.`);
+  }
+  lines.push(cib.attribution);
+  return lines.join("\n");
 }
 
 function actorRows(f: ResearchFindings): string {
@@ -136,6 +189,8 @@ function sourcesList(f: ResearchFindings): string {
   for (const p of f.pivots) for (const r of p.results) if (r.connected && r.url) src.push(r.url);
   if (f.watchlist) src.push(...f.watchlist.reporting);
   for (const fi of f.hostConduct?.findings || []) src.push(...fi.sources);
+  for (const h of allDocumentedHits(f)) if (h.citation) src.push(`${h.citation} (documented: ${h.domain})`);
+  if (f.deep?.age.firstSeen) src.push(`https://web.archive.org/web/*/${f.value} (Wayback CDX)`);
   for (const a of f.articles.slice(0, 10)) src.push(`${a.title || a.domain} - ${a.url}${a.date ? ` (${a.date})` : ""}`);
   return [...new Set(src)].map((s, i) => `${i + 1}. ${s}`).join("\n");
 }
@@ -154,7 +209,30 @@ export function assembleReportInput(f: ResearchFindings, date: string, runId: st
     (f.trackers.gaIds.length + f.trackers.adsenseIds.length ? `${f.trackers.gaIds.length + f.trackers.adsenseIds.length} tracker id(s) extracted. ` : "") +
     (pivotMembers ? `${pivotMembers} reverse-lookup member domain(s). ` : "") +
     (f.hostConduct?.matched ? `Documented host conduct on file for ${f.hostConduct.org}. ` : "") +
+    (f.deep?.sharedInfra.sameIp.length ? `${f.deep.sharedInfra.sameIp.length} discovered domain(s) on the seed's own non-CDN IP. ` : "") +
+    (allDocumentedHits(f).length ? `${allDocumentedHits(f).length} documented-reference hit(s) (state media / campaign / registry). ` : "") +
+    (f.deep?.age.recent ? `Site first observed ${f.deep.age.ageDays} days ago (recently stood up). ` : "") +
+    (f.coordination?.cib ? `Narrative Coordination Likelihood: ${f.coordination.cib.likelihood}${f.coordination.cib.likelihood === "Strong" ? " - actor UNDETERMINED" : ""}. ` : "") +
     `Association is not shared ownership; a shared selector is a co-behavior lead.`;
+
+  const docHits = allDocumentedHits(f);
+  const cibGrade = f.coordination?.cib?.likelihood;
+  const evidenceFor = [
+    f.watchlist && "curated pattern + cited reporting",
+    docHits.length && `${docHits.length} documented-reference hit(s)`,
+    f.deep?.sharedInfra.corroborates && "shared non-CDN IP with discovered domains",
+    pivotMembers >= 3 && `${pivotMembers} reverse-lookup members`,
+    (cibGrade === "Moderate" || cibGrade === "Strong") && `coordination ${cibGrade}`,
+  ].filter(Boolean).join("; ");
+  const hypothesisRows = [
+    f.watchlist
+      ? `| H1: ${f.watchlist.cluster} | ${evidenceFor || "pattern match"} | not independently confirmed here | consistent, ${f.watchlist.confidence} |`
+      : evidenceFor
+        ? `| H1: coordinated network around “${f.value}” (actor UNDETERMINED) | ${evidenceFor} | association ≠ common control | consistent, unconfirmed |`
+        : "",
+    `| H0 (null): no coordinated operation - organic / unrelated activity | ${evidenceFor ? "shared hosting, trackers and viral copy-paste also occur organically" : "no distinctive shared selector or coordination signal found"} | - | cannot be excluded |`,
+    `| H-D (deception): deliberate mimicry or false flag | copied selectors / reused templates can be planted to mislead attribution | no evidence either way in passive OSINT | cannot be excluded |`,
+  ].filter(Boolean).join("\n");
 
   return {
     network_name: f.watchlist?.cluster || f.value,
@@ -175,16 +253,20 @@ export function assembleReportInput(f: ResearchFindings, date: string, runId: st
     infrastructure_narrative: narrative?.infrastructure_narrative || (f.hostConduct?.matched ? `${f.hostConduct.org}: ${f.hostConduct.summary || "documented host conduct on file."} ${f.hostConduct.clientCaveat}` : ""),
     infra_table_rows: infraRows(f),
     underground_findings_or_none: "None - dark-web module did not run.",
-    narrative_analysis: narrative?.narrative_analysis,
+    narrative_analysis: narrative?.narrative_analysis || coordinationProse(f),
     disarm_table_rows: "",
     impact_evidence: narrative?.impact_evidence || (f.forecast?.available
       ? `Early-Warning Radar: ${f.forecast.band} - ${f.forecast.estimative} to escalate within ${f.forecast.horizonDays}d (hazard ${Math.round(f.forecast.hazard * 100)}%, ${f.forecast.confidence} confidence). ${f.forecast.alternative}`
       : undefined),
-    ach_table_rows: f.watchlist
-      ? `| H1: ${f.watchlist.cluster} | matches curated pattern + cited reporting | not independently confirmed here | consistent, ${f.watchlist.confidence} |\n| H0 (null): unrelated / coincidental | shared selectors can recur | pattern match | cannot be excluded |`
-      : `| H0 (null): no coordinated operation | no distinctive shared selector found | - | cannot be excluded |`,
+    ach_table_rows: hypothesisRows,
     playbook_comparison: narrative?.playbook_comparison,
-    gaps: `Not-connected sources limit coverage: ${f.toolsNotConfigured.join(", ") || "none"}. Paid reverse-lookup/passive-DNS would extend the pivot. This run is passive OSINT only.`,
+    gaps: [
+      `Not-connected sources limit coverage: ${[...f.toolsNotConfigured, ...(f.coordination?.sourcesOff || [])].join(", ") || "none"}.`,
+      f.coordination?.sourcesFailed.length ? `Sources connected but failing this run: ${f.coordination.sourcesFailed.join(", ")}.` : "",
+      f.deep && !f.deep.coHosted.collected ? `Co-hosting not collected (${f.deep.coHosted.skippedReason}).` : "",
+      f.deep && !f.deep.documented.referencePopulated ? "Documented-reference datasets (state media / campaigns / registries) are not populated on this deployment - a missing hit is not a clean bill." : "",
+      "Paid reverse-lookup/passive-DNS would extend the pivot. This run is passive OSINT only; a gap is not negative evidence.",
+    ].filter(Boolean).join(" "),
     next_steps: narrative?.next_steps || `Connect ${f.toolsNotConfigured.slice(0, 3).join(", ") || "additional providers"} to widen the pivot; re-run to diff new nodes; corroborate any attribution against a second independent source.`,
     sources_numbered_with_links: sourcesList(f) || "1. crt.sh (Certificate Transparency)",
   };
@@ -229,6 +311,30 @@ async function collectDomain(value: string, log: string[]): Promise<Partial<Rese
       out.pivots = pivots;
     } else { log.push("homepage: not reachable."); }
   } catch { log.push("homepage: fetch failed."); }
+
+  // v2 deep pass. Second hop resolves only OTHER registrable domains - the
+  // seed's own subdomains share its operator by definition, so they would
+  // inflate the shared-IP test without adding evidence.
+  const own = (d: string) => d === value || d.endsWith(`.${value}`);
+  const pivotDomains = dedupeDomains((out.pivots || []).flatMap((p) => p.members)).filter((d) => !own(d));
+  try {
+    out.deep = await deepenDomain(value, out.infra, out.rdap, [...pivotDomains, ...(out.crtsh?.members || [])].filter((d) => !own(d)), log);
+    const wlHits = watchlistHitsFor([...pivotDomains, ...out.deep.coHosted.domains, ...out.deep.sharedInfra.sameIp], getResolvedRules());
+    if (wlHits.length) {
+      out.deep.documented.related.push(...wlHits);
+      log.push(`curated watchlist: ${wlHits.length} discovered domain(s) match a documented cluster.`);
+    }
+  } catch { log.push("deep pass: failed (isolated - the rest of the report stands)."); }
+  return out;
+}
+
+/** Discovered (non-seed) domains that match a curated, cited watchlist cluster. */
+export function watchlistHitsFor(domains: string[], rules: ResolvedRule[]): DocumentedHit[] {
+  const out: DocumentedHit[] = [];
+  for (const d of [...new Set(domains)]) {
+    const r = matchWatchlist("domain", d, rules);
+    if (r) out.push({ domain: d, kind: "curated-watchlist", label: `${r.cluster} (${r.attribution})`, citation: r.reporting.join(", ") || undefined });
+  }
   return out;
 }
 
@@ -240,11 +346,30 @@ export async function runResearch(query: string, now: { date: string; runId: str
   const watchlist = matchWatchlist(kind, value, rules);
   if (watchlist) log.push(`Watchlist match: ${watchlist.cluster}.`);
 
+  // Narrative coordination runs alongside the infra collectors (it is the slow,
+  // many-source sweep) for a domain - who is pushing this site - or a narrative.
+  const coordinationP: Promise<NarrativeCoordination | undefined> = kind === "domain" || kind === "freetext"
+    ? collectNarrativeCoordination(value).catch(() => ({ collected: false, mentions: 0, sourcesLive: [], sourcesOff: [], sourcesFailed: [], note: "collection failed" }))
+    : Promise.resolve(undefined);
+
   let partial: Partial<ResearchFindings> = { trackers: { gaIds: [], adsenseIds: [] }, pivots: [], articles: [] };
   if (kind === "domain") partial = await collectDomain(value, log);
   else if (kind === "asn") { partial.hostConduct = buildHostConduct({ asn: value }); log.push(partial.hostConduct.matched ? `host-conduct: documented (${partial.hostConduct.org}).` : "host-conduct: not on file."); }
-  else if (kind === "adsense_id" || kind === "ga_id") { partial.pivots = [await runPivot(kind, value)]; log.push(`reverse-lookup pivot on ${kind}.`); }
+  else if (kind === "adsense_id" || kind === "ga_id") {
+    partial.pivots = [await runPivot(kind, value)];
+    log.push(`reverse-lookup pivot on ${kind}.`);
+    const hits = documentedMatches(undefined, partial.pivots.flatMap((p) => p.members)).related;
+    if (hits.length) { partial.documentedHits = hits; log.push(`documented reference: ${hits.length} hit(s) among pivot members.`); }
+  }
   else { partial.articles = await gdeltArticles(value); log.push(`Free-text query: ${partial.articles.length} news article(s) (GDELT) + watchlist/reporting.`); }
+
+  partial.coordination = await coordinationP;
+  const c = partial.coordination;
+  if (c) {
+    log.push(c.collected && c.cib
+      ? `coordination: ${c.cib.likelihood}${c.cib.likelihood === "Strong" ? " - actor UNDETERMINED" : ""} over ${c.mentions} public mention(s) from ${c.sourcesLive.length} live source(s).`
+      : `coordination: not collected (${c.note}).`);
+  }
 
   // Early-Warning Radar (keyless: public attention + tone) for a domain or a
   // named network - folds an escalation forecast into the report's impact section.
@@ -267,7 +392,13 @@ export async function runResearch(query: string, now: { date: string; runId: str
   const toolsNotConfigured = new Set<string>();
   for (const p of partial.pivots || []) { p.connectedTools.forEach((t) => toolsLive.add(t)); p.notConnectedTools.forEach((t) => toolsNotConfigured.add(t)); }
 
-  if (kind === "domain" || kind === "freetext") toolsLive.add("early-warning-radar");
+  if (partial.forecast) toolsLive.add("early-warning-radar");
+  if (partial.deep?.sharedInfra.collected) toolsLive.add("second-hop-dns");
+  if (partial.deep?.age.firstSeen) toolsLive.add("wayback-cdx");
+  if (partial.deep?.coHosted.collected) toolsLive.add("reverse-ip");
+  if (partial.deep?.documented.referencePopulated) toolsLive.add("io-reference");
+  if (c?.collected) toolsLive.add(`cib-coordination (${c.sourcesLive.length} sources)`);
+  for (const s of c?.sourcesOff || []) toolsNotConfigured.add(`mentions:${s}`);
 
   const findings: ResearchFindings = {
     kind, value, watchlist,
@@ -279,6 +410,9 @@ export async function runResearch(query: string, now: { date: string; runId: str
     infra: partial.infra,
     rdap: partial.rdap,
     articles: partial.articles || [],
+    deep: partial.deep,
+    documentedHits: partial.documentedHits,
+    coordination: partial.coordination,
     toolsLive: [...toolsLive], toolsNotConfigured: [...toolsNotConfigured], log,
   };
 
@@ -315,14 +449,20 @@ export async function runBriefResearch(brief: string, now: { date: string; runId
     ...sel.ga.map((g) => runPivot("ga_id", g)),
   ])).filter(Boolean);
 
-  // Per-domain infra + host-conduct + crt.sh (capped to 4 to bound time).
+  // Per-domain infra + host-conduct + crt.sh (capped to 4 to bound time), in
+  // parallel - one slow domain no longer stalls the others.
   let infra: any, rdap: any, hostConduct: any;
   const crtMembers: string[] = [];
-  for (const d of sel.domains.slice(0, 4)) {
-    const di = await resolveDomainInfra(d);
+  const perDomain = await Promise.all(sel.domains.slice(0, 4).map(async (d) => {
+    const [di, piv] = await Promise.all([
+      resolveDomainInfra(d).catch(() => ({} as DomainInfra)),
+      runPivot("domain", d).catch(() => null),
+    ]);
+    return { di, crt: piv?.results.find((r) => r.tool === "crtsh.certs") };
+  }));
+  for (const { di, crt } of perDomain) {
     if (!infra && di.ip) infra = di;
     if (di.asn && !hostConduct) { const hc = buildHostConduct({ asn: di.asn, org: di.org, hostName: di.org }); if (hc.matched) hostConduct = hc; }
-    const crt = (await runPivot("domain", d)).results.find((r) => r.tool === "crtsh.certs");
     if (crt) crtMembers.push(...crt.members);
   }
   // ASN selectors → documented host conduct.
@@ -331,16 +471,21 @@ export async function runBriefResearch(brief: string, now: { date: string; runId
   const articles = await gdeltArticles(briefTitle(brief));
   log.push(`Pivots: ${pivots.length}; crt.sh hosts: ${crtMembers.length}; news: ${articles.length}.`);
 
+  // Documented-reference match across every brief domain + pivot member (pure).
+  const doc = documentedMatches(undefined, [...sel.domains, ...pivots.flatMap((p) => p.members)]);
+  if (doc.related.length) log.push(`documented reference: ${doc.related.length} hit(s) across brief domains + pivot members.`);
+
   const toolsLive = new Set<string>(["crtsh.certs"]);
   const toolsNotConfigured = new Set<string>();
   for (const p of pivots) { p.connectedTools.forEach((t) => toolsLive.add(t)); p.notConnectedTools.forEach((t) => toolsNotConfigured.add(t)); }
-  if (articles.length || true) toolsLive.add("early-warning-radar");
+  if (doc.referencePopulated) toolsLive.add("io-reference");
 
   const findings: ResearchFindings = {
     kind: "freetext", value: briefTitle(brief), watchlist,
     crtsh: crtMembers.length ? { tool: "crtsh.certs", connected: true, members: dedupeDomains(crtMembers), count: crtMembers.length, note: `crt.sh: ${crtMembers.length} host(s) across brief domains.` } : undefined,
     trackers: { gaIds: sel.ga, adsenseIds: sel.adsense },
     pivots, hostConduct, infra, rdap, articles,
+    documentedHits: doc.related.length ? doc.related : undefined,
     toolsLive: [...toolsLive], toolsNotConfigured: [...toolsNotConfigured], log,
   };
   const confidence = deriveConfidence(findings);
